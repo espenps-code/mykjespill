@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mykje spill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --natt-1:#2a1a5e;
+  --natt-2:#4c1d95;
+  --natt-3:#1b1147;
+  --teal:#2dd4bf;
+  --lilla:#a855f7;
+  --oransje:#fb923c;
+  --gul:#fbbf24;
+  --rosa:#f472b6;
+  --gronn:#34d399;
+  --kort:#ffffff;
+  --blekk:#241a52;
+  --krite:#fff7ed;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  font-family:'Atkinson Hyperlegible',system-ui,sans-serif;
+  color:var(--krite);
+  background:
+    radial-gradient(900px 500px at 80% -5%, rgba(168,85,247,.55), transparent 60%),
+    radial-gradient(700px 500px at 10% 10%, rgba(45,212,191,.30), transparent 55%),
+    linear-gradient(170deg, var(--natt-2) 0%, var(--natt-1) 40%, var(--natt-3) 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ---- stjerner ---- */
+.stjerner{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.stjerne{
+  position:absolute;width:4px;height:4px;border-radius:50%;
+  background:#fff;opacity:.7;
+  box-shadow:0 0 6px 1px rgba(255,255,255,.6);
+  animation:blink 3.5s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:.2;transform:scale(.7);}50%{opacity:.9;transform:scale(1);}}
+
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:32px 20px 64px;}
+
+/* ---- hero ---- */
+.hero{
+  position:relative;
+  display:grid;grid-template-columns:1fr auto;gap:28px;align-items:center;
+  margin-bottom:40px;
+}
+.hero-tekst{position:relative;z-index:1;}
+.hero-tekst h1{
+  font-family:'Fredoka',sans-serif;font-weight:700;
+  font-size:clamp(2.8rem,8vw,5rem);line-height:.95;letter-spacing:-1px;
+  color:#fff;
+  text-shadow:0 4px 0 rgba(0,0,0,.25), 0 0 30px rgba(168,85,247,.5);
+}
+.hero-tekst h1 .gul{color:var(--gul);}
+.hero-tekst p{
+  font-size:clamp(1rem,2.5vw,1.3rem);margin-top:14px;max-width:30ch;
+  color:#e9defc;
+}
+.teljar{
+  display:inline-flex;align-items:center;gap:8px;margin-top:18px;
+  background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.2);
+  padding:8px 16px;border-radius:999px;font-weight:700;
+  font-family:'Fredoka',sans-serif;
+}
+.teljar b{color:var(--gul);font-size:1.2rem;}
+
+/* ---- maskot ---- */
+.maskot-boks{
+  position:relative;display:grid;place-items:center;z-index:1;
+  transition:transform .25s ease-out;will-change:transform;
+}
+.glod{
+  position:absolute;width:115%;aspect-ratio:1;border-radius:50%;z-index:0;
+  background:radial-gradient(circle, rgba(168,85,247,.6), rgba(45,212,191,.22) 45%, transparent 70%);
+  filter:blur(8px);animation:puls 5s ease-in-out infinite;
+}
+@keyframes puls{0%,100%{transform:scale(.9);opacity:.65;}50%{transform:scale(1.1);opacity:1;}}
+.maskot{
+  position:relative;z-index:1;width:clamp(170px,28vw,280px);
+  filter:drop-shadow(0 16px 20px rgba(0,0,0,.45));
+  animation:sveve 4.5s ease-in-out infinite;
+}
+@keyframes sveve{0%,100%{transform:translateY(0) rotate(-1.5deg);}50%{transform:translateY(-16px) rotate(1.5deg);}}
+
+/* ---- svevande pikselformer ---- */
+.pixlar{position:absolute;inset:-30px;pointer-events:none;z-index:0;transition:transform .25s ease-out;}
+.pix{position:absolute;animation:drift 6s ease-in-out infinite;}
+.pix-square{border-radius:4px;background:currentColor;}
+.pix-plus::before,.pix-plus::after{content:"";position:absolute;background:currentColor;border-radius:3px;}
+.pix-plus::before{left:35%;top:0;width:30%;height:100%;}
+.pix-plus::after{top:35%;left:0;height:30%;width:100%;}
+@keyframes drift{0%,100%{transform:translateY(0) rotate(0);}50%{transform:translateY(-18px) rotate(12deg);}}
+
+/* ---- tittel-animasjon ---- */
+.tittel{display:flex;flex-direction:column;}
+.tittel span{display:inline-block;opacity:0;animation:tittelinn .6s cubic-bezier(.2,.9,.3,1.5) forwards;}
+.tittel span:nth-child(1){animation-delay:.1s;}
+.tittel span:nth-child(2){animation-delay:.3s;}
+@keyframes tittelinn{from{opacity:0;transform:translateY(34px) scale(.8);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+/* ---- søk ---- */
+.verktoy{
+  display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+  margin-bottom:28px;
+}
+.sok{
+  flex:1;min-width:220px;display:flex;align-items:center;gap:10px;
+  background:#fff;border-radius:16px;padding:12px 18px;
+  border:3px solid var(--natt-3);
+  box-shadow:0 6px 0 rgba(0,0,0,.25);
+}
+.sok input{
+  border:0;outline:0;flex:1;font-family:inherit;font-size:1.05rem;
+  color:var(--blekk);background:transparent;
+}
+.sok svg{flex-shrink:0;}
+
+/* ---- rutenett ---- */
+.rutenett{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:22px;
+}
+
+.kort{
+  background:var(--kort);border-radius:22px;overflow:hidden;
+  text-decoration:none;color:var(--blekk);
+  border:3px solid var(--natt-3);
+  box-shadow:0 10px 0 rgba(0,0,0,.28);
+  display:flex;flex-direction:column;
+  transform:translateY(0);
+  transition:transform .15s ease, box-shadow .15s ease;
+  animation:pop .4s backwards;
+}
+@keyframes pop{from{opacity:0;transform:translateY(20px) scale(.96);}to{opacity:1;}}
+.kort:hover,.kort:focus-visible{
+  transform:translateY(-8px) rotate(-1deg);
+  box-shadow:0 18px 0 rgba(0,0,0,.28);
+  outline:none;
+}
+.kort:focus-visible{outline:4px solid var(--gul);outline-offset:3px;}
+
+.skjerm{
+  height:130px;display:grid;place-items:center;
+  font-size:4rem;position:relative;
+}
+.skjerm::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.25),transparent 45%);
+}
+.farge-teal{background:var(--teal);}
+.farge-lilla{background:var(--lilla);}
+.farge-oransje{background:var(--oransje);}
+.farge-gul{background:var(--gul);}
+.farge-rosa{background:var(--rosa);}
+.farge-gronn{background:var(--gronn);}
+
+.kort-tekst{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1;}
+.kort-tekst h3{font-family:'Fredoka',sans-serif;font-size:1.3rem;line-height:1.1;}
+.kort-tekst p{font-size:.95rem;color:#4b4470;flex:1;}
+
+.laga-av{
+  display:inline-flex;align-items:center;gap:6px;align-self:flex-start;
+  font-size:.8rem;font-weight:700;color:var(--lilla);
+  background:#f3e8ff;padding:4px 10px;border-radius:999px;
+}
+
+.spel-knapp{
+  margin-top:10px;align-self:flex-start;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.05rem;
+  color:#fff;background:var(--gronn);
+  border:0;border-radius:12px;padding:9px 22px;
+  border-bottom:4px solid rgba(0,0,0,.25);
+  cursor:pointer;
+}
+.kort:active .spel-knapp{transform:translateY(2px);border-bottom-width:2px;}
+
+.kort.snart{opacity:.85;}
+.kort.snart .spel-knapp{background:#9ca3af;}
+.merkelapp-snart{
+  position:absolute;top:10px;right:10px;z-index:2;
+  background:var(--blekk);color:#fff;font-weight:700;font-size:.75rem;
+  padding:4px 10px;border-radius:999px;font-family:'Fredoka',sans-serif;
+}
+
+/* ---- tomt søk ---- */
+.tomt{
+  grid-column:1/-1;text-align:center;padding:50px 20px;
+  font-size:1.2rem;color:#cbbdf0;
+}
+
+footer{
+  text-align:center;margin-top:50px;color:#b7a9e0;font-size:.9rem;
+}
+footer b{color:var(--gul);}
+
+@media (max-width:560px){
+  .hero{grid-template-columns:1fr;text-align:center;justify-items:center;}
+  .maskot{order:-1;}
+  .hero-tekst p{margin-inline:auto;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important;}
+}
+</style>
+</head>
+<body>
+
+<div class="stjerner" id="stjerner" aria-hidden="true"></div>
+
+<div class="wrap">
+
+  <header class="hero" id="hero">
+    <div class="pixlar" id="pixlar" aria-hidden="true"></div>
+
+    <div class="hero-tekst">
+      <h1 class="tittel"><span>Mykje</span><span class="gul">spill</span></h1>
+      <p>Av og for elevene på Mykje Skole. Velg et spill og prøv!</p>
+      <div class="teljar"><b id="tal">0</b> spill klare</div>
+    </div>
+
+    <!-- ===== MASKOT =====
+         Ugla ligger som bildefil ved siden av denne siden (mykje-ugle.webp).
+         Husk å ha begge filene i samme mappe når du laster opp/deler.
+    -->
+    <div class="maskot-boks" id="maskotBoks">
+      <div class="glod" aria-hidden="true"></div>
+      <img class="maskot" src="mykje-ugle.webp" alt="Ugla, maskoten i Mykje spill">
+    </div>
+  </header>
+
+  <div class="verktoy">
+    <label class="sok">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="3" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>
+      </svg>
+      <input type="search" id="sok" placeholder="Søk etter et spill …" aria-label="Søk etter spill">
+    </label>
+  </div>
+
+  <main class="rutenett" id="rutenett"></main>
+
+  <footer>
+    En del av <b>Mykje</b>-familien · Laget for og av elevene
+  </footer>
+
+</div>
+
+<script>
+/* =======================================================================
+   LEGG TIL ET NYTT SPILL
+   -----------------------------------------------------------------------
+   Kopier en blokk under, og fyll inn:
+     tittel      – navnet på spillet
+     beskrivelse – kort setning om hva spillet er
+     emoji       – et ikon som vises på "skjermen" (velg hva du vil)
+     url         – fila eller lenka til spillet, f.eks. "spill/labyrint.html"
+                   (la stå tom  ""  hvis spillet ikke er ferdig – da vises
+                    "Kommer snart" automatisk)
+     lagaAv      – hvem som laget det (elev, gruppe …). Tom = vises ikke.
+     farge       – fargen på kortet: teal, lilla, oransje, gul, rosa, gronn
+   Husk komma mellom hver blokk { ... }
+   ======================================================================= */
+
+const SPILL = [
+  {
+    tittel: "Flygeleder",
+    beskrivelse: "Los flyene trygt ned på rullebanen – uten at de krasjer!",
+    emoji: "✈️",
+    url: "flygeleder.html",
+    lagaAv: "",
+    farge: "teal"
+  },
+  {
+    tittel: "Livet på egne ben",
+    beskrivelse: "Balanser økonomi og hygge gjennom et år.",
+    emoji: "🔑",
+    url: "myntland-livet-pa-egne-bein.html",
+    lagaAv: "",
+    farge: "oransje"
+  }
+];
+
+/* ----------------------- under her trenger du ikke endre ---------------- */
+
+const rutenett = document.getElementById('rutenett');
+const sokFelt = document.getElementById('sok');
+const talFelt = document.getElementById('tal');
+
+function lagKort(spel, i){
+  const ferdig = spel.url && spel.url.trim() !== "";
+  const tag = ferdig ? 'a' : 'div';
+  const el = document.createElement(tag);
+  el.className = 'kort' + (ferdig ? '' : ' snart');
+  el.style.animationDelay = (i * 0.05) + 's';
+  if(ferdig){ el.href = spel.url; }
+
+  const lagaAv = spel.lagaAv
+    ? `<span class="laga-av">🛠️ ${spel.lagaAv}</span>` : '';
+  const snartMerke = ferdig ? '' : `<span class="merkelapp-snart">Kommer snart</span>`;
+  const knappTekst = ferdig ? 'Spill' : 'Snart klart';
+
+  el.innerHTML = `
+    <div class="skjerm farge-${spel.farge}">${snartMerke}${spel.emoji}</div>
+    <div class="kort-tekst">
+      <h3>${spel.tittel}</h3>
+      <p>${spel.beskrivelse}</p>
+      ${lagaAv}
+      <span class="spel-knapp">${knappTekst}</span>
+    </div>`;
+  return el;
+}
+
+function tegn(filter = ""){
+  rutenett.innerHTML = "";
+  const sok = filter.toLowerCase().trim();
+  const treff = SPILL.filter(s =>
+    s.tittel.toLowerCase().includes(sok) ||
+    s.beskrivelse.toLowerCase().includes(sok)
+  );
+
+  if(treff.length === 0){
+    rutenett.innerHTML = `<p class="tomt">Fant ingen spill som passet. Prøv et annet søk! 🦉</p>`;
+    return;
+  }
+  treff.forEach((s, i) => rutenett.appendChild(lagKort(s, i)));
+}
+
+talFelt.textContent = SPILL.filter(s => s.url && s.url.trim() !== "").length;
+sokFelt.addEventListener('input', e => tegn(e.target.value));
+tegn();
+
+/* stjerner på himmelen */
+const himmel = document.getElementById('stjerner');
+for(let i = 0; i < 40; i++){
+  const s = document.createElement('div');
+  s.className = 'stjerne';
+  s.style.left = Math.random() * 100 + '%';
+  s.style.top = Math.random() * 100 + '%';
+  s.style.animationDelay = Math.random() * 4 + 's';
+  s.style.transform = `scale(${0.5 + Math.random()})`;
+  himmel.appendChild(s);
+}
+
+/* svevende pikselformer i headeren (samme som i ugle-bildet) */
+const pixlar = document.getElementById('pixlar');
+const pixFargar = ['#2dd4bf','#a855f7','#f472b6','#fbbf24'];
+// posisjoner mest ut mot kantene, så de ikke legger seg oppå tekst/ugle
+const plassar = [
+  [4,18],[10,62],[16,30],[6,82],[22,8],
+  [74,12],[84,55],[90,24],[78,78],[94,70],[68,40]
+];
+plassar.forEach((p, i) => {
+  const d = document.createElement('div');
+  const plus = Math.random() > 0.45;
+  d.className = 'pix ' + (plus ? 'pix-plus' : 'pix-square');
+  const stor = 12 + Math.round(Math.random() * 16);
+  d.style.left = p[0] + '%';
+  d.style.top = p[1] + '%';
+  d.style.width = stor + 'px';
+  d.style.height = stor + 'px';
+  d.style.color = pixFargar[i % pixFargar.length];
+  d.style.opacity = 0.45;
+  d.style.animationDelay = (Math.random() * 3).toFixed(2) + 's';
+  d.style.animationDuration = (5 + Math.random() * 3).toFixed(2) + 's';
+  pixlar.appendChild(d);
+});
+
+/* lett parallaks som følger musepekeren (av ved redusert bevegelse) */
+const roleg = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!roleg){
+  const hero = document.getElementById('hero');
+  const boks = document.getElementById('maskotBoks');
+  hero.addEventListener('mousemove', e => {
+    const r = hero.getBoundingClientRect();
+    const dx = (e.clientX - r.left) / r.width - 0.5;
+    const dy = (e.clientY - r.top) / r.height - 0.5;
+    boks.style.transform = `translate(${dx*20}px, ${dy*16}px)`;
+    pixlar.style.transform = `translate(${dx*-26}px, ${dy*-20}px)`;
+  });
+  hero.addEventListener('mouseleave', () => {
+    boks.style.transform = '';
+    pixlar.style.transform = '';
+  });
+}
+</script>
+</body>
+</html>

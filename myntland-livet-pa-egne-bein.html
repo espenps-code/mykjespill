@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Myntland: Livet på egne bein</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1d2a4d; --navy2:#27376a; --gull:#f6b23a; --gull2:#ffd34d;
+    --krem:#fff7e6; --groenn:#5cb85c; --roed:#e2725b; --lilla:#b07ad6;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;
+    font-family:'Atkinson Hyperlegible',sans-serif; background:#87c5e8;
+    touch-action:none; overscroll-behavior:none; user-select:none; -webkit-user-select:none;}
+  #spill{position:fixed;inset:0;}
+  canvas{display:block;}
+  h1,h2,h3,.fredoka{font-family:'Fredoka One',cursive; font-weight:normal; letter-spacing:.5px;}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;top:0;left:0;right:0;display:none;justify-content:space-between;
+    align-items:flex-start;padding:10px 12px;pointer-events:none;z-index:20;gap:8px;flex-wrap:wrap;}
+  .hudBoks{background:rgba(29,42,77,.92);color:var(--krem);border-radius:14px;
+    padding:8px 14px;display:flex;gap:14px;align-items:center;box-shadow:0 3px 10px rgba(0,0,0,.25);
+    pointer-events:auto;font-size:15px;}
+  .hudStat{display:flex;flex-direction:column;align-items:center;min-width:62px;}
+  .hudStat .verdi{font-family:'Fredoka One';font-size:17px;color:var(--gull2);}
+  .hudStat .navn{font-size:11px;opacity:.8;}
+  .maaler{width:70px;height:8px;background:rgba(255,255,255,.2);border-radius:4px;overflow:hidden;margin-top:3px;}
+  .maaler>div{height:100%;border-radius:4px;transition:width .4s;}
+  #trivselBar>div{background:linear-gradient(90deg,#e2725b,#ffd34d,#5cb85c);}
+  #maalBar>div{background:var(--gull);}
+  .hudKnapp{background:var(--gull);color:var(--navy);border:none;border-radius:12px;
+    font-family:'Fredoka One';font-size:16px;padding:10px 18px;cursor:pointer;
+    box-shadow:0 3px 0 #c8862a;pointer-events:auto;}
+  .hudKnapp:active{transform:translateY(2px);box-shadow:0 1px 0 #c8862a;}
+  .ikonKnapp{background:rgba(29,42,77,.92);color:var(--krem);border:none;border-radius:12px;
+    font-size:18px;padding:9px 12px;cursor:pointer;pointer-events:auto;}
+
+  /* ---------- Joystick & interaksjon ---------- */
+  #joySone{position:fixed;left:0;bottom:0;width:45%;height:45%;z-index:15;display:none;}
+  #joyBase{position:fixed;width:110px;height:110px;border-radius:50%;
+    background:rgba(29,42,77,.35);border:3px solid rgba(255,255,255,.5);
+    display:none;z-index:16;pointer-events:none;}
+  #joyKnott{position:fixed;width:52px;height:52px;border-radius:50%;
+    background:var(--gull);border:3px solid #fff;display:none;z-index:17;pointer-events:none;
+    box-shadow:0 2px 8px rgba(0,0,0,.3);}
+  #interakt{position:fixed;right:18px;bottom:26px;z-index:18;display:none;
+    background:var(--groenn);color:#fff;border:4px solid #fff;border-radius:50%;
+    width:92px;height:92px;font-family:'Fredoka One';font-size:15px;cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);line-height:1.1;}
+  #interakt:active{transform:scale(.94);}
+  #naerSkilt{position:fixed;bottom:132px;right:14px;z-index:18;display:none;
+    background:rgba(29,42,77,.92);color:var(--krem);padding:8px 14px;border-radius:12px;
+    font-size:14px;max-width:200px;text-align:center;}
+
+  /* ---------- Modal / panel ---------- */
+  .overlegg{position:fixed;inset:0;background:rgba(20,28,55,.55);z-index:50;
+    display:none;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(2px);}
+  .boks{background:var(--krem);color:var(--navy);border-radius:22px;max-width:560px;width:100%;
+    max-height:88vh;display:flex;flex-direction:column;box-shadow:0 14px 50px rgba(0,0,0,.4);
+    border:4px solid var(--gull);overflow:hidden;}
+  #valgOverlegg{z-index:56;}
+  #spillOverlegg{z-index:52;}
+  .boksTopp{background:var(--navy);color:var(--gull2);padding:14px 18px;font-family:'Fredoka One';
+    font-size:20px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .boksInnhold{padding:16px 18px;overflow-y:auto;font-size:16px;line-height:1.5;
+    -webkit-overflow-scrolling:touch;touch-action:pan-y;}
+  .boksKnapper{padding:12px 18px 16px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;}
+  .knapp{background:var(--gull);color:var(--navy);border:none;border-radius:12px;
+    font-family:'Fredoka One';font-size:16px;padding:11px 18px;cursor:pointer;box-shadow:0 3px 0 #c8862a;}
+  .knapp:active{transform:translateY(2px);box-shadow:0 1px 0 #c8862a;}
+  .knapp.sekundaer{background:#dcd6c6;box-shadow:0 3px 0 #b3ad9c;}
+  .knapp.groenn{background:var(--groenn);color:#fff;box-shadow:0 3px 0 #3f8b3f;}
+  .lukkX{background:none;border:none;color:var(--krem);font-size:24px;cursor:pointer;font-family:'Fredoka One';}
+
+  table.sml{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px;}
+  table.sml th{background:var(--navy);color:var(--gull2);padding:7px 6px;text-align:left;font-size:13px;}
+  table.sml td{padding:7px 6px;border-bottom:1px solid #e3dcc8;}
+  table.sml tr.valgt td{background:#fdeec9;font-weight:700;}
+  .valgKnapp{background:var(--navy2);color:#fff;border:none;border-radius:9px;padding:7px 12px;
+    font-family:'Fredoka One';font-size:13px;cursor:pointer;}
+  .valgKnapp:disabled{opacity:.4;cursor:default;}
+  .infoRad{background:#fdeec9;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px;}
+  .regnestykke{background:var(--navy);color:var(--gull2);border-radius:12px;padding:12px 16px;
+    font-family:'Fredoka One';font-size:17px;margin:10px 0;text-align:center;}
+  input.tall{font-size:20px;font-family:'Fredoka One';padding:10px;border:3px solid var(--navy);
+    border-radius:12px;width:150px;text-align:center;color:var(--navy);background:#fff;}
+  .faneRad{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+  .fane{background:#dcd6c6;border:none;border-radius:10px;padding:8px 14px;
+    font-family:'Fredoka One';font-size:14px;cursor:pointer;color:var(--navy);}
+  .fane.aktiv{background:var(--navy);color:var(--gull2);}
+
+  /* ---------- Minispill ---------- */
+  .rutenett{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0;}
+  .spillKnapp{font-family:'Fredoka One';font-size:22px;padding:16px 6px;border:none;border-radius:14px;
+    background:var(--navy2);color:#fff;cursor:pointer;box-shadow:0 3px 0 #131c3a;}
+  .spillKnapp:active{transform:translateY(2px);}
+  .spillKnapp:disabled{cursor:default;}
+  .rist{animation:rist .3s;}
+  @keyframes rist{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  #plukkFelt{position:relative;height:250px;background:linear-gradient(180deg,#cdeebb,#a8d98f);border-radius:14px;overflow:hidden;margin:10px 0;}
+  .plukkBaesj{position:absolute;font-size:28px;background:none;border:none;cursor:pointer;padding:4px;z-index:2;}
+  .plukkPynt{position:absolute;font-size:32px;opacity:.9;pointer-events:none;}
+
+  /* ---------- Start- og sluttskjerm ---------- */
+  #start{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#87c5e8 0%,#bfe3f5 55%,#8fd07a 55.2%,#6cb95c 100%);padding:16px;overflow-y:auto;}
+  #startBoks{background:var(--krem);border:5px solid var(--gull);border-radius:26px;max-width:620px;
+    width:100%;padding:26px 26px 30px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.3);}
+  #startBoks h1{color:var(--navy);font-size:clamp(26px,5.5vw,40px);margin:0 0 4px;}
+  #startBoks .under{color:var(--roed);font-family:'Fredoka One';font-size:clamp(15px,3vw,19px);margin-bottom:14px;}
+  .vanskKnapp{display:block;width:100%;margin:9px 0;border:none;border-radius:16px;padding:14px;
+    font-family:'Fredoka One';font-size:18px;cursor:pointer;color:#fff;text-align:left;box-shadow:0 4px 0 rgba(0,0,0,.18);}
+  .vanskKnapp small{display:block;font-family:'Atkinson Hyperlegible';font-size:13px;opacity:.92;margin-top:3px;}
+  .vanskKnapp:active{transform:translateY(2px);}
+  #diplom{border:5px dashed var(--gull);border-radius:20px;padding:18px;margin:14px 0;background:#fffdf6;}
+  #diplom h2{margin:4px 0 2px;color:var(--navy);font-size:26px;}
+  .stjerner{font-size:30px;letter-spacing:4px;}
+  .statRute{display:inline-block;background:var(--navy);color:var(--gull2);border-radius:12px;
+    padding:8px 14px;margin:4px;font-family:'Fredoka One';font-size:15px;}
+  .lite{font-size:13px;opacity:.75;}
+
+  /* ---------- Lasteskjerm ---------- */
+  #laster{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:linear-gradient(180deg,#1d2a4d,#27376a);color:var(--krem);
+    transition:opacity .4s ease;text-align:center;padding:20px;}
+  #laster.borte{opacity:0;pointer-events:none;}
+  #laster .lasteMynt{font-size:64px;animation:lasteSnurr 1.4s linear infinite;}
+  #laster h2{font-family:'Fredoka One',cursive;color:var(--gull2);margin:14px 0 6px;font-size:24px;}
+  #laster p{font-size:15px;opacity:.9;margin:0;}
+  .lastePrikker{margin-top:18px;display:flex;gap:9px;}
+  .lastePrikker span{width:13px;height:13px;border-radius:50%;background:var(--gull);animation:lasteHopp 1s infinite;}
+  .lastePrikker span:nth-child(2){animation-delay:.15s;}
+  .lastePrikker span:nth-child(3){animation-delay:.3s;}
+  @keyframes lasteSnurr{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+  @keyframes lasteHopp{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-11px);opacity:1}}
+
+  /* Hindre dobbelttrykk-zoom på knapper og felter (iPad) */
+  button,input,select,textarea,a{touch-action:manipulation;}
+</style>
+</head>
+<body>
+<!-- Lasteskjerm: ligger over alt til spillet er klart -->
+<div id="laster">
+  <div class="lasteMynt">🪙</div>
+  <h2>Laster spillet …</h2>
+  <p>Vent litt – byen bygges opp!</p>
+  <div class="lastePrikker"><span></span><span></span><span></span></div>
+  <p id="lasteHint" style="display:none;margin-top:16px;color:#ffd34d;">Tar dette lang tid? Sjekk internett og last siden på nytt.</p>
+</div>
+<script>
+  // Kjører med en gang (uavhengig av Three.js): vis hint hvis lasting tar veldig lang tid
+  setTimeout(function(){
+    var l=document.getElementById('laster');
+    if(l && l.style.display!=='none' && !l.classList.contains('borte')){
+      var h=document.getElementById('lasteHint'); if(h) h.style.display='block';
+    }
+  },15000);
+</script>
+<div id="spill"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hudBoks">
+    <div class="hudStat"><span class="verdi" id="hudMnd">1/12</span><span class="navn">Måned</span></div>
+    <div class="hudStat"><span class="verdi" id="hudPenger">0 🪙</span><span class="navn">Brukskonto</span></div>
+    <div class="hudStat"><span class="verdi" id="hudTrivsel">50%</span><span class="navn">Trivsel</span>
+      <div class="maaler" id="trivselBar"><div style="width:50%"></div></div></div>
+    <div class="hudStat"><span class="verdi" id="hudMaal">0%</span><span class="navn">Sparemål</span>
+      <div class="maaler" id="maalBar"><div style="width:0%"></div></div></div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="ikonKnapp" id="lydKnapp" title="Lyd av/på">🔊</button>
+    <button class="ikonKnapp" id="hjelpKnapp" title="Hjelp">❓</button>
+    <button class="hudKnapp" id="nesteMndKnapp">Neste måned ➜</button>
+  </div>
+</div>
+
+<!-- Touch-kontroller -->
+<div id="joySone"></div>
+<div id="joyBase"></div>
+<div id="joyKnott"></div>
+<div id="naerSkilt"></div>
+<button id="interakt">Gå inn</button>
+
+<!-- Generell valg-modal -->
+<div class="overlegg" id="valgOverlegg">
+  <div class="boks">
+    <div class="boksTopp"><span id="valgTittel">Tittel</span></div>
+    <div class="boksInnhold" id="valgInnhold"></div>
+    <div class="boksKnapper" id="valgKnapper"></div>
+  </div>
+</div>
+
+<!-- Bygningspanel -->
+<div class="overlegg" id="panelOverlegg">
+  <div class="boks">
+    <div class="boksTopp"><span id="panelTittel">Tittel</span>
+      <button class="lukkX" id="panelLukk">✕</button></div>
+    <div class="boksInnhold" id="panelInnhold"></div>
+  </div>
+</div>
+
+<!-- Minispill: månedens jobboppgave -->
+<div class="overlegg" id="spillOverlegg">
+  <div class="boks">
+    <div class="boksTopp"><span id="spillTittel">Jobb</span></div>
+    <div class="boksInnhold" id="spillInnhold"></div>
+    <div class="boksKnapper" style="justify-content:flex-start;">
+      <button class="knapp sekundaer" id="spillDropp" style="font-size:13px;">Dropp jobben denne måneden (ingen lønn)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Startskjerm -->
+<div id="start">
+  <div id="startBoks">
+    <div style="font-size:54px;">🪙🏠💼</div>
+    <h1>Myntland: Livet på egne bein</h1>
+    <div class="under">Klarer du å balansere din egen økonomi i 12 måneder?</div>
+    <p style="text-align:left;font-size:15px;">
+      Velg jobb, finn et sted å bo, spar i banken og ta smarte valg når livet
+      byr på overraskelser. Målet: nå sparemålet ditt <b>og</b> ha det bra på veien!
+    </p>
+    <p style="text-align:left;font-size:14px;" class="lite">
+      🎮 PC: piltaster/WASD + E for å gå inn &nbsp;|&nbsp; 📱 iPad: styrespak nede til venstre + grønn knapp
+    </p>
+    <button class="vanskKnapp" style="background:var(--groenn);" data-v="lett">
+      🟢 Lett <small>1 500 🪙 i start • sparemål 3 000 🪙 • rolige måneder</small></button>
+    <button class="vanskKnapp" style="background:#e8a13a;" data-v="middels">
+      🟡 Middels <small>1 000 🪙 i start • sparemål 5 000 🪙 • litt av hvert kan skje</small></button>
+    <button class="vanskKnapp" style="background:var(--roed);" data-v="utfordring">
+      🔴 Utfordring <small>800 🪙 i start • sparemål 8 000 🪙 • dyrere priser og flere overraskelser</small></button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   MYNTLAND: LIVET PÅ EGNE BEIN — 3D-økonomispill for 5.–7. trinn
+   Selvstendig fil. Three.js r128 fra CDN. Ingen lagring i skyen.
+   ============================================================ */
+
+// ===================== SPILLDATA =====================
+const JOBBER = {
+  avisbud:   {navn:'Avisbud',          emoji:'📰', lonn:[800,800],   trivsel:+2, tid:'Tidlig morgen, 3 t/uke', krav:null, spill:'sortAviser',
+              info:'Trygg og grei lønn, og du blir i godt humør av morgenlufta.'},
+  butikk:    {navn:'Butikkmedhjelper', emoji:'🛒', lonn:[1500,1500], trivsel:0,  tid:'Ettermiddag, 6 t/uke',  krav:null, spill:'sortVarer',
+              info:'Bedre lønn, men tar mer av fritiden din.'},
+  hundepass: {navn:'Hundepasser',      emoji:'🐕', lonn:[600,2200],  trivsel:+1, tid:'Varierer fra uke til uke', krav:null, spill:'plukkOpp',
+              info:'Lønnen varierer! Noen måneder mange hunder, andre nesten ingen.'},
+  sykkelbud: {navn:'Sykkelbud',        emoji:'🚴', lonn:[2200,2200], trivsel:+1, tid:'Ettermiddag, 5 t/uke', krav:'trafikk', spill:'labyrint',
+              info:'God lønn for raske bein — krever trafikkurset på Skolen (800 🪙).'},
+  regnskap:  {navn:'Regnskapshjelp',   emoji:'🧮', lonn:[2600,2600], trivsel:0,  tid:'Kveld, 4 t/uke', krav:'tall', spill:'kvittering',
+              info:'Du hjelper butikkene med tallene. Krever tallkurset på Skolen (1 500 🪙).'},
+  kode:      {navn:'Kodehjelp',        emoji:'💻', lonn:[3000,3000], trivsel:0,  tid:'Kveld, 5 t/uke', krav:'kode', spill:'regne',
+              info:'Best lønn i byen — krever kodekurset på Skolen (2 000 🪙).'}
+};
+
+// Kurs på Skolen: pris + en liten prøve. laaser = jobben kurset åpner.
+const KURS = {
+  trafikk: {navn:'Trafikkurs', emoji:'🚦', pris:800,  laaser:'Sykkelbud',
+    sp:[{q:'Du sykler 12 km på én time. Hvor mange km kommer du på en halvtime?', svar:6},
+        {q:'Et bud skal levere 3 pakker i Solgata, 4 i Månegata og 5 i Stjernegata. Hvor mange pakker til sammen?', svar:12}]},
+  tall:    {navn:'Tallkurs',   emoji:'🧮', pris:1500, laaser:'Regnskapshjelp',
+    sp:[{q:'Hva er 25 % av 200?', svar:50},
+        {q:'En butikk selger varer for 348 🪙 og 267 🪙. Hva er summen?', svar:615}]},
+  kode:    {navn:'Kodekurs',   emoji:'💻', pris:2000, laaser:'Kodehjelp',
+    sp:[{q:'Tallmønster: 2, 4, 8, 16, … Hva er neste tall?', svar:32},
+        {q:'En kode gjentar 🔴🔵🔵 om og om igjen. Roboten skriver 9 tegn. Hvor mange 🔵 blir det?', svar:6}]}
+};
+// Videreutdanning: +25 % lønn på alle jobber
+const VIDERE = {pris:2500, bonus:0.25,
+  sp:[{q:'Du tjener 2 000 🪙 og bruker 1 500 🪙 i måneden. Hvor mange prosent av lønnen sparer du?', svar:25},
+      {q:'Lønnen din er 2 000 🪙 og øker med 25 %. Hva blir den nye lønnen?', svar:2500}]};
+
+const BOLIGER = {
+  hjemme: {navn:'Bo hjemme',  emoji:'🏡', leie:0,    strom:0,   nett:0,   trivsel:-2,
+           info:'Gratis! Men du føler deg ikke helt på egne bein…'},
+  dele:   {navn:'Dele hybel', emoji:'🚪', leie:600,  strom:200, nett:100, trivsel:+1,
+           info:'Du deler kostnadene med en venn. Litt trangt, men koselig.'},
+  egen:   {navn:'Egen hybel', emoji:'🏢', leie:1300, strom:300, nett:200, trivsel:+3,
+           info:'Helt din egen plass! Men alt på regningen er ditt.'}
+};
+
+const BUTIKKVARER = [
+  {navn:'Pizzakveld',        emoji:'🍕', pris:120, trivsel:6},
+  {navn:'Kinobillett',       emoji:'🎬', pris:150, trivsel:8},
+  {navn:'Plante til rommet', emoji:'🪴', pris:80,  trivsel:4},
+  {navn:'Konsertbillett',    emoji:'🎤', pris:400, trivsel:12},
+  {navn:'Nytt spill',        emoji:'🎮', pris:600, trivsel:15}
+];
+
+const KLUBB = [
+  {navn:'Sjakk-kveld',     emoji:'♟️', trivsel:5},
+  {navn:'Tegnekurs',       emoji:'🎨', trivsel:5},
+  {navn:'Fotball i hallen',emoji:'⚽', trivsel:5}
+];
+
+// Hendelser: t=tekst, valg=[{l:knapp, p:penger, h:trivsel, svar:tilbakemelding}]
+const HENDELSER = [
+  {t:'📱 Uff! Mobilen din falt i bakken og skjermen knuste. Hva gjør du?',
+   valg:[{l:'Reparere (300 🪙)', p:-300, h:0,  svar:'Smart! Reparasjon er ofte billigst.'},
+         {l:'Kjøpe brukt (800 🪙)', p:-800, h:2, svar:'Brukt fungerer fint og sparer deg for mye.'},
+         {l:'Kjøpe ny (2 000 🪙)', p:-2000, h:5, svar:'Ny og fin — men det kostet!'},
+         {l:'Vente med mobil', p:0, h:-8, svar:'Gratis, men kjipt å være uten mobil…'}]},
+  {t:'🎬 Vennene dine skal på kino i helga. Billetten koster 150 🪙.',
+   valg:[{l:'Bli med (150 🪙)', p:-150, h:8, svar:'Kjempekoselig kveld med gjengen!'},
+         {l:'Spare pengene', p:0, h:-4, svar:'Du sparte 150 🪙, men savnet vennene litt.'}]},
+  {t:'🚲 Sykkelen din punkterte på vei hjem.',
+   valg:[{l:'Fikse den (120 🪙)', p:-120, h:0, svar:'Sykkelen ruller igjen!'},
+         {l:'Gå til fots en stund', p:0, h:-5, svar:'Gratis, men beina blir slitne.'}]},
+  {t:'🎉 Du vant 500 🪙 i skolens loddtrekning!',
+   valg:[{l:'Jippi!', p:500, h:5, svar:'Flaks! Husk: uventede penger kan også spares.'}]},
+  {t:'🎂 Bursdagen din! Bestemor sender 300 🪙.',
+   valg:[{l:'Takk, bestemor!', p:300, h:4, svar:'Hurra for deg!'}]},
+  {t:'⚡ Strømprisen har gått opp denne måneden.',
+   bolig:true,
+   valg:[{l:'Au da… (100 🪙 ekstra)', p:-100, h:0, svar:'Strøm koster — det merker alle som betaler egne regninger.'}]},
+  {t:'🎤 Hele vennegjengen skal på konsert. Billetten koster 400 🪙.',
+   valg:[{l:'Bli med (400 🪙)', p:-400, h:12, svar:'For en kveld! Verdt det?'},
+         {l:'Stå over denne gangen', p:0, h:-6, svar:'Du sparte mye, men det var litt kjipt å være hjemme.'}]},
+  {t:'🧥 Genseren din røk opp i sømmen.',
+   valg:[{l:'Kjøpe ny (350 🪙)', p:-350, h:2, svar:'Ny genser, klar for vinteren.'},
+         {l:'Sy den selv (50 🪙 til utstyr)', p:-50, h:2, svar:'Reparere fremfor å kjøpe nytt — bra for lommeboka og kloden!'}]},
+  {t:'🪙 Du fant 100 🪙 på fortauet, og ingen eier dem.',
+   valg:[{l:'Heldig!', p:100, h:2, svar:'Små summer blir store hvis du tar vare på dem.'}]},
+  {t:'🎮 Spillet ALLE snakker om har kommet ut. Det koster 600 🪙.',
+   valg:[{l:'Kjøpe nå (600 🪙)', p:-600, h:10, svar:'Gøy! Men nye spill blir ofte billigere etter noen måneder.'},
+         {l:'Vente på salg', p:0, h:-3, svar:'Tålmodighet lønner seg ofte — salget kommer!'}]},
+  {t:'🦷 Tannlegetime: et lite hull må fikses.',
+   valg:[{l:'Betale regningen (250 🪙)', p:-250, h:0, svar:'Noen utgifter kan man ikke velge bort.'}]},
+  {t:'🍿 Klassen skal på tur og du trenger niste og utstyr.',
+   valg:[{l:'Handle inn (90 🪙)', p:-90, h:3, svar:'Klar for tur!'}]},
+  {t:'💳 En selger tilbyr deg et «kjøp nå, betal senere»-kort. Du kan få en kul ryggsekk uten å betale med en gang.',
+   valg:[{l:'Nei takk, jeg sparer heller', p:0, h:-2, svar:'Lurt! «Betal senere» betyr nesten alltid at det blir dyrere til slutt.'},
+         {l:'Ja, kjøp på kreditt (850 🪙 med renter)', p:-850, h:6, svar:'Au – kreditt koster ekstra. Det du «slipper» å betale nå, betaler du mer for senere.'}]},
+  {t:'🤝 En nabo spør om å låne 200 🪙 til neste måned.',
+   valg:[{l:'Låne bort (200 🪙)', p:-200, h:4, svar:'Fint å hjelpe! Naboen ble veldig glad. Men husk: lån bare bort det du klarer deg uten.'},
+         {l:'Si nei, høflig', p:0, h:-1, svar:'Helt greit å si nei. En god regel: lån bare bort penger du har råd til å miste.'}]},
+  {t:'📬 Det kom en regning i posten du hadde glemt.',
+   valg:[{l:'Betale med en gang (180 🪙)', p:-180, h:0, svar:'Best å betale regninger med en gang – da slipper du gebyr på toppen.'}]},
+  {t:'🧹 Naboen trenger hjelp med å rydde garasjen i helga, og betaler 250 🪙 for jobben.',
+   valg:[{l:'Ta jobben (+250 🪙)', p:250, h:-2, svar:'Litt slitsomt, men ekstra mynter i kassa!'},
+         {l:'Slappe av i helga', p:0, h:3, svar:'Hvile er også viktig. Du valgte fri framfor mynter denne gangen.'}]}
+];
+
+// Tenkestopp: sp=spørsmål, regn=vis regnestykke, fasit=tall, fork=forklaring
+const TENKESTOPP = [
+  {sp:'Jobb A betaler 1 200 🪙 i måneden. Jobb B betaler 350 🪙 i uka (regn 4 uker i måneden). Hvor mye gir jobb B på ett år (12 måneder)?',
+   regn:'350 × 4 × 12 = ?', fasit:16800, fork:'350 × 4 = 1 400 i måneden. 1 400 × 12 = 16 800 🪙. Jobb B lønner seg!'},
+  {sp:'En hybel koster 600 🪙 i leie, 200 🪙 i strøm og 100 🪙 i internett. Hva er totalkostnaden per måned?',
+   regn:'600 + 200 + 100 = ?', fasit:900, fork:'Husk å regne med ALLE kostnadene, ikke bare leien.'},
+  {sp:'Du har 1 000 🪙 på sparekonto og får 5 % rente denne måneden. Hvor mange mynter får du i rente?',
+   regn:'5 % av 1 000 = ?', fasit:50, fork:'5 % betyr 5 av hver 100. 1 000 ÷ 100 × 5 = 50 🪙.'},
+  {sp:'Du kjøpte fond for 500 🪙. Nå er det verdt 650 🪙. Hvor stor er gevinsten din?',
+   regn:'650 − 500 = ?', fasit:150, fork:'Gevinst = det fondet er verdt nå minus det du betalte.'},
+  {sp:'Du går på kino 3 ganger denne måneden. Hver billett koster 150 🪙. Hva koster det til sammen?',
+   regn:'3 × 150 = ?', fasit:450, fork:'Småutgifter som gjentar seg blir fort store summer.'},
+  {sp:'Du sparer 200 🪙 hver måned i ett helt år. Hvor mye har du spart etter 12 måneder (uten rente)?',
+   regn:'200 × 12 = ?', fasit:2400, fork:'Faste, små sparebeløp blir til mye over tid!'},
+  {sp:'En ny mobil koster 2 000 🪙. Å reparere den gamle koster 300 🪙. Hvor mye sparer du på å reparere?',
+   regn:'2 000 − 300 = ?', fasit:1700, fork:'Å reparere fremfor å kjøpe nytt sparer ofte mest penger.'},
+  {sp:'Strømmen øker fra 200 🪙 til 250 🪙 i måneden. Hvor mye mer betaler du på ett år?',
+   regn:'(250 − 200) × 12 = ?', fasit:600, fork:'50 🪙 mer i måneden høres lite ut — men blir 600 🪙 på et år.'}
+];
+
+const VANSKER = {
+  lett:       {start:1500, maal:3000, hendelser:1, faktor:0.8, fondVol:0.06, navn:'Lett'},
+  middels:    {start:1000, maal:5000, hendelser:2, faktor:1.0, fondVol:0.10, navn:'Middels'},
+  utfordring: {start:800,  maal:8000, hendelser:3, faktor:1.2, fondVol:0.16, navn:'Utfordring'}
+};
+
+// ===================== TILSTAND =====================
+let S = null;          // spilltilstand
+let uiAapen = true;    // blokkerer bevegelse når meny/modal er åpen
+let hendelsesPott = [], tenkePott = [];
+
+function nyttSpill(v){
+  const V = VANSKER[v];
+  S = {
+    vansk: v, V: V,
+    mnd: 1, penger: V.start, trivsel: 50,
+    jobb: null, bolig: 'hjemme',
+    spare: 0, fondAndeler: 0, fondKurs: 100, fondHist: [100],
+    fondBetalt: 0, kursBestatt: {}, videre: false,
+    klubbBrukt: false, riktigeTenk: 0, antallTenk: 0,
+    kjoept: 0, hendelseslogg: [],
+    prisSjokk: 1, bonusBrukt: false
+  };
+  hendelsesPott = HENDELSER.slice();
+  tenkePott = TENKESTOPP.slice();
+  bland(hendelsesPott); bland(tenkePott);
+}
+function bland(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} }
+function fmt(n){ return Math.round(n).toLocaleString('nb-NO'); }
+function fondVerdi(){ return S.fondAndeler * S.fondKurs; }
+function spareSum(){ return S.spare + fondVerdi(); }
+function pris(p){ return Math.round(p * S.V.faktor * (S.prisSjokk||1) / 10) * 10; }
+
+// ===================== LYD (WebAudio) =====================
+let lydPaa = true, AC = null;
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+function tone(f, t0, dur, type, vol){
+  if(!lydPaa || !ac()) return;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type||'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(vol||0.12, AC.currentTime+t0);
+  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime+t0+dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(AC.currentTime+t0); o.stop(AC.currentTime+t0+dur+0.05);
+}
+function lydMynt(){ tone(880,0,.09,'square',.08); tone(1320,.09,.14,'square',.08); }
+function lydDunk(){ tone(140,0,.18,'triangle',.2); tone(90,.05,.2,'triangle',.15); }
+function lydSuksess(){ [523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.18,'sine',.12)); }
+function lydFeil(){ tone(220,0,.2,'sawtooth',.08); tone(180,.15,.25,'sawtooth',.08); }
+function lydKlikk(){ tone(600,0,.05,'square',.05); }
+
+// ===================== UI-HJELPERE =====================
+const el = id => document.getElementById(id);
+
+function oppdaterHUD(){
+  if(!S) return;
+  el('hudMnd').textContent = S.mnd + '/12';
+  el('hudPenger').textContent = fmt(S.penger) + ' 🪙';
+  if(S.penger < 0) el('hudPenger').style.color = '#ff8a7a'; else el('hudPenger').style.color = '';
+  el('hudTrivsel').textContent = Math.round(S.trivsel) + '%';
+  el('trivselBar').firstElementChild.style.width = Math.max(0,Math.min(100,S.trivsel)) + '%';
+  const p = Math.min(100, spareSum() / S.V.maal * 100);
+  el('hudMaal').textContent = Math.round(p) + '%';
+  el('maalBar').firstElementChild.style.width = p + '%';
+}
+function justerTrivsel(d){ S.trivsel = Math.max(0, Math.min(100, S.trivsel + d)); }
+
+// Promise-basert valg-modal. knapper=[{l:tekst, v:verdi, klass}]
+// Løses med {v, input} der input = verdien i #modalInput hvis den finnes.
+function visValg(tittel, html, knapper){
+  return new Promise(res=>{
+    uiAapen = true;
+    el('valgTittel').textContent = tittel;
+    el('valgInnhold').innerHTML = html;
+    const kn = el('valgKnapper'); kn.innerHTML = '';
+    knapper.forEach(k=>{
+      const b = document.createElement('button');
+      b.className = 'knapp' + (k.klass ? ' '+k.klass : '');
+      b.textContent = k.l;
+      b.addEventListener('click', ()=>{
+        lydKlikk();
+        const inp = document.getElementById('modalInput');
+        const input = inp ? inp.value : null;
+        el('valgOverlegg').style.display = 'none';
+        uiAapen = !!(el('panelOverlegg').style.display === 'flex');
+        res({v:k.v, input:input});
+      });
+      kn.appendChild(b);
+    });
+    el('valgOverlegg').style.display = 'flex';
+  });
+}
+async function visInfo(tittel, html, knappetekst){
+  await visValg(tittel, html, [{l: knappetekst || 'OK', v:'ok'}]);
+}
+
+// Bygningspanel (åpen meny med egne knapper inni)
+function visPanel(tittel, html){
+  uiAapen = true;
+  el('panelTittel').textContent = tittel;
+  el('panelInnhold').innerHTML = html;
+  el('panelOverlegg').style.display = 'flex';
+}
+function lukkPanel(){
+  el('panelOverlegg').style.display = 'none';
+  uiAapen = false;
+}
+
+// ===================== THREE.JS — BYEN =====================
+let scene, kamera, renderer, spiller, klokke;
+const taster = {};
+const joy = {x:0, y:0, aktiv:false};
+let naerBygg = null;
+let naerNPC = null;
+const BYGG = [
+  {id:'jobb',   navn:'Jobbsenteret',   emoji:'💼', x:-13, z:-11, farge:0x5b8def},
+  {id:'bolig',  navn:'Boligkontoret',  emoji:'🏠', x: 13, z:-11, farge:0xe2725b},
+  {id:'bank',   navn:'Banken',         emoji:'🏦', x:-13, z:  9, farge:0xf6b23a},
+  {id:'butikk', navn:'Butikken',       emoji:'🛒', x: 13, z:  9, farge:0x6cc24a},
+  {id:'klubb',  navn:'Fritidsklubben', emoji:'🎲', x:  0, z:-19, farge:0xb07ad6},
+  {id:'skole',  navn:'Skolen',         emoji:'🏫', x:  0, z: 20, farge:0x3aa6a0}
+];
+const GRENSE = 26;
+let skyer = [];
+let npcer = [], fugler = [], biler = [];
+
+// --- Vandrende monstre, fugler, biler, torgbod (liv i byen) ---
+const NPCDATA = [
+  {navn:'Spare-Snik', emoji:'🟢', farge:0x5cb85c, type:'vanlig', replikker:[
+    'Hver måned gir sparekontoen 5 % rente. 1 000 mynter blir 1 050 – helt gratis!',
+    'Jeg sparer litt hver eneste måned. Små beløp blir store over tid.',
+    'Vet du hva som er gøyere enn å bruke alt med en gang? Å se sparekontoen vokse.',
+    'Renter på renter er som en snøball: den ruller og blir større og større.']},
+  {navn:'Sløsa', emoji:'🔴', farge:0xe2725b, type:'vanlig', replikker:[
+    'Åh! Har du sett det NYE spillet? Du MÅ ha det… eller? Hmm.',
+    'Jeg kjøpte tre pizzaer i går. Og en i forgårs. Nå er lommeboka tom…',
+    'Salg! Salg! …men trenger jeg egentlig en femte lue?',
+    'Det er så lett å bruke penger. Det vanskelige er å la være.']},
+  {navn:'Fond-Frida', emoji:'🟣', farge:0xb07ad6, type:'vanlig', replikker:[
+    'Fondet mitt steg 8 % forrige måned! …men falt 6 % måneden før. Opp og ned!',
+    'Fond kan gi mer enn sparekontoen – men husk at kursen også kan falle.',
+    'Aldri putt ALT i fond. Ha litt trygt på sparekontoen også.',
+    'Risiko betyr at du kan vinne mer – eller tape. Tør du?']},
+  {navn:'Lån-Lars', emoji:'🟡', farge:0xf0a93a, type:'vanlig', replikker:[
+    'Lån er lett å ta… men renta spiser deg opp hvis du ikke betaler ned.',
+    'Jeg lånte for å kjøpe noe jeg ikke trengte. Dumt. Ikke gjør som meg.',
+    'Havner brukskontoen i minus, koster det rente hver måned. Pass på!',
+    'Tenk deg godt om før du låner – både når du låner, og når du låner bort.']},
+  {navn:'Bonus-Bork', emoji:'⭐', farge:0xffd34d, type:'bonus', replikker:[
+    'Hei! Klarer du en regneoppgave, gir jeg deg mynter!']}
+];
+const NPCWP = [[-13,-4],[13,-4],[-13,4],[13,4],[0,-13],[0,13],[-9,0],[9,0],[6,6]];
+function nyttMaal(){ const w = NPCWP[Math.floor(Math.random()*NPCWP.length)]; return new THREE.Vector3(w[0],0,w[1]); }
+
+function lagMonster(farge){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({color:farge});
+  const kropp = new THREE.Mesh(new THREE.SphereGeometry(0.6,12,10), mat);
+  kropp.scale.y = 1.2; kropp.position.y = 0.9; kropp.castShadow = true; g.add(kropp);
+  const oyeMat = new THREE.MeshLambertMaterial({color:0xffffff});
+  const pupillMat = new THREE.MeshLambertMaterial({color:0x222222});
+  for(const dx of [-0.22, 0.22]){
+    const oye = new THREE.Mesh(new THREE.SphereGeometry(0.16,10,8), oyeMat);
+    oye.position.set(dx, 1.15, 0.48); g.add(oye);
+    const pup = new THREE.Mesh(new THREE.SphereGeometry(0.07,8,6), pupillMat);
+    pup.position.set(dx, 1.15, 0.62); g.add(pup);
+  }
+  for(const dx of [-0.3, 0.3]){
+    const fot = new THREE.Mesh(new THREE.SphereGeometry(0.2,8,6), mat);
+    fot.position.set(dx, 0.15, 0.08); fot.scale.z = 1.3; g.add(fot);
+  }
+  const dusk = new THREE.Mesh(new THREE.SphereGeometry(0.13,8,6), mat);
+  dusk.position.set(0, 1.7, -0.1); g.add(dusk);
+  return g;
+}
+function lagFugl(){
+  const g = new THREE.Group();
+  const m = new THREE.MeshLambertMaterial({color:0x33425f});
+  const v1 = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.07,0.32), m); v1.position.x = -0.45; v1.rotation.z = 0.4; g.add(v1);
+  const v2 = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.07,0.32), m); v2.position.x = 0.45; v2.rotation.z = -0.4; g.add(v2);
+  return g;
+}
+function lagBil(farge){
+  const g = new THREE.Group();
+  const kropp = new THREE.Mesh(new THREE.BoxGeometry(1.5,0.7,2.6), new THREE.MeshLambertMaterial({color:farge}));
+  kropp.position.y = 0.5; kropp.castShadow = true; g.add(kropp);
+  const tak = new THREE.Mesh(new THREE.BoxGeometry(1.3,0.6,1.3), new THREE.MeshLambertMaterial({color:farge}));
+  tak.position.set(0, 1.05, -0.1); g.add(tak);
+  const hjulMat = new THREE.MeshLambertMaterial({color:0x1a1a1a});
+  for(const hj of [[-0.78,0.85],[0.78,0.85],[-0.78,-0.85],[0.78,-0.85]]){
+    const h = new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,0.22,10), hjulMat);
+    h.rotation.z = Math.PI/2; h.position.set(hj[0], 0.3, hj[1]); g.add(h);
+  }
+  return g;
+}
+function lagTorgbod(){
+  const g = new THREE.Group();
+  const disk = new THREE.Mesh(new THREE.BoxGeometry(2.4,1,1.2), new THREE.MeshLambertMaterial({color:0xd9a066}));
+  disk.position.y = 0.5; disk.castShadow = true; g.add(disk);
+  const stolpe = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,2,8), new THREE.MeshLambertMaterial({color:0x6b4a2e}));
+  stolpe.position.y = 1.5; g.add(stolpe);
+  const parasoll = new THREE.Mesh(new THREE.ConeGeometry(2,0.8,12), new THREE.MeshLambertMaterial({color:0xe2725b}));
+  parasoll.position.y = 2.6; parasoll.castShadow = true; g.add(parasoll);
+  for(const dx of [-0.6, -0.2, 0.2]){
+    const eple = new THREE.Mesh(new THREE.SphereGeometry(0.16,8,6), new THREE.MeshLambertMaterial({color:0xcc3b3b}));
+    eple.position.set(dx, 1.12, 0.25); g.add(eple);
+  }
+  return g;
+}
+
+function lagSkilt(tekst){
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128;
+  const x = c.getContext('2d');
+  x.fillStyle = 'rgba(29,42,77,0.92)';
+  const r = 28;
+  x.beginPath();
+  x.moveTo(r,4); x.lineTo(512-r,4); x.quadraticCurveTo(508,4,508,4+r);
+  x.lineTo(508,124-r); x.quadraticCurveTo(508,124,512-r,124);
+  x.lineTo(r,124); x.quadraticCurveTo(4,124,4,124-r);
+  x.lineTo(4,4+r); x.quadraticCurveTo(4,4,r,4); x.closePath(); x.fill();
+  x.strokeStyle = '#f6b23a'; x.lineWidth = 6; x.stroke();
+  x.fillStyle = '#fff7e6';
+  x.font = "62px 'Fredoka One', sans-serif";
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(tekst, 256, 70);
+  const tex = new THREE.CanvasTexture(c);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthTest:false}));
+  sp.scale.set(7, 1.75, 1);
+  return sp;
+}
+
+function lagBygning(b){
+  const g = new THREE.Group();
+  const kropp = new THREE.Mesh(
+    new THREE.BoxGeometry(5.5, 4, 5),
+    new THREE.MeshLambertMaterial({color:b.farge}));
+  kropp.position.y = 2; kropp.castShadow = true; kropp.receiveShadow = true;
+  g.add(kropp);
+  const tak = new THREE.Mesh(
+    new THREE.ConeGeometry(4.6, 2.4, 4),
+    new THREE.MeshLambertMaterial({color:0x8a4a3a}));
+  tak.position.y = 5.2; tak.rotation.y = Math.PI/4; tak.castShadow = true;
+  g.add(tak);
+  const doer = new THREE.Mesh(
+    new THREE.BoxGeometry(1.4, 2.2, 0.25),
+    new THREE.MeshLambertMaterial({color:0x4a3220}));
+  doer.position.set(0, 1.1, 2.55);
+  g.add(doer);
+  for(const dx of [-1.7, 1.7]){
+    const v = new THREE.Mesh(
+      new THREE.BoxGeometry(1.1, 1.1, 0.2),
+      new THREE.MeshLambertMaterial({color:0xcfeaff, emissive:0x223344}));
+    v.position.set(dx, 2.4, 2.55);
+    g.add(v);
+  }
+  const skilt = lagSkilt(b.emoji + ' ' + b.navn);
+  skilt.position.y = 7.2;
+  g.add(skilt);
+  g.position.set(b.x, 0, b.z);
+  return g;
+}
+
+function lagTre(x, z){
+  const g = new THREE.Group();
+  const stamme = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.25, 0.35, 1.4, 7),
+    new THREE.MeshLambertMaterial({color:0x6b4a2e}));
+  stamme.position.y = 0.7; stamme.castShadow = true;
+  g.add(stamme);
+  const krone = new THREE.Mesh(
+    new THREE.SphereGeometry(1.1 + Math.random()*0.5, 8, 7),
+    new THREE.MeshLambertMaterial({color: Math.random() > .5 ? 0x4f9e45 : 0x6cb95c}));
+  krone.position.y = 2.1; krone.castShadow = true;
+  g.add(krone);
+  g.position.set(x, 0, z);
+  return g;
+}
+
+function lagSky(){
+  const g = new THREE.Group();
+  const m = new THREE.MeshLambertMaterial({color:0xffffff});
+  for(let i=0;i<3;i++){
+    const s = new THREE.Mesh(new THREE.SphereGeometry(1.2+Math.random(), 8, 7), m);
+    s.position.set(i*1.6-1.6, Math.random()*0.4, Math.random()*0.8);
+    g.add(s);
+  }
+  g.position.set(Math.random()*70-35, 16+Math.random()*5, Math.random()*70-35);
+  return g;
+}
+
+function lagSpiller(){
+  const g = new THREE.Group();
+  const kroppMat = new THREE.MeshLambertMaterial({color:0xf07a2a});
+  const kropp = new THREE.Mesh(new THREE.SphereGeometry(0.75, 14, 12), kroppMat);
+  kropp.scale.y = 1.25; kropp.position.y = 1.05; kropp.castShadow = true;
+  g.add(kropp);
+  const oyeMat = new THREE.MeshLambertMaterial({color:0xffffff});
+  const pupillMat = new THREE.MeshLambertMaterial({color:0x222222});
+  for(const dx of [-0.27, 0.27]){
+    const oye = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), oyeMat);
+    oye.position.set(dx, 1.35, 0.6);
+    g.add(oye);
+    const pup = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), pupillMat);
+    pup.position.set(dx, 1.35, 0.77);
+    g.add(pup);
+  }
+  const fotMat = new THREE.MeshLambertMaterial({color:0xc85f1c});
+  for(const dx of [-0.35, 0.35]){
+    const fot = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 6), fotMat);
+    fot.position.set(dx, 0.18, 0.1); fot.scale.z = 1.4;
+    g.add(fot);
+  }
+  const dusk = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), kroppMat);
+  dusk.position.set(0, 2.0, -0.15);
+  g.add(dusk);
+  return g;
+}
+
+function initTre(){
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87c5e8);
+  scene.fog = new THREE.Fog(0x87c5e8, 40, 95);
+
+  kamera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 200);
+  kamera.position.set(0, 15, 14);
+
+  renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  el('spill').appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+  const sol = new THREE.DirectionalLight(0xfff3d6, 0.85);
+  sol.position.set(18, 30, 12);
+  sol.castShadow = true;
+  sol.shadow.mapSize.set(2048, 2048);
+  sol.shadow.camera.left = -35; sol.shadow.camera.right = 35;
+  sol.shadow.camera.top = 35; sol.shadow.camera.bottom = -35;
+  scene.add(sol);
+
+  // Bakke
+  const bakke = new THREE.Mesh(
+    new THREE.PlaneGeometry(120, 120),
+    new THREE.MeshLambertMaterial({color:0x7cc06a}));
+  bakke.rotation.x = -Math.PI/2; bakke.receiveShadow = true;
+  scene.add(bakke);
+
+  // Veier (kors + ring rundt torget)
+  const veiMat = new THREE.MeshLambertMaterial({color:0xb9b2a4});
+  const v1 = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 56), veiMat);
+  v1.rotation.x = -Math.PI/2; v1.position.y = 0.02; v1.receiveShadow = true;
+  scene.add(v1);
+  const v2 = new THREE.Mesh(new THREE.PlaneGeometry(56, 4.5), veiMat);
+  v2.rotation.x = -Math.PI/2; v2.position.y = 0.02; v2.receiveShadow = true;
+  scene.add(v2);
+  const torg = new THREE.Mesh(new THREE.CircleGeometry(7, 28), veiMat);
+  torg.rotation.x = -Math.PI/2; torg.position.y = 0.03;
+  scene.add(torg);
+
+  // Fontene midt på torget
+  const fontene = new THREE.Group();
+  const kar = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.4, 0.7, 18),
+    new THREE.MeshLambertMaterial({color:0x9a938a}));
+  kar.position.y = 0.35; kar.castShadow = true;
+  fontene.add(kar);
+  const vann = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 1.9, 0.15, 18),
+    new THREE.MeshLambertMaterial({color:0x57b7e0}));
+  vann.position.y = 0.72;
+  fontene.add(vann);
+  const soyle = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 1.4, 10),
+    new THREE.MeshLambertMaterial({color:0x9a938a}));
+  soyle.position.y = 1.3;
+  fontene.add(soyle);
+  const mynt = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.16, 20),
+    new THREE.MeshLambertMaterial({color:0xf6b23a, emissive:0x6b4a00}));
+  mynt.rotation.z = Math.PI/2; mynt.position.y = 2.4;
+  mynt.userData.snurr = true;
+  fontene.add(mynt);
+  scene.add(fontene);
+
+  // Bygninger
+  for(const b of BYGG) scene.add(lagBygning(b));
+
+  // Trær spredt rundt (utenfor veier og bygg)
+  const trePos = [[-20,-2],[-22,14],[20,2],[22,-16],[-7,16],[7,17],[-19,-19],[20,16],[-9,-23],[9,-24],[24,8],[-24,-8]];
+  for(const [x,z] of trePos) scene.add(lagTre(x, z));
+
+  // Skyer
+  for(let i=0;i<6;i++){ const s = lagSky(); skyer.push(s); scene.add(s); }
+
+  // Torgbod ved fontenen
+  const bod = lagTorgbod(); bod.position.set(5.4, 0, 5.4); bod.rotation.y = -0.7; scene.add(bod);
+
+  // Vandrende monstre
+  npcer = [];
+  NPCDATA.forEach((dd, i)=>{
+    const grp = lagMonster(dd.farge);
+    const wp = NPCWP[i % NPCWP.length];
+    grp.position.set(wp[0], 0, wp[1]);
+    npcer.push({navn:dd.navn, emoji:dd.emoji, type:dd.type, replikker:dd.replikker,
+                grp:grp, maal:nyttMaal(), fart:2.0 + Math.random()*1.4, fase:Math.random()*7});
+    scene.add(grp);
+  });
+
+  // Fugler
+  fugler = [];
+  for(let i=0;i<5;i++){
+    const f = lagFugl();
+    f.position.set(Math.random()*70-35, 9+Math.random()*5, Math.random()*70-35);
+    f.userData.fart = 3 + Math.random()*2;
+    fugler.push(f); scene.add(f);
+  }
+
+  // Biler
+  biler = [];
+  const bil1 = lagBil(0xe24b4b); bil1.position.set(5, 0, 1.4);
+  bil1.userData = {akse:'x', dir:1, fart:6, lo:5, hi:26}; biler.push(bil1); scene.add(bil1);
+  const bil2 = lagBil(0x4b7be2); bil2.position.set(-5, 0, -1.4);
+  bil2.userData = {akse:'x', dir:-1, fart:5, lo:-26, hi:-5}; biler.push(bil2); scene.add(bil2);
+
+  // Spiller
+  spiller = lagSpiller();
+  spiller.position.set(0, 0, 12);
+  scene.add(spiller);
+
+  klokke = new THREE.Clock();
+  addEventListener('resize', ()=>{
+    kamera.aspect = innerWidth/innerHeight;
+    kamera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+}
+
+// ===================== KONTROLLER =====================
+addEventListener('keydown', e=>{
+  taster[e.key.toLowerCase()] = true;
+  if((e.key === 'e' || e.key === 'E' || e.key === 'Enter') && !uiAapen){
+    gjorInteraksjon();
+  }
+  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+});
+addEventListener('keyup', e=>{ taster[e.key.toLowerCase()] = false; });
+
+// Virtuell styrespak (iPad/touch)
+const joySone = el('joySone'), joyBase = el('joyBase'), joyKnott = el('joyKnott');
+let joyId = null, joyOrigo = {x:0, y:0};
+const JOYR = 50;
+
+function joyStart(x, y){
+  joyOrigo = {x, y}; joy.aktiv = true;
+  joyBase.style.left = (x-55)+'px'; joyBase.style.top = (y-55)+'px'; joyBase.style.display = 'block';
+  joyKnott.style.left = (x-26)+'px'; joyKnott.style.top = (y-26)+'px'; joyKnott.style.display = 'block';
+}
+function joyFlytt(x, y){
+  let dx = x - joyOrigo.x, dy = y - joyOrigo.y;
+  const d = Math.hypot(dx, dy);
+  if(d > JOYR){ dx = dx/d*JOYR; dy = dy/d*JOYR; }
+  joyKnott.style.left = (joyOrigo.x+dx-26)+'px';
+  joyKnott.style.top = (joyOrigo.y+dy-26)+'px';
+  joy.x = dx/JOYR; joy.y = dy/JOYR;
+}
+function joySlutt(){
+  joy.aktiv = false; joy.x = 0; joy.y = 0; joyId = null;
+  joyBase.style.display = 'none'; joyKnott.style.display = 'none';
+}
+joySone.addEventListener('touchstart', e=>{
+  if(uiAapen) return;
+  const t = e.changedTouches[0];
+  joyId = t.identifier;
+  joyStart(t.clientX, t.clientY);
+  e.preventDefault();
+}, {passive:false});
+addEventListener('touchmove', e=>{
+  if(joyId === null) return;
+  for(const t of e.changedTouches){
+    if(t.identifier === joyId){ joyFlytt(t.clientX, t.clientY); e.preventDefault(); }
+  }
+}, {passive:false});
+addEventListener('touchend', e=>{
+  for(const t of e.changedTouches){ if(t.identifier === joyId) joySlutt(); }
+});
+addEventListener('touchcancel', joySlutt);
+
+el('interakt').addEventListener('click', ()=>{
+  if(!uiAapen){ ac(); gjorInteraksjon(); }
+});
+
+const ERTOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+// ===================== SPILLSLØYFE =====================
+const FART = 9;
+function sloyfe(){
+  requestAnimationFrame(sloyfe);
+  const dt = Math.min(klokke.getDelta(), 0.12);
+  const t = klokke.elapsedTime;
+
+  // Bevegelse
+  let mx = 0, mz = 0;
+  if(!uiAapen){
+    if(taster['arrowup'] || taster['w']) mz -= 1;
+    if(taster['arrowdown'] || taster['s']) mz += 1;
+    if(taster['arrowleft'] || taster['a']) mx -= 1;
+    if(taster['arrowright'] || taster['d']) mx += 1;
+    mx += joy.x; mz += joy.y;
+  }
+  const ml = Math.hypot(mx, mz);
+  if(ml > 0.08){
+    if(ml > 1){ mx /= ml; mz /= ml; }
+    spiller.position.x += mx * FART * dt;
+    spiller.position.z += mz * FART * dt;
+    spiller.rotation.y = Math.atan2(mx, mz);
+    spiller.position.y = Math.abs(Math.sin(t*11)) * 0.22; // hoppende gange
+  } else {
+    spiller.position.y *= 0.8;
+  }
+
+  // Hold spilleren innenfor byen
+  spiller.position.x = Math.max(-GRENSE, Math.min(GRENSE, spiller.position.x));
+  spiller.position.z = Math.max(-GRENSE, Math.min(GRENSE, spiller.position.z));
+
+  // Enkel kollisjon: skyv ut av bygninger og fontene
+  const hindre = BYGG.map(b=>({x:b.x, z:b.z, r:4.2})).concat([{x:0, z:0, r:3.2}]);
+  for(const h of hindre){
+    const dx = spiller.position.x - h.x, dz = spiller.position.z - h.z;
+    const d = Math.hypot(dx, dz);
+    if(d < h.r && d > 0.001){
+      spiller.position.x = h.x + dx/d*h.r;
+      spiller.position.z = h.z + dz/d*h.r;
+    }
+  }
+
+  // Liv i byen: monstre, fugler, biler
+  for(const n of npcer){
+    const p = n.grp.position;
+    const dx = n.maal.x - p.x, dz = n.maal.z - p.z;
+    const d = Math.hypot(dx, dz);
+    if(d < 0.6){ n.maal = nyttMaal(); }
+    else {
+      p.x += dx/d * n.fart * dt;
+      p.z += dz/d * n.fart * dt;
+      n.grp.rotation.y = Math.atan2(dx, dz);
+      p.y = Math.abs(Math.sin(t*9 + n.fase)) * 0.16;
+    }
+    for(const b of BYGG){
+      const ex = p.x - b.x, ez = p.z - b.z, ed = Math.hypot(ex, ez);
+      if(ed < 4.0 && ed > 0.001){ p.x = b.x + ex/ed*4.0; p.z = b.z + ez/ed*4.0; n.maal = nyttMaal(); }
+    }
+  }
+  for(const f of fugler){
+    f.position.x += f.userData.fart * dt;
+    if(f.position.x > 42){ f.position.x = -42; f.position.z = Math.random()*70-35; }
+    if(f.children[0]){ f.children[0].rotation.z = 0.4 + Math.sin(t*8)*0.3; f.children[1].rotation.z = -0.4 - Math.sin(t*8)*0.3; }
+  }
+  for(const c of biler){
+    const u = c.userData;
+    if(u.akse === 'x'){
+      c.position.x += u.dir * u.fart * dt;
+      if(c.position.x > u.hi){ c.position.x = u.hi; u.dir = -1; }
+      if(c.position.x < u.lo){ c.position.x = u.lo; u.dir = 1; }
+      c.rotation.y = u.dir > 0 ? -Math.PI/2 : Math.PI/2;
+    } else {
+      c.position.z += u.dir * u.fart * dt;
+      if(c.position.z > u.hi){ c.position.z = u.hi; u.dir = -1; }
+      if(c.position.z < u.lo){ c.position.z = u.lo; u.dir = 1; }
+      c.rotation.y = u.dir > 0 ? 0 : Math.PI;
+    }
+  }
+
+  // Nærhet til bygninger og monstre
+  let naermestB = null, dBmin = 6.2;
+  for(const b of BYGG){
+    const d = Math.hypot(spiller.position.x - b.x, spiller.position.z - b.z);
+    if(d < dBmin){ dBmin = d; naermestB = b; }
+  }
+  let naermestN = null, dNmin = 4.6;
+  for(const n of npcer){
+    const d = Math.hypot(spiller.position.x - n.grp.position.x, spiller.position.z - n.grp.position.z);
+    if(d < dNmin){ dNmin = d; naermestN = n; }
+  }
+  let nyB = null, nyN = null;
+  if(naermestN && dNmin <= dBmin) nyN = naermestN;
+  else if(naermestB) nyB = naermestB;
+  if(nyB !== naerBygg || nyN !== naerNPC){
+    naerBygg = nyB; naerNPC = nyN;
+    if(!uiAapen && (naerBygg || naerNPC)){
+      if(naerNPC){
+        el('naerSkilt').innerHTML = naerNPC.emoji + ' <b>' + naerNPC.navn + '</b><br>' +
+          (ERTOUCH ? 'Trykk den grønne knappen' : 'Trykk <b>E</b>') + ' for å snakke';
+        el('interakt').textContent = 'Snakk';
+      } else {
+        el('naerSkilt').innerHTML = naerBygg.emoji + ' <b>' + naerBygg.navn + '</b><br>' +
+          (ERTOUCH ? 'Trykk den grønne knappen' : 'Trykk <b>E</b> for å gå inn');
+        el('interakt').textContent = 'Gå inn';
+      }
+      el('naerSkilt').style.display = 'block';
+      el('interakt').style.display = 'block';
+    } else {
+      el('naerSkilt').style.display = 'none';
+      el('interakt').style.display = 'none';
+    }
+  }
+  if(uiAapen){ el('naerSkilt').style.display = 'none'; el('interakt').style.display = 'none'; }
+  else if(naerBygg || naerNPC){ el('naerSkilt').style.display = 'block'; el('interakt').style.display = 'block'; }
+
+  // Kamera følger
+  const maalPos = new THREE.Vector3(spiller.position.x, 15, spiller.position.z + 14);
+  kamera.position.lerp(maalPos, 0.08);
+  kamera.lookAt(spiller.position.x, 1.5, spiller.position.z);
+
+  // Skyer driver, mynten snurrer
+  for(const s of skyer){
+    s.position.x += dt * 0.6;
+    if(s.position.x > 45) s.position.x = -45;
+  }
+  scene.traverse(o=>{ if(o.userData && o.userData.snurr) o.rotation.y += dt*1.5; });
+
+  renderer.render(scene, kamera);
+}
+
+// ===================== BYGNINGSMENYER =====================
+function aapneBygg(id){
+  lydKlikk();
+  if(id === 'jobb') jobbMeny();
+  else if(id === 'bolig') boligMeny();
+  else if(id === 'bank') bankMeny('konto');
+  else if(id === 'butikk') butikkMeny();
+  else if(id === 'klubb') klubbMeny();
+  else if(id === 'skole') skoleMeny('kurs');
+}
+
+// ----- Interaksjon: bygg eller monster -----
+function gjorInteraksjon(){
+  if(uiAapen) return;
+  if(naerNPC) snakkMedNPC(naerNPC);
+  else if(naerBygg) aapneBygg(naerBygg.id);
+}
+async function snakkMedNPC(n){
+  lydKlikk();
+  if(n.type === 'bonus') return bonusMonster(n);
+  const linje = n.replikker[Math.floor(Math.random()*n.replikker.length)];
+  await visInfo(n.emoji + ' ' + n.navn, '<p style="font-size:17px;">«' + linje + '»</p>');
+}
+function lagBonusSporsmal(){
+  const t = Math.floor(Math.random()*3);
+  if(t === 0){ const a = 3+Math.floor(Math.random()*8), b = 3+Math.floor(Math.random()*8); return {q:a+' × '+b+' = ?', svar:a*b}; }
+  if(t === 1){ const a = (1+Math.floor(Math.random()*9))*100, pp = [10,20,25,50][Math.floor(Math.random()*4)]; return {q:pp+' % av '+fmt(a)+' = ?', svar:Math.round(a*pp/100)}; }
+  const a = 120+Math.floor(Math.random()*80), b = 20+Math.floor(Math.random()*60); return {q:a+' − '+b+' = ?', svar:a-b};
+}
+async function bonusMonster(n){
+  if(S.bonusBrukt){
+    await visInfo(n.emoji + ' ' + n.navn, '<p>«Du har allerede tjent bonusen din denne måneden. Kom tilbake neste måned!»</p>');
+    return;
+  }
+  const o = lagBonusSporsmal();
+  const r = await visValg(n.emoji + ' ' + n.navn + ' – bonus!',
+    '<p>«Klarer du denne, gir jeg deg 100 mynter!»</p>' +
+    '<div class="regnestykke">' + o.q + '</div>' +
+    '<p style="text-align:center;"><input class="tall" id="modalInput" type="number" inputmode="numeric" placeholder="Svar"></p>',
+    [{l:'Svar!', v:'svar', klass:'groenn'}]);
+  S.bonusBrukt = true;
+  if(parseInt(r.input, 10) === o.svar){
+    S.penger += 100; lydSuksess(); oppdaterHUD();
+    await visInfo('Riktig! 🎉', '<div class="regnestykke">+100 🪙</div><p>«Godt regnet! Vi ses neste måned.»</p>');
+  } else {
+    lydFeil();
+    await visInfo('Nesten!', '<p>Riktig svar var <b>' + fmt(o.svar) + '</b>.</p><p>«Ikke gi opp – prøv igjen neste måned!»</p>');
+  }
+}
+function aarstid(mnd){
+  if([12,1,2].includes(mnd)) return {navn:'vinter', emoji:'❄️', strom:1.5};
+  if([3,4,5].includes(mnd))  return {navn:'vår',   emoji:'🌸', strom:1.0};
+  if([6,7,8].includes(mnd))  return {navn:'sommer', emoji:'☀️', strom:0.7};
+  return {navn:'høst', emoji:'🍂', strom:1.2};
+}
+async function startMaaned(){
+  const sjanse = S.vansk === 'lett' ? 0.12 : S.vansk === 'middels' ? 0.22 : 0.32;
+  if(Math.random() < sjanse){
+    S.prisSjokk = 1.3;
+    await visInfo(aarstid(S.mnd).emoji + ' Måned ' + S.mnd + ' – prissjokk!',
+      '<p>📢 Prisene i butikken og på en del kjøp har <b>steget ca. 30 %</b> denne måneden!</p>' +
+      '<p class="lite">Sånn er inflasjon: når prisene stiger, får du mindre for pengene. Kanskje lurt å vente med store kjøp?</p>');
+  } else {
+    S.prisSjokk = 1;
+  }
+}
+
+function jobbMeny(){
+  let rader = '';
+  for(const [id, j] of Object.entries(JOBBER)){
+    const laast = j.krav && !S.kursBestatt[j.krav];
+    const l0 = lonnMed(j.lonn[0]), l1 = lonnMed(j.lonn[1]);
+    const lonnTekst = (l0 === l1 ? fmt(l0) : fmt(l0) + '–' + fmt(l1)) + ' 🪙' + (S.videre ? ' ⭐' : '');
+    rader += '<tr class="' + (S.jobb === id ? 'valgt' : '') + '">' +
+      '<td>' + j.emoji + ' <b>' + j.navn + '</b><br><span class="lite">' + j.tid + '</span></td>' +
+      '<td>' + lonnTekst + '/mnd</td>' +
+      '<td>' + (j.trivsel > 0 ? '+'+j.trivsel : j.trivsel) + ' ❤️</td>' +
+      '<td>' + (S.jobb === id ? '✅ Din jobb' :
+        '<button class="valgKnapp" ' + (laast ? 'disabled' : '') + ' onclick="velgJobb(\'' + id + '\')">' +
+        (laast ? '🔒 ' + KURS[j.krav].navn : 'Velg') + '</button>') + '</td></tr>';
+  }
+  visPanel('💼 Jobbsenteret',
+    '<p>Sammenlign jobbene! Og husk: hver måned må du faktisk <b>gjøre jobben</b> for å få lønn.</p>' +
+    '<table class="sml"><tr><th>Jobb</th><th>Lønn</th><th>Trivsel/mnd</th><th></th></tr>' + rader + '</table>' +
+    (S.jobb ? '<div class="infoRad">' + JOBBER[S.jobb].emoji + ' ' + JOBBER[S.jobb].info + '</div>' :
+     '<div class="infoRad">⚠️ Du har ingen jobb ennå — uten jobb får du ikke lønn!</div>') +
+    (S.videre ? '<p class="lite">⭐ Du har videreutdanning: all lønn er 25 % høyere!</p>' :
+     '<p class="lite">💡 Jobber med 🔒 krever kurs fra 🏫 Skolen. Der finnes også videreutdanning som gir +25 % lønn. Lønner det seg? Regn på det!</p>'));
+}
+function velgJobb(id){
+  S.jobb = id; lydSuksess(); jobbMeny(); oppdaterHUD();
+}
+
+function boligMeny(){
+  let rader = '';
+  for(const [id, b] of Object.entries(BOLIGER)){
+    const tot = b.leie + b.strom + b.nett;
+    rader += '<tr class="' + (S.bolig === id ? 'valgt' : '') + '">' +
+      '<td>' + b.emoji + ' <b>' + b.navn + '</b></td>' +
+      '<td class="lite">' + fmt(b.leie) + ' + ' + fmt(b.strom) + ' + ' + fmt(b.nett) + '</td>' +
+      '<td><b>' + fmt(tot) + ' 🪙</b></td>' +
+      '<td>' + (b.trivsel > 0 ? '+'+b.trivsel : b.trivsel) + ' ❤️</td>' +
+      '<td>' + (S.bolig === id ? '✅ Her bor du' :
+        '<button class="valgKnapp" onclick="velgBolig(\'' + id + '\')">Flytt inn</button>') + '</td></tr>';
+  }
+  visPanel('🏠 Boligkontoret',
+    '<p>Hvor vil du bo? Regn ut <b>totalkostnaden</b>: leie + strøm + internett. Den trekkes automatisk hver måned.</p>' +
+    '<table class="sml"><tr><th>Bolig</th><th>Leie+strøm+nett</th><th>Totalt/mnd</th><th>Trivsel</th><th></th></tr>' + rader + '</table>' +
+    '<div class="infoRad">' + BOLIGER[S.bolig].emoji + ' ' + BOLIGER[S.bolig].info + '</div>' +
+    '<p class="lite">💡 Tips: Billigst er ikke alltid best, og dyrest er ikke alltid lurt. Hva har du råd til med lønnen din?</p>');
+}
+function velgBolig(id){
+  S.bolig = id; lydSuksess(); boligMeny(); oppdaterHUD();
+}
+
+// ----- BANKEN (faner: konto / fond / kurs) -----
+function bankMeny(fane){
+  const faner =
+    '<div class="faneRad">' +
+    '<button class="fane' + (fane==='konto'?' aktiv':'') + '" onclick="bankMeny(\'konto\')">💰 Sparekonto</button>' +
+    '<button class="fane' + (fane==='fond'?' aktiv':'') + '" onclick="bankMeny(\'fond\')">📈 Fond</button>' +
+    '</div>';
+  let innhold = '';
+
+  if(fane === 'konto'){
+    innhold =
+      '<div class="infoRad">Brukskonto: <b>' + fmt(S.penger) + ' 🪙</b> &nbsp;|&nbsp; Sparekonto: <b>' + fmt(S.spare) + ' 🪙</b></div>' +
+      '<p>Sparekontoen gir <b>5 % rente hver måned</b>. Trygt og forutsigbart — pengene vokser litt og litt.</p>' +
+      '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+      '<input class="tall" id="bankBelop" type="number" inputmode="numeric" min="0" step="10" placeholder="Beløp">' +
+      '<button class="knapp groenn" onclick="bankInn()">Sett inn</button>' +
+      '<button class="knapp sekundaer" onclick="bankUt()">Ta ut</button></div>' +
+      '<p class="lite" style="margin-top:12px;">💡 Regn selv: hvor mye blir 5 % av det du har på sparekontoen?</p>';
+  }
+  else {
+    const verdi = fondVerdi();
+    const gevinst = verdi - S.fondBetalt;
+    innhold =
+      '<div class="infoRad">Fondskurs i dag: <b>' + fmt(S.fondKurs) + ' 🪙</b> per andel<br>' +
+      'Du eier <b>' + S.fondAndeler.toFixed(1) + '</b> andeler verdt <b>' + fmt(verdi) + ' 🪙</b>' +
+      (S.fondAndeler > 0 ? '<br>Du har betalt ' + fmt(S.fondBetalt) + ' 🪙 → ' +
+        (gevinst >= 0 ? '<b style="color:#3f8b3f">gevinst ' + fmt(gevinst) + ' 🪙 📈</b>'
+                      : '<b style="color:#c0392b">tap ' + fmt(-gevinst) + ' 🪙 📉</b>') : '') +
+      '</div>' +
+      '<canvas id="fondGraf" width="480" height="160" style="width:100%;border-radius:12px;background:#1d2a4d;"></canvas>' +
+      '<p>Fond kan gi <b>mer enn sparekontoens 5 %</b> — men kursen går både opp og ned. Hva lønner seg over tid? Følg med på grafen!</p>' +
+      '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+      '<input class="tall" id="fondBelop" type="number" inputmode="numeric" min="0" step="10" placeholder="Beløp">' +
+      '<button class="knapp groenn" onclick="fondKjop()">Kjøp</button>' +
+      '<button class="knapp sekundaer" onclick="fondSelg()">Selg</button></div>';
+  }
+  visPanel('🏦 Banken', faner + innhold);
+  if(fane === 'fond') tegnFondGraf();
+}
+function lesBelop(id){
+  const v = parseInt(document.getElementById(id).value, 10);
+  return (isNaN(v) || v <= 0) ? null : v;
+}
+function bankInn(){
+  const b = lesBelop('bankBelop'); if(!b) return;
+  if(b > S.penger){ lydFeil(); visInfo('Hmm…', 'Du har bare ' + fmt(Math.max(0,S.penger)) + ' 🪙 på brukskontoen.'); return; }
+  S.penger -= b; S.spare += b; lydMynt(); bankMeny('konto'); oppdaterHUD();
+}
+function bankUt(){
+  const b = lesBelop('bankBelop'); if(!b) return;
+  if(b > S.spare){ lydFeil(); visInfo('Hmm…', 'Du har bare ' + fmt(S.spare) + ' 🪙 på sparekontoen.'); return; }
+  S.spare -= b; S.penger += b; lydMynt(); bankMeny('konto'); oppdaterHUD();
+}
+function fondKjop(){
+  const b = lesBelop('fondBelop'); if(!b) return;
+  if(b > S.penger){ lydFeil(); visInfo('Hmm…', 'Du har bare ' + fmt(Math.max(0,S.penger)) + ' 🪙 på brukskontoen.'); return; }
+  S.penger -= b; S.fondAndeler += b / S.fondKurs; S.fondBetalt += b;
+  lydMynt(); bankMeny('fond'); oppdaterHUD();
+}
+function fondSelg(){
+  const b = lesBelop('fondBelop'); if(!b) return;
+  const verdi = fondVerdi();
+  if(b > verdi + 0.01){ lydFeil(); visInfo('Hmm…', 'Fondet ditt er bare verdt ' + fmt(verdi) + ' 🪙.'); return; }
+  const andel = b / verdi;
+  S.fondBetalt = Math.max(0, S.fondBetalt * (1 - andel));
+  S.fondAndeler = Math.max(0, S.fondAndeler - b / S.fondKurs);
+  S.penger += b;
+  lydMynt(); bankMeny('fond'); oppdaterHUD();
+}
+function tegnFondGraf(){
+  const c = document.getElementById('fondGraf'); if(!c) return;
+  const x = c.getContext('2d');
+  const H = S.fondHist;
+  x.clearRect(0,0,c.width,c.height);
+  const min = Math.min.apply(null, H) - 5, max = Math.max.apply(null, H) + 5;
+  const px = i => 20 + i/(Math.max(H.length-1,1))*(c.width-40);
+  const py = v => c.height - 20 - (v-min)/(max-min)*(c.height-40);
+  // referanselinje: startkurs 100
+  x.strokeStyle = 'rgba(255,255,255,.25)'; x.setLineDash([5,5]);
+  x.beginPath(); x.moveTo(20, py(100)); x.lineTo(c.width-20, py(100)); x.stroke();
+  x.setLineDash([]);
+  x.strokeStyle = '#ffd34d'; x.lineWidth = 3; x.beginPath();
+  H.forEach((v,i)=>{ if(i===0) x.moveTo(px(i),py(v)); else x.lineTo(px(i),py(v)); });
+  x.stroke();
+  x.fillStyle = '#ffd34d';
+  H.forEach((v,i)=>{ x.beginPath(); x.arc(px(i),py(v),4,0,7); x.fill(); });
+  x.fillStyle = '#fff7e6'; x.font = "13px 'Atkinson Hyperlegible'";
+  x.fillText('Kursen måned for måned (stiplet linje = startkurs 100)', 20, 16);
+}
+
+// ----- BUTIKKEN -----
+function butikkMeny(){
+  let rader = '';
+  BUTIKKVARER.forEach((v,i)=>{
+    const p = pris(v.pris);
+    rader += '<tr><td>' + v.emoji + ' <b>' + v.navn + '</b></td>' +
+      '<td>' + fmt(p) + ' 🪙</td><td>+' + v.trivsel + ' ❤️</td>' +
+      '<td><button class="valgKnapp" onclick="kjopVare(' + i + ')">Kjøp</button></td></tr>';
+  });
+  visPanel('🛒 Butikken',
+    '<p>Ting som gjør livet litt bedre — mot betaling. Sammenlign: hvor mye trivsel får du per mynt?</p>' +
+    '<table class="sml"><tr><th>Vare</th><th>Pris</th><th>Trivsel</th><th></th></tr>' + rader + '</table>' +
+    '<p class="lite">💡 Trivselen din synker litt hver måned hvis du aldri unner deg noe. Men ikke bruk opp alt heller!</p>');
+}
+function kjopVare(i){
+  const v = BUTIKKVARER[i], p = pris(v.pris);
+  if(S.penger < p){ lydFeil(); visInfo('Hmm…', 'Du har ikke råd til ' + v.navn.toLowerCase() + ' akkurat nå (' + fmt(p) + ' 🪙).'); return; }
+  S.penger -= p; justerTrivsel(v.trivsel); S.kjoept++;
+  lydMynt(); oppdaterHUD();
+  visInfo('Kjøpt!', v.emoji + ' ' + v.navn + ' — du fikk +' + v.trivsel + ' ❤️ trivsel for ' + fmt(p) + ' 🪙.');
+}
+
+// ----- FRITIDSKLUBBEN -----
+function klubbMeny(){
+  let html = '<p>Her skjer det gratis ting hver måned! <b>Én aktivitet per måned</b> gir +5 ❤️ trivsel — helt uten å bruke en eneste mynt.</p>';
+  if(S.klubbBrukt){
+    html += '<div class="infoRad">✅ Du har vært på en aktivitet denne måneden. Kom tilbake neste måned!</div>';
+  } else {
+    KLUBB.forEach((a,i)=>{
+      html += '<button class="knapp groenn" style="display:block;width:100%;margin:8px 0;text-align:left;" onclick="klubbAktivitet(' + i + ')">' +
+        a.emoji + ' ' + a.navn + ' (gratis, +5 ❤️)</button>';
+    });
+  }
+  html += '<p class="lite">💡 Lærdom: trivsel trenger ikke alltid å koste penger.</p>';
+  visPanel('🎲 Fritidsklubben', html);
+}
+function klubbAktivitet(i){
+  if(S.klubbBrukt) return;
+  S.klubbBrukt = true; justerTrivsel(5); lydSuksess(); oppdaterHUD();
+  visInfo('Så gøy!', KLUBB[i].emoji + ' ' + KLUBB[i].navn + ' var en suksess. +5 ❤️ trivsel — og det kostet ingenting!');
+  klubbMeny();
+}
+
+// ===================== MÅNEDSSYKLUS =====================
+let mndPaagaar = false;
+async function nesteMaaned(){
+  if(mndPaagaar || !S) return;
+  mndPaagaar = true;
+  try{
+    // 0) Uten jobb? Bekreft.
+    if(!S.jobb){
+      const r = await visValg('Vent litt!',
+        '<p>⚠️ Du har <b>ingen jobb</b> — da får du ikke lønn denne måneden.</p><p>Stikk innom 💼 Jobbsenteret først?</p>',
+        [{l:'Jeg går til Jobbsenteret', v:'nei', klass:'groenn'}, {l:'Fortsett uten jobb', v:'ja', klass:'sekundaer'}]);
+      if(r.v === 'nei'){ mndPaagaar = false; return; }
+    }
+
+    const startPenger = S.penger, startSpare = spareSum();
+
+    // 1) Gjeldsrente hvis brukskontoen er i minus
+    if(S.penger < 0){
+      const rente = Math.round(-S.penger * 0.05);
+      S.penger -= rente;
+      lydDunk();
+      await visInfo('Banken ringer 📞',
+        '<p>Brukskontoen din er i minus — det betyr at du <b>skylder banken penger</b>.</p>' +
+        '<div class="regnestykke">5 % rente på gjelden: −' + fmt(rente) + ' 🪙</div>' +
+        '<p>Gjeld vokser hvis du ikke betaler den ned. Prøv å komme i pluss!</p>');
+      oppdaterHUD();
+    }
+
+    // 2) Jobben må gjøres — så kommer lønna
+    if(S.jobb){
+      const j = JOBBER[S.jobb];
+      const gjort = await jobbOppgave(S.jobb);
+      if(gjort){
+        const grunn = j.lonn[0] === j.lonn[1] ? j.lonn[0] :
+          Math.round((j.lonn[0] + Math.random()*(j.lonn[1]-j.lonn[0]))/50)*50;
+        const lonn = lonnMed(grunn);
+        S.penger += lonn;
+        justerTrivsel(j.trivsel);
+        lydMynt();
+        await visInfo('Lønning! 🪙',
+          '<p>' + j.emoji + ' Godt jobbet! Lønn fra jobben som <b>' + j.navn.toLowerCase() + '</b>:</p>' +
+          '<div class="regnestykke">' + (S.videre ?
+            fmt(grunn) + ' + videreutdanning ' + fmt(lonn - grunn) + ' = +' + fmt(lonn) + ' 🪙' :
+            '+' + fmt(lonn) + ' 🪙') +
+          (S.jobb === 'hundepass' ? '<br><span style="font-size:13px;">(' +
+            (grunn > 1400 ? 'mange hunder denne måneden! 🐕🐕🐕' : grunn < 900 ? 'rolig hundemåned… 🐕' : 'helt grei hundemåned 🐕🐕') +
+            ')</span>' : '') + '</div>');
+        oppdaterHUD();
+      } else {
+        justerTrivsel(-2);
+        await visInfo('Ingen jobb gjort 😬',
+          '<p>Du droppet jobben denne måneden — og uten arbeid, ingen lønn.</p>' +
+          '<p class="lite">Sjefen ble litt sur (−2 ❤️), men du beholder jobben.</p>');
+        oppdaterHUD();
+      }
+    }
+
+    // 3) Faste boutgifter (strømmen varierer med årstiden)
+    const b = BOLIGER[S.bolig];
+    const aar = aarstid(S.mnd);
+    const strom = Math.round(b.strom * aar.strom);
+    const tot = b.leie + strom + b.nett;
+    justerTrivsel(b.trivsel);
+    if(tot > 0){
+      S.penger -= tot;
+      lydDunk();
+      await visInfo('Faste utgifter 🧾',
+        '<p>' + b.emoji + ' Regningene for <b>' + b.navn.toLowerCase() + '</b> trekkes automatisk:</p>' +
+        '<div class="regnestykke">Leie ' + fmt(b.leie) + ' + strøm ' + fmt(strom) + ' + internett ' + fmt(b.nett) +
+        ' = −' + fmt(tot) + ' 🪙</div>' +
+        (b.strom > 0 ? '<p class="lite">' + aar.emoji + ' ' +
+          (aar.strom > 1 ? 'Det er ' + aar.navn + ' – strømmen er dyrere nå (×' + aar.strom + ').'
+           : aar.strom < 1 ? 'Det er ' + aar.navn + ' – strømmen er billigere nå (×' + aar.strom + ').'
+           : 'Vanlig strømpris denne måneden.') + '</p>' : ''));
+      oppdaterHUD();
+    }
+
+    // 4) Rente på sparekonto
+    if(S.spare > 0){
+      const rente = Math.round(S.spare * 0.05);
+      if(rente > 0){
+        S.spare += rente;
+        lydMynt();
+        await visInfo('Renter! 🏦',
+          '<p>Sparekontoen din vokser av seg selv:</p>' +
+          '<div class="regnestykke">5 % av ' + fmt(S.spare - rente) + ' 🪙 = +' + fmt(rente) + ' 🪙</div>' +
+          '<p class="lite">Dette kalles rente — banken betaler deg for å spare.</p>');
+        oppdaterHUD();
+      }
+    }
+
+    // 5) Fondskursen beveger seg
+    if(true){
+      const vol = S.V.fondVol;
+      const endring = (Math.random()*2 - 0.8) * vol * 2.2; // kan slå sparerenta — men svinger!
+      S.fondKurs = Math.max(30, Math.round(S.fondKurs * (1 + endring)));
+      S.fondHist.push(S.fondKurs);
+      if(S.fondAndeler > 0){
+        const pst = Math.round(endring * 100);
+        await visInfo('Fondsnytt 📈',
+          '<p>Fondskursen ' + (pst >= 0 ? 'steg' : 'falt') + ' med ca. <b>' + Math.abs(pst) + ' %</b> denne måneden.</p>' +
+          '<div class="regnestykke">Fondet ditt er nå verdt ' + fmt(fondVerdi()) + ' 🪙</div>' +
+          '<p class="lite">Opp og ned er helt normalt for fond. Det er derfor det både frister og skremmer!</p>');
+      }
+    }
+
+    // 6) Hendelser
+    const antall = S.V.hendelser;
+    for(let i = 0; i < antall; i++){
+      if(hendelsesPott.length === 0){ hendelsesPott = HENDELSER.slice(); bland(hendelsesPott); }
+      let h = hendelsesPott.shift();
+      if(h.bolig && S.bolig === 'hjemme'){ // strømhendelse passer ikke når du bor hjemme
+        hendelsesPott.push(h);
+        if(hendelsesPott.length === 0) continue;
+        h = hendelsesPott.shift();
+        if(h.bolig && S.bolig === 'hjemme') continue;
+      }
+      const knapper = h.valg.map((v, idx)=>({l:v.l, v:idx, klass: idx === 0 ? 'groenn' : 'sekundaer'}));
+      const r = await visValg('Noe skjer! ✨', '<p style="font-size:17px;">' + h.t + '</p>', knapper);
+      const valg = h.valg[r.v];
+      const p = valg.p < 0 ? -pris(-valg.p) : valg.p;
+      S.penger += p;
+      justerTrivsel(valg.h);
+      if(p > 0) lydMynt(); else if(p < 0) lydDunk();
+      S.hendelseslogg.push({mnd:S.mnd, valg:valg.l});
+      await visInfo('Resultat', '<p>' + valg.svar + '</p>' +
+        ((p !== 0 || valg.h !== 0) ? '<div class="regnestykke">' +
+          (p !== 0 ? (p > 0 ? '+' : '−') + fmt(Math.abs(p)) + ' 🪙 ' : '') +
+          (valg.h !== 0 ? (valg.h > 0 ? ' +' : ' −') + Math.abs(valg.h) + ' ❤️' : '') + '</div>' : ''));
+      oppdaterHUD();
+    }
+
+    // 7) Tenkestopp i partallsmåneder
+    if(S.mnd % 2 === 0 && tenkePott.length > 0){
+      await tenkestopp(tenkePott.shift());
+    }
+
+    // 8) Grunnslitasje på trivsel
+    justerTrivsel(-4);
+    oppdaterHUD();
+
+    // 9) Månedsoppsummering
+    const diffP = S.penger - startPenger;
+    const diffS = spareSum() - startSpare;
+    await visInfo('Måned ' + S.mnd + ' er over 📅',
+      '<div class="infoRad">' +
+      'Brukskonto: <b>' + fmt(S.penger) + ' 🪙</b> (' + (diffP >= 0 ? '+' : '−') + fmt(Math.abs(diffP)) + ' denne måneden)<br>' +
+      'Sparing totalt: <b>' + fmt(spareSum()) + ' 🪙</b> av målet på ' + fmt(S.V.maal) + ' 🪙<br>' +
+      'Trivsel: <b>' + Math.round(S.trivsel) + '%</b></div>' +
+      (S.trivsel < 25 ? '<p>😟 Trivselen din er lav! Unn deg noe i butikken eller stikk innom fritidsklubben.</p>' : '') +
+      (S.penger < 0 ? '<p>💸 Du er i minus — gjelden koster deg rente hver måned!</p>' : '') +
+      '<p class="lite">' + (12 - S.mnd) + ' måneder igjen.</p>', 'Videre!');
+
+    // 10) Ny måned eller slutt
+    S.mnd++;
+    S.klubbBrukt = false;
+    S.bonusBrukt = false;
+    if(S.mnd > 12){ sluttSpill(); }
+    else { oppdaterHUD(); await startMaaned(); }
+  } finally {
+    mndPaagaar = false;
+  }
+}
+
+// ===================== TENKESTOPP =====================
+async function tenkestopp(ts){
+  S.antallTenk++;
+  const r = await visValg('🧠 Tenkestopp!',
+    '<p>' + ts.sp + '</p>' +
+    '<div class="regnestykke">' + ts.regn + '</div>' +
+    '<p style="text-align:center;"><input class="tall" id="modalInput" type="number" inputmode="numeric" placeholder="Svar"></p>' +
+    '<p class="lite" style="text-align:center;">Riktig svar gir 150 🪙 i bonus!</p>',
+    [{l:'Svar!', v:'svar', klass:'groenn'}]);
+  const svar = parseInt(r.input, 10);
+  if(svar === ts.fasit){
+    S.penger += 150; S.riktigeTenk++;
+    lydSuksess(); oppdaterHUD();
+    await visInfo('Riktig! 🎉', '<div class="regnestykke">+150 🪙 i bonus!</div><p>' + ts.fork + '</p>');
+  } else {
+    lydFeil();
+    await visInfo('Ikke helt…', '<p>Riktig svar var <b>' + fmt(ts.fasit) + '</b>.</p><p>' + ts.fork + '</p><p class="lite">Ingen fare — du lærte noe, og det er gratis!</p>');
+  }
+}
+
+// ===================== SLUTTSKJERM =====================
+function sluttSpill(){
+  uiAapen = true;
+  const sparing = spareSum();
+  const maalNaadd = sparing >= S.V.maal;
+  const t = S.trivsel;
+
+  let tittel, emoji, tekst;
+  if(maalNaadd && t >= 60){
+    tittel = 'Balansekunstner'; emoji = '🤹';
+    tekst = 'Du nådde sparemålet OG hadde det bra på veien. Det er akkurat det personlig økonomi handler om!';
+  } else if(fondVerdi() > S.spare && fondVerdi() > 1000){
+    tittel = 'Investoren'; emoji = '📈';
+    tekst = 'Du turte å la pengene jobbe i fond. Modig — og du lærte at kursen går både opp og ned!';
+  } else if(t >= 75){
+    tittel = 'Livsnyter'; emoji = '🎉';
+    tekst = 'Du prioriterte opplevelser og venner. Livet ble godt — men husk at litt sparing gir trygghet også!';
+  } else if(maalNaadd){
+    tittel = 'Sparemester'; emoji = '🏦';
+    tekst = 'Du nådde sparemålet med god margin! Neste utfordring: klare det og samtidig holde trivselen oppe.';
+  } else {
+    tittel = 'Økonomilærling'; emoji = '🌱';
+    tekst = 'Tolv måneder med ekte valg og ekte regnestykker — det er slik man lærer. Prøv igjen med ny plan!';
+  }
+
+  let stjerner = 1;
+  if(maalNaadd) stjerner++;
+  if(t >= 60) stjerner++;
+  if(S.penger >= 0) stjerner++;
+  if(S.riktigeTenk >= 4) stjerner++;
+
+  const html =
+    '<div id="diplom">' +
+    '<div style="font-size:40px;">' + emoji + '</div>' +
+    '<div class="lite">DIPLOM tildeles</div>' +
+    '<h2>' + tittel + '</h2>' +
+    '<div class="stjerner">' + '⭐'.repeat(stjerner) + '<span style="opacity:.25">' + '⭐'.repeat(5-stjerner) + '</span></div>' +
+    '<p style="font-size:15px;">' + tekst + '</p></div>' +
+    '<div style="text-align:center;">' +
+    '<span class="statRute">💰 Sparing: ' + fmt(sparing) + ' / ' + fmt(S.V.maal) + ' 🪙</span>' +
+    '<span class="statRute">🪙 Brukskonto: ' + fmt(S.penger) + '</span>' +
+    '<span class="statRute">❤️ Trivsel: ' + Math.round(t) + '%</span>' +
+    '<span class="statRute">🧠 Tenkestopp: ' + S.riktigeTenk + '/' + S.antallTenk + ' riktige</span>' +
+    '<span class="statRute">🎓 Kurs: ' + (Object.keys(S.kursBestatt).length + (S.videre ? 1 : 0)) + '</span>' +
+    '<span class="statRute">🎚️ ' + S.V.navn + '</span></div>' +
+    '<p style="text-align:center;" class="lite">Snakk sammen: Hvilket valg var du mest fornøyd med? Hva ville du gjort annerledes?</p>';
+
+  if(maalNaadd) lydSuksess();
+  visValg('🏁 Året er omme!', html, [{l:'Spill igjen', v:'igjen', klass:'groenn'}])
+    .then(()=>{ location.reload(); });
+}
+
+// ===================== SKOLEN — KURS OG VIDEREUTDANNING =====================
+function lonnMed(l){ return Math.round(l * (S.videre ? 1 + VIDERE.bonus : 1)); }
+
+function skoleMeny(fane){
+  const faner = '<div class="faneRad">' +
+    '<button class="fane' + (fane==='kurs'?' aktiv':'') + '" onclick="skoleMeny(\'kurs\')">🎓 Kurs</button>' +
+    '<button class="fane' + (fane==='videre'?' aktiv':'') + '" onclick="skoleMeny(\'videre\')">🚀 Videreutdanning</button></div>';
+  let innhold = '';
+  if(fane === 'kurs'){
+    innhold = '<p>Et kurs koster mynter <b>og</b> en liten kursprøve. Å lære noe nytt er å <b>investere i seg selv</b> — det kan gi bedre lønn lenge!</p>';
+    for(const [id, k] of Object.entries(KURS)){
+      innhold += '<div class="infoRad" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">' +
+        '<span>' + k.emoji + ' <b>' + k.navn + '</b> (' + fmt(k.pris) + ' 🪙)<br>' +
+        '<span class="lite">Låser opp jobben ' + k.laaser + '</span></span>' +
+        (S.kursBestatt[id] ? '<b>🎓 Bestått!</b>' :
+          '<button class="valgKnapp" onclick="taKurs(\'' + id + '\')">Ta kurset</button>') + '</div>';
+    }
+    innhold += '<p class="lite">💡 Regn på det: hvor mye mer lønn gir jobben — og hvor mange måneder tar det å tjene inn kurset?</p>';
+  } else {
+    innhold = S.videre ?
+      '<div class="infoRad">⭐ Du har fullført videreutdanningen! All lønn er <b>25 % høyere</b>.</div>' :
+      '<p>🚀 <b>Videreutdanning — ' + fmt(VIDERE.pris) + ' 🪙</b></p>' +
+      '<p>Etter videreutdanning får du <b>+25 % lønn</b> i alle jobber — for resten av året. Men prøven er litt vanskeligere enn kursprøvene!</p>' +
+      '<div class="regnestykke">Lønner det seg? Regn: hvor mye mer tjener du i måneden, og når har du tjent inn de ' + fmt(VIDERE.pris) + ' myntene?</div>' +
+      '<button class="knapp groenn" onclick="taVidere()">Start videreutdanning (' + fmt(VIDERE.pris) + ' 🪙)</button>';
+  }
+  visPanel('🏫 Skolen', faner + innhold);
+}
+
+async function provePaaSkolen(tittel, sp){
+  for(let i = 0; i < sp.length; i++){
+    while(true){
+      const r = await visValg(tittel + ' — oppgave ' + (i+1) + '/' + sp.length,
+        '<p>' + sp[i].q + '</p>' +
+        '<p style="text-align:center;"><input class="tall" id="modalInput" type="number" inputmode="numeric" placeholder="Svar"></p>',
+        [{l:'Svar!', v:'svar', klass:'groenn'}]);
+      if(parseInt(r.input, 10) === sp[i].svar){ lydSuksess(); break; }
+      lydFeil();
+      await visInfo('Ikke helt… 🤔', '<p>Prøv igjen! Les oppgaven rolig en gang til — du klarer dette.</p>');
+    }
+  }
+}
+async function taKurs(id){
+  const k = KURS[id];
+  if(S.kursBestatt[id]) return;
+  if(S.penger < k.pris){ lydFeil(); visInfo('Hmm…', 'Kurset koster ' + fmt(k.pris) + ' 🪙, og du har ' + fmt(Math.max(0,S.penger)) + ' 🪙. Spar litt til!'); return; }
+  S.penger -= k.pris; lydMynt(); oppdaterHUD();
+  lukkPanel();
+  await visInfo(k.emoji + ' ' + k.navn, '<p>Velkommen til kurs! Klarer du kursprøven, er kurset bestått.</p>' +
+    '<p class="lite">Du kan prøve så mange ganger du vil — du har jo betalt for kurset!</p>', 'Start prøven');
+  await provePaaSkolen(k.emoji + ' ' + k.navn, k.sp);
+  S.kursBestatt[id] = true;
+  await visInfo('Kurs bestått! 🎓', '<p>Gratulerer! Jobben <b>' + k.laaser + '</b> er nå åpen for deg på 💼 Jobbsenteret.</p>');
+  skoleMeny('kurs');
+}
+async function taVidere(){
+  if(S.videre) return;
+  if(S.penger < VIDERE.pris){ lydFeil(); visInfo('Hmm…', 'Videreutdanning koster ' + fmt(VIDERE.pris) + ' 🪙, og du har ' + fmt(Math.max(0,S.penger)) + ' 🪙. Spar litt til!'); return; }
+  S.penger -= VIDERE.pris; lydMynt(); oppdaterHUD();
+  lukkPanel();
+  await visInfo('🚀 Videreutdanning', '<p>To skikkelige oppgaver står mellom deg og høyere lønn. Lykke til!</p>', 'Start prøven');
+  await provePaaSkolen('🚀 Videreutdanning', VIDERE.sp);
+  S.videre = true;
+  await visInfo('Bestått! ⭐', '<p>Du har fullført videreutdanningen — all lønn er nå <b>25 % høyere</b>!</p>');
+  skoleMeny('videre');
+}
+
+// ===================== MÅNEDENS JOBBOPPGAVE (minispill) =====================
+let spillLos = null;
+function visSpill(tittel, html){
+  uiAapen = true;
+  el('spillTittel').textContent = tittel;
+  el('spillInnhold').innerHTML = html;
+  el('spillOverlegg').style.display = 'flex';
+  return new Promise(res=>{ spillLos = res; });
+}
+function ferdigSpill(ok){
+  el('spillOverlegg').style.display = 'none';
+  uiAapen = false;
+  const r = spillLos; spillLos = null;
+  if(r) r(ok);
+}
+el('spillDropp').addEventListener('click', ()=>{ lydKlikk(); ferdigSpill(false); });
+
+function jobbOppgave(id){
+  const type = JOBBER[id].spill;
+  if(type === 'sortAviser') return spillSortAviser();
+  if(type === 'sortVarer')  return spillSortVarer();
+  if(type === 'plukkOpp')   return spillPlukk();
+  if(type === 'labyrint')   return spillLabyrint();
+  if(type === 'regne')      return spillRegne();
+  if(type === 'kvittering') return spillKvittering();
+  return Promise.resolve(true);
+}
+
+// --- Avisbud: sorter avisrunden etter husnummer ---
+let avisRekke = [];
+function spillSortAviser(){
+  const tall = [];
+  while(tall.length < 8){
+    const n = 1 + Math.floor(Math.random()*99);
+    if(!tall.includes(n)) tall.push(n);
+  }
+  avisRekke = tall.slice().sort((a,b)=>a-b);
+  let html = '<p>📰 Avisrunden! Trykk husnumrene i <b>stigende rekkefølge</b> — laveste først.</p><div class="rutenett">';
+  tall.forEach(n=>{ html += '<button class="spillKnapp" data-n="' + n + '" onclick="avisKlikk(this)">' + n + '</button>'; });
+  html += '</div>';
+  return visSpill('Jobb: Avisbud 📰', html);
+}
+function avisKlikk(b){
+  const n = parseInt(b.dataset.n, 10);
+  if(n === avisRekke[0]){
+    avisRekke.shift();
+    b.disabled = true; b.style.opacity = .25;
+    tone(600 + n*5, 0, .07, 'square', .06);
+    if(avisRekke.length === 0){ lydSuksess(); setTimeout(()=>ferdigSpill(true), 400); }
+  } else {
+    lydFeil(); b.classList.add('rist'); setTimeout(()=>b.classList.remove('rist'), 320);
+  }
+}
+
+// --- Butikkmedhjelper: sorter varer i riktig hylle ---
+const VARER_SORT = [
+  {e:'🍌', n:'Banan', k:0},{e:'🥛', n:'Melk', k:1},{e:'🍞', n:'Brød', k:2},{e:'🍎', n:'Eple', k:0},
+  {e:'🧀', n:'Ost', k:1},{e:'🍝', n:'Spagetti', k:2},{e:'🥕', n:'Gulrot', k:0},{e:'🍦', n:'Is', k:1}
+];
+const HYLLER = ['🥦 Frukt og grønt', '❄️ Kjøledisken', '🌾 Tørrvarer'];
+let vareKoe = [], vareIdx = 0;
+function spillSortVarer(){
+  vareKoe = VARER_SORT.slice(); bland(vareKoe); vareIdx = 0;
+  const p = visSpill('Jobb: Butikkmedhjelper 🛒', '');
+  visVare();
+  return p;
+}
+function visVare(){
+  const v = vareKoe[vareIdx];
+  el('spillInnhold').innerHTML =
+    '<p>Vareleveringen er kommet! Sett varene på riktig hylle (' + (vareIdx+1) + '/' + vareKoe.length + '):</p>' +
+    '<div style="text-align:center;font-size:56px;">' + v.e + '</div>' +
+    '<div style="text-align:center;font-family:\'Fredoka One\';font-size:20px;margin-bottom:10px;">' + v.n + '</div>' +
+    HYLLER.map((h,i)=>'<button class="knapp sekundaer" style="display:block;width:100%;margin:7px 0;" onclick="leggIHylle(' + i + ')">' + h + '</button>').join('');
+}
+function leggIHylle(i){
+  if(vareKoe[vareIdx].k === i){
+    lydMynt(); vareIdx++;
+    if(vareIdx >= vareKoe.length){ lydSuksess(); setTimeout(()=>ferdigSpill(true), 300); }
+    else visVare();
+  } else lydFeil();
+}
+
+// --- Hundepasser: plukk opp etter hundene ---
+let plukkIgjen = 0;
+function spillPlukk(){
+  const p = visSpill('Jobb: Hundepasser 🐕',
+    '<p>Tur i parken! Noen må plukke opp etter hundene — og det er deg. <b>Alle sammen!</b> 🧤</p>' +
+    '<div id="plukkFelt"></div><p class="lite" id="plukkTeller" style="text-align:center;"></p>');
+  setTimeout(()=>{
+    const felt = document.getElementById('plukkFelt');
+    if(!felt) return;
+    for(const [l, t] of [[8, 8],[78, 64]]){
+      const d = document.createElement('span');
+      d.className = 'plukkPynt'; d.textContent = '🐕';
+      d.style.left = l + '%'; d.style.top = t + '%';
+      felt.appendChild(d);
+    }
+    plukkIgjen = 10;
+    for(let i = 0; i < 10; i++){
+      const b = document.createElement('button');
+      b.className = 'plukkBaesj'; b.textContent = '💩';
+      b.style.left = (4 + Math.random()*84) + '%';
+      b.style.top = (6 + Math.random()*74) + '%';
+      b.addEventListener('click', ()=>{
+        b.remove(); plukkIgjen--;
+        tone(280, 0, .06, 'square', .07);
+        document.getElementById('plukkTeller').textContent = plukkIgjen + ' igjen…';
+        if(plukkIgjen <= 0){ lydSuksess(); setTimeout(()=>ferdigSpill(true), 350); }
+      });
+      felt.appendChild(b);
+    }
+    document.getElementById('plukkTeller').textContent = '10 igjen…';
+  }, 60);
+  return p;
+}
+
+// --- Sykkelbud: labyrint uten å treffe veggene ---
+let labAktiv = false;
+const LABREKT = [
+  [10,240,100,42],[68,120,42,162],[68,120,170,42],[196,120,42,120],[196,198,114,42]
+];
+const LABSTART = [10,240,42,42], LABMAAL = [276,198,34,42];
+function spillLabyrint(){
+  const p = visSpill('Jobb: Sykkelbud 🚴',
+    '<p>🚴 Lever pakken! Hold inne og før prikken fra <b style="color:#3f8b3f">START</b> til <b style="color:#c8862a">MÅL</b> uten å treffe de mørke veggene. Treffer du, må du begynne på nytt!</p>' +
+    '<canvas id="labKanvas" width="320" height="320" style="width:100%;max-width:340px;display:block;margin:0 auto;border-radius:12px;touch-action:none;"></canvas>');
+  setTimeout(initLabyrint, 60);
+  return p;
+}
+function iRekt(x, y, r){ return x >= r[0] && x <= r[0]+r[2] && y >= r[1] && y <= r[1]+r[3]; }
+function tegnLab(px, py){
+  const c = document.getElementById('labKanvas'); if(!c) return;
+  const g = c.getContext('2d');
+  g.fillStyle = '#1d2a4d'; g.fillRect(0, 0, 320, 320);
+  g.fillStyle = '#fff7e6';
+  for(const r of LABREKT) g.fillRect(r[0], r[1], r[2], r[3]);
+  g.fillStyle = '#9fd49b'; g.fillRect(LABSTART[0], LABSTART[1], LABSTART[2], LABSTART[3]);
+  g.fillStyle = '#ffd34d'; g.fillRect(LABMAAL[0], LABMAAL[1], LABMAAL[2], LABMAAL[3]);
+  g.fillStyle = '#1d2a4d';
+  g.font = "13px 'Fredoka One', sans-serif";
+  g.fillText('START', 11, 234); g.fillText('MÅL', 278, 192);
+  if(px !== undefined){
+    g.fillStyle = '#f07a2a'; g.beginPath(); g.arc(px, py, 10, 0, 7); g.fill();
+    g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke();
+  } else {
+    g.fillStyle = '#f07a2a'; g.beginPath();
+    g.arc(LABSTART[0]+21, LABSTART[1]+21, 10, 0, 7); g.fill();
+  }
+}
+function labPos(c, e){
+  const r = c.getBoundingClientRect();
+  return [(e.clientX - r.left) * 320 / r.width, (e.clientY - r.top) * 320 / r.height];
+}
+function initLabyrint(){
+  const c = document.getElementById('labKanvas'); if(!c) return;
+  labAktiv = false;
+  tegnLab();
+  c.addEventListener('pointerdown', e=>{
+    const [x, y] = labPos(c, e);
+    if(iRekt(x, y, LABSTART)){
+      labAktiv = true;
+      try{ c.setPointerCapture(e.pointerId); }catch(err){}
+      tegnLab(x, y);
+    }
+    e.preventDefault();
+  });
+  c.addEventListener('pointermove', e=>{
+    if(!labAktiv) return;
+    const [x, y] = labPos(c, e);
+    if(iRekt(x, y, LABMAAL)){
+      labAktiv = false; lydSuksess(); tegnLab(x, y);
+      setTimeout(()=>ferdigSpill(true), 350);
+      return;
+    }
+    if(!LABREKT.some(r=>iRekt(x, y, r))){
+      labAktiv = false; lydFeil(); tegnLab();
+      return;
+    }
+    tegnLab(x, y);
+    e.preventDefault();
+  });
+  c.addEventListener('pointerup', ()=>{
+    if(labAktiv){ labAktiv = false; lydFeil(); tegnLab(); }
+  });
+}
+
+// --- Kodehjelp: regneoppgaver ---
+let regneOppg = [], regneIdx = 0;
+function spillRegne(){
+  const t1 = ()=>{ const a = 2+Math.floor(Math.random()*8), b = 2+Math.floor(Math.random()*8); return {t:a+' × '+b+' = ?', svar:a*b}; };
+  const t2 = ()=>{ const a = 15+Math.floor(Math.random()*70), b = 15+Math.floor(Math.random()*70); return {t:a+' + '+b+' = ?', svar:a+b}; };
+  const t3 = ()=>{ const a = 40+Math.floor(Math.random()*60), b = 5+Math.floor(Math.random()*30); return {t:a+' − '+b+' = ?', svar:a-b}; };
+  regneOppg = [t1(), t2(), t3()];
+  regneIdx = 0;
+  const p = visSpill('Jobb: Kodehjelp 💻', '');
+  visRegne();
+  return p;
+}
+function visRegne(){
+  const o = regneOppg[regneIdx];
+  el('spillInnhold').innerHTML =
+    '<p>💻 Maskinen har stoppet! Regn ut det koden skal svare (' + (regneIdx+1) + '/3). Feil svar? Prøv igjen!</p>' +
+    '<div class="regnestykke">' + o.t + '</div>' +
+    '<p style="text-align:center;"><input class="tall" id="spillSvar" type="number" inputmode="numeric" placeholder="Svar"> ' +
+    '<button class="knapp groenn" onclick="svarRegne()">Svar</button></p>';
+}
+function svarRegne(){
+  const v = parseInt(document.getElementById('spillSvar').value, 10);
+  if(v === regneOppg[regneIdx].svar){
+    regneIdx++;
+    if(regneIdx >= 3){ lydSuksess(); setTimeout(()=>ferdigSpill(true), 300); }
+    else { lydMynt(); visRegne(); }
+  } else {
+    lydFeil();
+    document.getElementById('spillSvar').value = '';
+  }
+}
+
+// --- Regnskapshjelp: summer kvitteringen ---
+let kvitteringSum = 0;
+function spillKvittering(){
+  const varer = ['Melk','Brød','Ost','Epler','Såpe','Lyspærer','Kaffe','Bananer'];
+  bland(varer);
+  let linjer = '', sum = 0;
+  for(let i = 0; i < 4; i++){
+    const pr = (2 + Math.floor(Math.random()*58)) * 5;
+    sum += pr;
+    linjer += '<div style="display:flex;justify-content:space-between;"><span>' + varer[i] + '</span><b>' + pr + ' 🪙</b></div>';
+  }
+  kvitteringSum = sum;
+  return visSpill('Jobb: Regnskapshjelp 🧮',
+    '<p>🧮 Butikken trenger summen på dagens kvittering. Feil svar? Regn en gang til!</p>' +
+    '<div class="infoRad" style="font-size:16px;">' + linjer +
+    '<hr style="border:none;border-top:2px dashed #b3ad9c;"><div style="display:flex;justify-content:space-between;"><span><b>SUM</b></span><b>?</b></div></div>' +
+    '<p style="text-align:center;"><input class="tall" id="spillSvar" type="number" inputmode="numeric" placeholder="Sum"> ' +
+    '<button class="knapp groenn" onclick="svarKvittering()">Svar</button></p>');
+}
+function svarKvittering(){
+  const v = parseInt(document.getElementById('spillSvar').value, 10);
+  if(v === kvitteringSum){ lydSuksess(); setTimeout(()=>ferdigSpill(true), 300); }
+  else { lydFeil(); document.getElementById('spillSvar').value = ''; }
+}
+
+// ===================== HJELP =====================
+function visHjelp(){
+  visInfo('❓ Slik spiller du',
+    '<p><b>Målet:</b> nå sparemålet (' + fmt(S.V.maal) + ' 🪙 på sparekonto + fond) i løpet av 12 måneder — og hold trivselen oppe!</p>' +
+    '<p>💼 <b>Jobbsenteret</b> — velg og bytt jobb<br>' +
+    '🏠 <b>Boligkontoret</b> — velg hvor du bor<br>' +
+    '🏦 <b>Banken</b> — sparekonto (5 % rente) og fond<br>' +
+    '🏫 <b>Skolen</b> — kurs låser opp bedre jobber, videreutdanning gir +25 % lønn<br>' +
+    '🛒 <b>Butikken</b> — kjøp ting som gir trivsel<br>' +
+    '🎲 <b>Fritidsklubben</b> — gratis trivsel én gang i måneden</p>' +
+    '<p>🚶 <b>Monstrene i byen</b> rusler rundt – gå bort og trykk «Snakk» for et økonomitips. ⭐ Bonus-Bork gir deg 100 🪙 hvis du klarer en regneoppgave (én gang i måneden)!</p>' +
+    '<p>Gå rundt i byen og besøk husene. Når du er klar, trykk <b>«Neste måned»</b> — da må du først gjøre månedens jobboppgave, og så kommer lønn, regninger og overraskelser!</p>' +
+    '<p class="lite">🎮 PC: piltaster/WASD + E. 📱 iPad: styrespak nede til venstre + grønn knapp.</p>');
+}
+
+// ===================== OPPSTART =====================
+el('nesteMndKnapp').addEventListener('click', ()=>{ ac(); if(!uiAapen) nesteMaaned(); });
+el('hjelpKnapp').addEventListener('click', ()=>{ if(!uiAapen) visHjelp(); });
+el('lydKnapp').addEventListener('click', function(){
+  lydPaa = !lydPaa;
+  this.textContent = lydPaa ? '🔊' : '🔇';
+  if(lydPaa){ ac(); lydKlikk(); }
+});
+el('panelLukk').addEventListener('click', ()=>{ lydKlikk(); lukkPanel(); });
+
+document.querySelectorAll('.vanskKnapp').forEach(k=>{
+  k.addEventListener('click', async ()=>{
+    ac(); lydSuksess();
+    nyttSpill(k.dataset.v);
+    el('start').style.display = 'none';
+    el('hud').style.display = 'flex';
+    if(ERTOUCH) el('joySone').style.display = 'block';
+    oppdaterHUD();
+    uiAapen = false;
+    await visInfo('Velkommen til byen! 🏙️',
+      '<p>Du er ny i byen og skal klare deg selv i <b>12 måneder</b>.</p>' +
+      '<div class="infoRad">🎯 Sparemål: <b>' + fmt(S.V.maal) + ' 🪙</b> (sparekonto + fond)<br>' +
+      '❤️ Hold trivselen oppe på veien!</div>' +
+      '<p>Start med å gå til 💼 <b>Jobbsenteret</b> og skaff deg en jobb. På 🏫 <b>Skolen</b> finnes kurs som åpner bedre betalte jobber. Trykk «Neste måned» øverst når du er klar for lønning!</p>',
+      'Da setter vi i gang!');
+    await startMaaned();
+  });
+});
+
+// Hindre knip-zoom (pinch) på iPad/Safari
+['gesturestart','gesturechange','gestureend'].forEach(function(ev){
+  document.addEventListener(ev, function(e){ e.preventDefault(); }, {passive:false});
+});
+
+initTre();
+sloyfe();
+
+// Alt er bygget og klart – fjern lasteskjermen
+(function(){
+  var l = document.getElementById('laster');
+  if(l){ l.classList.add('borte'); setTimeout(function(){ l.style.display='none'; }, 450); }
+})();
+</script>
+</body>
+</html>

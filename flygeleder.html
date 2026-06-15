@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Flygeleder – tårnet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --field:#0E1B2A;
+    --field-2:#0a141f;
+    --grid:#15273b;
+    --panel:rgba(8,16,26,.82);
+    --panel-line:rgba(120,160,200,.18);
+    --amber:#F6B53C;
+    --ink:#E8EEF5;
+    --ink-dim:#9fb2c6;
+    --bad:#FF5C5C;
+    font-family:"Atkinson Hyperlegible", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;background:var(--field-2);color:var(--ink);overflow:hidden;}
+  #game{position:fixed;inset:0;}
+  canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;}
+
+  /* HUD */
+  #hud{
+    position:fixed;top:0;left:0;right:0;
+    display:flex;align-items:center;gap:14px;
+    padding:10px 14px;
+    background:linear-gradient(180deg, rgba(8,16,26,.9), rgba(8,16,26,0));
+    pointer-events:none;user-select:none;
+  }
+  .stat{
+    background:var(--panel);border:1px solid var(--panel-line);
+    border-radius:12px;padding:7px 12px;line-height:1;
+    backdrop-filter:blur(6px);
+  }
+  .stat .lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);}
+  .stat .val{font-family:ui-monospace,"SFMono-Regular",Menlo,monospace;font-size:22px;font-weight:700;margin-top:3px;color:var(--ink);}
+  .stat.lvl .val{color:var(--amber);}
+  #hearts{font-size:20px;letter-spacing:2px;color:var(--bad);margin-top:4px;min-height:24px;}
+  #spacer{flex:1;}
+  .iconbtn{
+    pointer-events:auto;
+    background:var(--panel);border:1px solid var(--panel-line);color:var(--ink);
+    border-radius:12px;padding:9px 13px;font-size:15px;font-weight:700;cursor:pointer;
+    backdrop-filter:blur(6px);
+  }
+  .iconbtn:hover{border-color:var(--amber);}
+  .iconbtn:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+
+  /* Overlays */
+  .overlay{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(120% 100% at 50% 0%, rgba(14,27,42,.55), rgba(6,11,18,.92));
+    backdrop-filter:blur(3px);padding:24px;z-index:5;
+  }
+  .overlay.hidden{display:none;}
+  .card{
+    width:min(560px,94vw);background:var(--panel);border:1px solid var(--panel-line);
+    border-radius:20px;padding:30px 30px 26px;box-shadow:0 30px 80px rgba(0,0,0,.5);
+  }
+  .eyebrow{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);font-weight:700;}
+  h1{font-size:clamp(30px,6vw,46px);margin:8px 0 2px;line-height:1.02;}
+  h2{font-size:clamp(24px,5vw,34px);margin:6px 0 4px;}
+  .lead{color:var(--ink-dim);font-size:16px;line-height:1.5;margin:10px 0 18px;}
+  .how{display:grid;gap:10px;margin:0 0 22px;}
+  .how .row{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.45;}
+  .num{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+    background:rgba(246,181,60,.14);color:var(--amber);font-weight:700;font-size:14px;
+    font-family:ui-monospace,monospace;}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin:2px 0 22px;}
+  .chip{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-dim);
+    border:1px solid var(--panel-line);border-radius:999px;padding:5px 11px;}
+  .dot{width:13px;height:13px;border-radius:50%;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+    background:var(--amber);color:#1a1206;border:none;border-radius:12px;
+    padding:14px 22px;font-size:18px;font-weight:700;font-family:inherit;
+  }
+  .btn:hover{filter:brightness(1.06);}
+  .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--panel-line);}
+  .row-btn{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .final{display:flex;gap:26px;margin:6px 0 20px;}
+  .final .b .val{font-family:ui-monospace,monospace;font-size:40px;font-weight:700;color:var(--amber);}
+  .final .b .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);}
+  .tag{display:inline-block;margin-top:14px;font-size:13px;color:var(--ink-dim);}
+  @media (max-width:520px){ .card{padding:22px 20px;} #hud{gap:8px;} .stat{padding:6px 9px;} .stat .val{font-size:18px;} }
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="cv"></canvas>
+
+  <div id="hud" aria-hidden="true">
+    <div class="stat lvl"><div class="lbl">Nivå</div><div class="val" id="hLevel">1</div></div>
+    <div class="stat"><div class="lbl">Poeng</div><div class="val" id="hScore">0</div></div>
+    <div class="stat"><div class="lbl">Fly igjen</div><div class="val" id="hLeft">0</div></div>
+    <div class="stat"><div class="lbl">Liv</div><div id="hearts">♥♥♥</div></div>
+    <div id="spacer"></div>
+    <button class="iconbtn" id="bSound" title="Lyd på/av">🔊</button>
+    <button class="iconbtn" id="bPause" title="Pause">⏸ Pause</button>
+  </div>
+
+  <!-- Startskjerm -->
+  <div class="overlay" id="ovStart">
+    <div class="card">
+      <div class="eyebrow">Kontrolltårnet</div>
+      <h1>Flygeleder</h1>
+      <p class="lead">Du styrer trafikken. Få flyene trygt ned – tegn ruter, hold avstand, og bygg ut flyplassen nivå for nivå med flere rullebaner og mer trafikk.</p>
+      <div class="how">
+        <div class="row"><span class="num">1</span><span><b>Tegn en rute:</b> dra fra et fly og slipp på rullebanen med <b>samme farge</b>. Flyet følger ruten og lander.</span></div>
+        <div class="row"><span class="num">2</span><span><b>Ventende fly</b> sirkler i luften til du gir dem en rute. Du kan tegne ny rute når som helst.</span></div>
+        <div class="row"><span class="num">3</span><span><b>Hold dem fra hverandre:</b> kolliderer to fly i lufta, mister du et liv og nivået starter på nytt.</span></div>
+        <div class="row"><span class="num">4</span><span><b>Land alle flyene trygt</b> for å gå videre. Nye rullebaner åpner på nivå 3 og 5.</span></div>
+      </div>
+      <div class="row-btn">
+        <button class="btn" id="bStart">Start vakten</button>
+        <span class="tag">Funker med mus, fingre og smartboard.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nytt nivå -->
+  <div class="overlay hidden" id="ovLevel">
+    <div class="card" style="text-align:center">
+      <div class="eyebrow" id="lvEyebrow">Klar for trafikk</div>
+      <h2 id="lvTitle">Nivå 2</h2>
+      <p class="lead" id="lvSub" style="margin-bottom:22px">Mer trafikk i lufta.</p>
+      <button class="btn" id="bNext">Fortsett</button>
+    </div>
+  </div>
+
+  <!-- Pause -->
+  <div class="overlay hidden" id="ovPause">
+    <div class="card" style="text-align:center">
+      <div class="eyebrow">Tårnet hviler</div>
+      <h2>Pause</h2>
+      <p class="lead" style="margin-bottom:22px">Trafikken venter på deg.</p>
+      <div class="row-btn" style="justify-content:center">
+        <button class="btn" id="bResume">Fortsett</button>
+        <button class="btn ghost" id="bQuit">Avslutt vakten</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game over -->
+  <div class="overlay hidden" id="ovOver">
+    <div class="card">
+      <div class="eyebrow" style="color:var(--bad)">Vakten er over</div>
+      <h2 id="ovOverTitle">For mange uhell</h2>
+      <div class="final">
+        <div class="b"><div class="val" id="fScore">0</div><div class="lbl">Poeng</div></div>
+        <div class="b"><div class="val" id="fLevel">1</div><div class="lbl">Nivå nådd</div></div>
+        <div class="b"><div class="val" id="fLanded">0</div><div class="lbl">Landinger</div></div>
+      </div>
+      <p class="lead" id="ovOverSub">Et tårn til? Trafikken stopper aldri.</p>
+      <button class="btn" id="bRestart">Ny vakt</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- Skjerm / oppløsning ----------
+  let W=0,H=0,DPR=1,SCALE=1;
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    SCALE = Math.min(W,H)/720;        // skalerer fart/størrelser til skjermen
+    layoutRunways();
+  }
+  window.addEventListener('resize', resize);
+
+  // ---------- Palett ----------
+  const COLORS = [
+    {name:'koral', hex:'#FF6B6B'},
+    {name:'himmel', hex:'#4DA3FF'},
+    {name:'mynte', hex:'#51D88A'},
+    {name:'gull',  hex:'#FFD23F'},
+  ];
+
+  // ---------- Rullebaner ----------
+  let runways = [];   // {x,y (touchdown topp), len, w, color, name}
+  let activeRunways = 1;
+
+  function layoutRunways(){
+    const len = Math.max(120, H*0.20);
+    const w   = Math.max(20, Math.min(34, W*0.03));
+    const topY = H*0.60;
+    let xs;
+    if(activeRunways===1) xs=[0.50];
+    else if(activeRunways===2) xs=[0.36,0.64];
+    else xs=[0.27,0.50,0.73];
+    runways = xs.map((fx,i)=>({
+      x: W*fx, y: topY, len, w,
+      color: COLORS[i], name:'Bane '+(i+1)
+    }));
+  }
+  function runwayBottom(r){ return {x:r.x, y:r.y + r.len}; }
+
+  // ---------- Spilltilstand ----------
+  const G = {
+    state:'menu',     // menu | play | levelup | pause | over
+    level:1, score:0, lives:3,
+    landedTotal:0,
+    needed:0, landed:0, spawned:0,
+    spawnTimer:0, spawnEvery:2600,
+    baseSpeed:78, maxAir:6,
+    planes:[], particles:[],
+    shake:0, flash:0, restartIn:0, toast:null,
+    radar:0, sound:true,
+  };
+
+  function levelConfig(lv){
+    const rw = lv<=2?1 : lv<=4?2 : 3;
+    return {
+      runways: rw,
+      needed: 4 + lv*2,
+      spawnEvery: Math.max(1300, 3000 - lv*180),
+      baseSpeed: Math.min(150, 70 + lv*8),
+      maxAir: Math.min(8, 4 + Math.floor(lv/2)),
+    };
+  }
+
+  // ---------- Fly ----------
+  function spawnPlane(){
+    const edge = Math.floor(Math.random()*3); // 0 topp,1 venstre,2 høyre
+    let x,y;
+    const m = 40;
+    if(edge===0){ x=W*(0.15+Math.random()*0.7); y=-m; }
+    else if(edge===1){ x=-m; y=H*(0.10+Math.random()*0.35); }
+    else { x=W+m; y=H*(0.10+Math.random()*0.35); }
+    // mål inn i ventesonen
+    const tx = W*(0.22+Math.random()*0.56);
+    const ty = H*(0.16+Math.random()*0.30);
+    const ang = Math.atan2(ty-y, tx-x);
+    const ci = Math.floor(Math.random()*activeRunways);
+    G.planes.push({
+      x,y, ang,
+      holdTarget:{x:tx, y:ty},
+      color: COLORS[ci],
+      state:'incoming',                 // incoming | holding | routed | landing
+      anchor:null, hAng:0, hDir: Math.random()<.5?1:-1,
+      path:null, pi:0,
+      routing:false, draft:null,
+      r: 9*SCALE,
+      land:0,
+      trail:[],
+    });
+    G.spawned++;
+  }
+
+  function planeSpeed(){ return G.baseSpeed*SCALE; }
+
+  // ---------- Input ----------
+  let active=null;
+  function pointAt(e){
+    const rect = cv.getBoundingClientRect();
+    return { x: e.clientX-rect.left, y: e.clientY-rect.top };
+  }
+  function airborne(p){ return p.state==='incoming'||p.state==='holding'||p.state==='routed'; }
+
+  cv.addEventListener('pointerdown', (e)=>{
+    if(G.state!=='play') return;
+    cv.setPointerCapture(e.pointerId);
+    const p = pointAt(e);
+    let best=null, bd=1e9;
+    for(const pl of G.planes){
+      if(!airborne(pl)) continue;
+      const d = Math.hypot(pl.x-p.x, pl.y-p.y);
+      if(d<bd){ bd=d; best=pl; }
+    }
+    if(best && bd < 34*SCALE){
+      active = best;
+      active.routing = true;
+      active.draft = [{x:active.x,y:active.y}];
+    }
+  });
+  cv.addEventListener('pointermove', (e)=>{
+    if(!active) return;
+    const p = pointAt(e);
+    const last = active.draft[active.draft.length-1];
+    if(Math.hypot(p.x-last.x,p.y-last.y) > 7*SCALE){
+      active.draft.push({x:p.x,y:p.y});
+      if(active.draft.length>240) active.draft.shift();
+    }
+  });
+  function endDrag(){
+    if(!active) return;
+    const pl = active; active=null; pl.routing=false;
+    const end = pl.draft[pl.draft.length-1];
+    // finn matchende rullebane nær slutten
+    let target=null, bd=1e9;
+    for(const r of runways){
+      const d = Math.hypot(r.x-end.x, r.y-end.y);
+      if(r.color===pl.color && d<bd){ bd=d; target=r; }
+    }
+    if(target && bd < 60*SCALE && pl.draft.length>2){
+      pl.draft.push({x:target.x, y:target.y});  // sikt mot touchdown
+      pl.path = pl.draft; pl.pi=0; pl.state='routed';
+      pl._rw = target;
+      blip(660,0.05);
+    } else {
+      // avvist – gå til hold der flyet står
+      if(pl.state==='incoming') startHold(pl);
+      blip(180,0.08);
+    }
+    pl.draft=null;
+  }
+  cv.addEventListener('pointerup', endDrag);
+  cv.addEventListener('pointercancel', endDrag);
+
+  // ---------- Hold-mønster ----------
+  function startHold(pl){
+    pl.state='holding';
+    const R = 30*SCALE;
+    const px = -Math.sin(pl.ang)*pl.hDir, py = Math.cos(pl.ang)*pl.hDir;
+    let ax = pl.x + px*R, ay = pl.y + py*R;
+    const padX = R + 26*SCALE;
+    ax = Math.max(padX, Math.min(W-padX, ax));
+    ay = Math.max(72*SCALE, Math.min(H*0.55, ay));
+    pl.anchor = {x:ax, y:ay, R};
+    pl.hAng = Math.atan2(pl.y-ay, pl.x-ax);
+  }
+
+  // ---------- Oppdatering ----------
+  function update(dt){
+    G.radar += dt*0.6;
+    if(G.shake>0) G.shake = Math.max(0, G.shake-dt*60);
+    if(G.flash>0) G.flash = Math.max(0, G.flash-dt*2.2);
+    if(G.toast){ G.toast.life-=dt; if(G.toast.life<=0) G.toast=null; }
+
+    // partikler animeres alltid (også under omstart-frys)
+    for(const pt of G.particles){
+      pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vx*=0.96; pt.vy*=0.96; pt.life-=dt;
+    }
+    G.particles = G.particles.filter(p=>p.life>0);
+
+    // kort frys etter krasj – så starter samme nivå på nytt
+    if(G.restartIn>0){
+      G.restartIn-=dt;
+      if(G.restartIn<=0) beginLevel(G.level);
+      return;
+    }
+
+    // spawn
+    if(G.spawned < G.needed){
+      G.spawnTimer += dt*1000;
+      const air = G.planes.filter(airborne).length;
+      if(G.spawnTimer>=G.spawnEvery && air<G.maxAir){
+        G.spawnTimer=0; spawnPlane();
+      }
+    }
+
+    const sp = planeSpeed();
+    for(const pl of G.planes){
+      if(pl.routing) { pushTrail(pl); continue; } // fryst mens du tegner
+
+      if(pl.state==='incoming'){
+        pl.x += Math.cos(pl.ang)*sp*dt;
+        pl.y += Math.sin(pl.ang)*sp*dt;
+        const reached = Math.hypot(pl.x-pl.holdTarget.x, pl.y-pl.holdTarget.y) < 9*SCALE;
+        if(reached || pl.x<24 || pl.x>W-24 || pl.y>H*0.5) startHold(pl);
+      }
+      else if(pl.state==='holding'){
+        const R=pl.anchor.R;
+        pl.hAng += pl.hDir * 1.1 * dt;
+        pl.x = pl.anchor.x + Math.cos(pl.hAng)*R;
+        pl.y = pl.anchor.y + Math.sin(pl.hAng)*R;
+        pl.ang = pl.hAng + pl.hDir*Math.PI/2;
+      }
+      else if(pl.state==='routed'){
+        const tgt = pl.path[pl.pi];
+        const dx=tgt.x-pl.x, dy=tgt.y-pl.y, d=Math.hypot(dx,dy);
+        pl.ang = Math.atan2(dy,dx);
+        const step = sp*dt;
+        if(d<=step){ pl.x=tgt.x; pl.y=tgt.y; pl.pi++;
+          if(pl.pi>=pl.path.length){ pl.state='landing'; pl.land=0; blip(880,0.05);} }
+        else { pl.x+=dx/d*step; pl.y+=dy/d*step; }
+      }
+      else if(pl.state==='landing'){
+        const r=pl._rw, b=runwayBottom(r);
+        const dx=b.x-pl.x, dy=b.y-pl.y, d=Math.hypot(dx,dy);
+        pl.ang = Math.atan2(dy,dx);
+        const step = 140*SCALE*dt;
+        pl.land += dt;
+        if(d<=step){ pl.done=true; onLanded(pl); }
+        else { pl.x+=dx/d*step; pl.y+=dy/d*step; }
+      }
+      pushTrail(pl);
+    }
+
+    // kollisjoner (kun fly i lufta, ikke det du tegner på)
+    const air = G.planes.filter(p=>airborne(p) && !p.routing && !p.done);
+    const cd = 22*SCALE;
+    for(let i=0;i<air.length;i++)for(let j=i+1;j<air.length;j++){
+      const a=air[i],b=air[j];
+      if(Math.hypot(a.x-b.x,a.y-b.y) < cd){ crash(a,b); }
+    }
+
+    G.planes = G.planes.filter(p=>!p.done && !p.gone);
+
+    // nivå bestått først når ALLE fly har landet trygt
+    if(G.state==='play' && G.landed>=G.needed && G.planes.length===0){
+      nextLevel();
+    }
+    // oppdater "Fly igjen": gjenstår å spawne + de som er i spill
+    if(G.state==='play'){
+      $('hLeft').textContent = Math.max(0,(G.needed-G.spawned)) + G.planes.length;
+    }
+  }
+
+  function pushTrail(pl){
+    pl.trail.push({x:pl.x,y:pl.y});
+    if(pl.trail.length> (reduceMotion?4:16)) pl.trail.shift();
+  }
+
+  function onLanded(pl){
+    G.score += 10*G.level;
+    G.landed++; G.landedTotal++;
+    blip(990,0.06);
+    syncHUD();
+  }
+
+  function crash(a,b){
+    a.gone=b.gone=true;
+    boom((a.x+b.x)/2,(a.y+b.y)/2);
+    G.lives--; G.shake=14*SCALE; G.flash=0.85;
+    blip(110,0.18,'sawtooth');
+    syncHUD();
+    if(G.lives<=0){ gameOver(); }
+    else { G.restartIn=1.0; G.toast={text:'Krasj – nivå '+G.level+' starter på nytt', life:2.0}; }
+  }
+
+  function boom(x,y){
+    for(let i=0;i<26;i++){
+      const a=Math.random()*Math.PI*2, s=(60+Math.random()*180)*SCALE;
+      G.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:0.5+Math.random()*0.4,
+        c: Math.random()<.5?'#FF8a3c':'#FF5c5c', r:(2+Math.random()*3)*SCALE});
+    }
+  }
+
+  // ---------- Tegning ----------
+  function draw(){
+    ctx.save();
+    if(G.shake>0){ ctx.translate((Math.random()-.5)*G.shake,(Math.random()-.5)*G.shake); }
+
+    // bakgrunn
+    const g=ctx.createRadialGradient(W*0.5,H*0.35,40,W*0.5,H*0.5,Math.max(W,H)*0.8);
+    g.addColorStop(0,'#13243a'); g.addColorStop(1,'#0a131f');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    drawGrid();
+    if(!reduceMotion) drawRadarSweep();
+
+    for(const r of runways) drawRunway(r);
+
+    // ruteforslag mens du tegner
+    if(active && active.draft) drawDraft(active);
+
+    for(const pl of G.planes) drawPlane(pl);
+    for(const pt of G.particles){
+      ctx.globalAlpha=Math.max(0,pt.life); ctx.fillStyle=pt.c;
+      ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.r,0,7); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    ctx.restore();
+
+    if(G.flash>0){ ctx.fillStyle='rgba(255,70,70,'+(G.flash*0.28)+')'; ctx.fillRect(0,0,W,H); }
+    if(G.toast) drawToast();
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    if(ctx.roundRect){ ctx.roundRect(x,y,w,h,r); }
+    else { ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+           ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  }
+  function drawToast(){
+    const a=Math.min(1,G.toast.life*2.2);
+    const fs=Math.round(17*Math.min(1.7,Math.max(1,SCALE)));
+    ctx.save(); ctx.globalAlpha=a;
+    ctx.font='700 '+fs+'px "Atkinson Hyperlegible",system-ui,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    const t=G.toast.text, w=ctx.measureText(t).width+40, h=fs+24, x=W/2, y=H*0.17;
+    ctx.fillStyle='rgba(255,92,92,.18)'; ctx.strokeStyle='rgba(255,92,92,.65)'; ctx.lineWidth=1.5;
+    roundRect(x-w/2,y-h/2,w,h,13); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#ffdede'; ctx.fillText(t,x,y+1);
+    ctx.restore();
+  }
+
+  function drawGrid(){
+    ctx.strokeStyle='rgba(120,160,200,.06)'; ctx.lineWidth=1;
+    const s=Math.max(46,W/22);
+    ctx.beginPath();
+    for(let x=0;x<W;x+=s){ ctx.moveTo(x,0); ctx.lineTo(x,H); }
+    for(let y=0;y<H;y+=s){ ctx.moveTo(0,y); ctx.lineTo(W,y); }
+    ctx.stroke();
+  }
+  function drawRadarSweep(){
+    const cx=W*0.5, cy=H*0.5, R=Math.max(W,H)*0.7, a=G.radar%(Math.PI*2);
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(a);
+    const lg=ctx.createLinearGradient(0,0,R,0);
+    lg.addColorStop(0,'rgba(81,216,138,.10)'); lg.addColorStop(1,'rgba(81,216,138,0)');
+    ctx.fillStyle=lg; ctx.beginPath(); ctx.moveTo(0,0);
+    ctx.arc(0,0,R,-0.18,0.0); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRunway(r){
+    const b=runwayBottom(r);
+    // skygge/strip
+    ctx.save();
+    ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=r.w+8; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(r.x,r.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    ctx.strokeStyle='#243447'; ctx.lineWidth=r.w; 
+    ctx.beginPath(); ctx.moveTo(r.x,r.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    // midtstripe
+    ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=2; ctx.setLineDash([10,12]);
+    ctx.beginPath(); ctx.moveTo(r.x,r.y+8); ctx.lineTo(b.x,b.y-8); ctx.stroke();
+    ctx.setLineDash([]);
+    // fargehode (touchdown)
+    ctx.fillStyle=r.color.hex;
+    ctx.beginPath(); ctx.arc(r.x,r.y,r.w*0.62,0,7); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,.55)'; ctx.font='700 '+Math.round(r.w*0.7)+'px ui-monospace,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText((runways.indexOf(r)+1), r.x, r.y+1);
+    ctx.restore();
+  }
+
+  function drawDraft(pl){
+    const d=pl.draft; if(d.length<2) return;
+    // gyldig mål?
+    const end=d[d.length-1];
+    let ok=false;
+    for(const r of runways){ if(r.color===pl.color && Math.hypot(r.x-end.x,r.y-end.y)<60*SCALE) ok=true; }
+    ctx.strokeStyle = ok? pl.color.hex : 'rgba(255,120,120,.7)';
+    ctx.lineWidth=3; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.setLineDash([2,9]);
+    ctx.beginPath(); ctx.moveTo(d[0].x,d[0].y);
+    for(let i=1;i<d.length;i++) ctx.lineTo(d[i].x,d[i].y);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  function drawPlane(pl){
+    // rute
+    if(pl.state==='routed' && pl.path){
+      ctx.strokeStyle=pl.color.hex+'88'; ctx.lineWidth=2.5; ctx.setLineDash([2,8]); ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(pl.x,pl.y);
+      for(let i=pl.pi;i<pl.path.length;i++) ctx.lineTo(pl.path[i].x,pl.path[i].y);
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    // hale
+    if(pl.trail.length>1){
+      ctx.lineWidth=2; ctx.strokeStyle=pl.color.hex+'33';
+      ctx.beginPath(); ctx.moveTo(pl.trail[0].x,pl.trail[0].y);
+      for(const t of pl.trail) ctx.lineTo(t.x,t.y); ctx.stroke();
+    }
+    // hold-ring
+    if(pl.state==='holding'){
+      ctx.strokeStyle=pl.color.hex+'55'; ctx.lineWidth=1.5; ctx.setLineDash([3,6]);
+      ctx.beginPath(); ctx.arc(pl.anchor.x,pl.anchor.y,pl.anchor.R,0,7); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // valgt-glød
+    if(pl===active){ ctx.fillStyle=pl.color.hex+'33'; ctx.beginPath(); ctx.arc(pl.x,pl.y,pl.r*2.6,0,7); ctx.fill(); }
+    // selve flyet
+    let alpha=1; if(pl.state==='landing') alpha=Math.max(0.15,1-pl.land*1.1);
+    ctx.save(); ctx.globalAlpha=alpha; ctx.translate(pl.x,pl.y); ctx.rotate(pl.ang);
+    const s=pl.r;
+    ctx.fillStyle=pl.color.hex;
+    ctx.beginPath();
+    ctx.moveTo(s*1.5,0); ctx.lineTo(-s,s*0.9); ctx.lineTo(-s*0.5,0); ctx.lineTo(-s,-s*0.9);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.beginPath(); ctx.arc(s*0.35,0,s*0.28,0,7); ctx.fill();
+    ctx.restore();
+  }
+
+  // ---------- Lyd ----------
+  let AC=null;
+  function blip(freq,dur,type){
+    if(!G.sound) return;
+    try{
+      AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+      const o=AC.createOscillator(), g=AC.createGain();
+      o.type=type||'sine'; o.frequency.value=freq;
+      g.gain.value=0.08; o.connect(g); g.connect(AC.destination);
+      o.start(); g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+dur);
+      o.stop(AC.currentTime+dur+0.02);
+    }catch(e){}
+  }
+
+  // ---------- HUD ----------
+  const $=id=>document.getElementById(id);
+  function syncHUD(){
+    $('hLevel').textContent=G.level;
+    $('hScore').textContent=G.score;
+    $('hLeft').textContent=Math.max(0,(G.needed-G.spawned)) + G.planes.length;
+    $('hearts').textContent='♥'.repeat(Math.max(0,G.lives)) || '–';
+  }
+
+  // ---------- Flyt ----------
+  function startGame(){
+    G.level=1; G.score=0; G.lives=3; G.landedTotal=0;
+    G.planes=[]; G.particles=[]; active=null;
+    G.restartIn=0; G.toast=null;
+    beginLevel(1);
+    hideAll(); G.state='play';
+  }
+  function beginLevel(lv){
+    const c=levelConfig(lv);
+    G.planes=[]; G.particles=[]; active=null;
+    G.level=lv; G.needed=c.needed; G.landed=0; G.spawned=0;
+    G.spawnEvery=c.spawnEvery; G.baseSpeed=c.baseSpeed; G.maxAir=c.maxAir;
+    G.spawnTimer=c.spawnEvery*0.5;
+    const prev=activeRunways; activeRunways=c.runways; layoutRunways();
+    syncHUD();
+  }
+  function nextLevel(){
+    G.state='levelup';
+    const lv=G.level+1; const c=levelConfig(lv);
+    const newBane = c.runways>activeRunways;
+    $('lvEyebrow').textContent = newBane? 'Flyplassen vokser' : 'Mer trafikk';
+    $('lvTitle').textContent='Nivå '+lv;
+    $('lvSub').textContent = newBane
+      ? ('Ny rullebane åpner – nå '+c.runways+' baner og '+c.runways+' farger i lufta.')
+      : ('Flere fly skal ned. Mål: '+c.needed+' landinger.');
+    show('ovLevel');
+    G._pendingLevel=lv;
+  }
+  function gameOver(){
+    G.state='over';
+    $('fScore').textContent=G.score;
+    $('fLevel').textContent=G.level;
+    $('fLanded').textContent=G.landedTotal;
+    show('ovOver');
+  }
+
+  function show(id){ $(id).classList.remove('hidden'); }
+  function hide(id){ $(id).classList.add('hidden'); }
+  function hideAll(){ ['ovStart','ovLevel','ovPause','ovOver'].forEach(hide); }
+
+  // ---------- Knapper ----------
+  $('bStart').onclick=startGame;
+  $('bRestart').onclick=startGame;
+  $('bNext').onclick=()=>{ beginLevel(G._pendingLevel); hide('ovLevel'); G.state='play'; };
+  $('bResume').onclick=()=>{ hide('ovPause'); G.state='play'; };
+  $('bQuit').onclick=()=>{ hide('ovPause'); G.state='menu'; show('ovStart'); };
+  $('bPause').onclick=()=>{ if(G.state==='play'){ G.state='pause'; show('ovPause'); } };
+  $('bSound').onclick=()=>{ G.sound=!G.sound; $('bSound').textContent=G.sound?'🔊':'🔈'; };
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape' && G.state==='play'){ G.state='pause'; show('ovPause'); }
+    else if(e.key==='Escape' && G.state==='pause'){ hide('ovPause'); G.state='play'; }
+  });
+
+  // ---------- Løkke ----------
+  let last=performance.now();
+  function loop(now){
+    let dt=(now-last)/1000; last=now; if(dt>0.05) dt=0.05;
+    if(G.state==='play') update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  resize();
+  syncHUD();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
