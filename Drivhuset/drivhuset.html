@@ -363,7 +363,7 @@ function textured(colorFallback, file, rx, ry){
   ld.load(ASSET_BASE+file, t=>{
     t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx||1,ry||1);
     t.anisotropy=renderer.capabilities.getMaxAnisotropy(); t.minFilter=THREE.LinearMipmapLinearFilter; t.generateMipmaps=true;
-    m.map=t; m.color.set(0xffffff); m.needsUpdate=true;
+    m.map=t; m.color.set(0xcacaca); m.needsUpdate=true;   // svak nedtoning så lyse flater ikke vaskes ut
   }, undefined, ()=>{ /* fil mangler → behold farge */ });
   return m;
 }
@@ -412,7 +412,9 @@ function buildWorld(){
   // grusplass + sti inn forfra
   const apron=new THREE.Mesh(new THREE.BoxGeometry(GH_W+9,0.52,GH_D+9), MAT.gravel);
   apron.position.y=-0.55; apron.receiveShadow=true; scene.add(apron);
-  const path=new THREE.Mesh(new THREE.BoxGeometry(4.5,0.54,14), MAT.gravel);
+  // egen grus-tekstur for stien så steinene blir like store som på grusplassen rundt
+  const pathMat=textured(0xcdbfa3,"gravel.png",1.3,5);
+  const path=new THREE.Mesh(new THREE.BoxGeometry(4.5,0.54,14), pathMat);
   path.position.set(0,-0.53,GH_D/2+8.5); path.receiveShadow=true; scene.add(path);
   // drivhusgulv (terrakotta)
   const floor=new THREE.Mesh(new THREE.BoxGeometry(GH_W,0.5,GH_D), MAT.floor);
