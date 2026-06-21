@@ -605,7 +605,8 @@ let gardener=null;
 const GARDENER_GLB   = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/02684e44-4834-40b6-8668-72c2585e9137.glb"; // gå
 const GARDENER_CHEER = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/a9acbfb1-08d3-4889-9a94-f5378170409f.glb"; // jubel (høsting)
 const GARDENER_SHRUG = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/dea18301-a02d-44bd-88b6-25087c044dac.glb"; // skuldertrekk (død)
-const GARDENER_FACING = 0;   // snu modellen 180° hvis den vender feil vei (0 eller Math.PI)
+const GARDENER_FACING = 0;     // snu modellen 180° hvis den vender feil vei (0 eller Math.PI)
+const GARDENER_HEIGHT = 1.95;  // ønsket høyde i spillet (juster om gartneren blir for stor/liten)
 function buildGardener(){
   const g=new THREE.Group();
   const skin=0xe9b58a, shirt=0x2f9e6a, pants=0x3a5a8a, hat=0xe8c66a;
@@ -629,11 +630,14 @@ function loadGardenerModel(g){
   const holder=new THREE.Group(); g.add(holder);     // egen gruppe så vi kan bobbe modellen
   new THREE.GLTFLoader().load(GARDENER_GLB, gltf=>{
     const m=gltf.scene;
-    // skaler til ~1,9 enheter høy og sett føttene på y=0
-    const box=new THREE.Box3().setFromObject(m), size=new THREE.Vector3(); box.getSize(size);
-    const h=size.y||1, s=1.9/h; m.scale.setScalar(s);
-    const box2=new THREE.Box3().setFromObject(m), c=new THREE.Vector3(); box2.getCenter(c);
-    m.position.x-=c.x; m.position.z-=c.z; m.position.y-=box2.min.y;   // sentrer + føtter på bakken
+    // mål høyden via skjelettets bein (pålitelig for riggede modeller), ellers via geometri
+    function measure(o){ o.updateMatrixWorld(true); const b=new THREE.Box3(); let bones=false;
+      o.traverse(n=>{ if(n.isBone){ b.expandByPoint(n.getWorldPosition(new THREE.Vector3())); bones=true; } });
+      if(!bones || b.isEmpty()) b.setFromObject(o); return {b,bones}; }
+    let mr=measure(m); const size=new THREE.Vector3(); mr.b.getSize(size);
+    const h=size.y||1, s=(mr.bones?GARDENER_HEIGHT*0.82:GARDENER_HEIGHT)/h; m.scale.setScalar(s);
+    mr=measure(m); const c=new THREE.Vector3(); mr.b.getCenter(c);
+    m.position.x-=c.x; m.position.z-=c.z; m.position.y-=mr.b.min.y;   // sentrer + føtter på bakken
     m.rotation.y=GARDENER_FACING;
     m.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
     holder.add(m);
