@@ -346,8 +346,8 @@ function resize(){
 addEventListener("resize",resize);
 
 /* ---- lys ---- */
-const hemi=new THREE.HemisphereLight(0xffffff,0x8fb89a,1.0); scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xfff1cf,1.0);
+const hemi=new THREE.HemisphereLight(0xffffff,0x8fb89a,0.8); scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff1cf,0.5);
 sun.position.set(12,24,9); sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-24; sun.shadow.camera.right=24; sun.shadow.camera.top=24; sun.shadow.camera.bottom=-24;
@@ -545,6 +545,11 @@ function buildGardenExtras(){
 
 const slotMeshes=[];
 const raycaster=new THREE.Raycaster(); const pointer=new THREE.Vector2();
+const hitTargets=[];   // store, usynlige trykksoner som gjør plassene lette å treffe
+function makeHitPad(i,r,h,y){
+  const pad=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,10), new THREE.MeshBasicMaterial({visible:false}));
+  pad.position.y=y; pad.userData.slot=i; hitTargets.push(pad); return pad;
+}
 function buildSlots(){
   for(let i=0;i<CFG.maxSlots;i++){
     const p=slotPos(i);
@@ -553,6 +558,7 @@ function buildSlots(){
     const tile=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.64,0.14,12), mat(0x9c6b3e));
     tile.position.y=0.6; tile.userData.slot=i; tile.receiveShadow=true; g.add(tile);
     g.userData.tile=tile;
+    g.add(makeHitPad(i,1.25,2.8,1.4));   // stor usynlig trykksone
     const content=new THREE.Group(); content.position.y=0.66; g.userData.content=content; g.add(content);
     scene.add(g); slotMeshes.push(g);
   }
@@ -563,6 +569,7 @@ function buildSlots(){
     const tile=new THREE.Mesh(new THREE.CylinderGeometry(0.72,0.72,0.16,12), mat(0x5a3f28));
     tile.position.y=0.3; tile.userData.slot=i; tile.receiveShadow=true; g.add(tile);
     g.userData.tile=tile; g.userData.bed=true;
+    g.add(makeHitPad(i,1.2,2.2,1.0));
     const content=new THREE.Group(); content.position.y=0.38; g.userData.content=content; g.add(content);
     scene.add(g); slotMeshes.push(g);
   }
@@ -594,7 +601,7 @@ let gardener=null;
 /* 3D-modell (Higgsfield). Prototype: hentes fra CDN. For en helt offline versjon
    kan du laste ned .glb-en til Assets/ og sette GARDENER_GLB="Assets/gartner.glb". */
 const GARDENER_GLB = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/8a0628b3-b830-4255-b3f0-61e9c93aa302.glb";
-const GARDENER_FACING = Math.PI;   // snu modellen 180° hvis den vender feil vei (0 eller Math.PI)
+const GARDENER_FACING = 0;   // snu modellen 180° hvis den vender feil vei (0 eller Math.PI)
 function buildGardener(){
   const g=new THREE.Group();
   const skin=0xe9b58a, shirt=0x2f9e6a, pants=0x3a5a8a, hat=0xe8c66a;
@@ -794,7 +801,7 @@ canvas.addEventListener("pointerdown",e=>{ dragging=true;moved=0;lastX=e.clientX
 canvas.addEventListener("pointermove",e=>{ if(!dragging)return;
   const dx=e.clientX-lastX,dy=e.clientY-lastY; moved+=Math.abs(dx)+Math.abs(dy); lastX=e.clientX;lastY=e.clientY;
   if(mode==="utforsk"){ exYaw -= dx*0.005; exPitch=clamp(exPitch - dy*0.004,-1.0,0.45); }
-  else { camYaw -= dx*0.006; camPitch=clamp(camPitch - dy*0.004, 0.5, 1.2); }   // dra sidelengs = snurr, opp/ned = tilt
+  else { camYaw -= dx*0.006; camPitch=clamp(camPitch - dy*0.004, 0.26, 1.25); }   // dra sidelengs = snurr, opp/ned = tilt
   placeCamera();
 });
 canvas.addEventListener("pointerup",e=>{ dragging=false; if(moved<7) tap(e); });
@@ -810,8 +817,7 @@ function rayTo(e){ const r=canvas.getBoundingClientRect();
   raycaster.setFromCamera(pointer,activeCamera); }
 function tap(e){
   rayTo(e);
-  const tiles=slotMeshes.map(g=>g.userData.tile);
-  let hit=raycaster.intersectObjects(tiles,false);
+  let hit=raycaster.intersectObjects(hitTargets,false);   // store trykksoner først
   if(hit.length){ walkToSlot(hit[0].object.userData.slot); return; }
   const sh=raycaster.intersectObjects(stands.map(s=>s.userData.hit),false);
   if(sh.length){ const st=sh[0].object.parent.position;
@@ -878,11 +884,8 @@ function tick(){
     g.target=null; g.pending=-1; g.standAct=null; g.path=[];
     const len=Math.hypot(kx,kz)||1; kx/=len; kz/=len;
     let wx,wz;
-    if(mode==="utforsk"){
-      const fx=Math.sin(exYaw),fz=Math.cos(exYaw),rx=Math.cos(exYaw),rz=-Math.sin(exYaw);
-      wx=fx*(-kz)+rx*kx; wz=fz*(-kz)+rz*kx;       // gå i blikkretningen
-    } else {
-      // bruk kameraets egne akser så «høyre» alltid er høyre på skjermen
+    {
+      // begge moduser: bruk kameraets egne akser så «høyre» alltid er høyre på skjermen
       activeCamera.updateMatrixWorld();
       const e=activeCamera.matrixWorld.elements;
       let rx=e[0], rz=e[2], fx=-e[8], fz=-e[10];
