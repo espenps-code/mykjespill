@@ -602,7 +602,9 @@ function buildBenches(){
 let gardener=null;
 /* 3D-modell (Higgsfield). Prototype: hentes fra CDN. For en helt offline versjon
    kan du laste ned .glb-en til Assets/ og sette GARDENER_GLB="Assets/gartner.glb". */
-const GARDENER_GLB = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/8a0628b3-b830-4255-b3f0-61e9c93aa302.glb";
+const GARDENER_GLB   = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/02684e44-4834-40b6-8668-72c2585e9137.glb"; // gå
+const GARDENER_CHEER = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/a9acbfb1-08d3-4889-9a94-f5378170409f.glb"; // jubel (høsting)
+const GARDENER_SHRUG = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/dea18301-a02d-44bd-88b6-25087c044dac.glb"; // skuldertrekk (død)
 const GARDENER_FACING = 0;   // snu modellen 180° hvis den vender feil vei (0 eller Math.PI)
 function buildGardener(){
   const g=new THREE.Group();
@@ -637,7 +639,38 @@ function loadGardenerModel(g){
     holder.add(m);
     g.userData.procParts.forEach(p=>p.visible=false);   // skjul reservefiguren
     g.userData.model=holder;
+    // gå-animasjon (spilles når gartneren beveger seg)
+    if(gltf.animations && gltf.animations.length){
+      const mixer=new THREE.AnimationMixer(m);
+      const act=mixer.clipAction(gltf.animations[0]); act.play(); act.paused=true;
+      g.userData.mixer=mixer; g.userData.walkAction=act; g.userData.modelMesh=m;
+      // når en engangs-gest er ferdig: tilbake til gå/ro
+      mixer.addEventListener("finished", ()=>{ const u=g.userData; u.gesture=null;
+        if(u.walkAction){ u.walkAction.reset(); u.walkAction.play(); u.walkAction.paused=!u.moving; } });
+      // hent inn jubel- og skuldertrekk-klippene (samme skjelett)
+      loadGesture(g, GARDENER_CHEER, "cheerAction");
+      loadGesture(g, GARDENER_SHRUG, "shrugAction");
+    }
   }, undefined, err=>{ /* feilet (CDN/CORS) → behold den enkle figuren */ });
+}
+/* last et klipp fra en annen rigg-GLB og legg det på samme mixer */
+function loadGesture(g, url, key){
+  new THREE.GLTFLoader().load(url, gltf=>{
+    const u=g.userData;
+    if(u.mixer && gltf.animations && gltf.animations.length){
+      const act=u.mixer.clipAction(gltf.animations[0], u.modelMesh);
+      act.setLoop(THREE.LoopOnce,1); act.clampWhenFinished=true;
+      u[key]=act;
+    }
+  }, undefined, ()=>{ /* klipp mangler → bare ingen gest */ });
+}
+/* spill en engangs-gest (stopper gå-syklusen mens den varer) */
+function playGesture(act){
+  if(!gardener || !act) return; const u=gardener.userData;
+  if(!u.mixer) return;
+  u.gesture=act;
+  if(u.walkAction) u.walkAction.stop();
+  act.reset(); act.play();
 }
 
 buildWorld();
@@ -920,8 +953,14 @@ function tick(){
   if(moving) g.phase+=dt*11; else g.phase = g.phase>0.05? g.phase*0.78 : 0;
   const sw=Math.sin(g.phase)*(moving?0.55:0.45*g.phase);
   g.legL.rotation.x=sw; g.legR.rotation.x=-sw; g.armL.rotation.x=-sw*0.7; g.armR.rotation.x=sw*0.7;
-  if(g.model){ g.model.position.y=Math.abs(Math.sin(g.phase))*0.07*(moving?1:0);
-    g.model.rotation.z=Math.sin(g.phase)*0.04*(moving?1:0); }   // lett vugging når modellen går
+  if(g.mixer){                                   // ekte gå-animasjon: spill når i bevegelse
+    if(!(g.gesture && g.gesture.isRunning()) && g.walkAction) g.walkAction.paused=!moving;  // ikke avbryt en gest
+    g.mixer.update(dt);
+    if(g.model){ g.model.position.y=0; g.model.rotation.z=0; }
+  } else if(g.model){                            // ingen rigg → lett vugging
+    g.model.position.y=Math.abs(Math.sin(g.phase))*0.07*(moving?1:0);
+    g.model.rotation.z=Math.sin(g.phase)*0.04*(moving?1:0);
+  }
   g.moving=moving;
   camFocus.lerp(gardener.position,0.09); placeCamera();
   for(let i=0;i<TOTAL_SLOTS;i++){ const s=G.slots[i]; if(s&&!s.dead&&s.stage>0){
@@ -1008,6 +1047,7 @@ function nextDay(){
   if(died.length) msgs.push("💀 "+died.length+" plante"+(died.length>1?"r":"")+" visnet");
   if(msgs.length) toast(msgs.join("  ·  "), died.length?"warn":(grew.length?"good":""));
   else toast("Dag "+G.day+" — drivhuset hviler 🌙");
+  if(died.length) playGesture(gardener.userData.shrugAction);   // gartneren trekker på skuldrene
   // sjekk lavt vann
   let dry=0; for(let i=0;i<G.slotsUnlocked;i++){ const s=G.slots[i]; if(s&&!s.dead&&!waterOK(s)&&!G.up.autovann) dry++; }
   if(dry && !G.up.autovann) setTimeout(()=>toast("💧 "+dry+" plante"+(dry>1?"r":"")+" trenger vann","warn"),900);
@@ -1028,6 +1068,7 @@ function harvest(i){ const s=G.slots[i]; if(!s||s.dead||s.stage<4)return; const 
   G.dex[s.species]=true; G.bestPrice[s.species]=Math.max(G.bestPrice[s.species]||0,price);
   G.slots[i]=null; renderSlot(i); openSlot(i); save();
   toast((s.special?"✨ ":"")+"Solgt "+sp.navn+" for "+price+" 🪙"+(s.special?" (sjelden!)":""), s.special?"gold":"good");
+  playGesture(gardener.userData.cheerAction);   // gartneren jubler
 }
 function changeLight(i){ // vekstlampe-oppgradering
   const s=G.slots[i]; if(!s||s.dead)return;
