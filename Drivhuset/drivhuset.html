@@ -368,7 +368,7 @@ function textured(colorFallback, file, rx, ry){
   return m;
 }
 const MAT = {
-  grass:  textured(0x6fae54, "grass.png", 6, 6),
+  grass:  textured(0x6fae54, "grass_flat.png", 6, 6),
   floor:  textured(0xc28a5c, "floor.png", 8, 6),
   gravel: textured(0xcdbfa3, "gravel.png", 9, 9),
   wood:   textured(0xb07e4e, "wood.png", 1, 1),
@@ -649,7 +649,8 @@ function loadGardenerModel(g){
       const act=mixer.clipAction(gltf.animations[0]); act.play(); act.paused=true;
       g.userData.mixer=mixer; g.userData.walkAction=act; g.userData.modelMesh=m;
       // når en engangs-gest er ferdig: tilbake til gå/ro
-      mixer.addEventListener("finished", ()=>{ const u=g.userData; u.gesture=null;
+      mixer.addEventListener("finished", e=>{ const u=g.userData; u.gesture=null;
+        if(e.action) e.action.stop();   // fjern gesten helt så den ikke blander seg inn i gå-syklusen
         if(u.walkAction){ u.walkAction.reset(); u.walkAction.play(); u.walkAction.paused=!u.moving; } });
       // hent inn jubel- og skuldertrekk-klippene (samme skjelett)
       loadGesture(g, GARDENER_CHEER, "cheerAction");
