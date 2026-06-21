@@ -217,7 +217,7 @@
 <!-- Startskjerm -->
 <div id="start">
   <div id="startBoks">
-    <div style="font-size:54px;">🪙🏠💼</div>
+    <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3CdYUPSOzmh7OXn0ZcBWtMDV0N4/hf_20260616_164106_633e179e-3d26-457b-bbd3-ef75080469e5.jpeg" alt="Myntland: en koselig by" onerror="this.style.display='none'" style="width:100%;border-radius:16px;margin:0 0 12px;display:block;box-shadow:0 6px 18px rgba(0,0,0,.18);">
     <h1>Myntland: Livet på egne bein</h1>
     <div class="under">Klarer du å balansere din egen økonomi i 12 måneder?</div>
     <p style="text-align:left;font-size:15px;">
@@ -598,32 +598,126 @@ function lagSkilt(tekst){
   return sp;
 }
 
-function lagBygning(b){
+// ---- Bygninger som ligner på hva de er (rene kodede former) ----
+function mkMesh(geo, color, opts){
+  const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial(Object.assign({color:color}, opts||{})));
+  m.castShadow = true; m.receiveShadow = true; return m;
+}
+function lagVindu(dx, dy, dz, w, h){
+  const v = mkMesh(new THREE.BoxGeometry(w||1.0, h||1.0, 0.2), 0xcfeaff, {emissive:0x223344});
+  v.position.set(dx, dy, dz); return v;
+}
+function lagDoer(dz, color){
+  const d = mkMesh(new THREE.BoxGeometry(1.4, 2.2, 0.25), color||0x4a3220);
+  d.position.set(0, 1.1, dz); return d;
+}
+
+function byggStandard(b){
   const g = new THREE.Group();
-  const kropp = new THREE.Mesh(
-    new THREE.BoxGeometry(5.5, 4, 5),
-    new THREE.MeshLambertMaterial({color:b.farge}));
-  kropp.position.y = 2; kropp.castShadow = true; kropp.receiveShadow = true;
-  g.add(kropp);
-  const tak = new THREE.Mesh(
-    new THREE.ConeGeometry(4.6, 2.4, 4),
-    new THREE.MeshLambertMaterial({color:0x8a4a3a}));
-  tak.position.y = 5.2; tak.rotation.y = Math.PI/4; tak.castShadow = true;
-  g.add(tak);
-  const doer = new THREE.Mesh(
-    new THREE.BoxGeometry(1.4, 2.2, 0.25),
-    new THREE.MeshLambertMaterial({color:0x4a3220}));
-  doer.position.set(0, 1.1, 2.55);
-  g.add(doer);
-  for(const dx of [-1.7, 1.7]){
-    const v = new THREE.Mesh(
-      new THREE.BoxGeometry(1.1, 1.1, 0.2),
-      new THREE.MeshLambertMaterial({color:0xcfeaff, emissive:0x223344}));
-    v.position.set(dx, 2.4, 2.55);
-    g.add(v);
+  const kropp = mkMesh(new THREE.BoxGeometry(5.5, 4, 5), b.farge); kropp.position.y = 2; g.add(kropp);
+  const tak = mkMesh(new THREE.ConeGeometry(4.6, 2.4, 4), 0x8a4a3a); tak.position.y = 5.2; tak.rotation.y = Math.PI/4; g.add(tak);
+  g.add(lagDoer(2.55, 0x4a3220));
+  g.add(lagVindu(-1.7, 2.4, 2.55, 1.1, 1.1)); g.add(lagVindu(1.7, 2.4, 2.55, 1.1, 1.1));
+  g.userData.skiltY = 7.2; return g;
+}
+
+// Jobbsenteret – kontorblokk med vindusrekker og flatt tak
+function byggKontor(b){
+  const g = new THREE.Group(); const h = 6.6;
+  const kropp = mkMesh(new THREE.BoxGeometry(5.4, h, 5), b.farge); kropp.position.y = h/2; g.add(kropp);
+  const tak = mkMesh(new THREE.BoxGeometry(5.8, 0.4, 5.4), 0x2f4374); tak.position.y = h+0.2; g.add(tak);
+  const boks = mkMesh(new THREE.BoxGeometry(1.6, 0.8, 1.6), 0x46608f); boks.position.set(1.2, h+0.6, -0.5); g.add(boks);
+  for(let r=0;r<3;r++) for(const c of [-1.6,0,1.6]) g.add(lagVindu(c, 2.4+r*1.6, 2.55, 1.1, 1.1));
+  g.add(lagDoer(2.55, 0x223a5e));
+  g.userData.skiltY = 7.9; return g;
+}
+
+// Boligkontoret – koselig hus med pyramidetak og pipe
+function byggHus(b){
+  const g = new THREE.Group();
+  const kropp = mkMesh(new THREE.BoxGeometry(5, 3.4, 4.6), b.farge); kropp.position.y = 1.7; g.add(kropp);
+  const tak = mkMesh(new THREE.ConeGeometry(4.0, 2.4, 4), 0x8a4a3a); tak.position.y = 4.6; tak.rotation.y = Math.PI/4; g.add(tak);
+  const pipe = mkMesh(new THREE.BoxGeometry(0.6, 1.4, 0.6), 0x7a4a3a); pipe.position.set(1.3, 4.4, -0.5); g.add(pipe);
+  g.add(lagDoer(2.35, 0x5a3a22));
+  g.add(lagVindu(-1.5, 2.2, 2.35, 1.0, 1.0)); g.add(lagVindu(1.5, 2.2, 2.35, 1.0, 1.0));
+  g.userData.skiltY = 6.9; return g;
+}
+
+// Banken – klassisk fasade med søyler, trapp og kuppel
+function byggBank(b){
+  const g = new THREE.Group(); const h = 4.4;
+  const kropp = mkMesh(new THREE.BoxGeometry(5.4, h, 5), 0xf3ead2); kropp.position.y = h/2; g.add(kropp);
+  const tak = mkMesh(new THREE.BoxGeometry(5.8, 0.5, 5.4), 0xe3d6b8); tak.position.y = h+0.25; g.add(tak);
+  const steg = mkMesh(new THREE.BoxGeometry(5.6, 0.5, 1.2), 0xd9cdb0); steg.position.set(0, 0.25, 2.7); g.add(steg);
+  for(const dx of [-1.8,-0.6,0.6,1.8]){
+    const sol = mkMesh(new THREE.CylinderGeometry(0.32, 0.32, 3.4, 12), 0xfffaf0); sol.position.set(dx, 1.95, 2.5); g.add(sol);
   }
+  const bjelke = mkMesh(new THREE.BoxGeometry(5.0, 0.7, 0.9), 0xe9dcc0); bjelke.position.set(0, 3.9, 2.5); g.add(bjelke);
+  const dome = mkMesh(new THREE.SphereGeometry(1.1, 16, 10, 0, Math.PI*2, 0, Math.PI/2), b.farge); dome.position.set(0, h+0.4, 0); g.add(dome);
+  g.add(lagDoer(2.55, 0x6a5230));
+  g.userData.skiltY = 6.9; return g;
+}
+
+// Butikken – utstillingsvindu, dør og stripet markise
+function byggButikk(b){
+  const g = new THREE.Group(); const h = 3.8;
+  const kropp = mkMesh(new THREE.BoxGeometry(5.2, h, 5), b.farge); kropp.position.y = h/2; g.add(kropp);
+  const tak = mkMesh(new THREE.BoxGeometry(5.5, 0.4, 5.3), 0x4e9636); tak.position.y = h+0.2; g.add(tak);
+  const rute = mkMesh(new THREE.BoxGeometry(2.6, 1.8, 0.2), 0xcfeaff, {emissive:0x223344}); rute.position.set(-0.9, 1.5, 2.55); g.add(rute);
+  const d = mkMesh(new THREE.BoxGeometry(1.2, 2.2, 0.25), 0x355c2a); d.position.set(1.6, 1.1, 2.55); g.add(d);
+  const stripeF = [0xe2725b, 0xfff3e0];
+  for(let i=0;i<6;i++){
+    const a = mkMesh(new THREE.BoxGeometry(0.7, 0.12, 1.0), stripeF[i%2]);
+    a.position.set(-2.0+i*0.72, 2.7, 2.9); a.rotation.x = -0.5; g.add(a);
+  }
+  g.userData.skiltY = 6.4; return g;
+}
+
+// Fritidsklubben – rundt telttak, lekne runde vinduer og vimpel
+function byggKlubb(b){
+  const g = new THREE.Group(); const h = 3.6;
+  const kropp = mkMesh(new THREE.BoxGeometry(5.2, h, 5), b.farge); kropp.position.y = h/2; g.add(kropp);
+  const tak = mkMesh(new THREE.ConeGeometry(4.0, 2.6, 16), 0xe2725b); tak.position.y = h+1.3; g.add(tak);
+  const stang = mkMesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 8), 0x333333); stang.position.set(0, h+3.2, 0); g.add(stang);
+  const flagg = mkMesh(new THREE.BoxGeometry(0.9, 0.5, 0.05), 0xffd34d); flagg.position.set(0.5, h+3.6, 0); g.add(flagg);
+  g.add(lagDoer(2.55, 0x5a3a6a));
+  for(const dx of [-1.6, 1.6]){
+    const v = mkMesh(new THREE.CylinderGeometry(0.5, 0.5, 0.2, 16), 0xffe08a, {emissive:0x4a3a00});
+    v.rotation.x = Math.PI/2; v.position.set(dx, 2.2, 2.55); g.add(v);
+  }
+  g.userData.skiltY = 8.2; return g;
+}
+
+// Skolen – klokketårn med spir, klokke, flagg og vindusrad
+function byggSkole(b){
+  const g = new THREE.Group(); const h = 4.2;
+  const kropp = mkMesh(new THREE.BoxGeometry(5.4, h, 5), b.farge); kropp.position.y = h/2; g.add(kropp);
+  const tak = mkMesh(new THREE.BoxGeometry(5.7, 0.4, 5.3), 0x2c7a76); tak.position.y = h+0.2; g.add(tak);
+  const taarn = mkMesh(new THREE.BoxGeometry(1.5, 1.8, 1.5), 0x49b7b1); taarn.position.set(0, h+1.1, 0); g.add(taarn);
+  const spir = mkMesh(new THREE.ConeGeometry(1.1, 1.2, 4), 0xe2725b); spir.position.set(0, h+2.6, 0); spir.rotation.y = Math.PI/4; g.add(spir);
+  const flaggstang = mkMesh(new THREE.CylinderGeometry(0.05, 0.05, 1.4, 8), 0x444444); flaggstang.position.set(0, h+3.9, 0); g.add(flaggstang);
+  const flagg = mkMesh(new THREE.BoxGeometry(0.8, 0.5, 0.05), 0xff5a4d); flagg.position.set(0.45, h+4.3, 0); g.add(flagg);
+  const klokke = mkMesh(new THREE.CylinderGeometry(0.45, 0.45, 0.12, 16), 0xfff7e6); klokke.rotation.x = Math.PI/2; klokke.position.set(0, h+1.3, 0.78); g.add(klokke);
+  const d1 = mkMesh(new THREE.BoxGeometry(0.9, 2.2, 0.25), 0x355a58); d1.position.set(-0.55, 1.1, 2.55); g.add(d1);
+  const d2 = mkMesh(new THREE.BoxGeometry(0.9, 2.2, 0.25), 0x355a58); d2.position.set(0.55, 1.1, 2.55); g.add(d2);
+  for(const dx of [-1.9,-0.65,0.65,1.9]) g.add(lagVindu(dx, 3.0, 2.55, 0.9, 0.9));
+  g.userData.skiltY = 9.4; return g;
+}
+
+function lagBygning(b){
+  let g;
+  switch(b.id){
+    case 'jobb':   g = byggKontor(b); break;
+    case 'bolig':  g = byggHus(b); break;
+    case 'bank':   g = byggBank(b); break;
+    case 'butikk': g = byggButikk(b); break;
+    case 'klubb':  g = byggKlubb(b); break;
+    case 'skole':  g = byggSkole(b); break;
+    default:       g = byggStandard(b);
+  }
+  g.rotation.y = (b.z > 0 ? Math.PI : 0); // fasaden mot torget
   const skilt = lagSkilt(b.emoji + ' ' + b.navn);
-  skilt.position.y = 7.2;
+  skilt.position.y = g.userData.skiltY || 7.2;
   g.add(skilt);
   g.position.set(b.x, 0, b.z);
   return g;
@@ -685,7 +779,11 @@ function lagSpiller(){
   return g;
 }
 
+const GRESS_URI = "https://d8j0ntlcm91z4.cloudfront.net/user_3CdYUPSOzmh7OXn0ZcBWtMDV0N4/hf_20260616_164108_2bd5710f-c5d9-488d-8ee8-412134e0569a.jpeg";
+const VEI_URI = "https://d8j0ntlcm91z4.cloudfront.net/user_3CdYUPSOzmh7OXn0ZcBWtMDV0N4/hf_20260616_164111_c0fe989b-d6cc-487f-9e04-7cc66ae27a04.jpeg";
 function initTre(){
+  const texLoader = new THREE.TextureLoader();
+  texLoader.setCrossOrigin("anonymous");
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87c5e8);
   scene.fog = new THREE.Fog(0x87c5e8, 40, 95);
@@ -710,21 +808,33 @@ function initTre(){
   scene.add(sol);
 
   // Bakke
+  const bakkeMat = new THREE.MeshLambertMaterial({color:0x7cc06a});
+  texLoader.load(GRESS_URI, function(tex){
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(30, 30);
+    bakkeMat.map = tex; bakkeMat.color.set(0xffffff); bakkeMat.needsUpdate = true;
+  });
   const bakke = new THREE.Mesh(
     new THREE.PlaneGeometry(120, 120),
-    new THREE.MeshLambertMaterial({color:0x7cc06a}));
+    bakkeMat);
   bakke.rotation.x = -Math.PI/2; bakke.receiveShadow = true;
   scene.add(bakke);
 
-  // Veier (kors + ring rundt torget)
-  const veiMat = new THREE.MeshLambertMaterial({color:0xb9b2a4});
-  const v1 = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 56), veiMat);
+  // Veier (kors + ring rundt torget) – med brostein-tekstur (faller tilbake til grå)
+  function veiMatMed(rx, ry){
+    const m = new THREE.MeshLambertMaterial({color:0xb9b2a4});
+    texLoader.load(VEI_URI, function(tex){
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(rx, ry);
+      m.map = tex; m.color.set(0xffffff); m.needsUpdate = true;
+    });
+    return m;
+  }
+  const v1 = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 56), veiMatMed(1, 12));
   v1.rotation.x = -Math.PI/2; v1.position.y = 0.02; v1.receiveShadow = true;
   scene.add(v1);
-  const v2 = new THREE.Mesh(new THREE.PlaneGeometry(56, 4.5), veiMat);
+  const v2 = new THREE.Mesh(new THREE.PlaneGeometry(56, 4.5), veiMatMed(12, 1));
   v2.rotation.x = -Math.PI/2; v2.position.y = 0.02; v2.receiveShadow = true;
   scene.add(v2);
-  const torg = new THREE.Mesh(new THREE.CircleGeometry(7, 28), veiMat);
+  const torg = new THREE.Mesh(new THREE.CircleGeometry(7, 28), veiMatMed(3, 3));
   torg.rotation.x = -Math.PI/2; torg.position.y = 0.03;
   scene.add(torg);
 
@@ -1048,7 +1158,7 @@ async function startMaaned(){
   if(Math.random() < sjanse){
     S.prisSjokk = 1.3;
     await visInfo(aarstid(S.mnd).emoji + ' Måned ' + S.mnd + ' – prissjokk!',
-      '<p>📢 Prisene i butikken og på en del kjøp har <b>steget ca. 30 %</b> denne måneden!</p>' +
+      '<p>📢 Prisene i butikken har <b>steget ca. 30 %</b> denne måneden!</p>' +
       '<p class="lite">Sånn er inflasjon: når prisene stiger, får du mindre for pengene. Kanskje lurt å vente med store kjøp?</p>');
   } else {
     S.prisSjokk = 1;
@@ -1082,12 +1192,14 @@ function velgJobb(id){
 }
 
 function boligMeny(){
+  const aar = aarstid(S.mnd);
   let rader = '';
   for(const [id, b] of Object.entries(BOLIGER)){
-    const tot = b.leie + b.strom + b.nett;
+    const strom = Math.round(b.strom * aar.strom);
+    const tot = b.leie + strom + b.nett;
     rader += '<tr class="' + (S.bolig === id ? 'valgt' : '') + '">' +
       '<td>' + b.emoji + ' <b>' + b.navn + '</b></td>' +
-      '<td class="lite">' + fmt(b.leie) + ' + ' + fmt(b.strom) + ' + ' + fmt(b.nett) + '</td>' +
+      '<td class="lite">' + fmt(b.leie) + ' + ' + fmt(strom) + ' + ' + fmt(b.nett) + '</td>' +
       '<td><b>' + fmt(tot) + ' 🪙</b></td>' +
       '<td>' + (b.trivsel > 0 ? '+'+b.trivsel : b.trivsel) + ' ❤️</td>' +
       '<td>' + (S.bolig === id ? '✅ Her bor du' :
@@ -1097,6 +1209,7 @@ function boligMeny(){
     '<p>Hvor vil du bo? Regn ut <b>totalkostnaden</b>: leie + strøm + internett. Den trekkes automatisk hver måned.</p>' +
     '<table class="sml"><tr><th>Bolig</th><th>Leie+strøm+nett</th><th>Totalt/mnd</th><th>Trivsel</th><th></th></tr>' + rader + '</table>' +
     '<div class="infoRad">' + BOLIGER[S.bolig].emoji + ' ' + BOLIGER[S.bolig].info + '</div>' +
+    '<p class="lite">' + aar.emoji + ' Strømmen vises for ' + aar.navn + ' og varierer gjennom året – dyrere om vinteren, billigere om sommeren.</p>' +
     '<p class="lite">💡 Tips: Billigst er ikke alltid best, og dyrest er ikke alltid lurt. Hva har du råd til med lønnen din?</p>');
 }
 function velgBolig(id){
@@ -1356,7 +1469,7 @@ async function nesteMaaned(){
       const knapper = h.valg.map((v, idx)=>({l:v.l, v:idx, klass: idx === 0 ? 'groenn' : 'sekundaer'}));
       const r = await visValg('Noe skjer! ✨', '<p style="font-size:17px;">' + h.t + '</p>', knapper);
       const valg = h.valg[r.v];
-      const p = valg.p < 0 ? -pris(-valg.p) : valg.p;
+      const p = valg.p; // belast nøyaktig det knappeteksten sier
       S.penger += p;
       justerTrivsel(valg.h);
       if(p > 0) lydMynt(); else if(p < 0) lydDunk();
