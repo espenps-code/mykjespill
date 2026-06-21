@@ -368,7 +368,7 @@ function textured(colorFallback, file, rx, ry){
   return m;
 }
 const MAT = {
-  grass:  textured(0x6fae54, "grass.png", 16, 16),
+  grass:  textured(0x6fae54, "grass.png", 6, 6),
   floor:  textured(0xc28a5c, "floor.png", 8, 6),
   gravel: textured(0xcdbfa3, "gravel.png", 9, 9),
   wood:   textured(0xb07e4e, "wood.png", 1, 1),
@@ -845,6 +845,7 @@ canvas.addEventListener("pointermove",e=>{ if(!dragging)return;
 });
 canvas.addEventListener("pointerup",e=>{ dragging=false; if(moved<7) tap(e); });
 canvas.addEventListener("wheel",e=>{ e.preventDefault(); camZoom*=e.deltaY<0?1.1:0.9; camZoom=clamp(camZoom,0.55,2.4); resize(); },{passive:false});
+canvas.addEventListener("contextmenu",e=>e.preventDefault());   // ingen høyreklikk-meny – la høyre-dra tilte fritt
 canvas.addEventListener("touchmove",e=>{ if(e.touches.length===2){ e.preventDefault();
   const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
   if(pinchD){ camZoom*=d/pinchD; camZoom=clamp(camZoom,0.55,2.4); resize(); } pinchD=d; }},{passive:false});
@@ -1064,7 +1065,8 @@ function waterPlant(i){ const s=G.slots[i]; if(!s||s.dead)return; const sp=SP[s.
 }
 function clearPest(i){ const s=G.slots[i]; if(!s)return; s.pest=false; sfx("fix"); renderSlot(i); openSlot(i); save(); toast("Skadedyr fjernet 🌿","good"); }
 function clearDisease(i){ const s=G.slots[i]; if(!s)return; s.disease=false; sfx("fix"); renderSlot(i); openSlot(i); save(); toast("Behandlet for sopp 🌿","good"); }
-function clearDead(i){ G.slots[i]=null; renderSlot(i); openSlot(i); save(); toast("Potten er tom igjen."); }
+function clearDead(i){ G.slots[i]=null; renderSlot(i); openSlot(i); save(); toast("Potten er tom igjen.");
+  playGesture(gardener.userData.shrugAction); }   // gartneren trekker på skuldrene over den døde planten
 function harvest(i){ const s=G.slots[i]; if(!s||s.dead||s.stage<4)return; const sp=SP[s.species];
   let quality=s.health/100; if(G.up.gjodsel) quality+=0.2;
   let price=Math.round(sp.sell*quality*(s.special?CFG.specialBonus:1));
