@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Drivhuset</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#21372b; --ink-soft:#4d6a58;
+  --paper:#f7efdd; --paper-2:#efe2c6; --paper-line:#e2d3af;
+  --leaf:#2f9e5e; --leaf-d:#247a48; --teal:#1f9d96; --amber:#e8a13a;
+  --terra:#d4683f; --sun:#f4c542;
+  --t-vanlig:#7fae6c; --t-uvanlig:#3fa4a0; --t-sjelden:#6f7fd6; --t-eksotisk:#b067c9; --t-legendarisk:#e0a323;
+  --shadow:0 6px 0 rgba(33,55,43,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;color:var(--ink);background:#bfe3d2;user-select:none}
+#scene{position:fixed;inset:0;display:block}
+canvas{display:block}
+
+/* ---------- HUD ---------- */
+.hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+.hud > *{pointer-events:auto}
+h1,h2,h3,.disp{font-family:'Fredoka One',cursive;font-weight:400;letter-spacing:.3px}
+
+.topbar{position:absolute;top:0;left:0;right:0;display:flex;gap:8px;align-items:center;padding:10px 12px;
+  background:linear-gradient(180deg,rgba(33,55,43,.28),rgba(33,55,43,0));}
+.brand{font-family:'Fredoka One',cursive;color:#fff;font-size:20px;text-shadow:0 2px 0 rgba(33,55,43,.45);margin-right:auto;display:flex;align-items:center;gap:8px}
+.brand .logo{width:30px;height:30px;border-radius:9px;background:radial-gradient(circle at 35% 30%,#5fd08a,#247a48);box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 3px 0 rgba(33,55,43,.3);display:grid;place-items:center;font-size:17px}
+.stat{background:var(--paper);border:2px solid var(--paper-line);border-radius:13px;padding:6px 12px;display:flex;align-items:center;gap:7px;box-shadow:var(--shadow)}
+.stat .v{font-family:'Fredoka One',cursive;font-size:17px;line-height:1}
+.stat .ic{font-size:17px;filter:saturate(1.1)}
+.stat.coin .v{color:var(--amber)}
+.stat.day .v{color:var(--teal)}
+.btn-next{background:var(--leaf);color:#fff;border:none;border-radius:13px;padding:9px 15px;font-family:'Fredoka One',cursive;font-size:15px;
+  box-shadow:0 5px 0 var(--leaf-d);cursor:pointer;display:flex;align-items:center;gap:7px;transition:transform .05s, box-shadow .05s}
+.btn-next:active{transform:translateY(4px);box-shadow:0 1px 0 var(--leaf-d)}
+.btn-next:disabled{opacity:.55;filter:grayscale(.3)}
+
+/* ---------- toolbar ---------- */
+.toolbar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:9px;
+  background:rgba(247,239,221,.92);border:2px solid var(--paper-line);border-radius:18px;padding:8px;box-shadow:var(--shadow);backdrop-filter:blur(3px)}
+.tool{width:62px;height:60px;border:none;background:transparent;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink);font-family:'Atkinson Hyperlegible',sans-serif;font-weight:700;font-size:11px}
+.tool .ti{font-size:23px;line-height:1}
+.tool:active{background:var(--paper-2)}
+.tool .badge{position:absolute;margin:-30px 0 0 26px;background:var(--terra);color:#fff;border-radius:9px;font-size:10px;padding:1px 5px;font-family:'Fredoka One',cursive}
+
+/* ---------- toast ---------- */
+.toasts{position:absolute;top:62px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:7px;align-items:center;width:min(92vw,440px)}
+.toast{background:var(--ink);color:#fff;border-radius:12px;padding:8px 14px;font-weight:700;font-size:14px;box-shadow:var(--shadow);opacity:0;transform:translateY(-8px);animation:tin .25s forwards;max-width:100%;text-align:center}
+.toast.good{background:var(--leaf-d)} .toast.warn{background:var(--terra)} .toast.gold{background:var(--amber);color:#3a2a08}
+@keyframes tin{to{opacity:1;transform:none}}
+
+/* ---------- info card ---------- */
+.card{position:absolute;right:12px;top:64px;width:min(92vw,330px);background:var(--paper);border:2px solid var(--paper-line);border-radius:18px;
+  box-shadow:0 12px 0 rgba(33,55,43,.16),0 18px 30px rgba(33,55,43,.22);overflow:hidden;display:none}
+.card.show{display:block;animation:cin .18s ease}
+@keyframes cin{from{opacity:0;transform:translateY(-6px)}to{opacity:1}}
+.card .hd{padding:11px 14px;display:flex;align-items:center;gap:9px;background:var(--paper-2);border-bottom:2px solid var(--paper-line)}
+.card .hd .nm{font-family:'Fredoka One',cursive;font-size:17px}
+.card .hd .x{margin-left:auto;border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--ink-soft);line-height:1}
+.tier{font-size:11px;font-family:'Fredoka One',cursive;color:#fff;padding:2px 8px;border-radius:20px}
+.card .bd{padding:12px 14px}
+.req{display:flex;flex-direction:column;gap:7px;margin:2px 0 10px}
+.req .row{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.req .row .lab{color:var(--ink-soft);width:54px}
+.req .row .val{font-weight:700}
+.req .row .mark{margin-left:auto;font-size:15px}
+.bar{height:11px;border-radius:8px;background:var(--paper-line);overflow:hidden;position:relative;flex:1}
+.bar > i{display:block;height:100%;border-radius:8px;transition:width .35s}
+.barwrap{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:3px 0}
+.barwrap .lab{width:54px;color:var(--ink-soft)}
+.alerts{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.alert{display:flex;align-items:center;gap:7px;background:#fff0e6;border:1.5px solid #f0c3a8;border-radius:10px;padding:6px 9px;font-size:12.5px;color:#9a4521}
+.alert.disease{background:#efeaff;border-color:#cdc2f0;color:#5b46a8}
+.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.abtn{flex:1;min-width:46%;border:none;border-radius:11px;padding:9px;font-family:'Atkinson Hyperlegible',sans-serif;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 0 rgba(0,0,0,.13)}
+.abtn:active{transform:translateY(2px);box-shadow:none}
+.abtn.water{background:var(--teal);color:#fff} .abtn.harvest{background:var(--amber);color:#3a2a08}
+.abtn.fix{background:var(--terra);color:#fff} .abtn.clear{background:var(--paper-2);color:var(--ink)} .abtn.light{background:#6f7fd6;color:#fff}
+.empty-hint{font-size:13.5px;color:var(--ink-soft);line-height:1.45}
+
+/* ---------- modal ---------- */
+.scrim{position:fixed;inset:0;background:rgba(28,40,32,.5);z-index:20;display:none;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(2px)}
+.scrim.show{display:flex;animation:fin .15s}
+@keyframes fin{from{opacity:0}}
+.modal{background:var(--paper);border:2px solid var(--paper-line);border-radius:22px;width:min(96vw,680px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 0 rgba(33,55,43,.18),0 30px 60px rgba(0,0,0,.3)}
+.modal .mhd{padding:14px 18px;display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--paper-line)}
+.modal .mhd h2{margin:0;font-size:21px}
+.modal .mhd .x{margin-left:auto;border:none;background:var(--paper-2);width:34px;height:34px;border-radius:11px;font-size:20px;cursor:pointer;color:var(--ink)}
+.modal .mbd{padding:14px 16px;overflow:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
+
+/* seed packet card */
+.packet{background:#fffaf0;border:2px solid var(--paper-line);border-radius:15px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 0 rgba(33,55,43,.1)}
+.packet .pk-top{height:74px;position:relative;display:grid;place-items:center;border-bottom:2px dashed var(--paper-line)}
+.packet .pk-emoji{font-size:34px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.18))}
+.packet .pk-tier{position:absolute;top:6px;left:6px}
+.packet .pk-bd{padding:9px 10px;display:flex;flex-direction:column;gap:6px;flex:1}
+.packet .pk-nm{font-family:'Fredoka One',cursive;font-size:15px}
+.packet .pk-line{font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:5px}
+.packet .pk-buy{margin-top:auto;border:none;border-radius:10px;padding:8px;background:var(--leaf);color:#fff;font-family:'Fredoka One',cursive;font-size:13px;cursor:pointer;box-shadow:0 3px 0 var(--leaf-d);display:flex;align-items:center;justify-content:center;gap:6px}
+.packet .pk-buy:active{transform:translateY(2px);box-shadow:none}
+.packet .pk-buy:disabled{opacity:.5;filter:grayscale(.4)}
+.packet.locked{opacity:.85}
+.packet.dex-lock .pk-emoji{filter:grayscale(1) brightness(1.6) opacity(.4)}
+.packet.dex-lock .pk-nm{color:#b8a98a}
+
+/* choices (planting) */
+.chooser{display:flex;flex-direction:column;gap:13px}
+.choose-grp .ttl{font-family:'Fredoka One',cursive;font-size:14px;margin:0 0 6px;display:flex;align-items:center;gap:7px}
+.opts{display:flex;flex-wrap:wrap;gap:7px}
+.opt{border:2px solid var(--paper-line);background:#fffaf0;border-radius:11px;padding:7px 11px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.opt.sel{border-color:var(--leaf);background:#e9f8ee;box-shadow:0 3px 0 rgba(47,158,94,.25)}
+.opt .price{font-size:11px;color:var(--amber);font-family:'Fredoka One',cursive}
+.match{font-size:13px;padding:8px 11px;border-radius:11px;display:flex;align-items:center;gap:8px;font-weight:700}
+.match.ok{background:#e9f8ee;color:var(--leaf-d)} .match.no{background:#fdeee6;color:var(--terra)}
+.plant-go{border:none;border-radius:13px;padding:12px;background:var(--leaf);color:#fff;font-family:'Fredoka One',cursive;font-size:16px;cursor:pointer;box-shadow:0 5px 0 var(--leaf-d);display:flex;align-items:center;justify-content:center;gap:8px}
+.plant-go:active{transform:translateY(3px);box-shadow:0 2px 0 var(--leaf-d)}
+.plant-go:disabled{opacity:.5;filter:grayscale(.4)}
+.reqcard{background:var(--paper-2);border-radius:13px;padding:11px 13px;margin-bottom:4px}
+.reqcard .h{font-family:'Fredoka One',cursive;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.reqcard .rr{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:#fff;border:1.5px solid var(--paper-line);border-radius:9px;padding:4px 9px;font-size:12px;font-weight:700}
+
+/* upgrades */
+.uprow{display:flex;align-items:center;gap:12px;background:#fffaf0;border:2px solid var(--paper-line);border-radius:14px;padding:11px 13px;margin-bottom:10px}
+.uprow .ue{font-size:30px}
+.uprow .ut{flex:1}
+.uprow .ut .un{font-family:'Fredoka One',cursive;font-size:15px}
+.uprow .ut .ud{font-size:12.5px;color:var(--ink-soft)}
+.uprow .ub{border:none;border-radius:11px;padding:9px 13px;background:var(--amber);color:#3a2a08;font-family:'Fredoka One',cursive;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #b67d22;white-space:nowrap}
+.uprow .ub:active{transform:translateY(2px);box-shadow:none}
+.uprow .ub:disabled{opacity:.5;filter:grayscale(.4)}
+.uprow .ub.done{background:var(--leaf);color:#fff;box-shadow:0 3px 0 var(--leaf-d)}
+
+/* intro */
+.intro .mbd{text-align:center}
+.intro p{font-size:15px;line-height:1.5;color:var(--ink-soft);max-width:460px;margin:8px auto}
+.intro .steps{display:flex;flex-direction:column;gap:9px;text-align:left;max-width:440px;margin:14px auto}
+.intro .step{display:flex;gap:11px;align-items:center;background:#fffaf0;border:2px solid var(--paper-line);border-radius:13px;padding:10px 13px}
+.intro .step .n{width:30px;height:30px;border-radius:9px;background:var(--leaf);color:#fff;font-family:'Fredoka One',cursive;display:grid;place-items:center;flex:none}
+.intro .step .tx{font-size:13.5px}
+.intro .start{margin:6px auto 2px}
+
+.mutebtn{position:absolute;top:54px;right:12px;width:38px;height:38px;border-radius:11px;border:2px solid var(--paper-line);background:var(--paper);font-size:17px;cursor:pointer;box-shadow:var(--shadow)}
+.hidden{display:none!important}
+@media(max-width:520px){
+  .brand{font-size:17px}.stat{padding:5px 9px}.stat .v{font-size:15px}
+  .tool{width:54px;height:54px}.tool .ti{font-size:20px}
+  .card{top:auto;bottom:84px;right:50%;transform:translateX(50%);width:min(94vw,340px)}
+}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div class="hud">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🌱</span>Drivhuset</div>
+    <div class="stat coin"><span class="ic">🪙</span><span class="v" id="coinV">0</span></div>
+    <div class="stat day"><span class="ic">📅</span>Dag <span class="v" id="dayV">1</span></div>
+    <button class="btn-next" id="nextBtn">Neste dag <span style="font-size:18px">⏭</span></button>
+  </div>
+
+  <button class="mutebtn" id="muteBtn" title="Lyd av/på">🔊</button>
+
+  <div class="toasts" id="toasts"></div>
+  <div class="card" id="card"></div>
+
+  <div class="toolbar">
+    <button class="tool" id="tPlant"><span class="ti">🌰</span>Plant</button>
+    <button class="tool" id="tShop"><span class="ti">🛒</span>Butikk</button>
+    <button class="tool" id="tUp"><span class="ti">⚙️</span>Oppgrader</button>
+    <button class="tool" id="tDex"><span class="ti">📒</span>Plantedex</button>
+  </div>
+</div>
+
+<style>
+#modeBtn{position:absolute;top:102px;right:12px;z-index:30;border:none;cursor:pointer;
+  background:rgba(27,67,50,.92);color:#fdf6e9;font-family:'Fredoka One',sans-serif;
+  padding:8px 12px;border-radius:16px;font-size:13px;box-shadow:var(--shadow)}
+#stick{position:fixed;left:20px;bottom:20px;width:120px;height:120px;z-index:25;border-radius:50%;
+  background:rgba(27,67,50,.26);border:2px solid rgba(253,246,233,.4);display:none;touch-action:none}
+#stick.show{display:block}
+#stickKnob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;
+  background:rgba(233,162,59,.95);box-shadow:0 3px 10px rgba(0,0,0,.32);pointer-events:none}
+</style>
+<button id="modeBtn">🚶 Gå rundt</button>
+<div id="stick"><div id="stickKnob"></div></div>
+
+<!-- modals -->
+<div class="scrim" id="scrim">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+/* ===================================================================== *
+ *  DRIVHUSET — koselig isometrisk plantedyrkingsspill                    *
+ *  Én fil, Three.js, localStorage. Alle innstillinger i CONFIG nederst. *
+ * ===================================================================== */
+"use strict";
+
+/* ---------- KONFIG ---------- */
+const CFG = {
+  startCoins: 120,
+  startSlots: 6,
+  maxSlots: 25,
+  cols: 5,
+  rows: 5,
+  waterDecay: 10,         // vann tapt per dag (flat)
+  waterPerCan: 25,        // vann tilført per vanning
+  healHealthy: 9,         // helse tilbake per dag når alt stemmer
+  dmgWater: 14,           // helse tapt ved feil vann
+  dmgSetup: 11,           // helse tapt per feil i potte/jord/lys
+  dmgPest: 13, dmgDisease: 11,
+  pestChance: 0.13, pestSpread: 0.35,
+  diseaseChance: 0.28,    // når overvannet
+  specialChance: 0.06, specialChanceLegend: 0.03, specialBonus: 2.5,
+  potPrice: {liten:5, medium:12, stor:25},
+  soilPrice:{vanlig:3, sand:6, naering:10, kompost:20},
+  slotBaseCost: 50, slotCostMul: 1.6,
+};
+const BED_SPOTS = 16, TOTAL_SLOTS = CFG.maxSlots + BED_SPOTS;   // utendørs bed-plasser (4 bed à 4 plasser)
+const STAGE = ["Frø","Spire","Ungplante","Voksen","Moden"];
+const STAGE_SCALE = [0.18,0.36,0.62,0.85,1.0];
+
+const TIERS = [
+  {n:"Vanlig", c:"#7fae6c"}, {n:"Uvanlig", c:"#3fa4a0"}, {n:"Sjelden", c:"#6f7fd6"},
+  {n:"Eksotisk", c:"#b067c9"}, {n:"Legendarisk", c:"#e0a323"},
+];
+const POT_N  = {liten:"Liten potte", medium:"Medium potte", stor:"Stor potte"};
+const SOIL_N = {vanlig:"Vanlig jord", sand:"Sandjord", naering:"Næringsrik jord", kompost:"Spesialkompost"};
+const LIGHT_N= {sol:"Full sol", halv:"Halvskygge", skygge:"Skygge"};
+const LIGHT_EMOJI={sol:"☀️",halv:"⛅",skygge:"🌑"};
+
+/* arketyper: flower, leafy, cactus, fruit, carnivore, tree */
+const SPECIES = [
+  {id:"solsikke",  navn:"Solsikke",       emoji:"🌻", tier:0, arch:"flower",   col:0xf4c542,col2:0x6b4a21, pot:"liten",  soil:"vanlig", water:[40,75], light:"sol",   days:1, seed:10, sell:35},
+  {id:"tulipan",   navn:"Tulipan",        emoji:"🌷", tier:0, arch:"flower",   col:0xe0567c,col2:0x2f9e5e, pot:"liten",  soil:"naering",water:[40,75], light:"sol",   days:1, seed:12, sell:42},
+  {id:"karse",     navn:"Karse",          emoji:"🌿", tier:0, arch:"leafy",    col:0x4fb06a,col2:0x2f7d49, pot:"liten",  soil:"vanlig", water:[50,85], light:"halv",  days:1, seed:8,  sell:28},
+  {id:"basilikum", navn:"Basilikum",      emoji:"🪴", tier:0, arch:"leafy",    col:0x3f9e57,col2:0x276b3b, pot:"liten",  soil:"naering",water:[50,85], light:"halv",  days:1, seed:10, sell:34},
+  {id:"lavendel",  navn:"Lavendel",       emoji:"💜", tier:1, arch:"flower",   col:0x9b6fd0,col2:0x4f7a4a, pot:"medium", soil:"sand",   water:[15,50], light:"sol",   days:2, seed:25, sell:98},
+  {id:"kaktus",    navn:"Kaktus",         emoji:"🌵", tier:1, arch:"cactus",   col:0x4f9e57,col2:0x2f6b3b, pot:"liten",  soil:"sand",   water:[0,35],  light:"sol",   days:2, seed:22, sell:88},
+  {id:"jordbaer",  navn:"Jordbær",        emoji:"🍓", tier:1, arch:"fruit",    col:0xe23b4e,col2:0x2f9e5e, pot:"medium", soil:"naering",water:[50,85], light:"sol",   days:2, seed:28, sell:115},
+  {id:"mynte",     navn:"Mynte",          emoji:"🍃", tier:1, arch:"leafy",    col:0x49b878,col2:0x2f7d49, pot:"medium", soil:"vanlig", water:[55,90], light:"halv",  days:1, seed:20, sell:78},
+  {id:"orkide",    navn:"Orkidé",         emoji:"🪻", tier:2, arch:"flower",   col:0xe08ad0,col2:0x4f9e6a, pot:"medium", soil:"kompost",water:[35,65], light:"halv",  days:2, seed:60, sell:235},
+  {id:"fluefanger",navn:"Fluefanger",     emoji:"🪲", tier:2, arch:"carnivore",col:0xd14848,col2:0x3f9e57, pot:"liten",  soil:"sand",   water:[60,95], light:"halv",  days:2, seed:70, sell:275},
+  {id:"bonsai",    navn:"Bonsai",         emoji:"🌳", tier:2, arch:"tree",     col:0x3f9e57,col2:0x7a5230, pot:"stor",   soil:"naering",water:[40,70], light:"sol",   days:3, seed:65, sell:255},
+  {id:"manblomst", navn:"Månblomst",      emoji:"🌙", tier:3, arch:"flower",   col:0x9fd0f0,col2:0x4f6a8a, pot:"medium", soil:"kompost",water:[45,75], light:"skygge",days:3, seed:150,sell:530},
+  {id:"krystallk", navn:"Krystallkaktus", emoji:"💎", tier:3, arch:"cactus",   col:0x5fe0d8,col2:0x2f8a86, pot:"liten",  soil:"sand",   water:[0,30],  light:"sol",   days:2, seed:140,sell:490},
+  {id:"dragefrukt",navn:"Dragefrukt",     emoji:"🐉", tier:3, arch:"fruit",    col:0xe04f8a,col2:0x4fae5f, pot:"stor",   soil:"sand",   water:[15,55], light:"sol",   days:3, seed:160,sell:570},
+  {id:"regnbue",   navn:"Regnbueblomst",  emoji:"🌈", tier:4, arch:"flower",   col:0xff7ac0,col2:0x5fae6f, pot:"stor",   soil:"kompost",water:[45,75], light:"sol",   days:3, seed:400,sell:1500},
+  {id:"stjernefro",navn:"Stjernefrø",     emoji:"⭐", tier:4, arch:"flower",   col:0xffdd55,col2:0x6a5fae, pot:"medium", soil:"kompost",water:[40,70], light:"skygge",days:3, seed:420,sell:1600},
+  {id:"gulltre",   navn:"Gulltre",        emoji:"🪙", tier:4, arch:"tree",     col:0xf2c64b,col2:0x8a6a2f, pot:"stor",   soil:"kompost",water:[35,70], light:"sol",   days:3, seed:450,sell:1750},
+];
+const SP = {}; SPECIES.forEach(s=>SP[s.id]=s);
+
+/* ---------- TILSTAND ---------- */
+let G = null;
+function freshGame(){
+  return {
+    coins: CFG.startCoins, day: 1, slotsUnlocked: CFG.startSlots,
+    seeds: {solsikke:1, karse:1},
+    slots: Array(TOTAL_SLOTS).fill(null),
+    dex: {}, bestPrice:{},
+    up: {autovann:false, skadedyrvakt:false, gjodsel:false, vekstlampe:false},
+    seenIntro:false, muted:false,
+  };
+}
+function save(){ try{ localStorage.setItem("drivhuset_v1", JSON.stringify(G)); }catch(e){} }
+function load(){
+  try{ const r=localStorage.getItem("drivhuset_v1"); if(r){ G=JSON.parse(r);
+    const f=freshGame(); for(const k in f) if(!(k in G)) G[k]=f[k];
+    if(G.slots.length<TOTAL_SLOTS) G.slots=G.slots.concat(Array(TOTAL_SLOTS-G.slots.length).fill(null));
+    return true; } }catch(e){}
+  return false;
+}
+
+/* lysnivå pr. slot-rad (rad 0 = front/sol) */
+function slotBaseLight(i){ const row=Math.floor(i/CFG.cols); return ["sol","sol","halv","skygge"][row] || "halv"; }
+function slotLight(i){ const s=G.slots[i]; if(s&&s.light) return s.light; return slotBaseLight(i); }
+
+/* ===================================================================== *
+ *  THREE.JS — scene, orbiterende kamera, stort drivhus, gartner          *
+ * ===================================================================== */
+const canvas = document.getElementById("scene");
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbfe3d2);
+(function(){ const ld=new THREE.TextureLoader(); ld.crossOrigin="anonymous";
+  ld.load("Assets/bg_world.png", t=>{ scene.background=t; }, undefined, ()=>{/* mangler → behold farge */}); })();
+scene.fog = new THREE.Fog(0xbfe3d2, 40, 82);
+
+/* ---- to kameraer: oversikt (orbit) + utforsk (gå rundt) ---- */
+let mode = "oversikt";                   // "oversikt" | "utforsk"
+let camYaw = Math.PI*0.22, camZoom = 1;
+let camPitch = 0.84;                     // helling (oversikt) – kan tiltes ved å dra opp/ned
+const camFocus = new THREE.Vector3(0,0,0);
+let exYaw = Math.PI, exPitch = -0.12;    // utforsk: blikkretning
+const camera = new THREE.OrthographicCamera(-1,1,1,-1,0.1,220);
+const fpCam  = new THREE.PerspectiveCamera(68, innerWidth/innerHeight, 0.1, 260);
+let activeCamera = camera;
+function placeCamera(){
+  if(mode==="utforsk" && typeof gardener!=="undefined" && gardener){
+    const back=1.9, eyeH=2.05, cp=Math.cos(exPitch), sx=Math.sin(exYaw), sz=Math.cos(exYaw);
+    fpCam.position.set(gardener.position.x - sx*back, eyeH, gardener.position.z - sz*back);
+    fpCam.lookAt(
+      fpCam.position.x + sx*cp*5,
+      fpCam.position.y + Math.sin(exPitch)*5,
+      fpCam.position.z + sz*cp*5);
+    return;
+  }
+  const d = 36, cp=Math.cos(camPitch), sp=Math.sin(camPitch);
+  camera.position.set(
+    camFocus.x + Math.sin(camYaw)*cp*d,
+    camFocus.y + sp*d,
+    camFocus.z + Math.cos(camYaw)*cp*d
+  );
+  camera.lookAt(camFocus);
+}
+function setMode(m){
+  mode=m; const b=document.getElementById("modeBtn");
+  if(m==="utforsk"){ exYaw=camYaw; exPitch=-0.12; if(b)b.textContent="🗺️ Oversikt";
+    document.getElementById("stick").classList.add("show");
+    toast("Gå rundt: dra for å se deg om · joystick/WASD for å gå 🚶","good"); }
+  else { if(b)b.textContent="🚶 Gå rundt"; document.getElementById("stick").classList.remove("show"); }
+  activeCamera = (m==="utforsk")? fpCam : camera;
+  resize();
+}
+function resize(){
+  const w=innerWidth,h=innerHeight; renderer.setSize(w,h);
+  const aspect=w/h, view=13/camZoom;
+  camera.left=-view*aspect; camera.right=view*aspect; camera.top=view; camera.bottom=-view;
+  camera.updateProjectionMatrix();
+  fpCam.aspect=aspect; fpCam.updateProjectionMatrix();
+  placeCamera();
+}
+addEventListener("resize",resize);
+
+/* ---- lys ---- */
+const hemi=new THREE.HemisphereLight(0xffffff,0x8fb89a,1.0); scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff1cf,1.0);
+sun.position.set(12,24,9); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-24; sun.shadow.camera.right=24; sun.shadow.camera.top=24; sun.shadow.camera.bottom=-24;
+sun.shadow.camera.near=1; sun.shadow.camera.far=80; sun.shadow.bias=-0.0005; scene.add(sun);
+const fill=new THREE.DirectionalLight(0xbfe0ff,0.28); fill.position.set(-9,8,-6); scene.add(fill);
+
+/* ---- materialer + teksturlasting (med fargefallback) ---- */
+function mat(col,opts){ return new THREE.MeshLambertMaterial(Object.assign({color:col},opts||{})); }
+const ASSET_BASE = "Assets/";       // legg de genererte bildene her ved deploy
+function textured(colorFallback, file, rx, ry){
+  const m = new THREE.MeshLambertMaterial({color:colorFallback});
+  const ld = new THREE.TextureLoader(); ld.crossOrigin="anonymous";
+  ld.load(ASSET_BASE+file, t=>{
+    t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx||1,ry||1);
+    t.anisotropy=renderer.capabilities.getMaxAnisotropy(); t.minFilter=THREE.LinearMipmapLinearFilter; t.generateMipmaps=true;
+    m.map=t; m.color.set(0xffffff); m.needsUpdate=true;
+  }, undefined, ()=>{ /* fil mangler → behold farge */ });
+  return m;
+}
+const MAT = {
+  grass:  textured(0x6fae54, "grass.png", 16, 16),
+  floor:  textured(0xc28a5c, "floor.png", 8, 6),
+  gravel: textured(0xcdbfa3, "gravel.png", 9, 9),
+  wood:   textured(0xb07e4e, "wood.png", 1, 1),
+  soil:   textured(0x5a3f28, "soil.png", 3, 1),
+};
+
+/* ---- verden: hage, drivhus, stier, stativer ---- */
+const GH_W = 22, GH_D = 16, GH_H = 7;
+const GH_DOOR = 1.8;            // halv dørbredde (åpning foran)
+let stands=[];
+/* hindre (benker, bed) som gartneren ikke kan gå gjennom — rektangler i xz */
+const OBSTACLES=[];
+function addObstacle(cx,cz,w,d,pad){ pad=pad||0;
+  OBSTACLES.push({minx:cx-w/2-pad, maxx:cx+w/2+pad, minz:cz-d/2-pad, maxz:cz+d/2+pad}); }
+function blocked(x,z){ for(let i=0;i<OBSTACLES.length;i++){ const o=OBSTACLES[i];
+  if(x>o.minx && x<o.maxx && z>o.minz && z<o.maxz) return true; } return false; }
+function buildStand(x,z,emoji,act){
+  const g=new THREE.Group(); g.position.set(x,0,z);
+  const counter=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.0,1.2), MAT.wood);
+  counter.position.y=0.5; counter.castShadow=true; counter.receiveShadow=true; g.add(counter);
+  const pm=mat(0x9a6b3e);
+  [-1,1].forEach(s=>{ const p=new THREE.Mesh(new THREE.BoxGeometry(0.16,1.9,0.16),pm); p.position.set(s*1.0,0.95,-0.5); p.castShadow=true; g.add(p); });
+  const sign=new THREE.Mesh(new THREE.BoxGeometry(2.4,0.7,0.12),mat(0xfff3da)); sign.position.set(0,2.0,-0.5); g.add(sign);
+  const spr=makeMarker(emoji); spr.position.set(0,2.0,-0.36); spr.scale.set(0.85,0.85,0.85); g.add(spr);
+  counter.userData.stand=act; g.userData.hit=counter; scene.add(g); stands.push(g);
+}
+function buildWorld(){
+  // utendørs plen
+  const lawn=new THREE.Mesh(new THREE.BoxGeometry(72,0.5,72), MAT.grass);
+  lawn.position.y=-0.6; lawn.receiveShadow=true; scene.add(lawn);
+  // gjerde rundt hagen
+  const fenceMat=mat(0xe9dcc0), fH=1.1, R=30;
+  function fenceLine(x1,z1,x2,z2){
+    const len=Math.hypot(x2-x1,z2-z1), n=Math.max(1,Math.round(len/2.4));
+    for(let i=0;i<=n;i++){ const tx=x1+(x2-x1)*i/n, tz=z1+(z2-z1)*i/n;
+      const p=new THREE.Mesh(new THREE.BoxGeometry(0.18,fH,0.18),fenceMat); p.position.set(tx,fH/2-0.35,tz); p.castShadow=true; scene.add(p); }
+    const rail=new THREE.Mesh(new THREE.BoxGeometry((Math.abs(x2-x1)||0.14),0.12,(Math.abs(z2-z1)||0.14)),fenceMat);
+    rail.position.set((x1+x2)/2,fH*0.55-0.35,(z1+z2)/2); scene.add(rail);
+  }
+  fenceLine(-R,-R,R,-R); fenceLine(-R,R,R,R); fenceLine(-R,-R,-R,R); fenceLine(R,-R,R,R);
+  // grusplass + sti inn forfra
+  const apron=new THREE.Mesh(new THREE.BoxGeometry(GH_W+9,0.52,GH_D+9), MAT.gravel);
+  apron.position.y=-0.55; apron.receiveShadow=true; scene.add(apron);
+  const path=new THREE.Mesh(new THREE.BoxGeometry(4.5,0.54,14), MAT.gravel);
+  path.position.set(0,-0.53,GH_D/2+8.5); path.receiveShadow=true; scene.add(path);
+  // drivhusgulv (terrakotta)
+  const floor=new THREE.Mesh(new THREE.BoxGeometry(GH_W,0.5,GH_D), MAT.floor);
+  floor.position.y=-0.25; floor.receiveShadow=true; scene.add(floor);
+  // ---- ORANGERI: solide trestolper, knevegger, glass over, takbjelker ----
+  const HW=GH_W/2, HD=GH_D/2, KNEE=1.2, PEAK=2.4, DW=GH_DOOR; // DW = halv dørbredde
+  const timber = ()=> mat(0xb7a382,{flatShading:true});       // lyst, tydelig treverk
+  const glass  = new THREE.MeshLambertMaterial({color:0xd6efe7,transparent:true,opacity:0.20,side:THREE.DoubleSide});
+  function postAt(x,z,th){ th=th||0.34; const p=new THREE.Mesh(new THREE.BoxGeometry(th,GH_H,th),timber());
+    p.position.set(x,GH_H/2,z); p.castShadow=true; scene.add(p); }
+  function beamX(x1,x2,y,z,th){ th=th||0.2; const b=new THREE.Mesh(new THREE.BoxGeometry(Math.abs(x2-x1)+th,th,th),timber());
+    b.position.set((x1+x2)/2,y,z); b.castShadow=true; scene.add(b); }
+  function beamZ(z1,z2,y,x,th){ th=th||0.2; const b=new THREE.Mesh(new THREE.BoxGeometry(th,th,Math.abs(z2-z1)+th),timber());
+    b.position.set(x,y,(z1+z2)/2); b.castShadow=true; scene.add(b); }
+  function kneePanel(cx,cz,w,d){ const p=new THREE.Mesh(new THREE.BoxGeometry(w,KNEE,d),MAT.wood);
+    p.position.set(cx,KNEE/2,cz); p.castShadow=true; p.receiveShadow=true; scene.add(p); }
+  function glassPanel(cx,cz,w,d){ const g=new THREE.Mesh(new THREE.BoxGeometry(w,GH_H-KNEE,d),glass);
+    g.position.set(cx,KNEE+(GH_H-KNEE)/2,cz); scene.add(g); }
+  // vertikale stolper (dør foran i midten, mellom -DW og DW)
+  [-HW,-6,-DW,DW,6,HW].forEach(x=>postAt(x,HD));        // framvegg
+  [-HW,-6,0,6,HW].forEach(x=>postAt(x,-HD));            // bakvegg
+  [-HD,-4,0,4,HD].forEach(z=>{ postAt(-HW,z); postAt(HW,z); }); // sidevegger
+  // knevegger + glass: bakvegg
+  kneePanel(0,-HD,GH_W,0.3); glassPanel(0,-HD,GH_W,0.16);
+  // sidevegger
+  [-HW,HW].forEach(x=>{ kneePanel(x,0,0.3,GH_D); glassPanel(x,0,0.16,GH_D); });
+  // framvegg i to segmenter med døråpning
+  const segW=HW-DW, segC=DW+segW/2;
+  [-segC,segC].forEach(cx=>{ kneePanel(cx,HD,segW,0.3); glassPanel(cx,HD,segW,0.16); });
+  beamX(-DW,DW,GH_H-0.1,HD);                            // døroverligger
+  // topprammer + knehøyde-rammer langs alle vegger
+  beamX(-HW,HW,GH_H,-HD); beamX(-HW,HW,GH_H,HD);
+  beamZ(-HD,HD,GH_H,-HW); beamZ(-HD,HD,GH_H,HW);
+  beamX(-HW,HW,KNEE,-HD); beamZ(-HD,HD,KNEE,-HW); beamZ(-HD,HD,KNEE,HW);
+  // tak: glassflater
+  const roofLen=Math.hypot(HW,PEAK), rA=Math.atan2(PEAK,HW);
+  const roofL=new THREE.Mesh(new THREE.PlaneGeometry(roofLen,GH_D),glass);
+  roofL.position.set(-HW/2,GH_H+PEAK/2,0); roofL.rotation.y=Math.PI/2; roofL.rotation.z=rA; scene.add(roofL);
+  const roofR=roofL.clone(); roofR.position.x=HW/2; roofR.rotation.z=-rA; scene.add(roofR);
+  const ridge=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.32,GH_D),timber()); ridge.position.set(0,GH_H+PEAK,0); ridge.castShadow=true; scene.add(ridge);
+  // synlige takbjelker (raftere)
+  [-HD,-5.33,-2.67,0,2.67,5.33,HD].forEach(z=>{
+    const rl=new THREE.Mesh(new THREE.BoxGeometry(roofLen,0.18,0.15),timber()); rl.position.set(-HW/2,GH_H+PEAK/2,z); rl.rotation.z=rA; rl.castShadow=true; scene.add(rl);
+    const rr=new THREE.Mesh(new THREE.BoxGeometry(roofLen,0.18,0.15),timber()); rr.position.set(HW/2,GH_H+PEAK/2,z); rr.rotation.z=-rA; rr.castShadow=true; scene.add(rr);
+  });
+  // gavl-trekanter (glass + kongsstolpe) foran og bak
+  [HD,-HD].forEach(z=>{
+    const sh=new THREE.Shape(); sh.moveTo(-HW,0); sh.lineTo(HW,0); sh.lineTo(0,PEAK); sh.lineTo(-HW,0);
+    const gg=new THREE.Mesh(new THREE.ShapeGeometry(sh),glass); gg.position.set(0,GH_H,z); scene.add(gg);
+    const kp=new THREE.Mesh(new THREE.BoxGeometry(0.22,PEAK,0.22),timber()); kp.position.set(0,GH_H+PEAK/2,z); scene.add(kp);
+  });
+  // disker framme
+  buildStand(-GH_W/2+2.6, GH_D/2-1.7, "🛒", "shop");
+  buildStand(GH_W/2-2.6,  GH_D/2-1.7, "🌟", "up");
+}
+
+/* ---- plassrutenett (større, med ganger) ---- */
+const SLOT_GAP = 3.0;
+function slotPos(i){
+  const col=i%CFG.cols, row=Math.floor(i/CFG.cols);
+  const x=(col-(CFG.cols-1)/2)*SLOT_GAP;
+  const z=(row-(CFG.rows-1)/2)*SLOT_GAP - 1.2;
+  return new THREE.Vector3(x,0,z);
+}
+/* ---- utendørs blomsterbed ---- */
+function isBed(i){ return i >= CFG.maxSlots; }
+const BED_DEFS = [ {x:-15, z0:-4.5, dz:3}, {x:15, z0:-4.5, dz:3},
+                   {x:-7, z0:11, dz:2.5}, {x:7, z0:11, dz:2.5} ];
+function bedPos(i){
+  const b=i-CFG.maxSlots, def=BED_DEFS[Math.floor(b/4)], k=b%4;
+  return new THREE.Vector3(def.x, 0, def.z0 + k*def.dz);
+}
+function makeTree(x,z,s){
+  // s skaleres opp ~3x for store, frodige trær. Gruppe litt under bakken så stammen står plantet (ikke svever).
+  const g=new THREE.Group(); g.position.set(x,-0.45,z);
+  const th=2.6*s;                                  // stammehøyde
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.28*s,0.44*s,th,8),mat(0x7a5230,{flatShading:true}));
+  trunk.position.y=th/2; trunk.castShadow=true; g.add(trunk);
+  const cols=[0x4f9e57,0x3f8e4f,0x5fae67,0x68b86a,0x46934f];
+  const blobs=6;
+  for(let k=0;k<blobs;k++){ const a=k/blobs*Math.PI*2, rr=(1.3+Math.random()*0.7)*s;
+    const f=new THREE.Mesh(new THREE.IcosahedronGeometry(rr,0),mat(cols[k%cols.length],{flatShading:true}));
+    f.position.set(Math.cos(a)*1.0*s*(k?1:0),(th+0.5*s)+(k%3)*0.7*s,Math.sin(a)*1.0*s*(k?1:0));
+    f.castShadow=true; g.add(f); }
+  scene.add(g);
+}
+function makeBush(x,z){ const g=new THREE.Group(); g.position.set(x,-0.32,z);
+  for(let k=0;k<4;k++){ const b=new THREE.Mesh(new THREE.IcosahedronGeometry(0.5+Math.random()*0.3,0),mat(0x5aa85f,{flatShading:true}));
+    b.position.set((Math.random()-0.5)*0.9,0.4+Math.random()*0.22,(Math.random()-0.5)*0.9); b.castShadow=true; g.add(b);} scene.add(g); }
+function makeFlowers(x,z){ const g=new THREE.Group(); g.position.set(x,-0.32,z);
+  const cols=[0xe0567c,0xf4c542,0x9b6fd0,0xff7ab0,0x6fc0e0];
+  for(let k=0;k<6;k++){ const a=Math.random()*6.28,r=Math.random()*1.0;
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.4,5),mat(0x3f8e4f)); stem.position.set(Math.cos(a)*r,0.2,Math.sin(a)*r); g.add(stem);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(0.12,7,6),mat(cols[k%cols.length])); head.position.set(Math.cos(a)*r,0.42,Math.sin(a)*r); head.scale.y=0.7; g.add(head);} scene.add(g); }
+function buildGardenExtras(){
+  // to lange blomsterbed (under bed-plassene)
+  BED_DEFS.forEach(def=>{
+    const cz=def.z0 + 1.5*def.dz, len=4*def.dz;
+    const soil=new THREE.Mesh(new THREE.BoxGeometry(2.2,0.6,len), MAT.soil);
+    soil.position.set(def.x,0.0,cz); soil.receiveShadow=true; scene.add(soil);
+    const rimMat=mat(0x8a5a34);
+    [-1.2,1.2].forEach(ox=>{ const r=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.55,len+0.4),rimMat); r.position.set(def.x+ox,0.06,cz); r.castShadow=true; scene.add(r); });
+    [-1,1].forEach(oz=>{ const r=new THREE.Mesh(new THREE.BoxGeometry(2.6,0.55,0.2),rimMat); r.position.set(def.x,0.06,cz+oz*(len/2+0.2)); scene.add(r); });
+    addObstacle(def.x,cz,2.6,len+0.4,0.1);     // bedet blokkerer gjennomgang
+  });
+  // store trær rundt hagen (halvert antall)
+  [[-27,-22,3.4],[27,21,3.4],[0,-27,3.6],[-25,7,2.7],[25,7,2.7],[-12,-25,2.9],[28,-3,3.0]]
+    .forEach(([x,z,s])=>makeTree(x,z,s));
+  // dekorative pyntebed med blomster (fyller hagen)
+  function decoBed(x,z,w,d){
+    const soil=new THREE.Mesh(new THREE.BoxGeometry(w,0.5,d), MAT.soil);
+    soil.position.set(x,-0.05,z); soil.receiveShadow=true; scene.add(soil);
+    const rm=mat(0x8a5a34);
+    const rL=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.45,d+0.3),rm); rL.position.set(x-w/2,0.02,z); rL.castShadow=true; scene.add(rL);
+    const rR=rL.clone(); rR.position.x=x+w/2; scene.add(rR);
+    const rF=new THREE.Mesh(new THREE.BoxGeometry(w+0.3,0.45,0.18),rm); rF.position.set(x,0.02,z-d/2); rF.castShadow=true; scene.add(rF);
+    const rB=rF.clone(); rB.position.z=z+d/2; scene.add(rB);
+    // blomster oppå
+    for(let fx=-1;fx<=1;fx++) for(let fz=-1;fz<=1;fz++){
+      makeFlowers(x+fx*(w*0.28), z+fz*(d*0.28));
+    }
+    addObstacle(x,z,w+0.3,d+0.3,0.1);     // pyntebedet blokkerer gjennomgang
+  }
+  [[-24,-13,3,5],[24,-13,3,5],[-28,5,3,6],[28,5,3,6],[-19,24,5,3],[19,24,5,3],[-13,24,4,3],[13,24,4,3]]
+    .forEach(([x,z,w,d])=>decoBed(x,z,w,d));
+  // busker + blomsterklynger
+  [[-20,-13],[20,-13],[-25,1],[25,1],[-9,21],[9,21],[-19,17],[19,17],[-23,-19],[23,-19]].forEach(([x,z])=>makeBush(x,z));
+  [[-23,-7],[23,-7],[-9,-21],[9,-21],[0,23],[-26,-9],[26,-9]].forEach(([x,z])=>makeFlowers(x,z));
+}
+
+const slotMeshes=[];
+const raycaster=new THREE.Raycaster(); const pointer=new THREE.Vector2();
+function buildSlots(){
+  for(let i=0;i<CFG.maxSlots;i++){
+    const p=slotPos(i);
+    const g=new THREE.Group(); g.position.copy(p);
+    // pottene står på benk (bygges i buildBenches) — her bare en liten skål/underlag
+    const tile=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.64,0.14,12), mat(0x9c6b3e));
+    tile.position.y=0.6; tile.userData.slot=i; tile.receiveShadow=true; g.add(tile);
+    g.userData.tile=tile;
+    const content=new THREE.Group(); content.position.y=0.66; g.userData.content=content; g.add(content);
+    scene.add(g); slotMeshes.push(g);
+  }
+  // bed-plasser: flate jordflekker man kan så i
+  for(let i=CFG.maxSlots;i<TOTAL_SLOTS;i++){
+    const p=bedPos(i);
+    const g=new THREE.Group(); g.position.copy(p);
+    const tile=new THREE.Mesh(new THREE.CylinderGeometry(0.72,0.72,0.16,12), mat(0x5a3f28));
+    tile.position.y=0.3; tile.userData.slot=i; tile.receiveShadow=true; g.add(tile);
+    g.userData.tile=tile; g.userData.bed=true;
+    const content=new THREE.Group(); content.position.y=0.38; g.userData.content=content; g.add(content);
+    scene.add(g); slotMeshes.push(g);
+  }
+}
+
+/* ---- dyrkebenker under pottene i drivhuset ---- */
+function buildBenches(){
+  const topY=0.53, th=0.12, width=1.7, len=(CFG.rows-1)*SLOT_GAP+1, cz=-1.2;  // går langs z (kolonner)
+  for(let c=0;c<CFG.cols;c++){
+    const cx=(c-(CFG.cols-1)/2)*SLOT_GAP;
+    const top=new THREE.Mesh(new THREE.BoxGeometry(width,th,len), MAT.wood);
+    top.position.set(cx,topY,cz); top.castShadow=true; top.receiveShadow=true; scene.add(top);
+    // kanter (langs z)
+    [-1,1].forEach(s=>{ const lip=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.1,len),mat(0x8a5a34));
+      lip.position.set(cx+s*(width/2-0.06),topY+0.05,cz); scene.add(lip); });
+    // bein
+    [[-width/2+0.35,-len/2+0.5],[width/2-0.35,-len/2+0.5],[-width/2+0.35,len/2-0.5],[width/2-0.35,len/2-0.5]]
+      .forEach(([lx,lz])=>{ const leg=new THREE.Mesh(new THREE.BoxGeometry(0.16,topY,0.16), MAT.wood);
+        leg.position.set(cx+lx,topY/2,cz+lz); leg.castShadow=true; scene.add(leg); });
+    // tverrbjelke
+    const rail=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,len-0.8),mat(0x8a5a34));
+    rail.position.set(cx,0.2,cz); scene.add(rail);
+    addObstacle(cx,cz,width,len,0.12);     // ikke mulig å gå gjennom benken
+  }
+}
+
+/* ---- gartner-figur ---- */
+let gardener=null;
+/* 3D-modell (Higgsfield). Prototype: hentes fra CDN. For en helt offline versjon
+   kan du laste ned .glb-en til Assets/ og sette GARDENER_GLB="Assets/gartner.glb". */
+const GARDENER_GLB = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/8a0628b3-b830-4255-b3f0-61e9c93aa302.glb";
+const GARDENER_FACING = Math.PI;   // snu modellen 180° hvis den vender feil vei (0 eller Math.PI)
+function buildGardener(){
+  const g=new THREE.Group();
+  const skin=0xe9b58a, shirt=0x2f9e6a, pants=0x3a5a8a, hat=0xe8c66a;
+  const torso=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.3,0.6,10),mat(shirt)); torso.position.y=0.95; torso.castShadow=true; g.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.24,12,10),mat(skin)); head.position.y=1.42; head.castShadow=true; g.add(head);
+  const brim=new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.42,0.06,16),mat(hat)); brim.position.y=1.55; g.add(brim);
+  const crown=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.24,0.22,12),mat(hat)); crown.position.y=1.66; g.add(crown);
+  const armL=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,0.55,8),mat(shirt)); armL.position.set(-0.34,0.98,0); armL.castShadow=true; g.add(armL);
+  const armR=armL.clone(); armR.position.x=0.34; g.add(armR);
+  const legL=new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.1,0.62,8),mat(pants)); legL.position.set(-0.13,0.32,0); legL.castShadow=true; g.add(legL);
+  const legR=legL.clone(); legR.position.x=0.13; g.add(legR);
+  const procParts=[torso,head,brim,crown,armL,armR,legL,legR];   // den enkle figuren (reserve)
+  g.userData={legL,legR,armL,armR, procParts, model:null, target:null, pending:-1, standAct:null, path:[], phase:0, moving:false, speed:6.4};
+  g.position.set(0,0,GH_D/2+3.5);
+  scene.add(g); gardener=g; camFocus.copy(g.position);
+  loadGardenerModel(g);
+}
+/* prøv å laste 3D-modellen; lykkes det, skjul den enkle figuren */
+function loadGardenerModel(g){
+  if(typeof THREE.GLTFLoader!=="function") return;   // loader ikke tilgjengelig → behold reserve
+  const holder=new THREE.Group(); g.add(holder);     // egen gruppe så vi kan bobbe modellen
+  new THREE.GLTFLoader().load(GARDENER_GLB, gltf=>{
+    const m=gltf.scene;
+    // skaler til ~1,9 enheter høy og sett føttene på y=0
+    const box=new THREE.Box3().setFromObject(m), size=new THREE.Vector3(); box.getSize(size);
+    const h=size.y||1, s=1.9/h; m.scale.setScalar(s);
+    const box2=new THREE.Box3().setFromObject(m), c=new THREE.Vector3(); box2.getCenter(c);
+    m.position.x-=c.x; m.position.z-=c.z; m.position.y-=box2.min.y;   // sentrer + føtter på bakken
+    m.rotation.y=GARDENER_FACING;
+    m.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
+    holder.add(m);
+    g.userData.procParts.forEach(p=>p.visible=false);   // skjul reservefiguren
+    g.userData.model=holder;
+  }, undefined, err=>{ /* feilet (CDN/CORS) → behold den enkle figuren */ });
+}
+
+buildWorld();
+buildBenches();
+buildSlots();
+buildGardenExtras();
+buildGardener();
+/* ---------- prosedyre-planter ---------- */
+function disposeGroup(grp){ while(grp.children.length){ const c=grp.children.pop(); if(c.geometry)c.geometry.dispose(); grp.remove(c);} }
+
+function makePot(size, soil){
+  const grp=new THREE.Group();
+  const r={liten:0.42,medium:0.55,stor:0.72}[size]||0.5;
+  const h={liten:0.5,medium:0.62,stor:0.8}[size]||0.55;
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(r,r*0.78,h,12), mat(0xc4623a,{flatShading:true}));
+  body.position.y=h/2; body.castShadow=true; grp.add(body);
+  const rim=new THREE.Mesh(new THREE.CylinderGeometry(r*1.08,r*1.02,h*0.16,12), mat(0xd07346,{flatShading:true}));
+  rim.position.y=h*0.93; grp.add(rim);
+  const soilCol={vanlig:0x6b4a2e,sand:0xcdb079,naering:0x4a3320,kompost:0x3a2a18}[soil]||0x6b4a2e;
+  const dirt=new THREE.Mesh(new THREE.CylinderGeometry(r*0.92,r*0.92,0.12,12), mat(soilCol));
+  dirt.position.y=h*0.86; grp.add(dirt);
+  grp.userData.top=h*0.9; grp.userData.r=r;
+  return grp;
+}
+
+function lerpColor(a,b,t){ const ca=new THREE.Color(a),cb=new THREE.Color(b); return ca.lerp(cb,t).getHex(); }
+
+function makePlant(sp, stage, special){
+  const grp=new THREE.Group();
+  if(stage===0){ // bare en liten jordhaug-spire-spire
+    const seed=new THREE.Mesh(new THREE.SphereGeometry(0.07,8,6), mat(0x8a6a3a));
+    seed.position.y=0.04; grp.add(seed); return grp;
+  }
+  const sc=STAGE_SCALE[stage];
+  const stemCol=sp.col2;
+  const main=new THREE.Color(sp.col);
+  if(special){ main.offsetHSL(0.0,0.15,0.12); } // litt mer mettet/lys for spesial
+  const mc=main.getHex();
+  const flat={flatShading:true};
+
+  function stem(hgt,thick){ const s=new THREE.Mesh(new THREE.CylinderGeometry(thick*0.7,thick,hgt,8), mat(stemCol,flat)); s.position.y=hgt/2; s.castShadow=true; grp.add(s); return s; }
+  function leaf(y,ang,len){ const l=new THREE.Mesh(new THREE.ConeGeometry(0.12,len,6), mat(lerpColor(stemCol,0x6fc77a,0.4),flat));
+    l.position.set(Math.cos(ang)*0.16,y,Math.sin(ang)*0.16); l.rotation.z=Math.PI/2.4; l.rotation.y=-ang; l.castShadow=true; grp.add(l); }
+
+  if(sp.arch==="flower"){
+    const h=1.1*sc; stem(h,0.06+0.02*sc);
+    leaf(h*0.4,0.6,0.5*sc); leaf(h*0.55,Math.PI+0.4,0.5*sc);
+    if(stage>=3){
+      const cy=h+0.05;
+      const center=new THREE.Mesh(new THREE.SphereGeometry(0.16*sc,10,8), mat(sp.col2,flat)); center.position.y=cy; grp.add(center);
+      const petals=stage>=4?8:5; const pr=0.22*sc;
+      for(let i=0;i<petals;i++){ const a=i/petals*Math.PI*2;
+        const pet=new THREE.Mesh(new THREE.SphereGeometry(0.13*sc,8,6), mat(mc,flat));
+        pet.scale.set(1,0.45,1.5); pet.position.set(Math.cos(a)*pr,cy,Math.sin(a)*pr); pet.castShadow=true; grp.add(pet);
+      }
+      if(sp.id==="regnbue"){ grp.children.forEach((c,i)=>{ if(c.material&&i>4){ c.material=mat(new THREE.Color().setHSL(i/12,0.8,0.6).getHex(),flat);} }); }
+    } else { const bud=new THREE.Mesh(new THREE.SphereGeometry(0.12*sc,8,6), mat(lerpColor(stemCol,mc,0.5),flat)); bud.position.y=h+0.02; grp.add(bud); }
+  }
+  else if(sp.arch==="leafy"){
+    const h=0.7*sc; stem(h,0.05);
+    const n=stage>=4?7:stage>=3?5:3;
+    for(let i=0;i<n;i++){ const a=i/n*Math.PI*2; const yy=h*0.3+ (i%3)*0.18*sc;
+      const lf=new THREE.Mesh(new THREE.SphereGeometry(0.2*sc,8,6), mat(mc,flat));
+      lf.scale.set(1,0.5,1.7); lf.position.set(Math.cos(a)*0.22*sc,yy,Math.sin(a)*0.22*sc); lf.rotation.y=-a; lf.castShadow=true; grp.add(lf);
+    }
+  }
+  else if(sp.arch==="cactus"){
+    const h=0.85*sc; const body=new THREE.Mesh(new THREE.CylinderGeometry(0.28*sc,0.32*sc,h,10), mat(mc,flat));
+    body.position.y=h/2; body.castShadow=true; grp.add(body);
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(0.28*sc,10,8), mat(mc,flat)); cap.position.y=h; cap.scale.y=0.7; grp.add(cap);
+    if(stage>=3){ for(const s2 of [-1,1]){ const arm=new THREE.Mesh(new THREE.CylinderGeometry(0.13*sc,0.15*sc,0.4*sc,8), mat(mc,flat));
+      arm.position.set(s2*0.3*sc,h*0.55,0); grp.add(arm);
+      const ac=new THREE.Mesh(new THREE.SphereGeometry(0.14*sc,8,6),mat(mc,flat)); ac.position.set(s2*0.3*sc,h*0.78,0); grp.add(ac);} }
+    if(stage>=4){ const fl=new THREE.Mesh(new THREE.SphereGeometry(0.13,8,6), mat(special?0xffd0e8:0xff7ab0,flat)); fl.position.y=h+0.1; fl.scale.y=0.6; grp.add(fl); }
+  }
+  else if(sp.arch==="fruit"){
+    const h=0.6*sc; stem(h,0.05);
+    for(let i=0;i<5;i++){ const a=i/5*Math.PI*2; const lf=new THREE.Mesh(new THREE.SphereGeometry(0.2*sc,8,6),mat(sp.col2,flat));
+      lf.scale.set(1,0.4,1.5); lf.position.set(Math.cos(a)*0.24*sc,h*0.7+0.1,Math.sin(a)*0.24*sc); lf.rotation.y=-a; lf.castShadow=true; grp.add(lf);}
+    if(stage>=4){ for(let i=0;i<3;i++){ const a=i/3*Math.PI*2+0.5; const fr=new THREE.Mesh(new THREE.SphereGeometry(0.15*sc,10,8),mat(mc,flat));
+      fr.position.set(Math.cos(a)*0.2,h*0.6,Math.sin(a)*0.2); fr.castShadow=true; grp.add(fr);} }
+    else if(stage>=3){ const fr=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,6),mat(lerpColor(sp.col2,mc,0.5),flat)); fr.position.y=h*0.6; grp.add(fr); }
+  }
+  else if(sp.arch==="carnivore"){
+    const h=0.5*sc; stem(h,0.06);
+    const n=stage>=4?3:stage>=3?2:1;
+    for(let i=0;i<n;i++){ const a=i/n*Math.PI*2; const px=Math.cos(a)*0.18*(i?1:0), pz=Math.sin(a)*0.18*(i?1:0);
+      const cup=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.18*sc,0.4*sc,8), mat(mc,flat));
+      cup.position.set(px,h+0.18*sc,pz); cup.castShadow=true; grp.add(cup);
+      const lip=new THREE.Mesh(new THREE.TorusGeometry(0.16*sc,0.04,6,10), mat(sp.col2,flat)); lip.position.set(px,h+0.38*sc,pz); lip.rotation.x=Math.PI/2; grp.add(lip);
+    }
+  }
+  else if(sp.arch==="tree"){
+    const h=1.0*sc; const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.1*sc,0.16*sc,h,8), mat(sp.col2,flat));
+    trunk.position.y=h/2; trunk.castShadow=true; grp.add(trunk);
+    if(stage>=2){ const blobs=stage>=4?5:3;
+      for(let i=0;i<blobs;i++){ const a=i/blobs*Math.PI*2; const rr=0.3*sc;
+        const b=new THREE.Mesh(new THREE.SphereGeometry((0.3+ (i%2)*0.08)*sc,10,8), mat(mc,flat));
+        b.position.set(Math.cos(a)*rr*(i?1:0), h+0.1+(i%2)*0.18*sc, Math.sin(a)*rr*(i?1:0)); b.castShadow=true; grp.add(b);
+      } }
+    else { const b=new THREE.Mesh(new THREE.SphereGeometry(0.22*sc,8,6),mat(mc,flat)); b.position.y=h+0.05; grp.add(b); }
+  }
+
+  if(special){ // glød
+    const glow=new THREE.PointLight(mc,0.7,2.4); glow.position.y=0.8*sc; grp.add(glow);
+  }
+  return grp;
+}
+
+/* statusmerker over potte (skadedyr/sykdom/visnet/moden/vann) */
+function makeMarker(emoji){
+  // bruk små farge-sprites via canvas-tekstur
+  const cv=document.createElement("canvas"); cv.width=cv.height=64;
+  const ctx=cv.getContext("2d"); ctx.font="48px serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(emoji,32,36);
+  const tex=new THREE.CanvasTexture(cv);
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+  spr.scale.set(0.7,0.7,0.7); return spr;
+}
+
+/* tegn innholdet i en slot */
+function renderSlot(i){
+  const g=slotMeshes[i];
+  const content=g.userData.content; disposeGroup(content);
+  const bed=isBed(i);
+  if(!bed){
+    const unlocked = i < G.slotsUnlocked;
+    g.userData.tile.material.color.set(unlocked?0x9c6b3e:0x6f513a);
+    g.userData.tile.material.opacity=unlocked?1:0.55; g.userData.tile.material.transparent=!unlocked;
+    if(!unlocked){
+      const lock=makeMarker("🔒"); lock.position.y=0.7; content.add(lock); return;
+    }
+  }
+  const s=G.slots[i];
+  if(!s) return;
+  const sp=SP[s.species];
+  let baseY=0;
+  if(!bed){ const pot=makePot(s.pot, s.soil); content.add(pot); baseY=pot.userData.top; }
+  if(s.dead){
+    const plant=makePlant(sp, Math.min(s.stage,2), false);
+    plant.position.y=baseY; plant.traverse(o=>{ if(o.material&&o.material.color) o.material.color.multiplyScalar(0.5); });
+    content.add(plant);
+    const m=makeMarker("💀"); m.position.y=baseY+1.0; content.add(m);
+    return;
+  }
+  const plant=makePlant(sp, s.stage, s.special);
+  plant.position.y=baseY; content.add(plant);
+  // markører
+  let my=baseY + STAGE_SCALE[s.stage]*1.2 + 0.5;
+  if(s.pest){ const m=makeMarker("🐛"); m.position.y=my; content.add(m); my+=0.55; g.userData.pestMark=m; }
+  if(s.disease){ const m=makeMarker("🍄"); m.position.y=my; content.add(m); my+=0.55; }
+  if(s.stage>=4){ const m=makeMarker("✨"); m.position.y=my; content.add(m); }
+}
+function renderAllSlots(){ for(let i=0;i<TOTAL_SLOTS;i++) renderSlot(i); }
+/* ===================================================================== *
+ *  KAMERA-ORBIT + GARTNER-STYRING                                        *
+ * ===================================================================== */
+let dragging=false,lastX=0,lastY=0,moved=0,pinchD=0;
+const keys={};
+addEventListener("keydown",e=>{ keys[e.code]=true; });
+addEventListener("keyup",e=>{ keys[e.code]=false; });
+
+canvas.addEventListener("pointerdown",e=>{ dragging=true;moved=0;lastX=e.clientX;lastY=e.clientY; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener("pointermove",e=>{ if(!dragging)return;
+  const dx=e.clientX-lastX,dy=e.clientY-lastY; moved+=Math.abs(dx)+Math.abs(dy); lastX=e.clientX;lastY=e.clientY;
+  if(mode==="utforsk"){ exYaw -= dx*0.005; exPitch=clamp(exPitch - dy*0.004,-1.0,0.45); }
+  else { camYaw -= dx*0.006; camPitch=clamp(camPitch - dy*0.004, 0.5, 1.2); }   // dra sidelengs = snurr, opp/ned = tilt
+  placeCamera();
+});
+canvas.addEventListener("pointerup",e=>{ dragging=false; if(moved<7) tap(e); });
+canvas.addEventListener("wheel",e=>{ e.preventDefault(); camZoom*=e.deltaY<0?1.1:0.9; camZoom=clamp(camZoom,0.55,2.4); resize(); },{passive:false});
+canvas.addEventListener("touchmove",e=>{ if(e.touches.length===2){ e.preventDefault();
+  const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  if(pinchD){ camZoom*=d/pinchD; camZoom=clamp(camZoom,0.55,2.4); resize(); } pinchD=d; }},{passive:false});
+canvas.addEventListener("touchend",()=>pinchD=0);
+
+const groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+function rayTo(e){ const r=canvas.getBoundingClientRect();
+  pointer.x=((e.clientX-r.left)/r.width)*2-1; pointer.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(pointer,activeCamera); }
+function tap(e){
+  rayTo(e);
+  const tiles=slotMeshes.map(g=>g.userData.tile);
+  let hit=raycaster.intersectObjects(tiles,false);
+  if(hit.length){ walkToSlot(hit[0].object.userData.slot); return; }
+  const sh=raycaster.intersectObjects(stands.map(s=>s.userData.hit),false);
+  if(sh.length){ const st=sh[0].object.parent.position;
+    walkPath(st.x,st.z+1.2,-1,sh[0].object.userData.stand); return; }
+  const pt=new THREE.Vector3(); raycaster.ray.intersectPlane(groundPlane,pt);
+  if(pt){ walkPath(pt.x,pt.z,-1,null); if($("card").classList.contains("show"))hideCard(); }
+}
+/* er et punkt inne i drivhuset? */
+function gardInside(x,z){ return Math.abs(x)<GH_W/2-0.3 && z>-GH_D/2+0.3 && z<GH_D/2-0.3; }
+/* sett mål (med ev. mellomstopp ved døra hvis vi krysser veggen) */
+function walkPath(x,z,pending,standAct){
+  const g=gardener.userData; x=clamp(x,-34,34); z=clamp(z,-34,34);
+  g.path=[];
+  if(gardInside(gardener.position.x,gardener.position.z)!==gardInside(x,z))
+    g.path.push({x:0,z:GH_D/2-0.7,pending:-1,standAct:null});   // innom døra først
+  g.path.push({x,z,pending:pending==null?-1:pending,standAct:standAct||null});
+  nextNode();
+}
+function nextNode(){ const g=gardener.userData; const n=g.path.shift();
+  g.target=new THREE.Vector3(n.x,0,n.z); g.pending=n.pending; g.standAct=n.standAct; }
+function walkTo(x,z,pending){ walkPath(x,z,pending,null); }
+function walkToSlot(i){
+  const bed=isBed(i), gp=gardener.position;
+  if(!bed){ // potter står på benk → stå i gangen ved siden av
+    const sp=slotPos(i), side=(gp.x>=sp.x)?1:-1;
+    walkPath(sp.x+side*1.5, sp.z, i, null); return;
+  }
+  const sp=bedPos(i);
+  const dir=new THREE.Vector3(gp.x-sp.x,0,gp.z-sp.z); if(dir.lengthSq()<0.01)dir.set(0,0,1); dir.normalize();
+  walkPath(sp.x+dir.x*1.5, sp.z+dir.z*1.5, i, null);
+}
+/* vegg-kollisjon: stopp ved drivhusveggene, slipp gjennom døra foran */
+function moveGardener(ox,oz,nx,nz){
+  const hw=GH_W/2, hd=GH_D/2, m=0.4, dw=GH_DOOR;
+  let x=nx;
+  if(oz>-hd-m && oz<hd-m){                       // i høyde med sideveggene
+    if((ox+hw)*(x+hw)<0) x=ox;                    // venstre vegg
+    if((ox-hw)*(x-hw)<0) x=ox;                    // høyre vegg
+  }
+  if(blocked(x,oz)) x=ox;                         // benker/bed (x-akse)
+  let z=nz;
+  if(x>-hw-m && x<hw+m){
+    if((oz+hd)*(z+hd)<0) z=oz;                              // bakvegg
+    if((oz-hd)*(z-hd)<0 && !(x>-dw && x<dw)) z=oz;          // framvegg (åpen i døra)
+  }
+  if(blocked(x,z)) z=oz;                          // benker/bed (z-akse)
+  return {x,z};
+}
+
+/* ===================================================================== *
+ *  RENDER-LOOP                                                           *
+ * ===================================================================== */
+let selSlot=-1;
+const clock=new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const dt=Math.min(clock.getDelta(),0.05), time=performance.now()*0.001;
+  const g=gardener.userData;
+  let kx=0,kz=0, moving=false;
+  if(keys["KeyW"]||keys["ArrowUp"])kz-=1; if(keys["KeyS"]||keys["ArrowDown"])kz+=1;
+  if(keys["KeyA"]||keys["ArrowLeft"])kx-=1; if(keys["KeyD"]||keys["ArrowRight"])kx+=1;
+  if(joy.active){ kx+=joy.x; kz+=joy.z; }
+  if(Math.abs(kx)>0.02||Math.abs(kz)>0.02){
+    g.target=null; g.pending=-1; g.standAct=null; g.path=[];
+    const len=Math.hypot(kx,kz)||1; kx/=len; kz/=len;
+    let wx,wz;
+    if(mode==="utforsk"){
+      const fx=Math.sin(exYaw),fz=Math.cos(exYaw),rx=Math.cos(exYaw),rz=-Math.sin(exYaw);
+      wx=fx*(-kz)+rx*kx; wz=fz*(-kz)+rz*kx;       // gå i blikkretningen
+    } else {
+      // bruk kameraets egne akser så «høyre» alltid er høyre på skjermen
+      activeCamera.updateMatrixWorld();
+      const e=activeCamera.matrixWorld.elements;
+      let rx=e[0], rz=e[2], fx=-e[8], fz=-e[10];
+      const rl=Math.hypot(rx,rz)||1, fl=Math.hypot(fx,fz)||1;
+      rx/=rl; rz/=rl; fx/=fl; fz/=fl;
+      wx=kx*rx + (-kz)*fx; wz=kx*rz + (-kz)*fz;
+    }
+    const ox=gardener.position.x, oz=gardener.position.z;
+    const nx=clamp(ox+wx*g.speed*dt,-34,34), nz=clamp(oz+wz*g.speed*dt,-34,34);
+    const r=moveGardener(ox,oz,nx,nz);
+    gardener.position.x=r.x; gardener.position.z=r.z;
+    gardener.rotation.y=Math.atan2(wx,wz); moving=true;
+    if($("card").classList.contains("show"))hideCard();
+  } else if(g.target){
+    const dx=g.target.x-gardener.position.x, dz=g.target.z-gardener.position.z, dist=Math.hypot(dx,dz);
+    if(dist>0.18){ const ux=dx/dist,uz=dz/dist;
+      const ox=gardener.position.x, oz=gardener.position.z;
+      const r=moveGardener(ox,oz, ox+ux*g.speed*dt, oz+uz*g.speed*dt);
+      gardener.position.x=r.x; gardener.position.z=r.z;
+      gardener.rotation.y=Math.atan2(ux,uz); moving=true;
+      if(Math.abs(r.x-ox)<1e-4 && Math.abs(r.z-oz)<1e-4){   // sitter fast mot vegg → gi opp
+        g.target=null; g.path=[]; g.pending=-1; g.standAct=null; }
+    } else if(g.path && g.path.length){ nextNode(); }   // videre til neste veipunkt (døra → målet)
+    else {
+      g.target=null;
+      if(g.pending>=0){ openSlot(g.pending); g.pending=-1; }
+      else if(g.standAct){ const a=g.standAct; g.standAct=null; if(a==="shop")openShop(); else if(a==="up")openUpgrades(); }
+    }
+  }
+  if(moving) g.phase+=dt*11; else g.phase = g.phase>0.05? g.phase*0.78 : 0;
+  const sw=Math.sin(g.phase)*(moving?0.55:0.45*g.phase);
+  g.legL.rotation.x=sw; g.legR.rotation.x=-sw; g.armL.rotation.x=-sw*0.7; g.armR.rotation.x=sw*0.7;
+  if(g.model){ g.model.position.y=Math.abs(Math.sin(g.phase))*0.07*(moving?1:0);
+    g.model.rotation.z=Math.sin(g.phase)*0.04*(moving?1:0); }   // lett vugging når modellen går
+  g.moving=moving;
+  camFocus.lerp(gardener.position,0.09); placeCamera();
+  for(let i=0;i<TOTAL_SLOTS;i++){ const s=G.slots[i]; if(s&&!s.dead&&s.stage>0){
+    slotMeshes[i].userData.content.rotation.z=Math.sin(time*1.2+i)*0.025; }}
+  renderer.render(scene,activeCamera);
+}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+/* ===================================================================== *
+ *  SPILL-LOGIKK                                                          *
+ * ===================================================================== */
+function coins(){ return Math.round(G.coins); }
+function setCoins(v){ G.coins=v; document.getElementById("coinV").textContent=coins(); }
+function pay(v){ if(G.coins<v){ toast("Ikke nok mynt — du mangler "+(v-coins())+" 🪙","warn"); return false; } setCoins(G.coins-v); return true; }
+function earn(v){ setCoins(G.coins+v); }
+
+function plantSeed(i, speciesId, pot, soil, light){
+  const sp=SP[speciesId], bed=isBed(i);
+  if(!G.seeds[speciesId] || G.seeds[speciesId]<=0){ toast("Du har ikke det frøet.","warn"); return; }
+  if(bed){ pot=sp.pot; soil="vanlig"; light="sol"; }   // åpent bed: ingen potte, hagejord, full sol
+  const cost = bed?0:(CFG.potPrice[pot]+CFG.soilPrice[soil]);
+  if(!pay(cost)) return;
+  G.seeds[speciesId]--;
+  const isLegend=sp.tier===4;
+  const special=Math.random() < (isLegend?CFG.specialChanceLegend:CFG.specialChance);
+  const w0=Math.round((sp.water[0]+sp.water[1])/2);
+  G.slots[i]={species:speciesId, pot, soil, light, stage:0, daysInStage:0, health:100, water:w0, pest:false, disease:false, dead:false, special, bed};
+  renderSlot(i); save(); sfx("plant");
+  toast((special?"✨ ":"")+sp.navn+(bed?" sådd i bedet":" plantet")+(special?" — en sjelden variant!":"")+"!", special?"gold":"good");
+  if(selSlot===i) openSlot(i);
+}
+
+function setupErrors(s){ const sp=SP[s.species]; let n=0;
+  if(s.bed){ if(sp.soil!=="vanlig")n++; if(sp.light!=="sol")n++; return n; }
+  if(s.pot!==sp.pot)n++; if(s.soil!==sp.soil)n++; if(slotLightFor(s)!==sp.light)n++; return n; }
+function slotLightFor(s){ return s.light; }
+function waterOK(s){ const sp=SP[s.species]; return s.water>=sp.water[0] && s.water<=sp.water[1]; }
+function overWater(s){ const sp=SP[s.species]; return s.water>sp.water[1]; }
+
+function nextDay(){
+  G.day++;
+  let died=[],grew=[],pestNew=[];
+  const idx=[]; for(let i=0;i<G.slotsUnlocked;i++) idx.push(i); for(let i=CFG.maxSlots;i<TOTAL_SLOTS;i++) idx.push(i);
+  for(const i of idx){
+    const s=G.slots[i]; if(!s||s.dead) continue;
+    const sp=SP[s.species];
+    // vann
+    if(s.bed){ s.water = Math.round((sp.water[0]+sp.water[1])/2); }   // regn vanner bedet
+    else if(G.up.autovann){ s.water = (sp.water[0]+sp.water[1])/2; }
+    else { s.water=Math.max(0,s.water-CFG.waterDecay); }
+    // skadedyr spawn
+    if(!s.pest && s.stage>0){ let pc=CFG.pestChance; if(G.up.skadedyrvakt)pc*=0.5;
+      if(Math.random()<pc){ s.pest=true; pestNew.push(i); } }
+    // sykdom ved overvann
+    if(!s.disease && overWater(s) && Math.random()<CFG.diseaseChance){ s.disease=true; }
+    // helse / vekst
+    const setErr=setupErrors(s);
+    let dmg=0;
+    if(!waterOK(s)) dmg+=CFG.dmgWater;
+    dmg+=setErr*CFG.dmgSetup;
+    if(s.pest) dmg+=CFG.dmgPest;
+    if(s.disease) dmg+=CFG.dmgDisease;
+    const allRight = setErr===0 && waterOK(s) && !s.pest && !s.disease;
+    if(allRight){
+      s.health=Math.min(100,s.health+CFG.healHealthy);
+      if(s.stage<4){ s.daysInStage++; if(s.daysInStage>=sp.days){ s.stage++; s.daysInStage=0; grew.push(i);} }
+    } else {
+      s.health-=dmg;
+    }
+    if(s.health<=0){ s.dead=true; died.push(i); }
+  }
+  // skadedyr sprer seg
+  for(let i=0;i<G.slotsUnlocked;i++){ const s=G.slots[i]; if(s&&s.pest&&!s.dead){
+    const neigh=[i-1,i+1,i-CFG.cols,i+CFG.cols];
+    neigh.forEach(j=>{ if(j>=0&&j<G.slotsUnlocked){ const t=G.slots[j];
+      if(t&&!t.dead&&!t.pest&&Math.random()<CFG.pestSpread){ t.pest=true; } } });
+  }}
+  document.getElementById("dayV").textContent=G.day;
+  renderAllSlots(); if(selSlot>=0) openSlot(selSlot); save();
+  // tilbakemelding
+  if(grew.length) sfx("grow");
+  let msgs=[];
+  if(grew.length) msgs.push("🌱 "+grew.length+" plante"+(grew.length>1?"r":"")+" vokste");
+  if(pestNew.length) msgs.push("🐛 skadedyr dukket opp!");
+  if(died.length) msgs.push("💀 "+died.length+" plante"+(died.length>1?"r":"")+" visnet");
+  if(msgs.length) toast(msgs.join("  ·  "), died.length?"warn":(grew.length?"good":""));
+  else toast("Dag "+G.day+" — drivhuset hviler 🌙");
+  // sjekk lavt vann
+  let dry=0; for(let i=0;i<G.slotsUnlocked;i++){ const s=G.slots[i]; if(s&&!s.dead&&!waterOK(s)&&!G.up.autovann) dry++; }
+  if(dry && !G.up.autovann) setTimeout(()=>toast("💧 "+dry+" plante"+(dry>1?"r":"")+" trenger vann","warn"),900);
+}
+
+/* handlinger på en plante */
+function waterPlant(i){ const s=G.slots[i]; if(!s||s.dead)return; const sp=SP[s.species];
+  s.water=Math.min(100,s.water+CFG.waterPerCan); sfx("water"); renderSlot(i); openSlot(i); save();
+  if(overWater(s)) toast("Forsiktig — nå er det i overkant vått 💧","warn");
+}
+function clearPest(i){ const s=G.slots[i]; if(!s)return; s.pest=false; sfx("fix"); renderSlot(i); openSlot(i); save(); toast("Skadedyr fjernet 🌿","good"); }
+function clearDisease(i){ const s=G.slots[i]; if(!s)return; s.disease=false; sfx("fix"); renderSlot(i); openSlot(i); save(); toast("Behandlet for sopp 🌿","good"); }
+function clearDead(i){ G.slots[i]=null; renderSlot(i); openSlot(i); save(); toast("Potten er tom igjen."); }
+function harvest(i){ const s=G.slots[i]; if(!s||s.dead||s.stage<4)return; const sp=SP[s.species];
+  let quality=s.health/100; if(G.up.gjodsel) quality+=0.2;
+  let price=Math.round(sp.sell*quality*(s.special?CFG.specialBonus:1));
+  earn(price); sfx("sell");
+  G.dex[s.species]=true; G.bestPrice[s.species]=Math.max(G.bestPrice[s.species]||0,price);
+  G.slots[i]=null; renderSlot(i); openSlot(i); save();
+  toast((s.special?"✨ ":"")+"Solgt "+sp.navn+" for "+price+" 🪙"+(s.special?" (sjelden!)":""), s.special?"gold":"good");
+}
+function changeLight(i){ // vekstlampe-oppgradering
+  const s=G.slots[i]; if(!s||s.dead)return;
+  const order=["sol","halv","skygge"]; s.light=order[(order.indexOf(s.light)+1)%3];
+  renderSlot(i); openSlot(i); save(); toast("Lys satt til "+LIGHT_N[s.light]+" "+LIGHT_EMOJI[s.light]);
+}
+
+/* ===================================================================== *
+ *  UI                                                                    *
+ * ===================================================================== */
+const $=id=>document.getElementById(id);
+function toast(msg,kind){ const t=document.createElement("div"); t.className="toast"+(kind?" "+kind:""); t.textContent=msg;
+  $("toasts").appendChild(t); setTimeout(()=>{t.style.transition="opacity .3s";t.style.opacity="0";setTimeout(()=>t.remove(),300);},2600);
+  while($("toasts").children.length>3) $("toasts").firstChild.remove();
+}
+function tierBadge(t){ return `<span class="tier" style="background:${TIERS[t].c}">${TIERS[t].n}</span>`; }
+
+/* info-kort */
+function hideCard(){ $("card").classList.remove("show"); selSlot=-1; }
+function openSlot(i){
+  selSlot=i; const c=$("card"); c.classList.add("show");
+  const bed=isBed(i);
+  if(!bed && i>=G.slotsUnlocked){
+    const cost=slotCost();
+    c.innerHTML=`<div class="hd"><span style="font-size:20px">🔒</span><span class="nm">Låst plass</span><button class="x" onclick="hideCard()">×</button></div>
+    <div class="bd"><p class="empty-hint">Denne pottplassen er ikke åpnet ennå. Lås den opp under <b>Oppgrader</b> for ${cost} 🪙.</p>
+    <div class="actions"><button class="abtn harvest" onclick="openUpgrades()">Åpne oppgraderinger</button></div></div>`;
+    return;
+  }
+  const s=G.slots[i];
+  if(!s){
+    if(bed){
+      c.innerHTML=`<div class="hd"><span style="font-size:20px">🌷</span><span class="nm">Blomsterbed</span>
+        <span style="font-size:12px;color:var(--ink-soft)">☀️ Full sol</span>
+        <button class="x" onclick="hideCard()">×</button></div>
+        <div class="bd"><p class="empty-hint">Et åpent bed ute i hagen — full sol, hagejord og regn. Så et frø rett i jorda. Perfekt for sol-elskere, dårlig for skyggeplanter.</p>
+        <div class="actions"><button class="abtn harvest" onclick="openPlanting(${i})">🌱 Så frø</button></div></div>`;
+      return;
+    }
+    c.innerHTML=`<div class="hd"><span style="font-size:20px">🪴</span><span class="nm">Tom plass</span>
+      <span style="font-size:12px;color:var(--ink-soft)">${LIGHT_EMOJI[slotBaseLight(i)]} ${LIGHT_N[slotBaseLight(i)]}</span>
+      <button class="x" onclick="hideCard()">×</button></div>
+      <div class="bd"><p class="empty-hint">Her er det ledig. Plant et frø — husk å velge potte, jord og lys som passer planten.</p>
+      <div class="actions"><button class="abtn harvest" onclick="openPlanting(${i})">🌰 Plant her</button></div></div>`;
+    return;
+  }
+  const sp=SP[s.species];
+  const okPot=s.pot===sp.pot, okSoil=s.soil===sp.soil, okLight=s.light===sp.light, okW=waterOK(s);
+  const mk=b=>b?'<span class="mark">✅</span>':'<span class="mark">⚠️</span>';
+  const wlo=sp.water[0],whi=sp.water[1];
+  const healthCol=s.health>60?"var(--leaf)":s.health>30?"var(--amber)":"var(--terra)";
+  const waterCol=okW?"var(--teal)":"var(--terra)";
+  let alerts="";
+  if(s.dead){ alerts=`<div class="alert"><span>💀</span> Planten visnet. ${bed?'Rydd bedet':'Tøm potten'} for å bruke plassen på nytt.</div>`; }
+  else {
+    if(s.pest) alerts+=`<div class="alert"><span>🐛</span> Skadedyr! Fjern dem, ellers sprer de seg.</div>`;
+    if(s.disease) alerts+=`<div class="alert disease"><span>🍄</span> Soppsykdom av for mye vann. Behandle planten.</div>`;
+    if(!okW && !bed && !G.up.autovann) alerts+=`<div class="alert"><span>💧</span> ${s.water<wlo?"For tørt":"For vått"} — vannbehov ${wlo}–${whi}.</div>`;
+  }
+  let actions="";
+  if(s.dead){ actions=`<button class="abtn clear" onclick="clearDead(${i})">🧹 ${bed?'Rydd bedet':'Tøm potten'}</button>`; }
+  else {
+    if(!bed && !G.up.autovann) actions+=`<button class="abtn water" onclick="waterPlant(${i})">💧 Vann</button>`;
+    if(s.pest) actions+=`<button class="abtn fix" onclick="clearPest(${i})">🐛 Fjern dyr</button>`;
+    if(s.disease) actions+=`<button class="abtn fix" onclick="clearDisease(${i})">🍄 Behandle</button>`;
+    if(s.stage>=4) actions+=`<button class="abtn harvest" onclick="harvest(${i})">✂️ Høst &amp; selg</button>`;
+    if(!bed && G.up.vekstlampe) actions+=`<button class="abtn light" onclick="changeLight(${i})">💡 Lys: ${LIGHT_EMOJI[s.light]}</button>`;
+    if(!bed) actions+=`<button class="abtn" onclick="transplantOut(${i})">🌿 Plant ut</button>`;
+  }
+  const reqHtml = bed
+    ? `<div class="row"><span class="lab">Sted</span><span class="val">🌷 Blomsterbed</span></div>
+       <div class="row"><span class="lab">Lys</span><span class="val">☀️ Full sol</span>${mk(sp.light==='sol')}</div>
+       <div class="row"><span class="lab">Jord</span><span class="val">🟫 Hagejord</span>${mk(sp.soil==='vanlig')}</div>`
+    : `<div class="row"><span class="lab">Potte</span><span class="val">${POT_N[s.pot]}</span>${mk(okPot)}</div>
+       <div class="row"><span class="lab">Jord</span><span class="val">${SOIL_N[s.soil]}</span>${mk(okSoil)}</div>
+       <div class="row"><span class="lab">Lys</span><span class="val">${LIGHT_EMOJI[s.light]} ${LIGHT_N[s.light]}</span>${mk(okLight)}</div>`;
+  c.innerHTML=`
+   <div class="hd"><span style="font-size:22px">${sp.emoji}</span><span class="nm">${sp.navn}${s.special?' ✨':''}${bed?' 🌷':''}</span>
+     ${tierBadge(sp.tier)}<button class="x" onclick="hideCard()">×</button></div>
+   <div class="bd">
+     <div class="barwrap"><span class="lab">Stadium</span>
+       <div class="bar"><i style="width:${(s.stage/4)*100}%;background:var(--leaf)"></i></div>
+       <b style="font-size:12px">${STAGE[s.stage]}</b></div>
+     <div class="barwrap"><span class="lab">Helse</span>
+       <div class="bar"><i style="width:${Math.max(0,s.health)}%;background:${healthCol}"></i></div></div>
+     <div class="barwrap"><span class="lab">Vann</span>
+       <div class="bar"><i style="width:${s.water}%;background:${waterCol}"></i></div>
+       <b style="font-size:11px;color:var(--ink-soft)">${bed?'regnvannet 🌧️':'vil ha '+wlo+'–'+whi}</b></div>
+     <div class="req">${reqHtml}</div>
+     <div class="alerts">${alerts}</div>
+     <div class="actions">${actions}</div>
+   </div>`;
+}
+function transplantOut(i){
+  const s=G.slots[i]; if(!s||s.dead||isBed(i))return;
+  let j=-1; for(let k=CFG.maxSlots;k<TOTAL_SLOTS;k++){ if(!G.slots[k]){ j=k; break; } }
+  if(j<0){ toast("Ingen ledige bed — rydd et bed først.","warn"); return; }
+  const sp=SP[s.species];
+  s.bed=true; s.soil="vanlig"; s.light="sol"; s.pot=sp.pot; s.pest=false; s.disease=false;
+  G.slots[j]=s; G.slots[i]=null;
+  renderSlot(i); renderSlot(j); save(); sfx("plant");
+  toast(sp.navn+" plantet ut i bedet 🌿","good");
+  walkToSlot(j); selSlot=j; openSlot(j);
+}
+
+/* ----- modal-hjelpere ----- */
+function openModal(html){ $("modal").innerHTML=html; $("scrim").classList.add("show"); }
+function closeModal(){ $("scrim").classList.remove("show"); }
+$("scrim").addEventListener("pointerdown",e=>{ if(e.target===$("scrim")) closeModal(); });
+
+/* ----- planting ----- */
+let plantSel={};
+function openPlanting(slot){
+  closeModal();
+  const owned=SPECIES.filter(s=>G.seeds[s.id]>0);
+  plantSel={slot, species:owned[0]?owned[0].id:null, pot:null, soil:null, light:slotBaseLight(slot), bed:isBed(slot)};
+  window.plantSel=plantSel;
+  renderPlanting();
+  hideCard();
+}
+function renderPlanting(){
+  const owned=SPECIES.filter(s=>G.seeds[s.id]>0);
+  if(!owned.length){ openModal(`<div class="mhd"><h2>🌰 Plant frø</h2><button class="x" onclick="closeModal()">×</button></div>
+    <div class="mbd"><p class="empty-hint">Du har ingen frø igjen. Gå til <b>Butikk</b> og kjøp noen først!</p>
+    <div class="actions" style="margin-top:10px"><button class="abtn harvest" onclick="openShop()">🛒 Til butikken</button></div></div>`); return; }
+  const sp=SP[plantSel.species]||owned[0]; plantSel.species=sp.id;
+  if(plantSel.bed){
+    const seedOptsB=owned.map(s=>`<button class="opt ${s.id===sp.id?'sel':''}" onclick="plantSel.species='${s.id}';renderPlanting()">${s.emoji} ${s.navn} <span class="price">×${G.seeds[s.id]}</span></button>`).join("");
+    const sun=sp.light==="sol", plain=sp.soil==="vanlig", fit=sun&&plain;
+    openModal(`
+     <div class="mhd"><h2>🌷 Så i bedet</h2><button class="x" onclick="closeModal()">×</button></div>
+     <div class="mbd">
+       <div class="reqcard"><div class="h">${sp.emoji} ${sp.navn} ${tierBadge(sp.tier)}</div>
+         <div class="rr"><span class="chip">☀️ Full sol</span><span class="chip">🟫 Hagejord</span><span class="chip">🌧️ Regnvannet</span></div></div>
+       <div class="chooser">
+         <div class="choose-grp"><div class="ttl">🌱 Frø</div><div class="opts">${seedOptsB}</div></div>
+         <div style="display:flex;flex-direction:column;gap:6px">
+           <div class="match ${sun?'ok':'no'}">${sun?'✅':'⚠️'} Lys: ${sun?'elsker full sol':'vil egentlig ha '+LIGHT_N[sp.light]}</div>
+           <div class="match ${plain?'ok':'no'}">${plain?'✅':'⚠️'} Jord: ${plain?'trives i hagejord':'vil egentlig ha '+SOIL_N[sp.soil]}</div>
+         </div>
+         <p style="font-size:12.5px;color:var(--ink-soft);margin:2px 2px 0">${fit?'Perfekt for bedet — denne gror godt ute. 🌼':'Kan sås her, men trives nok best i drivhuset.'}</p>
+         <button class="plant-go" onclick="doPlant()">Så ${sp.emoji} (gratis)</button>
+       </div>
+     </div>`);
+    return;
+  }
+  const seedOpts=owned.map(s=>`<button class="opt ${s.id===sp.id?'sel':''}" onclick="plantSel.species='${s.id}';renderPlanting()">${s.emoji} ${s.navn} <span class="price">×${G.seeds[s.id]}</span></button>`).join("");
+  const potOpts=Object.keys(POT_N).map(p=>`<button class="opt ${plantSel.pot===p?'sel':''}" onclick="plantSel.pot='${p}';renderPlanting()">${POT_N[p]} <span class="price">${CFG.potPrice[p]}🪙</span></button>`).join("");
+  const soilOpts=Object.keys(SOIL_N).map(p=>`<button class="opt ${plantSel.soil===p?'sel':''}" onclick="plantSel.soil='${p}';renderPlanting()">${SOIL_N[p]} <span class="price">${CFG.soilPrice[p]}🪙</span></button>`).join("");
+  const lightOpts=Object.keys(LIGHT_N).map(p=>`<button class="opt ${plantSel.light===p?'sel':''}" onclick="plantSel.light='${p}';renderPlanting()">${LIGHT_EMOJI[p]} ${LIGHT_N[p]}</button>`).join("");
+  const ready = plantSel.pot && plantSel.soil;
+  const cost = (plantSel.pot?CFG.potPrice[plantSel.pot]:0)+(plantSel.soil?CFG.soilPrice[plantSel.soil]:0);
+  const matches=[];
+  if(plantSel.pot) matches.push([plantSel.pot===sp.pot,`Potte: ${plantSel.pot===sp.pot?'passer':'planten vil ha '+POT_N[sp.pot]}`]);
+  if(plantSel.soil) matches.push([plantSel.soil===sp.soil,`Jord: ${plantSel.soil===sp.soil?'passer':'planten vil ha '+SOIL_N[sp.soil]}`]);
+  matches.push([plantSel.light===sp.light,`Lys: ${plantSel.light===sp.light?'passer':'planten vil ha '+LIGHT_N[sp.light]}`]);
+  const matchHtml=matches.map(([ok,txt])=>`<div class="match ${ok?'ok':'no'}">${ok?'✅':'⚠️'} ${txt}</div>`).join("");
+
+  openModal(`
+   <div class="mhd"><h2>🌰 Plant frø</h2><button class="x" onclick="closeModal()">×</button></div>
+   <div class="mbd">
+     <div class="reqcard">
+       <div class="h">${sp.emoji} ${sp.navn} ${tierBadge(sp.tier)}</div>
+       <div class="rr">
+         <span class="chip">${POT_N[sp.pot]}</span><span class="chip">${SOIL_N[sp.soil]}</span>
+         <span class="chip">${LIGHT_EMOJI[sp.light]} ${LIGHT_N[sp.light]}</span><span class="chip">💧 ${sp.water[0]}–${sp.water[1]}</span>
+       </div>
+     </div>
+     <div class="chooser">
+       <div class="choose-grp"><div class="ttl">🌱 Frø</div><div class="opts">${seedOpts}</div></div>
+       <div class="choose-grp"><div class="ttl">🪴 Potte</div><div class="opts">${potOpts}</div></div>
+       <div class="choose-grp"><div class="ttl">🟫 Jord</div><div class="opts">${soilOpts}</div></div>
+       <div class="choose-grp"><div class="ttl">💡 Plassering / lys</div><div class="opts">${lightOpts}</div></div>
+       ${ready?`<div style="display:flex;flex-direction:column;gap:6px">${matchHtml}</div>`:''}
+       <button class="plant-go" ${ready?'':'disabled'} onclick="doPlant()">${ready?`Plant for ${cost} 🪙`:'Velg potte og jord'}</button>
+     </div>
+   </div>`);
+}
+function doPlant(){ const s=plantSel; plantSeed(s.slot,s.species,s.pot,s.soil,s.light); closeModal(); }
+
+/* ----- butikk ----- */
+function openShop(){
+  hideCard();
+  const cards=SPECIES.map(s=>{
+    const canBuy=coins()>=s.seed;
+    return `<div class="packet">
+      <div class="pk-top" style="background:radial-gradient(circle at 50% 40%, ${TIERS[s.tier].c}33, #fffaf0)">
+        <span class="pk-tier">${tierBadge(s.tier)}</span><span class="pk-emoji">${s.emoji}</span>
+      </div>
+      <div class="pk-bd">
+        <div class="pk-nm">${s.navn}</div>
+        <div class="pk-line">${LIGHT_EMOJI[s.light]} ${LIGHT_N[s.light]} · 💧${s.water[0]}–${s.water[1]}</div>
+        <div class="pk-line">🪴 ${POT_N[s.pot].replace(' potte','')} · 🟫 ${SOIL_N[s.soil].replace(' jord','')}</div>
+        <div class="pk-line">💰 selges for ~${s.sell} 🪙 · 📦 ${G.seeds[s.id]||0} frø</div>
+        <button class="pk-buy" ${canBuy?'':'disabled'} onclick="buySeed('${s.id}')">Kjøp frø — ${s.seed} 🪙</button>
+      </div></div>`;
+  }).join("");
+  openModal(`<div class="mhd"><h2>🛒 Frøbutikk</h2>
+     <span style="font-size:13px;color:var(--ink-soft)">Sjeldnere frø = strengere krav, men mye høyere pris</span>
+     <button class="x" onclick="closeModal()">×</button></div>
+   <div class="mbd"><div class="grid">${cards}</div></div>`);
+}
+function buySeed(id){ const s=SP[id]; if(!pay(s.seed))return; G.seeds[id]=(G.seeds[id]||0)+1; sfx("coin"); save(); openShop(); toast(s.emoji+" Kjøpte "+s.navn+"-frø","good"); }
+
+/* ----- oppgraderinger ----- */
+function slotCost(){ return Math.round(CFG.slotBaseCost*Math.pow(CFG.slotCostMul, G.slotsUnlocked-CFG.startSlots)); }
+const UPGRADES=[
+  {id:"slot", e:"🪴", n:"Ny pottplass", d:"Åpne én plass til i drivhuset.", repeat:true,
+    cost:()=>slotCost(), can:()=>G.slotsUnlocked<CFG.maxSlots, done:()=>G.slotsUnlocked>=CFG.maxSlots, doneTxt:"Fullt drivhus",
+    buy:()=>{ G.slotsUnlocked++; renderSlot(G.slotsUnlocked-1); }},
+  {id:"autovann", e:"🚿", n:"Automatisk vanning", d:"Plantene holder alltid riktig vannmengde selv.", cost:()=>80,
+    can:()=>!G.up.autovann, done:()=>G.up.autovann, buy:()=>G.up.autovann=true},
+  {id:"skadedyrvakt", e:"🛡️", n:"Skadedyrvakt", d:"Halverer sjansen for skadedyr.", cost:()=>120,
+    can:()=>!G.up.skadedyrvakt, done:()=>G.up.skadedyrvakt, buy:()=>G.up.skadedyrvakt=true},
+  {id:"gjodsel", e:"🌟", n:"Gjødselsystem", d:"Bedre kvalitet — alle planter selges for mer.", cost:()=>150,
+    can:()=>!G.up.gjodsel, done:()=>G.up.gjodsel, buy:()=>G.up.gjodsel=true},
+  {id:"vekstlampe", e:"💡", n:"Vekstlamper", d:"Lar deg endre lysnivå på planter som allerede vokser.", cost:()=>100,
+    can:()=>!G.up.vekstlampe, done:()=>G.up.vekstlampe, buy:()=>G.up.vekstlampe=true},
+];
+function openUpgrades(){
+  hideCard();
+  const rows=UPGRADES.map(u=>{
+    const done=u.done(); const cost=u.cost(); const afford=coins()>=cost;
+    let btn;
+    if(done && !u.repeat) btn=`<button class="ub done" disabled>✓ Eid</button>`;
+    else if(u.done && u.done() && u.repeat) btn=`<button class="ub done" disabled>${u.doneTxt||'Maks'}</button>`;
+    else btn=`<button class="ub" ${afford?'':'disabled'} onclick="buyUpgrade('${u.id}')">${cost} 🪙</button>`;
+    const extra=u.id==="slot"?` (${G.slotsUnlocked}/${CFG.maxSlots})`:"";
+    return `<div class="uprow"><div class="ue">${u.e}</div>
+      <div class="ut"><div class="un">${u.n}${extra}</div><div class="ud">${u.d}</div></div>${btn}</div>`;
+  }).join("");
+  openModal(`<div class="mhd"><h2>⚙️ Oppgraderinger</h2><button class="x" onclick="closeModal()">×</button></div>
+    <div class="mbd">${rows}</div>`);
+}
+function buyUpgrade(id){ const u=UPGRADES.find(x=>x.id===id); if(!u||!u.can())return; const c=u.cost(); if(!pay(c))return;
+  u.buy(); sfx("coin"); save(); openUpgrades(); if(selSlot>=0)openSlot(selSlot);
+  toast(u.e+" "+u.n+(u.repeat?" åpnet!":" kjøpt!"),"good");
+}
+
+/* ----- plantedex ----- */
+function openDex(){
+  hideCard();
+  const total=SPECIES.length, found=SPECIES.filter(s=>G.dex[s.id]).length;
+  const cards=SPECIES.map(s=>{
+    const f=G.dex[s.id];
+    return `<div class="packet ${f?'':'dex-lock'}">
+      <div class="pk-top" style="background:radial-gradient(circle at 50% 40%, ${f?TIERS[s.tier].c+'33':'#eee'}, #fffaf0)">
+        <span class="pk-tier">${tierBadge(s.tier)}</span><span class="pk-emoji">${f?s.emoji:'❔'}</span>
+      </div>
+      <div class="pk-bd">
+        <div class="pk-nm">${f?s.navn:'???'}</div>
+        ${f?`<div class="pk-line">🪴 ${POT_N[s.pot].replace(' potte','')} · 🟫 ${SOIL_N[s.soil].replace(' jord','')}</div>
+            <div class="pk-line">${LIGHT_EMOJI[s.light]} ${LIGHT_N[s.light]} · 💧${s.water[0]}–${s.water[1]}</div>
+            <div class="pk-line">🏆 beste salg: ${G.bestPrice[s.id]||0} 🪙</div>`
+          :`<div class="pk-line">Dyrk denne til moden for å låse den opp.</div>`}
+      </div></div>`;
+  }).join("");
+  openModal(`<div class="mhd"><h2>📒 Plantedex</h2>
+     <span style="font-size:14px;color:var(--ink-soft);font-family:'Fredoka One',cursive">${found}/${total}</span>
+     <button class="x" onclick="closeModal()">×</button></div>
+   <div class="mbd"><div class="grid">${cards}</div></div>`);
+}
+
+/* ----- intro ----- */
+function openIntro(){
+  openModal(`<div class="modal-intro intro" style="display:contents">
+   <div class="mhd"><h2>🌱 Velkommen til Drivhuset</h2></div>
+   <div class="mbd">
+     <img src="Assets/intro.png" alt="" onerror="this.style.display='none'" style="width:100%;border-radius:14px;margin-bottom:12px;display:block">
+     <p>Dyrk planter, treff de rette forholdene, og selg dem videre. Jo sjeldnere og friskere, jo mer er de verdt.</p>
+     <div class="steps">
+       <div class="step"><div class="n">1</div><div class="tx"><b>Kjøp frø</b> i butikken — start med de billige.</div></div>
+       <div class="step"><div class="n">2</div><div class="tx"><b>Plant</b> og velg potte, jord og lys som planten liker.</div></div>
+       <div class="step"><div class="n">3</div><div class="tx"><b>Vann og stell</b> hver dag — hold skadedyr unna.</div></div>
+       <div class="step"><div class="n">4</div><div class="tx"><b>Neste dag</b> lar plantene vokse. Høst de modne og selg!</div></div>
+     </div>
+     <p style="font-size:13px">Tips: dra for å snurre rundt drivhuset, rull/knip for å zoome. Trykk på en pottplass, så går gartneren bort og steller den (eller styr selv med WASD/piltaster).</p>
+     <button class="plant-go start" onclick="finishIntro()">La oss dyrke! 🌻</button>
+   </div></div>`);
+}
+function finishIntro(){ G.seenIntro=true; save(); closeModal(); }
+
+/* ===================================================================== *
+ *  LYD (Web Audio)                                                       *
+ * ===================================================================== */
+let AC=null, musicGain=null, musicOn=false;
+function audio(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+function sfx(type){
+  if(G.muted) return; const ac=audio(); if(!ac)return;
+  if(ac.state==="suspended") ac.resume();
+  const now=ac.currentTime;
+  const notes={plant:[330,440],water:[660,880],grow:[523,659,784],sell:[523,659,784,1046],coin:[880,1170],fix:[440,550],error:[200,150]}[type]||[440];
+  notes.forEach((f,i)=>{ const o=ac.createOscillator(),g=ac.createGain();
+    o.type=type==="water"?"sine":(type==="sell"||type==="grow"?"triangle":"square");
+    o.frequency.value=f; o.connect(g); g.connect(ac.destination);
+    const t=now+i*0.07; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.12,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.22); o.start(t); o.stop(t+0.24);
+  });
+}
+/* enkel, koselig ambient-loop */
+let musicTimer=null;
+const MEL=[0,4,7,12,7,4, 2,5,9,5, 0,4,7,11,7,4, 9,5,2,5];
+let melIx=0;
+function startMusic(){ const ac=audio(); if(!ac||musicOn)return; musicOn=true;
+  musicGain=ac.createGain(); musicGain.gain.value=0.05; musicGain.connect(ac.destination);
+  const step=()=>{ if(!musicOn||G.muted){ return; } const ac=audio();
+    const base=261.63; const semi=MEL[melIx%MEL.length]; melIx++;
+    const f=base*Math.pow(2,semi/12);
+    [f,f*1.5].forEach((ff,k)=>{ const o=ac.createOscillator(),g=ac.createGain(); o.type="sine"; o.frequency.value=ff;
+      o.connect(g); g.connect(musicGain); const t=ac.currentTime;
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(k?0.25:0.5,t+0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.7); o.start(t); o.stop(t+0.75); });
+    musicTimer=setTimeout(step,520);
+  }; step();
+}
+function stopMusic(){ musicOn=false; if(musicTimer)clearTimeout(musicTimer); }
+function updateMute(){ $("muteBtn").textContent=G.muted?"🔇":"🔊"; if(G.muted)stopMusic(); else startMusic(); }
+
+/* ===================================================================== *
+ *  KOBLINGER + OPPSTART                                                  *
+ * ===================================================================== */
+$("nextBtn").onclick=()=>{ if(!AC){ audio(); if(!G.muted)startMusic(); } nextDay(); };
+$("tPlant").onclick=()=>{ // plant på første ledige ulåste slot, ellers be om valg
+  let free=-1; for(let i=0;i<G.slotsUnlocked;i++){ if(!G.slots[i]){ free=i; break; } }
+  if(free<0){ toast("Ingen ledige plasser — høst eller åpne en ny plass.","warn"); return; }
+  openPlanting(free);
+};
+$("tShop").onclick=openShop;
+$("tUp").onclick=openUpgrades;
+$("tDex").onclick=openDex;
+$("muteBtn").onclick=()=>{ G.muted=!G.muted; save(); updateMute(); if(!G.muted){ audio(); } };
+
+/* ---- touch-joystick (kun i Gå rundt-modus) ---- */
+let joy={x:0,z:0,active:false};
+(function(){
+  const st=$("stick"), kn=$("stickKnob"); let sid=null; const R=46;
+  function set(e){ const r=st.getBoundingClientRect();
+    let dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
+    const d=Math.hypot(dx,dy)||1; if(d>R){ dx=dx/d*R; dy=dy/d*R; }
+    kn.style.transform=`translate(${dx}px,${dy}px)`; joy.x=dx/R; joy.z=dy/R; joy.active=true; }
+  st.addEventListener("pointerdown",e=>{ sid=e.pointerId; st.setPointerCapture(e.pointerId); set(e); });
+  st.addEventListener("pointermove",e=>{ if(sid===e.pointerId) set(e); });
+  function end(e){ if(sid===e.pointerId){ sid=null; joy.active=false; joy.x=joy.z=0; kn.style.transform="translate(0,0)"; } }
+  st.addEventListener("pointerup",end); st.addEventListener("pointercancel",end);
+})();
+$("modeBtn").onclick=()=>setMode(mode==="utforsk"?"oversikt":"utforsk");
+
+window.hideCard=hideCard; window.openSlot=openSlot; window.openPlanting=openPlanting; window.renderPlanting=renderPlanting;
+window.doPlant=doPlant; window.openShop=openShop; window.buySeed=buySeed; window.openUpgrades=openUpgrades;
+window.buyUpgrade=buyUpgrade; window.openDex=openDex; window.closeModal=closeModal; window.finishIntro=finishIntro;
+window.waterPlant=waterPlant; window.clearPest=clearPest; window.clearDisease=clearDisease; window.clearDead=clearDead;
+window.harvest=harvest; window.changeLight=changeLight; window.plantSel=plantSel;
+window.transplantOut=transplantOut; window.setMode=setMode;
+
+function boot(){
+  if(!load()){ G=freshGame(); }
+  setCoins(G.coins); $("dayV").textContent=G.day; $("muteBtn").textContent=G.muted?"🔇":"🔊";
+  resize(); renderAllSlots(); requestAnimationFrame(tick);
+  if(!G.seenIntro) openIntro();
+  // start musikk ved første interaksjon (autoplay-policy)
+  const kick=()=>{ if(!G.muted){ audio(); startMusic(); } removeEventListener("pointerdown",kick); };
+  addEventListener("pointerdown",kick,{once:true});
+}
+boot();
+</script>
+</body>
+</html>
