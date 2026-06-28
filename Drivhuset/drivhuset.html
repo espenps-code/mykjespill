@@ -163,6 +163,7 @@ h1,h2,h3,.disp{font-family:'Fredoka One',cursive;font-weight:400;letter-spacing:
     <div class="brand"><span class="logo">🌱</span>Drivhuset</div>
     <div class="stat coin"><span class="ic">🪙</span><span class="v" id="coinV">0</span></div>
     <div class="stat day"><span class="ic">📅</span>Dag <span class="v" id="dayV">1</span></div>
+    <div class="stat" id="wxStat" title="Vær og årstid"><span class="ic" id="wxIc">☀️</span><span class="v" id="wxV" style="font-size:13px">Sol 🌱</span></div>
     <button class="btn-next" id="nextBtn">Neste dag <span style="font-size:18px">⏭</span></button>
   </div>
 
@@ -175,6 +176,7 @@ h1,h2,h3,.disp{font-family:'Fredoka One',cursive;font-weight:400;letter-spacing:
     <button class="tool" id="tPlant"><span class="ti">🌰</span>Plant</button>
     <button class="tool" id="tShop"><span class="ti">🛒</span>Butikk</button>
     <button class="tool" id="tUp"><span class="ti">⚙️</span>Oppgrader</button>
+    <button class="tool" id="tOrders"><span class="ti">📋</span>Oppdrag</button>
     <button class="tool" id="tDex"><span class="ti">📒</span>Plantedex</button>
   </div>
 </div>
@@ -225,6 +227,9 @@ const CFG = {
   potPrice: {liten:5, medium:12, stor:25},
   soilPrice:{vanlig:3, sand:6, naering:10, kompost:20},
   slotBaseCost: 50, slotCostMul: 1.6,
+  marketLo: 0.7, marketHi: 1.4,    // daglig prissving (×salgsverdi)
+  seasonLen: 7,                    // dager per årstid
+  orderRewardMul: 1.5,             // oppdragsbonus utover vanlig salg
 };
 const BED_SPOTS = 16, TOTAL_SLOTS = CFG.maxSlots + BED_SPOTS;   // utendørs bed-plasser (4 bed à 4 plasser)
 const STAGE = ["Frø","Spire","Ungplante","Voksen","Moden"];
@@ -238,6 +243,23 @@ const POT_N  = {liten:"Liten potte", medium:"Medium potte", stor:"Stor potte"};
 const SOIL_N = {vanlig:"Vanlig jord", sand:"Sandjord", naering:"Næringsrik jord", kompost:"Spesialkompost"};
 const LIGHT_N= {sol:"Full sol", halv:"Halvskygge", skygge:"Skygge"};
 const LIGHT_EMOJI={sol:"☀️",halv:"⛅",skygge:"🌑"};
+
+/* årstider + vær */
+const SEASONS=[{n:"Vår",e:"🌱"},{n:"Sommer",e:"☀️"},{n:"Høst",e:"🍂"},{n:"Vinter",e:"❄️"}];
+const WEATHER={
+  sol:  {n:"Sol",   e:"☀️", decay:1.0, rain:false, grow:true},
+  skyet:{n:"Skyet", e:"☁️", decay:0.7, rain:false, grow:true},
+  regn: {n:"Regn",  e:"🌧️", decay:1.0, rain:true,  grow:true},
+  torke:{n:"Tørke", e:"🌶️", decay:2.0, rain:false, grow:true},
+  kald: {n:"Kald",  e:"❄️", decay:0.8, rain:false, grow:false},  // vekst står stille
+};
+// værtrekning per årstid (vår, sommer, høst, vinter)
+const WEATHER_BIAS=[
+  ["sol","skyet","regn","regn","sol","skyet"],
+  ["sol","sol","sol","skyet","torke","regn"],
+  ["skyet","regn","regn","sol","skyet","kald"],
+  ["kald","kald","skyet","sol","regn","kald"],
+];
 
 /* arketyper: flower, leafy, cactus, fruit, carnivore, tree */
 const SPECIES = [
@@ -271,8 +293,24 @@ function freshGame(){
     dex: {}, bestPrice:{},
     up: {autovann:false, skadedyrvakt:false, gjodsel:false, vekstlampe:false},
     seenIntro:false, muted:false,
+    market:{}, weather:"sol", season:0, seasonDay:0, orders:[], orderSeq:1,
   };
 }
+/* ---- marked, vær, oppdrag ---- */
+function rollMarket(){ G.market={}; SPECIES.forEach(s=>{ G.market[s.id]=+(CFG.marketLo+Math.random()*(CFG.marketHi-CFG.marketLo)).toFixed(2); }); }
+function marketFactor(id){ return (G.market && G.market[id]) || 1; }
+function priceOf(s){ const sp=SP[s.species]; let q=s.health/100; if(G.up.gjodsel) q+=0.2;
+  return Math.round(sp.sell*q*(s.special?CFG.specialBonus:1)*marketFactor(s.species)); }
+function rollWeather(){ const b=WEATHER_BIAS[G.season%4]; G.weather=b[Math.floor(Math.random()*b.length)]; }
+function curWeather(){ return WEATHER[G.weather]||WEATHER.sol; }
+function curSeason(){ return SEASONS[G.season%4]; }
+function genOrder(){ const pool=SPECIES.filter(s=>s.tier<=2); const sp=pool[Math.floor(Math.random()*pool.length)];
+  const need=1+Math.floor(Math.random()*3), days=4+Math.floor(Math.random()*4);
+  return {id:G.orderSeq++, species:sp.id, need, have:0, days, reward:Math.round(sp.sell*need*CFG.orderRewardMul)}; }
+function ensureOrders(){ if(!G.orders) G.orders=[]; while(G.orders.length<2) G.orders.push(genOrder()); }
+function orderProgress(id){ const o=G.orders.find(x=>x.species===id && x.have<x.need); if(!o) return;
+  o.have++; if(o.have>=o.need){ earn(o.reward); sfx("coin");
+    toast("📋 Oppdrag fullført: +"+o.reward+" 🪙","gold"); G.orders=G.orders.filter(x=>x!==o); ensureOrders(); } save(); }
 function save(){ try{ localStorage.setItem("drivhuset_v1", JSON.stringify(G)); }catch(e){} }
 function load(){
   try{ const r=localStorage.getItem("drivhuset_v1"); if(r){ G=JSON.parse(r);
@@ -520,8 +558,8 @@ function buildGardenExtras(){
     [-1,1].forEach(oz=>{ const r=new THREE.Mesh(new THREE.BoxGeometry(2.6,0.55,0.2),rimMat); r.position.set(def.x,0.06,cz+oz*(len/2+0.2)); scene.add(r); });
     addObstacle(def.x,cz,2.6,len+0.4,0.1);     // bedet blokkerer gjennomgang
   });
-  // store trær rundt hagen (halvert antall)
-  [[-27,-22,3.4],[27,21,3.4],[0,-27,3.6],[-25,7,2.7],[25,7,2.7],[-12,-25,2.9],[28,-3,3.0]]
+  // store trær rundt hagen (halvert antall, ~25% mindre så drivhuset blir midtpunktet)
+  [[-27,-22,2.55],[27,21,2.55],[0,-27,2.7],[-25,7,2.0],[25,7,2.0],[-12,-25,2.18],[28,-3,2.25]]
     .forEach(([x,z,s])=>makeTree(x,z,s));
   // dekorative pyntebed med blomster (fyller hagen)
   function decoBed(x,z,w,d){
@@ -607,6 +645,7 @@ const GARDENER_CHEER = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe
 const GARDENER_SHRUG = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/dea18301-a02d-44bd-88b6-25087c044dac.glb"; // skuldertrekk (død)
 const GARDENER_FACING = 0;     // snu modellen 180° hvis den vender feil vei (0 eller Math.PI)
 const GARDENER_HEIGHT = 1.95;  // ønsket høyde i spillet (juster om gartneren blir for stor/liten)
+const GARDENER_DROP = 0.08;    // senk litt så føttene står på bakken (øk hvis hen svever, senk hvis hen synker)
 function buildGardener(){
   const g=new THREE.Group();
   const skin=0xe9b58a, shirt=0x2f9e6a, pants=0x3a5a8a, hat=0xe8c66a;
@@ -634,25 +673,30 @@ function loadGardenerModel(g){
     function measure(o){ o.updateMatrixWorld(true); const b=new THREE.Box3(); let bones=false;
       o.traverse(n=>{ if(n.isBone){ b.expandByPoint(n.getWorldPosition(new THREE.Vector3())); bones=true; } });
       if(!bones || b.isEmpty()) b.setFromObject(o); return {b,bones}; }
+    // 1) skaler etter skjeletthøyde
     let mr=measure(m); const size=new THREE.Vector3(); mr.b.getSize(size);
     const h=size.y||1, s=(mr.bones?GARDENER_HEIGHT*0.82:GARDENER_HEIGHT)/h; m.scale.setScalar(s);
-    mr=measure(m); const c=new THREE.Vector3(); mr.b.getCenter(c);
-    m.position.x-=c.x; m.position.z-=c.z; m.position.y-=mr.b.min.y;   // sentrer + føtter på bakken
     m.rotation.y=GARDENER_FACING;
     m.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
-    holder.add(m);
-    g.userData.procParts.forEach(p=>p.visible=false);   // skjul reservefiguren
-    g.userData.model=holder;
-    // gå-animasjon (spilles når gartneren beveger seg)
+    // 2) lag mixer og sett kvilepositur (gå-modellens frame 0) FØR vi plasserer føttene
+    let mixer=null, walkAct=null;
     if(gltf.animations && gltf.animations.length){
-      const mixer=new THREE.AnimationMixer(m);
-      const act=mixer.clipAction(gltf.animations[0]); act.play(); act.paused=true;
-      g.userData.mixer=mixer; g.userData.walkAction=act; g.userData.modelMesh=m;
-      // når en engangs-gest er ferdig: tilbake til gå/ro
+      mixer=new THREE.AnimationMixer(m);
+      walkAct=mixer.clipAction(gltf.animations[0]); walkAct.play(); walkAct.paused=true;
+      mixer.update(0);
+    }
+    // 3) sentrer + sett føttene på bakken (mens modellen ennå er frittstående)
+    mr=measure(m); const c=new THREE.Vector3(); mr.b.getCenter(c);
+    m.position.x-=c.x; m.position.z-=c.z; m.position.y = -mr.b.min.y - GARDENER_DROP;
+    // 4) fest modellen og skjul reservefiguren
+    holder.add(m);
+    g.userData.procParts.forEach(p=>p.visible=false);
+    g.userData.model=holder;
+    if(mixer){
+      g.userData.mixer=mixer; g.userData.walkAction=walkAct; g.userData.modelMesh=m;
       mixer.addEventListener("finished", e=>{ const u=g.userData; u.gesture=null;
         if(e.action) e.action.stop();   // fjern gesten helt så den ikke blander seg inn i gå-syklusen
         if(u.walkAction){ u.walkAction.reset(); u.walkAction.play(); u.walkAction.paused=!u.moving; } });
-      // hent inn jubel- og skuldertrekk-klippene (samme skjelett)
       loadGesture(g, GARDENER_CHEER, "cheerAction");
       loadGesture(g, GARDENER_SHRUG, "shrugAction");
     }
@@ -1007,15 +1051,18 @@ function overWater(s){ const sp=SP[s.species]; return s.water>sp.water[1]; }
 
 function nextDay(){
   G.day++;
+  // årstid skifter hver CFG.seasonLen dag; nytt vær + nye markedspriser
+  G.seasonDay=(G.seasonDay||0)+1; if(G.seasonDay>=CFG.seasonLen){ G.seasonDay=0; G.season=(G.season||0)+1; }
+  rollWeather(); rollMarket(); const w=curWeather();
   let died=[],grew=[],pestNew=[];
   const idx=[]; for(let i=0;i<G.slotsUnlocked;i++) idx.push(i); for(let i=CFG.maxSlots;i<TOTAL_SLOTS;i++) idx.push(i);
   for(const i of idx){
     const s=G.slots[i]; if(!s||s.dead) continue;
     const sp=SP[s.species];
-    // vann
-    if(s.bed){ s.water = Math.round((sp.water[0]+sp.water[1])/2); }   // regn vanner bedet
+    // vann (vær: regn vanner alt, tørke tørker dobbelt så fort)
+    if(s.bed || w.rain){ s.water = Math.round((sp.water[0]+sp.water[1])/2); }
     else if(G.up.autovann){ s.water = (sp.water[0]+sp.water[1])/2; }
-    else { s.water=Math.max(0,s.water-CFG.waterDecay); }
+    else { s.water=Math.max(0,s.water-CFG.waterDecay*w.decay); }
     // skadedyr spawn
     if(!s.pest && s.stage>0){ let pc=CFG.pestChance; if(G.up.skadedyrvakt)pc*=0.5;
       if(Math.random()<pc){ s.pest=true; pestNew.push(i); } }
@@ -1031,7 +1078,7 @@ function nextDay(){
     const allRight = setErr===0 && waterOK(s) && !s.pest && !s.disease;
     if(allRight){
       s.health=Math.min(100,s.health+CFG.healHealthy);
-      if(s.stage<4){ s.daysInStage++; if(s.daysInStage>=sp.days){ s.stage++; s.daysInStage=0; grew.push(i);} }
+      if(w.grow && s.stage<4){ s.daysInStage++; if(s.daysInStage>=sp.days){ s.stage++; s.daysInStage=0; grew.push(i);} }   // kaldt vær = ingen vekst
     } else {
       s.health-=dmg;
     }
@@ -1043,7 +1090,11 @@ function nextDay(){
     neigh.forEach(j=>{ if(j>=0&&j<G.slotsUnlocked){ const t=G.slots[j];
       if(t&&!t.dead&&!t.pest&&Math.random()<CFG.pestSpread){ t.pest=true; } } });
   }}
-  document.getElementById("dayV").textContent=G.day;
+  // oppdrag: tell ned frister, fjern utløpte, fyll på til 2 aktive
+  let expired=0; (G.orders||[]).forEach(o=>o.days--);
+  expired=(G.orders||[]).filter(o=>o.days<=0).length;
+  G.orders=(G.orders||[]).filter(o=>o.days>0); ensureOrders();
+  document.getElementById("dayV").textContent=G.day; updateHUD();
   renderAllSlots(); if(selSlot>=0) openSlot(selSlot); save();
   // tilbakemelding
   if(grew.length) sfx("grow");
@@ -1054,6 +1105,11 @@ function nextDay(){
   if(msgs.length) toast(msgs.join("  ·  "), died.length?"warn":(grew.length?"good":""));
   else toast("Dag "+G.day+" — drivhuset hviler 🌙");
   if(died.length) playGesture(gardener.userData.shrugAction);   // gartneren trekker på skuldrene
+  if(expired) setTimeout(()=>toast("📋 "+expired+" oppdrag utløp","warn"),300);
+  // vær + årstid + markedshint
+  const avg=SPECIES.reduce((a,s)=>a+marketFactor(s.id),0)/SPECIES.length;
+  const mkt = avg>1.12?"  ·  📈 gode priser!" : avg<0.88?"  ·  📉 lave priser" : "";
+  setTimeout(()=>toast(curWeather().e+" "+curWeather().n+"  ·  "+curSeason().e+" "+curSeason().n+mkt),550);
   // sjekk lavt vann
   let dry=0; for(let i=0;i<G.slotsUnlocked;i++){ const s=G.slots[i]; if(s&&!s.dead&&!waterOK(s)&&!G.up.autovann) dry++; }
   if(dry && !G.up.autovann) setTimeout(()=>toast("💧 "+dry+" plante"+(dry>1?"r":"")+" trenger vann","warn"),900);
@@ -1069,13 +1125,13 @@ function clearDisease(i){ const s=G.slots[i]; if(!s)return; s.disease=false; sfx
 function clearDead(i){ G.slots[i]=null; renderSlot(i); openSlot(i); save(); toast("Potten er tom igjen.");
   playGesture(gardener.userData.shrugAction); }   // gartneren trekker på skuldrene over den døde planten
 function harvest(i){ const s=G.slots[i]; if(!s||s.dead||s.stage<4)return; const sp=SP[s.species];
-  let quality=s.health/100; if(G.up.gjodsel) quality+=0.2;
-  let price=Math.round(sp.sell*quality*(s.special?CFG.specialBonus:1));
+  const price=priceOf(s), id=s.species;            // priceOf tar med kvalitet, sjelden, gjødsel og dagspris
   earn(price); sfx("sell");
-  G.dex[s.species]=true; G.bestPrice[s.species]=Math.max(G.bestPrice[s.species]||0,price);
+  G.dex[id]=true; G.bestPrice[id]=Math.max(G.bestPrice[id]||0,price);
   G.slots[i]=null; renderSlot(i); openSlot(i); save();
   toast((s.special?"✨ ":"")+"Solgt "+sp.navn+" for "+price+" 🪙"+(s.special?" (sjelden!)":""), s.special?"gold":"good");
   playGesture(gardener.userData.cheerAction);   // gartneren jubler
+  orderProgress(id);
 }
 function changeLight(i){ // vekstlampe-oppgradering
   const s=G.slots[i]; if(!s||s.dead)return;
@@ -1141,7 +1197,7 @@ function openSlot(i){
     if(!bed && !G.up.autovann) actions+=`<button class="abtn water" onclick="waterPlant(${i})">💧 Vann</button>`;
     if(s.pest) actions+=`<button class="abtn fix" onclick="clearPest(${i})">🐛 Fjern dyr</button>`;
     if(s.disease) actions+=`<button class="abtn fix" onclick="clearDisease(${i})">🍄 Behandle</button>`;
-    if(s.stage>=4) actions+=`<button class="abtn harvest" onclick="harvest(${i})">✂️ Høst &amp; selg</button>`;
+    if(s.stage>=4) actions+=`<button class="abtn harvest" onclick="harvest(${i})">✂️ Selg ~${priceOf(s)} 🪙</button>`;
     if(!bed && G.up.vekstlampe) actions+=`<button class="abtn light" onclick="changeLight(${i})">💡 Lys: ${LIGHT_EMOJI[s.light]}</button>`;
     if(!bed) actions+=`<button class="abtn" onclick="transplantOut(${i})">🌿 Plant ut</button>`;
   }
@@ -1339,6 +1395,21 @@ function openDex(){
    <div class="mbd"><div class="grid">${cards}</div></div>`);
 }
 
+/* ----- oppdrag ----- */
+function openOrders(){
+  hideCard(); ensureOrders();
+  const rows=G.orders.map(o=>{ const sp=SP[o.species];
+    return `<div class="uprow"><div class="ue">${sp.emoji}</div>
+      <div class="ut"><div class="un">${o.need}× ${sp.navn}</div>
+        <div class="ud">Levert ${o.have}/${o.need} modne · ${o.days} dag${o.days>1?'er':''} igjen</div></div>
+      <div class="ub done">+${o.reward} 🪙</div></div>`; }).join("");
+  openModal(`<div class="mhd"><h2>📋 Oppdrag</h2><button class="x" onclick="closeModal()">×</button></div>
+    <div class="mbd"><p class="empty-hint" style="margin-bottom:10px">Dyrk og selg de etterspurte plantene før fristen for bonusmynt. Nye oppdrag dukker opp automatisk.</p>${rows}</div>`);
+}
+/* ----- vær/årstid i topplinja ----- */
+function updateHUD(){ const w=curWeather(), se=curSeason();
+  const ic=$("wxIc"), v=$("wxV"); if(ic) ic.textContent=w.e; if(v) v.textContent=w.n+" "+se.e; }
+
 /* ----- intro ----- */
 function openIntro(){
   openModal(`<div class="modal-intro intro" style="display:contents">
@@ -1405,6 +1476,7 @@ $("tPlant").onclick=()=>{ // plant på første ledige ulåste slot, ellers be om
 };
 $("tShop").onclick=openShop;
 $("tUp").onclick=openUpgrades;
+$("tOrders").onclick=openOrders;
 $("tDex").onclick=openDex;
 $("muteBtn").onclick=()=>{ G.muted=!G.muted; save(); updateMute(); if(!G.muted){ audio(); } };
 
@@ -1425,14 +1497,17 @@ $("modeBtn").onclick=()=>setMode(mode==="utforsk"?"oversikt":"utforsk");
 
 window.hideCard=hideCard; window.openSlot=openSlot; window.openPlanting=openPlanting; window.renderPlanting=renderPlanting;
 window.doPlant=doPlant; window.openShop=openShop; window.buySeed=buySeed; window.openUpgrades=openUpgrades;
-window.buyUpgrade=buyUpgrade; window.openDex=openDex; window.closeModal=closeModal; window.finishIntro=finishIntro;
+window.buyUpgrade=buyUpgrade; window.openDex=openDex; window.openOrders=openOrders; window.closeModal=closeModal; window.finishIntro=finishIntro;
 window.waterPlant=waterPlant; window.clearPest=clearPest; window.clearDisease=clearDisease; window.clearDead=clearDead;
 window.harvest=harvest; window.changeLight=changeLight; window.plantSel=plantSel;
 window.transplantOut=transplantOut; window.setMode=setMode;
 
 function boot(){
   if(!load()){ G=freshGame(); }
-  setCoins(G.coins); $("dayV").textContent=G.day; $("muteBtn").textContent=G.muted?"🔇":"🔊";
+  if(!G.market || !Object.keys(G.market).length) rollMarket();   // marked, vær og oppdrag på plass fra dag 1
+  if(!G.weather) G.weather="sol";
+  ensureOrders();
+  setCoins(G.coins); $("dayV").textContent=G.day; $("muteBtn").textContent=G.muted?"🔇":"🔊"; updateHUD();
   resize(); renderAllSlots(); requestAnimationFrame(tick);
   if(!G.seenIntro) openIntro();
   // start musikk ved første interaksjon (autoplay-policy)
