@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Fargeflukt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#4b5568;
+    --bg-1:#3e4757;
+    --panel:#2f3949;
+    --panel-2:#28303e;
+    --cream:#f7f2e7;
+    --cream-dim:#b8bfcc;
+    --gold:#f2b53d;
+    --font-display:'Fredoka',sans-serif;
+    --font-body:'Atkinson Hyperlegible',sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%; overscroll-behavior:none;}
+  body{
+    margin:0; min-height:100%;
+    touch-action:pan-y;
+    background:
+      radial-gradient(ellipse at 50% -20%, #5d6981 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 120%, #2b3240 0%, transparent 55%),
+      var(--bg-0);
+    color:var(--cream);
+    font-family:var(--font-body);
+    overflow-x:hidden;
+    display:flex; justify-content:center;
+    user-select:none; -webkit-user-select:none;
+  }
+  #app{ width:100%; max-width:560px; min-height:100vh; display:flex; flex-direction:column; position:relative; }
+  .screen{ display:none; flex:1; flex-direction:column; padding:22px 20px 40px; animation:fadeIn .25s ease; }
+  .screen.active{ display:flex; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+  /* ---------- Home ---------- */
+  .brand{ text-align:center; margin:18px 0 6px; }
+  .brand h1{
+    font-family:var(--font-display); font-weight:700; letter-spacing:.5px;
+    font-size:2.6rem; margin:0;
+    background:linear-gradient(90deg,#ef4d3d,#f2b53d,#5cb946,#3f7fe8);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 3px 0 rgba(0,0,0,.3));
+  }
+  .brand p{ color:var(--cream-dim); margin:4px 0 0; font-size:.95rem; }
+
+  .plank{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:18px;
+    box-shadow: 0 10px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .diff-card{
+    margin-top:16px; padding:18px 18px 16px; cursor:pointer;
+    display:flex; align-items:center; gap:14px;
+    transition:transform .15s ease;
+    border-left:6px solid var(--card-color, var(--gold));
+  }
+  .diff-card:active{ transform:scale(.98); }
+  .diff-card .swatches{ display:flex; gap:5px; flex-shrink:0; }
+  .diff-card .sw{ width:14px; height:14px; border-radius:4px; box-shadow:inset 0 -2px 0 rgba(0,0,0,.25);}
+  .diff-card .info{ flex:1; }
+  .diff-card h2{ font-family:var(--font-display); margin:0 0 3px; font-size:1.25rem; }
+  .diff-card .sub{ color:var(--cream-dim); font-size:.82rem; }
+  .diff-card .progress-wrap{ margin-top:8px; height:6px; border-radius:4px; background:rgba(0,0,0,.35); overflow:hidden; }
+  .diff-card .progress-bar{ height:100%; border-radius:4px; background:var(--card-color); }
+  .diff-card .chev{ font-size:1.4rem; color:var(--cream-dim); }
+  .footer-note{ text-align:center; color:var(--cream-dim); font-size:.75rem; margin-top:auto; padding-top:24px; opacity:.7; }
+
+  /* ---------- Level select ---------- */
+  .topbar{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .iconbtn{
+    width:40px; height:40px; border-radius:12px; border:none; cursor:pointer;
+    background:var(--panel); color:var(--cream); font-size:1.2rem; font-family:var(--font-display);
+    box-shadow: 0 3px 0 rgba(0,0,0,.35);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .iconbtn:active{ transform:translateY(2px); box-shadow:none; }
+  .topbar h2{ font-family:var(--font-display); font-size:1.3rem; margin:0; flex:1; }
+  .level-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .level-btn{
+    aspect-ratio:1; border-radius:14px; border:none; cursor:pointer;
+    font-family:var(--font-display); font-weight:600; font-size:1.05rem;
+    display:flex; align-items:center; justify-content:center; position:relative;
+    background:linear-gradient(160deg, var(--lb-color-light), var(--lb-color));
+    color:#fff; box-shadow:0 4px 0 rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.3);
+  }
+  .level-btn:active{ transform:translateY(3px); box-shadow:inset 0 1px 0 rgba(255,255,255,.3); }
+  .level-btn.locked{ background:var(--panel); color:var(--cream-dim); box-shadow:0 4px 0 rgba(0,0,0,.35); cursor:default; }
+  .level-btn.locked:active{ transform:none; }
+  .level-btn .star{ position:absolute; top:-6px; right:-4px; font-size:.85rem; filter:drop-shadow(0 1px 1px rgba(0,0,0,.5)); }
+
+  /* ---------- Game ---------- */
+  .game-topbar{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .game-topbar .lvl-label{ font-family:var(--font-display); font-size:1.1rem; flex:1; text-align:center; }
+  .stat-pill{ background:var(--panel); padding:6px 12px; border-radius:20px; font-size:.85rem; display:flex; gap:6px; align-items:center; color:var(--cream-dim); }
+  .stat-pill b{ color:var(--cream); }
+  .stat-pill.danger{ background:#7a2a24; }
+  .stat-pill.danger b{ color:#ffb3ab; }
+  #blocks-left-pill{ display:none; }
+  @media(min-width:400px){ #blocks-left-pill{ display:flex; } }
+
+  .board-wrap{ margin:14px auto 4px; position:relative; touch-action:none; filter:drop-shadow(0 18px 22px rgba(0,0,0,.45)); }
+  #board-svg{ display:block; overflow:visible; }
+
+  .game-actions{ display:flex; gap:10px; justify-content:center; margin-top:20px; }
+  .pillbtn{
+    font-family:var(--font-display); font-weight:600; font-size:.9rem;
+    border:none; border-radius:12px; padding:10px 18px; cursor:pointer;
+    background:var(--panel); color:var(--cream); box-shadow:0 3px 0 rgba(0,0,0,.35);
+  }
+  .pillbtn:active{ transform:translateY(2px); box-shadow:none; }
+  .pillbtn.primary{ background:linear-gradient(160deg,#ffd069,var(--gold)); color:#4a2f08; }
+
+  /* ---------- Win overlay ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(20,24,32,.72);
+    display:none; align-items:center; justify-content:center; z-index:200;
+    backdrop-filter:blur(3px);
+  }
+  .overlay.active{ display:flex; }
+  .win-card{
+    background:linear-gradient(160deg,var(--panel),var(--panel-2));
+    border-radius:22px; padding:32px 28px; text-align:center; width:88%; max-width:340px;
+    box-shadow:0 20px 50px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.07);
+    animation:popIn .28s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes popIn{ from{transform:scale(.8); opacity:0;} to{transform:scale(1); opacity:1;} }
+  .win-card .big-emoji{ font-size:2.6rem; }
+  .win-card h3{ font-family:var(--font-display); font-size:1.5rem; margin:6px 0 2px; }
+  .win-card p{ color:var(--cream-dim); margin:0 0 18px; font-size:.9rem; }
+  .win-card .row{ display:flex; gap:10px; }
+  .win-card .row .pillbtn{ flex:1; }
+
+  .particle{ position:absolute; pointer-events:none; border-radius:3px; z-index:60;
+    box-shadow: inset 0 2px 2px rgba(255,255,255,.4), inset 0 -2px 3px rgba(0,0,0,.3); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section class="screen active" id="screen-home">
+    <div class="brand">
+      <h1>Fargeflukt</h1>
+      <p>Tøm det fulle brettet – ut gjennom riktig farge!</p>
+    </div>
+    <div id="diff-cards"></div>
+    <div class="footer-note">50 baner &middot; 3 vanskelighetsgrader &middot; alle løsbare</div>
+  </section>
+
+  <section class="screen" id="screen-levels">
+    <div class="topbar">
+      <button class="iconbtn" id="btn-back-home">‹</button>
+      <h2 id="levels-title">Lett</h2>
+    </div>
+    <div class="level-grid" id="level-grid"></div>
+  </section>
+
+  <section class="screen" id="screen-game">
+    <div class="game-topbar">
+      <button class="iconbtn" id="btn-back-levels">‹</button>
+      <div class="lvl-label" id="game-lvl-label">Lett – Bane 1</div>
+      <div class="stat-pill" id="blocks-left-pill">Igjen <b id="blocks-left">0</b></div>
+      <div class="stat-pill" id="move-pill">Trekk <b id="move-count">0</b></div>
+    </div>
+    <div class="board-wrap" id="board-wrap"></div>
+    <div class="game-actions">
+      <button class="pillbtn" id="btn-reset">↺ Start på nytt</button>
+      <button class="pillbtn" id="btn-levels-2">☰ Banevalg</button>
+    </div>
+  </section>
+
+</div>
+
+<div class="overlay" id="overlay-fail">
+  <div class="win-card">
+    <div class="big-emoji">😵</div>
+    <h3>Tom for trekk!</h3>
+    <p>Du brukte alle <b id="fail-max">0</b> trekkene</p>
+    <div class="row">
+      <button class="pillbtn" id="btn-fail-levels">Banevalg</button>
+      <button class="pillbtn primary" id="btn-fail-retry">↺ Prøv igjen</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-win">
+  <div class="win-card">
+    <div class="big-emoji">🎉</div>
+    <h3>Bra jobba!</h3>
+    <p>Bane fullført på <b id="win-moves">0</b> trekk</p>
+    <div class="row">
+      <button class="pillbtn" id="btn-win-levels">Banevalg</button>
+      <button class="pillbtn primary" id="btn-win-next">Neste bane ›</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   CONFIG
+========================================================= */
+const COLORS = [
+  {name:'red',    hex:'#e8483a', light:'#f47265', dark:'#b32e23'},
+  {name:'blue',   hex:'#3f7fe8', light:'#6ba0f2', dark:'#2a5cb5'},
+  {name:'green',  hex:'#5cb946', light:'#82d46d', dark:'#3f8f2e'},
+  {name:'yellow', hex:'#f2b53d', light:'#ffd069', dark:'#c98d1d'},
+  {name:'purple', hex:'#8e5be0', light:'#ad83ef', dark:'#6a3cb5'},
+  {name:'orange', hex:'#f07030', light:'#ff9560', dark:'#c24f14'},
+];
+
+/* Shapes as cell lists [row, col] */
+function normShape(cells){
+  const minR = Math.min(...cells.map(c=>c[0]));
+  const minC = Math.min(...cells.map(c=>c[1]));
+  return cells.map(([r,c])=>[r-minR, c-minC]);
+}
+function rotShape(cells){ return normShape(cells.map(([r,c])=>[c, -r])); }
+function allRotations(cells){
+  const out = []; let cur = normShape(cells);
+  for(let i=0;i<4;i++){
+    const key = JSON.stringify(cur.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]));
+    if(!out.some(s=>s.key===key)) out.push({key, cells:cur});
+    cur = rotShape(cur);
+  }
+  return out.map(s=>s.cells);
+}
+const BASE_SHAPES = {
+  i2:[[0,0],[0,1]],
+  i3:[[0,0],[0,1],[0,2]],
+  i4:[[0,0],[0,1],[0,2],[0,3]],
+  sq:[[0,0],[0,1],[1,0],[1,1]],
+  l3:[[0,0],[1,0],[1,1]],
+  l4:[[0,0],[1,0],[2,0],[2,1]],
+  t4:[[0,0],[0,1],[0,2],[1,1]],
+};
+function shapePool(names){
+  const pool = [];
+  for(const n of names) for(const rot of allRotations(BASE_SHAPES[n])) pool.push(rot);
+  return pool;
+}
+
+const DIFFS = {
+  easy:   {label:'Lett',      grid:6, blocksMin:5,  blocksMax:8,  numColors:4, color:'#5cb946', movePref:0.75, moveFactor:2.3, moveSlack:5,
+           shapes:shapePool(['i2','i3','sq','l3'])},
+  medium: {label:'Middels',   grid:7, blocksMin:8,  blocksMax:13, numColors:5, color:'#3f7fe8', movePref:0.92, moveFactor:2.0, moveSlack:4,
+           shapes:shapePool(['i2','i3','i4','sq','l3','l4'])},
+  hard:   {label:'Vanskelig', grid:8, blocksMin:12, blocksMax:18, numColors:6, color:'#e8483a', movePref:1.0, moveFactor:1.8, moveSlack:4,
+           shapes:shapePool(['i2','i3','i4','sq','l3','l4','t4'])},
+};
+const LEVELS_PER_DIFF = 50;
+const STORAGE_KEY = 'fargeflukt-progress-v3';
+
+/* =========================================================
+   Seeded RNG
+========================================================= */
+function hashStr(s){
+  let h = 1779033703 ^ s.length;
+  for(let i=0;i<s.length;i++){ h = Math.imul(h ^ s.charCodeAt(i), 3432918353); h = (h<<13)|(h>>>19); }
+  return (h ^ (h>>>16)) >>> 0;
+}
+function mulberry32(seed){
+  let a = seed;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5)|0;
+    let t = Math.imul(a ^ (a>>>15), 1|a);
+    t = (t + Math.imul(t ^ (t>>>7), 61|t)) ^ t;
+    return ((t ^ (t>>>14))>>>0)/4294967296;
+  };
+}
+
+/* =========================================================
+   LEVEL GENERATION — reverse insertion => guaranteed solvable.
+   Blocks slide IN from a colored wall segment; solving = reverse.
+========================================================= */
+function generateLevel(diffKey, levelNum){
+  /* FULL-BOARD generation:
+     1) Tile the entire grid with polyominoes (no empty cells).
+     2) "Peel": repeatedly pick a piece that can slide straight out through a
+        wall (given what is still on the board) and assign that wall its color.
+     The peel order is a valid solution, so every level is solvable. */
+  const cfg = DIFFS[diffKey];
+  const gs = cfg.grid;
+  const palette = COLORS.slice(0, cfg.numColors);
+
+  for(let attempt=0; attempt<60; attempt++){
+    const rng = mulberry32(hashStr(diffKey+'#'+levelNum+'#full#'+attempt));
+    const pieces = tileBoard(gs, cfg.shapes, rng);
+    const res = peel(pieces, gs, palette, rng, cfg.movePref);
+    if(res) return {gridSize:gs, blocks:res.blocks, walls:res.walls};
+  }
+  // Extremely unlikely fallback: full board of horizontal strips, trivially peelable
+  const rng = mulberry32(hashStr(diffKey+'#'+levelNum+'#strips'));
+  const pieces = [];
+  for(let r=0;r<gs;r++){
+    let c=0;
+    while(c<gs){
+      const len = Math.min(gs-c, 2+Math.floor(rng()*3));
+      pieces.push({cells:Array.from({length:len},(_,i)=>[r,c+i])});
+      c += len;
+    }
+  }
+  const res = peel(pieces, gs, palette, rng, 0.5);
+  return {gridSize:gs, blocks:res.blocks, walls:res.walls};
+}
+
+/* Tile the whole gs×gs grid with shapes from the pool (1x1 as last resort). */
+function tileBoard(gs, pool, rng){
+  const occ = Array.from({length:gs}, ()=>Array(gs).fill(false));
+  const pieces = [];
+  // prefer bigger shapes, with randomness
+  // (shape order randomized per cell below)
+  for(let r=0;r<gs;r++) for(let c=0;c<gs;c++){
+    if(occ[r][c]) continue;
+    let placed = null;
+    // weighted-random order: bigger shapes favored but plenty of variety
+    const order = pool.slice().sort((a,b)=>
+      (b.length + rng()*3.2) - (a.length + rng()*3.2));
+    outer:
+    for(const shape of order){
+      // try anchoring each cell of the shape onto (r,c)
+      for(const [ar,ac] of shape){
+        const pr = r-ar, pc = c-ac;
+        let ok = true;
+        for(const [sr,sc] of shape){
+          const rr=pr+sr, cc=pc+sc;
+          if(rr<0||rr>=gs||cc<0||cc>=gs||occ[rr][cc]){ ok=false; break; }
+        }
+        if(ok){ placed = shape.map(([sr,sc])=>[pr+sr, pc+sc]); break outer; }
+      }
+    }
+    if(!placed) placed = [[r,c]]; // 1x1 filler
+    for(const [rr,cc] of placed) occ[rr][cc] = true;
+    pieces.push({cells:placed});
+  }
+  return pieces;
+}
+
+/* Assign colors + walls by peeling pieces off the full board.
+   Each peel may require the piece to SLIDE to a different position first —
+   the colored wall segment is placed at the position it exits from, not
+   where it starts. This forces the player to maneuver pieces around. */
+function peel(pieces, gs, palette, rng, movePref){
+  const walls = {top:Array(gs).fill(null), bottom:Array(gs).fill(null),
+                 left:Array(gs).fill(null), right:Array(gs).fill(null)};
+  const occ = Array.from({length:gs}, ()=>Array(gs).fill(null));
+  pieces.forEach((p,i)=>{
+    p.idx = i;
+    const minR = Math.min(...p.cells.map(c=>c[0]));
+    const minC = Math.min(...p.cells.map(c=>c[1]));
+    p.rel = p.cells.map(([r,c])=>[r-minR, c-minC]);
+    p.x = minC; p.y = minR;
+    let w=0,h=0; for(const [r,c] of p.rel){ w=Math.max(w,c+1); h=Math.max(h,r+1); }
+    p.w=w; p.h=h;
+    for(const [r,c] of p.cells) occ[r][c]=i;
+  });
+  const active = new Set(pieces.map(p=>p.idx));
+  const colorOf = {};
+
+  const hits = (p,x,y)=>{
+    for(const [r,c] of p.rel){
+      const v = occ[y+r][x+c];
+      if(v!==null && v!==p.idx) return true;
+    }
+    return false;
+  };
+
+  /* straight exit check for piece p AS IF positioned at (x,y):
+     returns wall indices if geometrically clear, else null */
+  const exposedAt = (p, x, y, side)=>{
+    if(side==='top'||side==='bottom'){
+      const colMin={}, colMax={};
+      for(const [r,c] of p.rel){
+        colMin[c]=Math.min(colMin[c]??99,r); colMax[c]=Math.max(colMax[c]??-1,r);
+      }
+      for(const c in colMin){
+        const cc=x+ +c;
+        if(side==='top'){ for(let r=0;r<y+colMin[c];r++){ const v=occ[r][cc]; if(v!==null&&v!==p.idx) return null; } }
+        else { for(let r=y+colMax[c]+1;r<gs;r++){ const v=occ[r][cc]; if(v!==null&&v!==p.idx) return null; } }
+      }
+      return Object.keys(colMin).map(c=>x+ +c);
+    } else {
+      const rowMin={}, rowMax={};
+      for(const [r,c] of p.rel){
+        rowMin[r]=Math.min(rowMin[r]??99,c); rowMax[r]=Math.max(rowMax[r]??-1,c);
+      }
+      for(const r in rowMin){
+        const rr=y+ +r;
+        if(side==='left'){ for(let c=0;c<x+rowMin[r];c++){ const v=occ[rr][c]; if(v!==null&&v!==p.idx) return null; } }
+        else { for(let c=x+rowMax[r]+1;c<gs;c++){ const v=occ[rr][c]; if(v!==null&&v!==p.idx) return null; } }
+      }
+      return Object.keys(rowMin).map(r=>y+ +r);
+    }
+  };
+
+  /* BFS all positions p can slide to given current occupancy */
+  const reachable = (p)=>{
+    const dist = new Map();
+    const key=(x,y)=>x+'_'+y;
+    const q=[[p.x,p.y]];
+    dist.set(key(p.x,p.y),0);
+    while(q.length){
+      const [x,y]=q.shift();
+      const d=dist.get(key(x,y));
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nx=x+dx, ny=y+dy;
+        if(nx<0||ny<0||nx>gs-p.w||ny>gs-p.h) continue;
+        if(dist.has(key(nx,ny))) continue;
+        if(hits(p,nx,ny)) continue;
+        dist.set(key(nx,ny), d+1);
+        q.push([nx,ny]);
+      }
+    }
+    return dist;
+  };
+
+  const steps = pieces.length;
+  for(let step=0; step<steps; step++){
+    const direct = [], moved = [];
+    for(const idx of active){
+      const p = pieces[idx];
+      const dist = reachable(p);
+      for(const [k,d] of dist){
+        const [x,y] = k.split('_').map(Number);
+        for(const side of ['top','bottom','left','right']){
+          const wi = exposedAt(p,x,y,side);
+          if(!wi) continue;
+          const cols = [...new Set(wi.map(i=>walls[side][i]).filter(v=>v!==null).map(v=>v.name))];
+          if(cols.length>1) continue;
+          const cand = {p,x,y,side,wi,forced:cols.length===1?cols[0]:null,d};
+          (d>0 ? moved : direct).push(cand);
+        }
+      }
+    }
+    if(!direct.length && !moved.length) return null; // deadlock — retry tiling
+
+    let pick;
+    if(moved.length && (rng() < movePref || !direct.length)){
+      // favor exits that require the most maneuvering
+      moved.sort((a,b)=>b.d-a.d);
+      const topK = moved.filter(c=>c.d >= moved[0].d-1);
+      pick = topK[Math.floor(rng()*topK.length)];
+    } else {
+      pick = direct[Math.floor(rng()*direct.length)];
+    }
+
+    const color = pick.forced
+      ? COLORS.find(c=>c.name===pick.forced)
+      : palette[Math.floor(rng()*palette.length)];
+    for(const i of pick.wi) walls[pick.side][i] = color;
+    colorOf[pick.p.idx] = color;
+    active.delete(pick.p.idx);
+    for(const [r,c] of pick.p.cells) occ[r][c] = null;
+  }
+
+  const blocks = pieces.map((p,i)=>({
+    id:i, color:colorOf[p.idx], cells:p.rel,
+    row:Math.min(...p.cells.map(c=>c[0])),
+    col:Math.min(...p.cells.map(c=>c[1])),
+    removed:false
+  }));
+  return {blocks, walls};
+}
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+let progress = null;
+function defaultProgress(){
+  const p = {};
+  for(const k in DIFFS) p[k] = {unlocked:1, completed:{}};
+  return p;
+}
+async function loadProgress(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    progress = res ? JSON.parse(res.value) : defaultProgress();
+  }catch(e){ progress = defaultProgress(); }
+}
+async function saveProgress(){
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(progress), false); }catch(e){}
+}
+
+/* =========================================================
+   STATE
+========================================================= */
+let currentDiff = 'easy';
+let currentLevelNum = 1;
+let level = null;      // {gridSize, blocks, walls}
+let cell = 48;         // px per cell
+let wallT = 0;         // wall thickness px
+let moves = 0;
+let maxMoves = 0;
+let failed = false;
+let animating = false;
+
+/* Estimate solution length in PLAYER moves (one axis-drag = 1 move,
+   the exit drag included). Greedy piece order + per-piece BFS where
+   one move = a slide of any length along one axis. */
+function optimalMoves(lv){
+  const gs = lv.gridSize, w = lv.walls;
+  const st = lv.blocks.map(b=>({id:b.id,color:b.color,rel:b.cells,x:b.col,y:b.row,
+    w:Math.max(...b.cells.map(c=>c[1]))+1, h:Math.max(...b.cells.map(c=>c[0]))+1, active:true}));
+  const occ = Array.from({length:gs},()=>Array(gs).fill(null));
+  for(const p of st) for(const [r,c] of p.rel) occ[p.y+r][p.x+c]=p.id;
+  const hits=(p,x,y)=>{ for(const [r,c] of p.rel){ const v=occ[y+r][x+c]; if(v!==null&&v!==p.id) return true; } return false; };
+  const expAt=(p,x,y,side)=>{
+    if(side==='top'||side==='bottom'){
+      const mn={},mx={}; for(const [r,c] of p.rel){ mn[c]=Math.min(mn[c]??99,r); mx[c]=Math.max(mx[c]??-1,r); }
+      for(const c in mn){ const cc=x+ +c;
+        if(side==='top'){ for(let r=0;r<y+mn[c];r++){ const v=occ[r][cc]; if(v!==null&&v!==p.id) return null; } }
+        else { for(let r=y+mx[c]+1;r<gs;r++){ const v=occ[r][cc]; if(v!==null&&v!==p.id) return null; } } }
+      return Object.keys(mn).map(c=>x+ +c);
+    } else {
+      const mn={},mx={}; for(const [r,c] of p.rel){ mn[r]=Math.min(mn[r]??99,c); mx[r]=Math.max(mx[r]??-1,c); }
+      for(const r in mn){ const rr=y+ +r;
+        if(side==='left'){ for(let c=0;c<x+mn[r];c++){ const v=occ[rr][c]; if(v!==null&&v!==p.id) return null; } }
+        else { for(let c=x+mx[r]+1;c<gs;c++){ const v=occ[rr][c]; if(v!==null&&v!==p.id) return null; } } }
+      return Object.keys(mn).map(r=>y+ +r);
+    }
+  };
+  const exitOK=(p,x,y)=>{
+    for(const side of ['top','bottom','left','right']){
+      const wi=expAt(p,x,y,side);
+      if(wi && wi.every(i=>w[side][i]&&w[side][i].name===p.color.name)) return true;
+    }
+    return false;
+  };
+  let total=0, remaining=st.length, prog=true;
+  while(remaining && prog){
+    prog=false;
+    for(const p of st){
+      if(!p.active) continue;
+      // BFS: nodes are positions; edges are full axis-slides (1 move each)
+      const key=(x,y)=>x+'_'+y;
+      const dist=new Map([[key(p.x,p.y),0]]);
+      const q=[[p.x,p.y]];
+      let found=-1;
+      if(exitOK(p,p.x,p.y)) found=0;
+      while(q.length && found<0){
+        const [x,y]=q.shift(); const d=dist.get(key(x,y));
+        for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+          let nx=x, ny=y;
+          while(true){
+            const tx=nx+dx, ty=ny+dy;
+            if(tx<0||ty<0||tx>gs-p.w||ty>gs-p.h) break;
+            if(hits(p,tx,ty)) break;
+            nx=tx; ny=ty;
+            if(!dist.has(key(nx,ny))){
+              dist.set(key(nx,ny), d+1);
+              q.push([nx,ny]);
+              if(exitOK(p,nx,ny)){ found=d+1; break; }
+            }
+          }
+          if(found>=0) break;
+        }
+      }
+      if(found>=0){
+        total += found + 1; // slides to get there + the exit drag
+        for(const [r,c] of p.rel) occ[p.y+r][p.x+c]=null;
+        p.active=false; remaining--; prog=true; break;
+      }
+    }
+  }
+  return remaining===0 ? total : 0;
+}
+
+const screens = {
+  home: document.getElementById('screen-home'),
+  levels: document.getElementById('screen-levels'),
+  game: document.getElementById('screen-game'),
+};
+function showScreen(name){
+  for(const k in screens) screens[k].classList.toggle('active', k===name);
+  // freeze all page scroll/bounce while playing
+  const lock = name==='game';
+  document.body.style.overflow = lock ? 'hidden' : '';
+  document.body.style.touchAction = lock ? 'none' : 'pan-y';
+  document.documentElement.style.overflow = lock ? 'hidden' : '';
+}
+
+/* ---------- HOME ---------- */
+function renderHome(){
+  const wrap = document.getElementById('diff-cards');
+  wrap.innerHTML = '';
+  for(const key in DIFFS){
+    const cfg = DIFFS[key];
+    const prog = progress[key];
+    const done = Object.keys(prog.completed).length;
+    const card = document.createElement('div');
+    card.className = 'plank diff-card';
+    card.style.setProperty('--card-color', cfg.color);
+    const swatches = COLORS.slice(0,cfg.numColors).map(c=>`<div class="sw" style="background:${c.hex}"></div>`).join('');
+    card.innerHTML = `
+      <div class="swatches">${swatches}</div>
+      <div class="info">
+        <h2>${cfg.label}</h2>
+        <div class="sub">${cfg.grid}×${cfg.grid} brett &middot; ${done}/${LEVELS_PER_DIFF} fullført</div>
+        <div class="progress-wrap"><div class="progress-bar" style="width:${done/LEVELS_PER_DIFF*100}%"></div></div>
+      </div>
+      <div class="chev">›</div>`;
+    card.addEventListener('click', ()=>{ currentDiff = key; renderLevelSelect(); showScreen('levels'); });
+    wrap.appendChild(card);
+  }
+}
+
+/* ---------- LEVEL SELECT ---------- */
+function renderLevelSelect(){
+  const cfg = DIFFS[currentDiff];
+  document.getElementById('levels-title').textContent = cfg.label;
+  const grid = document.getElementById('level-grid');
+  grid.innerHTML = '';
+  const prog = progress[currentDiff];
+  for(let n=1;n<=LEVELS_PER_DIFF;n++){
+    const btn = document.createElement('button');
+    const unlocked = n <= prog.unlocked;
+    const completed = !!prog.completed[n];
+    btn.className = 'level-btn' + (unlocked?'':' locked');
+    const shade = COLORS[(n-1)%cfg.numColors];
+    btn.style.setProperty('--lb-color', shade.hex);
+    btn.style.setProperty('--lb-color-light', shade.light);
+    btn.innerHTML = unlocked ? n + (completed?'<span class="star">⭐</span>':'') : '🔒';
+    if(unlocked) btn.addEventListener('click', ()=>startLevel(currentDiff,n));
+    grid.appendChild(btn);
+  }
+}
+
+/* =========================================================
+   GAME — SVG rendering
+========================================================= */
+const NS = 'http://www.w3.org/2000/svg';
+let svg=null, blockLayer=null, boardW=0, boardH=0;
+
+function startLevel(diffKey, levelNum){
+  currentDiff = diffKey; currentLevelNum = levelNum;
+  level = generateLevel(diffKey, levelNum);
+  const cfg = DIFFS[diffKey];
+  const opt = optimalMoves(level);
+  maxMoves = Math.max(level.blocks.length + 2, Math.ceil(opt*cfg.moveFactor) + cfg.moveSlack);
+  moves = 0; animating = false; failed = false;
+  renderMoves();
+  document.getElementById('game-lvl-label').textContent = DIFFS[diffKey].label + ' – Bane ' + levelNum;
+  buildBoard();
+  updateBlocksLeft();
+  showScreen('game');
+}
+
+function renderMoves(){
+  const pill = document.getElementById('move-pill');
+  document.getElementById('move-count').textContent = moves + '/' + maxMoves;
+  pill.classList.toggle('danger', maxMoves-moves <= 3);
+}
+function bumpMove(){
+  moves++; renderMoves();
+}
+function checkFail(){
+  if(failed) return;
+  if(moves >= maxMoves && level.blocks.some(b=>!b.removed)){
+    failed = true;
+    document.getElementById('fail-max').textContent = maxMoves;
+    setTimeout(()=>document.getElementById('overlay-fail').classList.add('active'), 300);
+  }
+}
+
+function updateBlocksLeft(){
+  document.getElementById('blocks-left').textContent = level.blocks.filter(b=>!b.removed).length;
+}
+
+function buildBoard(){
+  const gs = level.gridSize;
+  const wrap = document.getElementById('board-wrap');
+  const availW = Math.min(window.innerWidth - 36, 470);
+  cell = Math.floor(availW/(gs+1.6));
+  wallT = Math.round(cell*0.62);
+  boardW = gs*cell + wallT*2;
+  boardH = gs*cell + wallT*2;
+
+  wrap.innerHTML = '';
+  // stop iOS pull-to-refresh / page scroll while touching the board
+  wrap.addEventListener('touchmove', (e)=>e.preventDefault(), {passive:false});
+  wrap.addEventListener('touchstart', (e)=>e.preventDefault(), {passive:false});
+  svg = document.createElementNS(NS,'svg');
+  svg.setAttribute('id','board-svg');
+  svg.setAttribute('width', boardW);
+  svg.setAttribute('height', boardH);
+  svg.setAttribute('viewBox', `0 0 ${boardW} ${boardH}`);
+  wrap.appendChild(svg);
+
+  // ---- defs: wood grain + per-color gradients ----
+  const defs = document.createElementNS(NS,'defs');
+  defs.innerHTML = `
+    <pattern id="stripes" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(20)">
+      <rect width="14" height="14" fill="none"/>
+      <rect width="7" height="14" fill="rgba(255,255,255,0.07)"/>
+      <rect x="7" width="2" height="14" fill="rgba(0,0,0,0.05)"/>
+    </pattern>
+    ${COLORS.map(c=>`
+      <linearGradient id="grad-${c.name}" x1="0" y1="0" x2="0.35" y2="1">
+        <stop offset="0" stop-color="${c.light}"/>
+        <stop offset="1" stop-color="${c.hex}"/>
+      </linearGradient>
+      <linearGradient id="wgrad-${c.name}" x1="0" y1="0" x2="0.35" y2="1">
+        <stop offset="0" stop-color="${c.hex}"/>
+        <stop offset="1" stop-color="${c.dark}"/>
+      </linearGradient>`).join('')}
+    <linearGradient id="grad-frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8d94a6"/>
+      <stop offset="1" stop-color="#666e82"/>
+    </linearGradient>
+  `;
+  svg.appendChild(defs);
+
+  // ---- inner tray (grey recessed cells) ----
+  const tray = document.createElementNS(NS,'g');
+  const trayBg = rect(wallT-4, wallT-4, gs*cell+8, gs*cell+8, 10);
+  trayBg.setAttribute('fill','#525a6b');
+  tray.appendChild(trayBg);
+  for(let r=0;r<gs;r++) for(let c=0;c<gs;c++){
+    const cellR = rect(wallT+c*cell+2.5, wallT+r*cell+2.5, cell-5, cell-5, 7);
+    cellR.setAttribute('fill','#5d6577');
+    cellR.setAttribute('stroke','rgba(0,0,0,0.14)');
+    cellR.setAttribute('stroke-width','1');
+    tray.appendChild(cellR);
+  }
+  svg.appendChild(tray);
+
+  // ---- frame walls (colored segments = exits) ----
+  const frame = document.createElementNS(NS,'g');
+  drawWalls(frame, gs);
+  svg.appendChild(frame);
+
+  // ---- blocks ----
+  blockLayer = document.createElementNS(NS,'g');
+  svg.appendChild(blockLayer);
+  for(const b of level.blocks){ if(!b.removed) makeBlockNode(b); }
+}
+
+function rect(x,y,w,h,r){
+  const el = document.createElementNS(NS,'rect');
+  el.setAttribute('x',x); el.setAttribute('y',y);
+  el.setAttribute('width',w); el.setAttribute('height',h);
+  el.setAttribute('rx',r); el.setAttribute('ry',r);
+  return el;
+}
+
+/* Draw the four walls as contiguous colored runs */
+function drawWalls(g, gs){
+  const runs = (arr)=>{
+    const out=[]; let i=0;
+    while(i<arr.length){
+      let j=i; while(j+1<arr.length && sameColor(arr[j+1],arr[i])) j++;
+      out.push({from:i,to:j,color:arr[i]}); i=j+1;
+    }
+    return out;
+  };
+  const sameColor=(a,b)=>((a&&b&&a.name===b.name)||(!a&&!b));
+  const segFill = (color, side)=> color ? `url(#wgrad-${color.name})` : 'url(#grad-frame)';
+
+  const sides = [
+    {key:'top',    horiz:true,  x:i=>wallT+i*cell, y:()=>0,               len:(f,t)=>(t-f+1)*cell, thick:wallT},
+    {key:'bottom', horiz:true,  x:i=>wallT+i*cell, y:()=>boardH-wallT,     len:(f,t)=>(t-f+1)*cell, thick:wallT},
+    {key:'left',   horiz:false, x:()=>0,           y:i=>wallT+i*cell,      len:(f,t)=>(t-f+1)*cell, thick:wallT},
+    {key:'right',  horiz:false, x:()=>boardW-wallT,y:i=>wallT+i*cell,      len:(f,t)=>(t-f+1)*cell, thick:wallT},
+  ];
+
+  // corner blobs first (neutral)
+  for(const [cx,cy] of [[0,0],[boardW-wallT,0],[0,boardH-wallT],[boardW-wallT,boardH-wallT]]){
+    const cr = rect(cx,cy,wallT,wallT, 10);
+    cr.setAttribute('fill','#4a5162');
+    g.appendChild(cr);
+  }
+
+  for(const s of sides){
+    for(const run of runs(level.walls[s.key])){
+      let x,y,w,h;
+      if(s.horiz){ x=s.x(run.from); y=s.y(); w=s.len(run.from,run.to); h=s.thick; }
+      else{ x=s.x(); y=s.y(run.from); w=s.thick; h=s.len(run.from,run.to); }
+      const seg = rect(x+1.5, y+1.5, w-3, h-3, 9);
+      seg.setAttribute('fill', segFill(run.color, s.key));
+      g.appendChild(seg);
+      if(run.color){
+        const tex = rect(x+1.5, y+1.5, w-3, h-3, 9);
+        tex.setAttribute('fill','url(#stripes)');
+        g.appendChild(tex);
+      }
+      const gloss = rect(x+4, y+4, s.horiz? w-8 : Math.max(4,w*0.28), s.horiz? Math.max(4,h*0.28) : h-8, 5);
+      gloss.setAttribute('fill','rgba(255,255,255,0.22)');
+      g.appendChild(gloss);
+      // exit chevron on colored segments
+      if(run.color){
+        const midX = x+w/2, midY = y+h/2, a = Math.min(w,h)*0.30;
+        const tri = document.createElementNS(NS,'polygon');
+        let pts;
+        if(s.key==='top') pts = `${midX-a},${midY+a*0.7} ${midX+a},${midY+a*0.7} ${midX},${midY-a*0.8}`;
+        else if(s.key==='bottom') pts = `${midX-a},${midY-a*0.7} ${midX+a},${midY-a*0.7} ${midX},${midY+a*0.8}`;
+        else if(s.key==='left') pts = `${midX+a*0.7},${midY-a} ${midX+a*0.7},${midY+a} ${midX-a*0.8},${midY}`;
+        else pts = `${midX-a*0.7},${midY-a} ${midX-a*0.7},${midY+a} ${midX+a*0.8},${midY}`;
+        tri.setAttribute('points', pts);
+        tri.setAttribute('fill','rgba(255,255,255,0.85)');
+        g.appendChild(tri);
+      }
+    }
+  }
+}
+
+/* ---------- Block geometry: rounded outline path for cell set ---------- */
+function blockPath(cells, cs, rad, inset){
+  inset = inset || 0;
+  // Build outline via edge-walking on unit grid, then rounded corners.
+  const set = new Set(cells.map(([r,c])=>r+','+c));
+  const has = (r,c)=>set.has(r+','+c);
+  // collect boundary edges as directed segments (counterclockwise around filled area)
+  const edges = new Map(); // key: from -> to
+  for(const [r,c] of cells){
+    if(!has(r-1,c)) addE(c, r, c+1, r);       // top edge, ->right
+    if(!has(r+1,c)) addE(c+1, r+1, c, r+1);   // bottom edge, ->left
+    if(!has(r,c-1)) addE(c, r+1, c, r);       // left edge, ->up
+    if(!has(r,c+1)) addE(c+1, r, c+1, r+1);   // right edge, ->down
+  }
+  function addE(x1,y1,x2,y2){ edges.set(x1+','+y1+'>'+x2+','+y2, [[x1,y1],[x2,y2]]); }
+  // chain edges into loop
+  const byStart = new Map();
+  for(const [,e] of edges) byStart.set(e[0][0]+','+e[0][1], e);
+  const first = edges.values().next().value;
+  const pts = [first[0]];
+  let cur = first;
+  for(let i=0;i<edges.size;i++){
+    const nxt = byStart.get(cur[1][0]+','+cur[1][1]);
+    if(!nxt) break;
+    pts.push(nxt[0]);
+    cur = nxt;
+    if(nxt[1][0]===first[0][0] && nxt[1][1]===first[0][1]) break;
+  }
+  // merge collinear
+  const merged = [];
+  for(let i=0;i<pts.length;i++){
+    const p0 = pts[(i-1+pts.length)%pts.length], p1 = pts[i], p2 = pts[(i+1)%pts.length];
+    const collinear = (p1[0]-p0[0])*(p2[1]-p1[1]) - (p1[1]-p0[1])*(p2[0]-p1[0]) === 0;
+    if(!collinear) merged.push(p1);
+  }
+  // build rounded path, offset inward by `inset`
+  // loop travels clockwise in screen coords with interior on the right:
+  // inward normal of edge dir (dx,dy) is (-dy,dx)
+  const m = merged.length;
+  const P = [];
+  for(let i=0;i<m;i++){
+    const p0 = merged[(i-1+m)%m], p1 = merged[i], p2 = merged[(i+1)%m];
+    const d1 = unit([p1[0]-p0[0], p1[1]-p0[1]]);
+    const d2 = unit([p2[0]-p1[0], p2[1]-p1[1]]);
+    const n1 = [-d1[1], d1[0]], n2 = [-d2[1], d2[0]];
+    P.push([ p1[0]*cs + (n1[0]+n2[0])*inset, p1[1]*cs + (n1[1]+n2[1])*inset ]);
+  }
+  function unit(v){ const l = Math.hypot(v[0],v[1])||1; return [v[0]/l, v[1]/l]; }
+  let d = '';
+  const n = P.length;
+  for(let i=0;i<n;i++){
+    const prev = P[(i-1+n)%n], cu = P[i], nxt = P[(i+1)%n];
+    const v1 = norm([cu[0]-prev[0], cu[1]-prev[1]]);
+    const v2 = norm([nxt[0]-cu[0], nxt[1]-cu[1]]);
+    const a = [cu[0]-v1[0]*rad, cu[1]-v1[1]*rad];
+    const b = [cu[0]+v2[0]*rad, cu[1]+v2[1]*rad];
+    if(i===0) d += `M${a[0]},${a[1]} `;
+    else d += `L${a[0]},${a[1]} `;
+    d += `Q${cu[0]},${cu[1]} ${b[0]},${b[1]} `;
+  }
+  d += 'Z';
+  return d;
+  function norm(v){ const l = Math.hypot(v[0],v[1])||1; return [v[0]/l, v[1]/l]; }
+}
+
+function makeBlockNode(b){
+  const inset = 3.5;
+  const g = document.createElementNS(NS,'g');
+  g.setAttribute('id','block-'+b.id);
+  g.style.cursor = 'grab';
+
+  const d = blockPath(b.cells, cell, 9, inset);
+  const dRim = blockPath(b.cells, cell, 7, inset+3);
+
+  // drop shadow copy
+  const sh = document.createElementNS(NS,'path');
+  sh.setAttribute('d', d);
+  sh.setAttribute('transform', 'translate(0,3.5)');
+  sh.setAttribute('fill','rgba(0,0,0,0.30)');
+  g.appendChild(sh);
+
+  const body = document.createElementNS(NS,'path');
+  body.setAttribute('d', d);
+  body.setAttribute('fill', `url(#grad-${b.color.name})`);
+  body.setAttribute('stroke', b.color.dark);
+  body.setAttribute('stroke-width','2');
+  g.appendChild(body);
+
+  const tex = document.createElementNS(NS,'path');
+  tex.setAttribute('d', d);
+  tex.setAttribute('fill','url(#stripes)');
+  g.appendChild(tex);
+
+  const rim = document.createElementNS(NS,'path');
+  rim.setAttribute('d', dRim);
+  rim.setAttribute('fill','none');
+  rim.setAttribute('stroke','rgba(255,255,255,0.30)');
+  rim.setAttribute('stroke-width','2.5');
+  g.appendChild(rim);
+
+  b.node = g;
+  b.fx = b.col; b.fy = b.row; // fractional pos
+  positionBlock(b);
+  blockLayer.appendChild(g);
+  attachDrag(b);
+}
+
+function positionBlock(b){
+  b.node.style.transform = `translate(${wallT + b.fx*cell}px, ${wallT + b.fy*cell}px)`;
+}
+
+/* ---------- Movement, collision, exits ----------
+   Axis-locked sliding: a gesture picks ONE axis, the block slides along it,
+   clamped to a precomputed range. Exits fire the instant the block touches
+   a valid colored wall; invalid walls are solid. Blocks always stay on grid. */
+
+function shapeSize(b){
+  let w=0,h=0;
+  for(const [r,c] of b.cells){ w=Math.max(w,c+1); h=Math.max(h,r+1); }
+  return {w,h};
+}
+
+function openSides(b){
+  const gs = level.gridSize;
+  const cols = [...new Set(b.cells.map(c=>c[1]))].map(c=>b.fx+c);
+  const rows = [...new Set(b.cells.map(c=>c[0]))].map(r=>b.fy+r);
+  const match = (side, idx)=> idx>=0 && idx<gs && level.walls[side][idx] && level.walls[side][idx].name===b.color.name;
+  return {
+    top:    cols.every(c=>match('top',c)),
+    bottom: cols.every(c=>match('bottom',c)),
+    left:   rows.every(r=>match('left',r)),
+    right:  rows.every(r=>match('right',r)),
+  };
+}
+
+function collides(b, fx, fy){
+  const eps = 0.004;
+  for(const other of level.blocks){
+    if(other.removed || other.id===b.id) continue;
+    for(const [r1,c1] of b.cells){
+      const ax = fx+c1, ay = fy+r1;
+      for(const [r2,c2] of other.cells){
+        const bx = other.fx+c2, by = other.fy+r2;
+        if(Math.abs(ax-bx) < 1-eps && Math.abs(ay-by) < 1-eps) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/* Slide range along one axis from the block's current integer position.
+   Returns in-board {min,max} plus whether each end is a valid exit. */
+function axisRange(b, axis, open){
+  const gs = level.gridSize;
+  const {w,h} = shapeSize(b);
+  if(axis==='x'){
+    let min=b.fx, max=b.fx;
+    while(min-1>=0 && !collides(b,min-1,b.fy)) min--;
+    while(max+1<=gs-w && !collides(b,max+1,b.fy)) max++;
+    let exitNeg = open.left && min===0;
+    if(exitNeg){ for(let p=-1; p>-w; p--){ if(collides(b,p,b.fy)){ exitNeg=false; break; } } }
+    let exitPos = open.right && max===gs-w;
+    if(exitPos){ for(let p=gs-w+1; p<gs; p++){ if(collides(b,p,b.fy)){ exitPos=false; break; } } }
+    return {min,max,exitNeg,exitPos};
+  } else {
+    let min=b.fy, max=b.fy;
+    while(min-1>=0 && !collides(b,b.fx,min-1)) min--;
+    while(max+1<=gs-h && !collides(b,b.fx,max+1)) max++;
+    let exitNeg = open.top && min===0;
+    if(exitNeg){ for(let p=-1; p>-h; p--){ if(collides(b,b.fx,p)){ exitNeg=false; break; } } }
+    let exitPos = open.bottom && max===gs-h;
+    if(exitPos){ for(let p=gs-h+1; p<gs; p++){ if(collides(b,b.fx,p)){ exitPos=false; break; } } }
+    return {min,max,exitNeg,exitPos};
+  }
+}
+
+function attachDrag(b){
+  const g = b.node;
+  g.addEventListener('pointerdown', (e)=>{
+    if(animating || b.removed || failed) return;
+    e.preventDefault();
+    g.setPointerCapture(e.pointerId);
+    g.style.cursor = 'grabbing';
+    blockLayer.appendChild(g); // raise above siblings
+
+    const open = openSides(b);
+    const rx = axisRange(b,'x',open);
+    const ry = axisRange(b,'y',open);
+    const startFX = b.fx, startFY = b.fy;
+    const startPX = e.clientX, startPY = e.clientY;
+    let axis = null;
+    let done = false;
+
+    const onMove = (ev)=>{
+      if(done || b.removed) return;
+      const dxPix = ev.clientX - startPX;
+      const dyPix = ev.clientY - startPY;
+      if(!axis){
+        if(Math.abs(dxPix) < 7 && Math.abs(dyPix) < 7) return;
+        axis = Math.abs(dxPix) >= Math.abs(dyPix) ? 'x' : 'y';
+      }
+      if(axis==='x'){
+        let fx = startFX + dxPix/cell;
+        fx = Math.max(rx.min, Math.min(rx.max, fx));
+        b.fx = fx;
+        positionBlock(b);
+        if(rx.exitNeg && fx <= rx.min + 0.05){ done=true; cleanup(); slideOut(b,g,-1,0,1); return; }
+        if(rx.exitPos && fx >= rx.max - 0.05){ done=true; cleanup(); slideOut(b,g, 1,0,1); return; }
+      } else {
+        let fy = startFY + dyPix/cell;
+        fy = Math.max(ry.min, Math.min(ry.max, fy));
+        b.fy = fy;
+        positionBlock(b);
+        if(ry.exitNeg && fy <= ry.min + 0.05){ done=true; cleanup(); slideOut(b,g,0,-1,1); return; }
+        if(ry.exitPos && fy >= ry.max - 0.05){ done=true; cleanup(); slideOut(b,g,0, 1,1); return; }
+      }
+    };
+    const onUp = ()=>{
+      if(done) return;
+      done = true; cleanup();
+      // snap to nearest grid cell within the allowed range
+      if(axis==='x'){
+        b.fx = Math.max(rx.min, Math.min(rx.max, Math.round(b.fx)));
+      } else if(axis==='y'){
+        b.fy = Math.max(ry.min, Math.min(ry.max, Math.round(b.fy)));
+      }
+      if(b.fx!==startFX || b.fy!==startFY){
+        bumpMove();
+      }
+      b.col = b.fx; b.row = b.fy;
+      smoothTo(b);
+      checkFail();
+    };
+    const cleanup = ()=>{
+      g.removeEventListener('pointermove', onMove);
+      g.removeEventListener('pointerup', onUp);
+      g.removeEventListener('pointercancel', onUp);
+      g.style.cursor = 'grab';
+    };
+    g.addEventListener('pointermove', onMove);
+    g.addEventListener('pointerup', onUp);
+    g.addEventListener('pointercancel', onUp);
+  });
+}
+
+/* Slide the block out through the wall and pop it. countMove=1 counts the move. */
+function slideOut(b, g, dx, dy, countMove){
+  if(b.removed) return;
+  animating = true;
+  if(countMove) bumpMove();
+  const t0 = performance.now();
+  let last = t0;
+  const SPEED = 16; // cells per second
+  const stepper = (now)=>{
+    if(b.removed) return;
+    const dt = Math.min(0.05,(now-last)/1000); last = now;
+    b.fx += dx*SPEED*dt; b.fy += dy*SPEED*dt;
+    positionBlock(b);
+    if(fullyOutside(b) || now-t0 > 700){ finishExit(b, g); return; }
+    requestAnimationFrame(stepper);
+  };
+  requestAnimationFrame(stepper);
+}
+
+function fullyOutside(b){
+  const gs = level.gridSize;
+  let minX=99,maxX=-99,minY=99,maxY=-99;
+  for(const [r,c] of b.cells){
+    minX=Math.min(minX,b.fx+c); maxX=Math.max(maxX,b.fx+c+1);
+    minY=Math.min(minY,b.fy+r); maxY=Math.max(maxY,b.fy+r+1);
+  }
+  return maxX<=0 || minX>=gs || maxY<=0 || minY>=gs;
+}
+
+function smoothTo(b){
+  const g = b.node;
+  g.style.transition = 'transform .14s ease';
+  positionBlock(b);
+  setTimeout(()=>{ g.style.transition='none'; }, 170);
+}
+
+function finishExit(b, g){
+  animating = false;
+  if(b.removed) return;
+  b.removed = true;
+  spawnParticles(b);
+  g.remove();
+  animating = false;
+  updateBlocksLeft();
+  checkWin();
+  checkFail();
+}
+
+function spawnParticles(b){
+  const wrap = document.getElementById('board-wrap');
+  const rectW = wrap.getBoundingClientRect();
+  // block centre in wrap coords
+  let sx=0, sy=0, n=0;
+  for(const [r,c] of b.cells){ sx += b.fx+c+0.5; sy += b.fy+r+0.5; n++; }
+  const cx = wallT + (sx/n)*cell, cy = wallT + (sy/n)*cell;
+  const count = 8 + b.cells.length*3;
+  for(let i=0;i<count;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const sz = cell*(0.16+Math.random()*0.18);
+    p.style.width = sz+'px'; p.style.height = sz+'px';
+    p.style.background = Math.random()<0.5 ? b.color.hex : b.color.light;
+    p.style.left = cx+'px'; p.style.top = cy+'px';
+    wrap.appendChild(p);
+    const ang = Math.random()*Math.PI*2;
+    const dist = cell*(0.8+Math.random()*2.2);
+    const rot = (Math.random()*540-270);
+    p.animate([
+      { transform:`translate(-50%,-50%) rotate(0deg) scale(1)`, opacity:1 },
+      { transform:`translate(calc(-50% + ${Math.cos(ang)*dist}px), calc(-50% + ${Math.sin(ang)*dist + cell*0.7}px)) rotate(${rot}deg) scale(.5)`, opacity:0 }
+    ], { duration:520+Math.random()*260, easing:'cubic-bezier(.2,.6,.4,1)' }).onfinish = ()=>p.remove();
+  }
+}
+
+function checkWin(){
+  if(level.blocks.every(b=>b.removed)){
+    const prog = progress[currentDiff];
+    prog.completed[currentLevelNum] = true;
+    if(currentLevelNum+1 > prog.unlocked && currentLevelNum < LEVELS_PER_DIFF)
+      prog.unlocked = currentLevelNum+1;
+    saveProgress();
+    document.getElementById('win-moves').textContent = moves;
+    document.getElementById('btn-win-next').style.display =
+      currentLevelNum < LEVELS_PER_DIFF ? 'block' : 'none';
+    setTimeout(()=>document.getElementById('overlay-win').classList.add('active'), 350);
+  }
+}
+
+/* ---------- nav ---------- */
+document.getElementById('btn-back-home').addEventListener('click', ()=>{ renderHome(); showScreen('home'); });
+document.getElementById('btn-back-levels').addEventListener('click', ()=>{ renderLevelSelect(); showScreen('levels'); });
+document.getElementById('btn-levels-2').addEventListener('click', ()=>{ renderLevelSelect(); showScreen('levels'); });
+document.getElementById('btn-reset').addEventListener('click', ()=>startLevel(currentDiff,currentLevelNum));
+document.getElementById('btn-fail-retry').addEventListener('click', ()=>{
+  document.getElementById('overlay-fail').classList.remove('active');
+  startLevel(currentDiff, currentLevelNum);
+});
+document.getElementById('btn-fail-levels').addEventListener('click', ()=>{
+  document.getElementById('overlay-fail').classList.remove('active');
+  renderLevelSelect(); showScreen('levels');
+});
+document.getElementById('btn-win-levels').addEventListener('click', ()=>{
+  document.getElementById('overlay-win').classList.remove('active');
+  renderLevelSelect(); showScreen('levels');
+});
+document.getElementById('btn-win-next').addEventListener('click', ()=>{
+  document.getElementById('overlay-win').classList.remove('active');
+  if(currentLevelNum < LEVELS_PER_DIFF) startLevel(currentDiff, currentLevelNum+1);
+});
+window.addEventListener('resize', ()=>{
+  if(screens.game.classList.contains('active') && !animating){
+    // rebuild board at new size, preserving state
+    for(const b of level.blocks){ b.col = Math.round(b.fx); b.row = Math.round(b.fy); }
+    buildBoard(); updateBlocksLeft();
+  }
+});
+
+/* ---------- init ---------- */
+(async function init(){
+  await loadProgress();
+  renderHome();
+  showScreen('home');
+})();
+
+})();
+</script>
+</body>
+</html>
