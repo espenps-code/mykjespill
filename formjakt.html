@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Formjakt – del opp brettet!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#8ed8f8; --bg2:#fdf3d8;
+    --ink:#3a2d5c;
+    --card:#fffdf6;
+    --lett:#3fbf7f; --middels:#ff9f3f; --vanskelig:#9b6bf2;
+    --shadow:0 6px 0 rgba(58,45,92,.18);
+    font-size:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; height:100%; overscroll-behavior:none;}
+  html{position:fixed; inset:0; overflow:hidden; width:100%;}
+  body{
+    position:fixed; inset:0; overflow:hidden; width:100%;
+    font-family:'Baloo 2', 'Comic Sans MS', system-ui, sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,.55) 0 60px, transparent 61px),
+      radial-gradient(circle at 85% 20%, rgba(255,255,255,.45) 0 40px, transparent 41px),
+      radial-gradient(circle at 70% 85%, rgba(255,255,255,.4) 0 50px, transparent 51px),
+      linear-gradient(160deg, var(--bg1), var(--bg2) 70%);
+    background-attachment:fixed;
+    min-height:100%;
+    user-select:none; -webkit-user-select:none;
+    touch-action:manipulation;
+  }
+  .screen{
+    max-width:640px; margin:0 auto; padding:16px 16px 60px;
+    display:none; animation:fadeIn .3s ease;
+    height:100dvh; overflow-y:auto; overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .screen.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+
+  /* ---------- Startskjerm ---------- */
+  .logo{
+    text-align:center; margin:24px 0 6px;
+    font-size:3.2rem; font-weight:800; line-height:1;
+    letter-spacing:.5px;
+  }
+  .logo span{display:inline-block; animation:bob 2.4s ease-in-out infinite;}
+  .logo span:nth-child(2n){animation-delay:.2s;}
+  .logo span:nth-child(3n){animation-delay:.4s;}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-6px) rotate(2deg);}}
+  .tagline{text-align:center; font-size:1.1rem; margin:0 0 22px; opacity:.8; font-weight:700;}
+
+  .diff-card{
+    display:flex; align-items:center; gap:14px;
+    width:100%; border:none; cursor:pointer;
+    background:var(--card); border-radius:22px;
+    padding:16px 18px; margin:0 0 14px;
+    box-shadow:var(--shadow);
+    font-family:inherit; color:var(--ink); text-align:left;
+    transition:transform .12s ease;
+  }
+  .diff-card:active{transform:scale(.97) translateY(2px);}
+  .diff-card .blob{
+    width:58px; height:58px; border-radius:18px; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.9rem; color:#fff;
+  }
+  .diff-card.lett .blob{background:var(--lett);}
+  .diff-card.middels .blob{background:var(--middels);}
+  .diff-card.vanskelig .blob{background:var(--vanskelig);}
+  .diff-card h2{margin:0; font-size:1.35rem; font-weight:800;}
+  .diff-card p{margin:2px 0 0; font-size:.9rem; opacity:.7; font-weight:600;}
+  .diff-card .count{margin-left:auto; font-weight:800; font-size:.95rem; opacity:.75; white-space:nowrap;}
+
+  .howto{
+    background:rgba(255,255,255,.7); border-radius:18px;
+    padding:14px 16px; margin-top:18px; font-weight:600; font-size:.95rem;
+  }
+  .howto b{font-weight:800;}
+  .howto ol{margin:8px 0 0; padding-left:22px;}
+  .howto li{margin-bottom:4px;}
+
+  /* ---------- Toppfelt ---------- */
+  .topbar{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .iconbtn{
+    border:none; cursor:pointer; font-family:inherit;
+    background:var(--card); color:var(--ink);
+    width:46px; height:46px; border-radius:15px;
+    font-size:1.3rem; font-weight:800;
+    box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .12s ease;
+  }
+  .iconbtn:active{transform:scale(.92);}
+  .topbar .title{font-size:1.25rem; font-weight:800; flex:1; text-align:center;}
+
+  /* ---------- Brettvelger ---------- */
+  .level-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:6px;}
+  .lvlbtn{
+    aspect-ratio:1; border:none; cursor:pointer; font-family:inherit;
+    border-radius:16px; font-size:1.2rem; font-weight:800;
+    background:var(--card); color:var(--ink);
+    box-shadow:var(--shadow); position:relative;
+    transition:transform .12s ease;
+  }
+  .lvlbtn:active{transform:scale(.92);}
+  .lvlbtn.lockedlvl{
+    opacity:.45; cursor:default; font-size:1rem;
+    box-shadow:0 3px 0 rgba(58,45,92,.12);
+  }
+  .lvlbtn.lockedlvl:active{transform:none;}
+  .lvlbtn.done{color:#fff;}
+  .lvlbtn.done::after{
+    content:"★"; position:absolute; top:-7px; right:-5px;
+    font-size:1rem; color:#ffd23f; text-shadow:0 1px 0 rgba(58,45,92,.4);
+  }
+  .diffband{
+    border-radius:18px; padding:10px 14px; color:#fff; font-weight:800;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:12px; font-size:1.05rem;
+  }
+
+  /* ---------- Spillskjerm ---------- */
+  .bank{
+    background:var(--card); border-radius:20px; padding:12px;
+    box-shadow:var(--shadow); margin-bottom:14px;
+  }
+  .bank h3{margin:0 0 8px; text-align:center; font-size:.95rem; font-weight:800; opacity:.75;}
+  .bank-shapes{display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
+  .shape-card{
+    background:#f3eefc; border-radius:14px; padding:8px;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .15s ease;
+  }
+  .shape-card.pulse{animation:pulseCard .5s ease;}
+  @keyframes pulseCard{0%{transform:scale(1);}40%{transform:scale(1.22) rotate(4deg);}100%{transform:scale(1);}}
+  .shape-mini{display:grid; gap:3px;}
+  .shape-mini .m{width:16px; height:16px; border-radius:4px;}
+  .shape-mini .m.on{background:var(--ink); opacity:.85;}
+  .shape-mini .m.off{background:transparent;}
+
+  .board-wrap{
+    background:var(--card); border-radius:24px; padding:14px;
+    box-shadow:var(--shadow);
+  }
+  #board{
+    display:grid; gap:0; margin:0 auto; touch-action:none;
+    width:min(88vw, 540px);
+    border:4px solid #6b5aa3; border-radius:14px; overflow:hidden;
+    background:#fdfaf1;
+  }
+  .cell{
+    position:relative;
+    aspect-ratio:1;
+    background:#fdfaf1;
+    border:2px solid #b9aede;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .12s ease;
+  }
+  .cell.alt{background:#f1ebfa;}
+  .cell.paint{
+    background:#ffe9a8 !important;
+    border-color:#e0a93f;
+  }
+  .board-wrap.shake{animation:shake .35s ease;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-8px);}
+    40%{transform:translateX(8px);}
+    60%{transform:translateX(-6px);}
+    80%{transform:translateX(6px);}
+  }
+
+  .game-actions{display:flex; gap:10px; margin-top:14px;}
+  .bigbtn{
+    flex:1; border:none; cursor:pointer; font-family:inherit;
+    background:var(--card); color:var(--ink);
+    border-radius:16px; padding:12px; font-size:1rem; font-weight:800;
+    box-shadow:var(--shadow); transition:transform .12s ease;
+  }
+  .bigbtn:active{transform:scale(.95);}
+  .hintline{text-align:center; margin-top:12px; font-weight:700; font-size:.9rem; opacity:.65;}
+
+  /* ---------- Seier ---------- */
+  #winOverlay{
+    position:fixed; inset:0; display:none;
+    align-items:center; justify-content:center;
+    background:rgba(58,45,92,.45); z-index:50; padding:20px;
+  }
+  #winOverlay.show{display:flex;}
+  .win-card{
+    background:var(--card); border-radius:28px; padding:28px 24px;
+    text-align:center; max-width:340px; width:100%;
+    box-shadow:0 10px 0 rgba(58,45,92,.25);
+    animation:popIn .35s cubic-bezier(.2,1.6,.4,1);
+  }
+  @keyframes popIn{from{transform:scale(.6); opacity:0;} to{transform:scale(1); opacity:1;}}
+  .win-card .stars{font-size:2.6rem; letter-spacing:6px; margin-bottom:6px;}
+  .win-card h2{margin:0 0 4px; font-size:1.7rem; font-weight:800;}
+  .win-card p{margin:0 0 18px; font-weight:700; opacity:.7;}
+  .win-card .bigbtn{width:100%; margin-bottom:10px;}
+  .win-card .bigbtn.primary{background:var(--lett); color:#fff;}
+
+  #confetti{position:fixed; inset:0; pointer-events:none; z-index:60;}
+
+  .mute-float{position:fixed; top:14px; right:14px; z-index:40;}
+  @media (min-width:700px){
+    .cell{cursor:pointer;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======== START ======== -->
+<div class="screen active" id="screenStart">
+  <h1 class="logo" aria-label="Formjakt">
+    <span style="color:#ff6b6b">F</span><span style="color:#ff9f3f">o</span><span style="color:#ffd23f">r</span><span style="color:#3fbf7f">m</span><span style="color:#4aa8ff">j</span><span style="color:#9b6bf2">a</span><span style="color:#ff6b9d">k</span><span style="color:#3fbf7f">t</span>
+  </h1>
+  <p class="tagline">Del opp brettet med figurene! 🧩</p>
+
+  <button class="diff-card lett" data-diff="lett">
+    <div class="blob">🐣</div>
+    <div><h2>Lett</h2><p>Små brett, enkle figurer</p></div>
+    <div class="count" id="countLett">0/20 ★</div>
+  </button>
+  <button class="diff-card middels" data-diff="middels">
+    <div class="blob">🦊</div>
+    <div><h2>Middels</h2><p>Større brett, flere figurer</p></div>
+    <div class="count" id="countMiddels">0/20 ★</div>
+  </button>
+  <button class="diff-card vanskelig" data-diff="vanskelig">
+    <div class="blob">🐉</div>
+    <div><h2>Vanskelig</h2><p>Store brett, lure figurer</p></div>
+    <div class="count" id="countVanskelig">0/20 ★</div>
+  </button>
+
+  <div class="howto">
+    <b>Slik spiller du:</b>
+    <ol>
+      <li>Se på figurene øverst – det er formene du kan bruke.</li>
+      <li>Tegn over rutene med fingeren for å lage en form. Du kan snu formene!</li>
+      <li>Fyll hele brettet – ingen ruter til overs. Trykk på en farget form for å fjerne den.</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ======== BRETTVELGER ======== -->
+<div class="screen" id="screenLevels">
+  <div class="topbar">
+    <button class="iconbtn" id="btnBackStart" aria-label="Tilbake">←</button>
+    <div class="title" id="levelsTitle">Velg brett</div>
+    <div style="width:46px"></div>
+  </div>
+  <div class="diffband" id="diffBand"><span id="diffBandName"></span><span id="diffBandStars"></span></div>
+  <div class="level-grid" id="levelGrid"></div>
+</div>
+
+<!-- ======== SPILL ======== -->
+<div class="screen" id="screenGame">
+  <div class="topbar">
+    <button class="iconbtn" id="btnBackLevels" aria-label="Tilbake">←</button>
+    <div class="title" id="gameTitle">Brett 1</div>
+    <button class="iconbtn" id="btnRestart" aria-label="Start brettet på nytt">↺</button>
+  </div>
+
+  <div class="bank">
+    <h3>Du kan bruke disse figurene (snu dem som du vil!)</h3>
+    <div class="bank-shapes" id="bankShapes"></div>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <div id="board"></div>
+  </div>
+
+  <div class="game-actions">
+    <button class="bigbtn" id="btnClear">🧽 Visk ut alt</button>
+  </div>
+  <div class="hintline">Tegn over rutene – slipp for å sjekke formen!</div>
+</div>
+
+<!-- ======== SEIER ======== -->
+<div id="winOverlay">
+  <div class="win-card">
+    <div class="stars">⭐⭐⭐</div>
+    <h2>Hurra!</h2>
+    <p id="winText">Du klarte brettet!</p>
+    <button class="bigbtn primary" id="btnNext">Neste brett ➜</button>
+    <button class="bigbtn" id="btnWinLevels">Velg brett</button>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+<button class="iconbtn mute-float" id="btnMute" aria-label="Lyd av/på">🔊</button>
+
+<script>
+"use strict";
+
+/* =========================================================
+   FORMJAKT – oppdelingspuslespill
+   Brettet deles i områder; hvert område må matche en figur
+   fra figurbanken (rotasjon + speiling er lov).
+   Brettene genereres ved å FLISLEGGE brettet med figurene,
+   så alle brett er garantert løsbare.
+========================================================= */
+
+/* ---------- Seedet tilfeldighet ---------- */
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shuffled(arr, rnd){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(rnd()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* ---------- Figurdefinisjoner (r,c) ---------- */
+const SHAPES = {
+  D2 : [[0,0],[0,1]],                         // domino
+  I3 : [[0,0],[0,1],[0,2]],                   // strek 3
+  L3 : [[0,0],[1,0],[1,1]],                   // hjørne
+  O4 : [[0,0],[0,1],[1,0],[1,1]],             // kvadrat
+  I4 : [[0,0],[0,1],[0,2],[0,3]],             // strek 4
+  L4 : [[0,0],[1,0],[2,0],[2,1]],             // L
+  T4 : [[0,0],[0,1],[0,2],[1,1]],             // T
+  S4 : [[0,1],[0,2],[1,0],[1,1]],             // S
+  P5 : [[0,0],[0,1],[1,0],[1,1],[2,0]],       // P-pentomino
+  L5 : [[0,0],[1,0],[2,0],[3,0],[3,1]],       // L-pentomino
+  U5 : [[0,0],[0,2],[1,0],[1,1],[1,2]],       // U-pentomino
+  T5 : [[0,0],[0,1],[0,2],[1,1],[2,1]]        // T-pentomino
+};
+
+function normalize(cells){
+  let mr = Infinity, mc = Infinity;
+  for(const [r,c] of cells){ if(r<mr) mr=r; if(c<mc) mc=c; }
+  const out = cells.map(([r,c]) => [r-mr, c-mc]);
+  out.sort((a,b)=> a[0]-b[0] || a[1]-b[1]);
+  return out;
+}
+function keyOf(cells){ return normalize(cells).map(c=>c.join(",")).join(";"); }
+function rot(cells){ return cells.map(([r,c]) => [c, -r]); }
+function flip(cells){ return cells.map(([r,c]) => [r, -c]); }
+
+/* Alle varianter (rotasjoner + speilinger), deduplisert */
+const VARIANTS = {};
+const SHAPE_KEYSETS = {};
+for(const name in SHAPES){
+  const seen = new Map();
+  let cur = SHAPES[name];
+  for(let f=0; f<2; f++){
+    let c = f ? flip(cur) : cur;
+    for(let r=0; r<4; r++){
+      const n = normalize(c);
+      seen.set(keyOf(n), n);
+      c = rot(c);
+    }
+  }
+  VARIANTS[name] = [...seen.values()];
+  SHAPE_KEYSETS[name] = new Set([...seen.keys()]);
+}
+
+/* ---------- Vanskelighetsgrader ---------- */
+const DIFFS = {
+  lett:      { name:"Lett",      color:"var(--lett)",      emoji:"🐣", rows:4, cols:4,
+               pool:["D2","I3","L3","O4"], bankMin:2, bankMax:3, seedBase:1000 },
+  middels:   { name:"Middels",   color:"var(--middels)",   emoji:"🦊", rows:6, cols:6,
+               pool:["O4","I4","L4","T4","S4","L3","I3"], bankMin:3, bankMax:3, seedBase:2000 },
+  vanskelig: { name:"Vanskelig", color:"var(--vanskelig)", emoji:"🐉", rows:8, cols:8,
+               pool:["I4","L4","T4","S4","P5","L5","U5","T5"], bankMin:3, bankMax:4, seedBase:3000 }
+};
+const LEVELS_PER_DIFF = 20;
+
+/* ---------- Kan arealet dekkes av figurstørrelsene? ---------- */
+function areaFeasible(area, sizes){
+  const dp = new Array(area+1).fill(false);
+  dp[0] = true;
+  for(let a=1; a<=area; a++){
+    for(const s of sizes){ if(a>=s && dp[a-s]){ dp[a]=true; break; } }
+  }
+  return dp[area];
+}
+
+/* ---------- Flislegging med tilbakesporing ---------- */
+function tileBoard(rows, cols, bank, rnd){
+  const grid = new Array(rows*cols).fill(-1);
+  const placements = [];
+  let nodes = 0;
+  const NODE_CAP = 250000;
+
+  const allVariants = [];
+  for(const name of bank){
+    for(const v of VARIANTS[name]) allVariants.push({name, cells:v});
+  }
+
+  function firstEmpty(){
+    for(let i=0;i<grid.length;i++) if(grid[i]===-1) return i;
+    return -1;
+  }
+
+  function solve(){
+    if(++nodes > NODE_CAP) return false;
+    const idx = firstEmpty();
+    if(idx === -1) return true;
+    const r0 = Math.floor(idx/cols), c0 = idx % cols;
+
+    for(const v of shuffled(allVariants, rnd)){
+      // ankercelle = første celle i lese-rekkefølge
+      const [ar, ac] = v.cells[0];
+      const dr = r0 - ar, dc = c0 - ac;
+      let ok = true;
+      for(const [r,c] of v.cells){
+        const rr = r+dr, cc = c+dc;
+        if(rr<0 || rr>=rows || cc<0 || cc>=cols || grid[rr*cols+cc] !== -1){ ok=false; break; }
+      }
+      if(!ok) continue;
+      const id = placements.length;
+      for(const [r,c] of v.cells) grid[(r+dr)*cols + (c+dc)] = id;
+      placements.push(v.name);
+      if(solve()) return true;
+      placements.pop();
+      for(const [r,c] of v.cells) grid[(r+dr)*cols + (c+dc)] = -1;
+    }
+    return false;
+  }
+
+  return solve() ? {grid, pieces:placements.length} : null;
+}
+
+/* ---------- Generer et brett (deterministisk pr. nivå) ---------- */
+function generateLevel(diffKey, levelIndex){
+  const D = DIFFS[diffKey];
+  for(let attempt=0; attempt<40; attempt++){
+    const rnd = mulberry32(D.seedBase + levelIndex*37 + attempt*7919);
+    const bankSize = D.bankMin + Math.floor(rnd()*(D.bankMax - D.bankMin + 1));
+    const bank = shuffled(D.pool, rnd).slice(0, bankSize);
+    const sizes = bank.map(n => SHAPES[n].length);
+    if(!areaFeasible(D.rows*D.cols, sizes)) continue;
+    const tiled = tileBoard(D.rows, D.cols, bank, rnd);
+    if(tiled) return { rows:D.rows, cols:D.cols, bank, pieces:tiled.pieces };
+  }
+  // nødløsning – skal i praksis aldri skje
+  return { rows:D.rows, cols:D.cols, bank:["O4","D2"], pieces:(D.rows*D.cols)/2 };
+}
+
+/* ---------- Lyd (Web Audio, ingen filer) ---------- */
+let audioCtx = null;
+let muted = false;
+try{ muted = localStorage.getItem("formjakt_mute") === "1"; }catch(e){}
+
+function ac(){
+  if(!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(AC) audioCtx = new AC();
+  }
+  if(audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+function tone(freq, dur, type, vol, when, slideTo){
+  const ctx = ac(); if(!ctx || muted) return;
+  const t0 = ctx.currentTime + (when||0);
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type || "sine";
+  o.frequency.setValueAtTime(freq, t0);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0+dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol||0.2, t0+0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  o.connect(g).connect(ctx.destination);
+  o.start(t0); o.stop(t0+dur+0.05);
+}
+const SFX = {
+  paint(n){ tone(340 + n*45, .09, "sine", .12); },
+  lock(){ tone(523,.1,"triangle",.2); tone(659,.1,"triangle",.2,.08); tone(784,.16,"triangle",.22,.16); },
+  wrong(){ tone(200,.18,"sawtooth",.12,0,120); },
+  remove(){ tone(500,.1,"sine",.15,0,220); },
+  click(){ tone(600,.06,"square",.07); },
+  win(){
+    const notes=[523,659,784,1047,784,1047,1319];
+    notes.forEach((f,i)=> tone(f,.22,"triangle",.22,i*.13));
+    tone(262,1.1,"sine",.12,0);
+  }
+};
+
+/* ---------- Fremdrift ---------- */
+let progress = { lett:[], middels:[], vanskelig:[] };
+try{
+  const raw = localStorage.getItem("formjakt_v1");
+  if(raw){ const p = JSON.parse(raw); for(const k in progress) if(Array.isArray(p[k])) progress[k]=p[k]; }
+}catch(e){}
+function saveProgress(){
+  try{ localStorage.setItem("formjakt_v1", JSON.stringify(progress)); }catch(e){}
+}
+function doneCount(diff){ return progress[diff].filter(Boolean).length; }
+
+/* ---------- Spilltilstand ---------- */
+const REGION_COLORS = [
+  "#ff6b6b","#4aa8ff","#3fbf7f","#ffd23f","#9b6bf2",
+  "#ff9f3f","#ff6b9d","#38c9c9","#a3d94f","#f27ad9",
+  "#7f8cff","#f2b25c","#5ccf9d","#e05c5c","#5cb8f2","#c98cf2"
+];
+let state = null; // {diff, level, rows, cols, bank, owner[], regions:{id:{cells,color,shape}}, nextRegionId, painting, paintCells}
+
+/* ---------- Skjermbytte ---------- */
+const screens = {
+  start: document.getElementById("screenStart"),
+  levels: document.getElementById("screenLevels"),
+  game: document.getElementById("screenGame")
+};
+function show(name){
+  for(const k in screens) screens[k].classList.toggle("active", k===name);
+  window.scrollTo(0,0);
+}
+
+/* ---------- Startskjerm ---------- */
+function refreshStartCounts(){
+  document.getElementById("countLett").textContent = doneCount("lett")+"/20 ★";
+  document.getElementById("countMiddels").textContent = doneCount("middels")+"/20 ★";
+  document.getElementById("countVanskelig").textContent = doneCount("vanskelig")+"/20 ★";
+}
+document.querySelectorAll(".diff-card").forEach(btn=>{
+  btn.addEventListener("click", ()=>{ SFX.click(); openLevels(btn.dataset.diff); });
+});
+
+/* ---------- Brettvelger ---------- */
+let currentDiff = "lett";
+function openLevels(diff){
+  currentDiff = diff;
+  const D = DIFFS[diff];
+  document.getElementById("diffBandName").textContent = D.emoji + " " + D.name;
+  document.getElementById("diffBandStars").textContent = doneCount(diff) + "/20 ★";
+  document.getElementById("diffBand").style.background = D.color;
+  const grid = document.getElementById("levelGrid");
+  grid.innerHTML = "";
+  for(let i=0;i<LEVELS_PER_DIFF;i++){
+    const unlocked = i === 0 || !!progress[diff][i-1];
+    const b = document.createElement("button");
+    b.className = "lvlbtn" + (progress[diff][i] ? " done" : "") + (unlocked ? "" : " lockedlvl");
+    if(progress[diff][i]) b.style.background = D.color;
+    if(unlocked){
+      b.textContent = i+1;
+      b.addEventListener("click", ()=>{ SFX.click(); startLevel(diff, i); });
+    }else{
+      b.textContent = "🔒";
+      b.disabled = true;
+    }
+    grid.appendChild(b);
+  }
+  show("levels");
+}
+document.getElementById("btnBackStart").addEventListener("click", ()=>{ SFX.click(); refreshStartCounts(); show("start"); });
+
+/* ---------- Start et brett ---------- */
+function startLevel(diff, level){
+  const gen = generateLevel(diff, level);
+  state = {
+    diff, level,
+    rows: gen.rows, cols: gen.cols,
+    bank: gen.bank,
+    owner: new Array(gen.rows*gen.cols).fill(null),
+    regions: {},
+    nextRegionId: 1,
+    colorIdx: 0,
+    painting: false,
+    paintCells: new Set()
+  };
+  document.getElementById("gameTitle").textContent =
+    DIFFS[diff].emoji + " Brett " + (level+1);
+  renderBank();
+  renderBoard();
+  show("game");
+}
+
+/* ---------- Figurbank-UI ---------- */
+function renderBank(){
+  const wrap = document.getElementById("bankShapes");
+  wrap.innerHTML = "";
+  for(const name of state.bank){
+    const cells = normalize(SHAPES[name]);
+    let maxR=0, maxC=0;
+    for(const [r,c] of cells){ if(r>maxR)maxR=r; if(c>maxC)maxC=c; }
+    const card = document.createElement("div");
+    card.className = "shape-card";
+    card.dataset.shape = name;
+    const mini = document.createElement("div");
+    mini.className = "shape-mini";
+    mini.style.gridTemplateColumns = `repeat(${maxC+1}, 16px)`;
+    const set = new Set(cells.map(c=>c.join(",")));
+    for(let r=0;r<=maxR;r++){
+      for(let c=0;c<=maxC;c++){
+        const m = document.createElement("div");
+        m.className = "m " + (set.has(r+","+c) ? "on" : "off");
+        mini.appendChild(m);
+      }
+    }
+    card.appendChild(mini);
+    wrap.appendChild(card);
+  }
+}
+function pulseShapeCard(name){
+  const card = document.querySelector(`.shape-card[data-shape="${name}"]`);
+  if(!card) return;
+  card.classList.remove("pulse");
+  void card.offsetWidth;
+  card.classList.add("pulse");
+}
+
+/* ---------- Brett-UI ---------- */
+const boardEl = document.getElementById("board");
+function renderBoard(){
+  boardEl.innerHTML = "";
+  boardEl.style.gridTemplateColumns = "repeat(" + state.cols + ", 1fr)";
+  for(let i=0;i<state.rows*state.cols;i++){
+    const d = document.createElement("div");
+    const r = Math.floor(i/state.cols), c = i%state.cols;
+    d.className = "cell" + ((r+c)%2 ? " alt" : "");
+    d.dataset.i = i;
+    boardEl.appendChild(d);
+  }
+  repaintAll();
+}
+function neighborsSameRegion(i, regionId){
+  const r = Math.floor(i/state.cols), c = i%state.cols;
+  return {
+    top:    r>0             && state.owner[i-state.cols]===regionId,
+    bottom: r<state.rows-1  && state.owner[i+state.cols]===regionId,
+    left:   c>0             && state.owner[i-1]===regionId,
+    right:  c<state.cols-1  && state.owner[i+1]===regionId
+  };
+}
+function repaintCell(i){
+  const el = boardEl.children[i];
+  const regionId = state.owner[i];
+  el.classList.toggle("paint", state.paintCells.has(i));
+  el.classList.toggle("locked", regionId !== null);
+  if(regionId !== null){
+    const reg = state.regions[regionId];
+    const nb = neighborsSameRegion(i, regionId);
+    el.style.background = reg.color;
+    el.style.borderStyle = "solid";
+    el.style.borderTopColor    = nb.top    ? reg.color : "rgba(58,45,92,.45)";
+    el.style.borderBottomColor = nb.bottom ? reg.color : "rgba(58,45,92,.45)";
+    el.style.borderLeftColor   = nb.left   ? reg.color : "rgba(58,45,92,.45)";
+    el.style.borderRightColor  = nb.right  ? reg.color : "rgba(58,45,92,.45)";
+  }else{
+    el.style.background = "";
+    el.style.borderStyle = "";
+    el.style.borderTopColor = el.style.borderBottomColor =
+    el.style.borderLeftColor = el.style.borderRightColor = "";
+  }
+}
+function repaintAll(){
+  for(let i=0;i<state.rows*state.cols;i++) repaintCell(i);
+}
+
+/* ---------- Tegnelogikk ---------- */
+function cellFromEvent(ev){
+  const t = document.elementFromPoint(ev.clientX, ev.clientY);
+  if(t && t.classList && t.classList.contains("cell")) return parseInt(t.dataset.i, 10);
+  return null;
+}
+function isAdjacentToPaint(i){
+  if(state.paintCells.size === 0) return true;
+  const r = Math.floor(i/state.cols), c = i%state.cols;
+  for(const j of state.paintCells){
+    const rr = Math.floor(j/state.cols), cc = j%state.cols;
+    if(Math.abs(rr-r)+Math.abs(cc-c) === 1) return true;
+  }
+  return false;
+}
+function addPaint(i){
+  if(state.owner[i] !== null || state.paintCells.has(i)) return;
+  if(!isAdjacentToPaint(i)) return;
+  state.paintCells.add(i);
+  SFX.paint(state.paintCells.size);
+  repaintCell(i);
+}
+
+boardEl.addEventListener("pointerdown", ev=>{
+  ev.preventDefault();
+  const i = cellFromEvent(ev);
+  if(i === null || !state) return;
+  ac();
+  if(state.owner[i] !== null){ removeRegion(state.owner[i]); return; }
+  state.painting = true;
+  state.paintCells = new Set();
+  addPaint(i);
+});
+boardEl.addEventListener("pointermove", ev=>{
+  if(!state || !state.painting) return;
+  ev.preventDefault();
+  const i = cellFromEvent(ev);
+  if(i !== null) addPaint(i);
+});
+function endPaint(){
+  if(!state || !state.painting) return;
+  state.painting = false;
+  evaluatePaint();
+}
+window.addEventListener("pointerup", endPaint);
+window.addEventListener("pointercancel", endPaint);
+
+/* ---------- Sjekk tegnet område ---------- */
+function evaluatePaint(){
+  const cells = [...state.paintCells];
+  state.paintCells = new Set();
+  if(cells.length === 0) return;
+
+  const coords = cells.map(i => [Math.floor(i/state.cols), i%state.cols]);
+  const key = keyOf(coords);
+  let matched = null;
+  for(const name of state.bank){
+    if(SHAPE_KEYSETS[name].has(key)){ matched = name; break; }
+  }
+
+  if(matched){
+    const id = state.nextRegionId++;
+    const color = REGION_COLORS[state.colorIdx++ % REGION_COLORS.length];
+    state.regions[id] = { cells, color, shape: matched };
+    for(const i of cells) state.owner[i] = id;
+    for(const i of cells) repaintCell(i);
+    // naboceller kan trenge oppdaterte kanter
+    cells.forEach(i => {
+      [i-1,i+1,i-state.cols,i+state.cols].forEach(j=>{
+        if(j>=0 && j<state.owner.length && state.owner[j]!==null) repaintCell(j);
+      });
+    });
+    SFX.lock();
+    pulseShapeCard(matched);
+    checkWin();
+  }else{
+    cells.forEach(i => repaintCell(i));
+    const wrap = document.getElementById("boardWrap");
+    wrap.classList.remove("shake");
+    void wrap.offsetWidth;
+    wrap.classList.add("shake");
+    SFX.wrong();
+  }
+}
+function removeRegion(id){
+  const reg = state.regions[id];
+  if(!reg) return;
+  for(const i of reg.cells) state.owner[i] = null;
+  delete state.regions[id];
+  for(const i of reg.cells) repaintCell(i);
+  SFX.remove();
+}
+
+/* ---------- Seier ---------- */
+function checkWin(){
+  if(state.owner.some(o => o === null)) return;
+  progress[state.diff][state.level] = true;
+  saveProgress();
+  const pieces = Object.keys(state.regions).length;
+  document.getElementById("winText").textContent =
+    "Du fylte brettet med " + pieces + " figurer!";
+  document.getElementById("winOverlay").classList.add("show");
+  SFX.win();
+  launchConfetti();
+}
+document.getElementById("btnNext").addEventListener("click", ()=>{
+  SFX.click();
+  document.getElementById("winOverlay").classList.remove("show");
+  const next = state.level + 1;
+  if(next < LEVELS_PER_DIFF) startLevel(state.diff, next);
+  else openLevels(state.diff);
+});
+document.getElementById("btnWinLevels").addEventListener("click", ()=>{
+  SFX.click();
+  document.getElementById("winOverlay").classList.remove("show");
+  openLevels(state.diff);
+});
+
+/* ---------- Knapper ---------- */
+document.getElementById("btnBackLevels").addEventListener("click", ()=>{
+  SFX.click(); openLevels(state ? state.diff : currentDiff);
+});
+document.getElementById("btnRestart").addEventListener("click", ()=>{
+  SFX.click(); if(state) startLevel(state.diff, state.level);
+});
+document.getElementById("btnClear").addEventListener("click", ()=>{
+  if(!state) return;
+  SFX.remove();
+  state.owner.fill(null);
+  state.regions = {};
+  state.paintCells = new Set();
+  repaintAll();
+});
+const btnMute = document.getElementById("btnMute");
+function refreshMute(){ btnMute.textContent = muted ? "🔇" : "🔊"; }
+btnMute.addEventListener("click", ()=>{
+  muted = !muted;
+  try{ localStorage.setItem("formjakt_mute", muted ? "1" : "0"); }catch(e){}
+  refreshMute();
+  if(!muted) SFX.click();
+});
+refreshMute();
+
+// Hindre at berøring på brettet drar/lukker vinduet
+document.getElementById("boardWrap").addEventListener("touchmove", ev=>{
+  ev.preventDefault();
+}, {passive:false});
+
+/* ---------- Konfetti ---------- */
+const confCanvas = document.getElementById("confetti");
+const confCtx = confCanvas.getContext("2d");
+let confParticles = [], confRunning = false;
+function launchConfetti(){
+  confCanvas.width = window.innerWidth;
+  confCanvas.height = window.innerHeight;
+  confParticles = [];
+  for(let i=0;i<130;i++){
+    confParticles.push({
+      x: Math.random()*confCanvas.width,
+      y: -20 - Math.random()*confCanvas.height*0.4,
+      vx: (Math.random()-0.5)*2.4,
+      vy: 2 + Math.random()*3.5,
+      size: 6 + Math.random()*7,
+      rot: Math.random()*Math.PI,
+      vr: (Math.random()-0.5)*0.25,
+      color: REGION_COLORS[Math.floor(Math.random()*REGION_COLORS.length)]
+    });
+  }
+  if(!confRunning){ confRunning = true; requestAnimationFrame(confTick); }
+}
+function confTick(){
+  confCtx.clearRect(0,0,confCanvas.width,confCanvas.height);
+  let alive = false;
+  for(const p of confParticles){
+    p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+    if(p.y < confCanvas.height + 30){
+      alive = true;
+      confCtx.save();
+      confCtx.translate(p.x, p.y);
+      confCtx.rotate(p.rot);
+      confCtx.fillStyle = p.color;
+      confCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+      confCtx.restore();
+    }
+  }
+  if(alive) requestAnimationFrame(confTick);
+  else { confRunning = false; confCtx.clearRect(0,0,confCanvas.width,confCanvas.height); }
+}
+
+refreshStartCounts();
+</script>
+</body>
+</html>
