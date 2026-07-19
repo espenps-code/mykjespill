@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Myntopol – Myntland-brettspillet</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap');
+
+:root{
+  --blue:#1a5fa5; --blue-light:#dbeafe; --blue-dark:#1e0f52;
+  --green:#1D9E75; --green-light:#E1F5EE; --green-dark:#085041;
+  --amber:#EF9F27; --amber-light:#FAEEDA; --amber-dark:#d4890f;
+  --coral:#D85A30; --coral-light:#FAECE7;
+  --purple:#534AB7; --purple-light:#EEEDFE;
+  --bg:#F7F9F7; --white:#fff; --text:#1a2e1a; --muted:#5a7a5a; --border:#c8dfc8;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%; overflow:hidden;}
+body{font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);}
+h1,h2,h3,.fredoka{font-family:'Fredoka One',cursive; font-weight:400;}
+
+#scene{position:fixed; inset:0; z-index:0;}
+#scene canvas{display:block;}
+
+/* ---------- Toppstripe ---------- */
+#topbar{position:fixed; top:0; left:0; right:0; z-index:10; display:flex; align-items:center;
+  justify-content:space-between; padding:10px 16px; pointer-events:none;}
+#topbar > *{pointer-events:auto;}
+#logo{font-family:'Fredoka One',cursive; font-size:1.6rem; color:var(--blue-dark);
+  background:var(--white); padding:6px 18px; border-radius:16px; box-shadow:0 3px 0 var(--border);}
+#logo span{color:var(--amber);}
+#goalbox{background:var(--white); border-radius:16px; padding:8px 16px; box-shadow:0 3px 0 var(--border); min-width:230px;}
+#goalbox .gtitle{font-weight:800; font-size:.85rem; color:var(--muted);}
+#goalmeter{height:14px; background:var(--green-light); border-radius:7px; margin-top:4px; overflow:hidden;}
+#goalfill{height:100%; width:0%; background:var(--green); border-radius:7px; transition:width .6s;}
+#goaltext{font-weight:800; font-size:.85rem; margin-top:3px;}
+#targetinfo{background:var(--white); border-radius:16px; padding:8px 16px; box-shadow:0 3px 0 var(--border);
+  font-weight:900; color:var(--blue-dark);}
+
+/* ---------- Spillerpaneler ---------- */
+#players{position:fixed; left:14px; top:72px; z-index:10; display:flex; flex-direction:column; gap:8px; width:215px;}
+.pcard{background:var(--white); border-radius:14px; padding:8px 12px; box-shadow:0 3px 0 var(--border);
+  border:3px solid transparent; transition:border .3s, transform .3s;}
+.pcard.active{border-color:var(--amber); transform:scale(1.04); box-shadow:0 4px 14px rgba(239,159,39,.4);}
+.pcard .prow1{display:flex; align-items:center; gap:8px;}
+.pcard .pavatar{font-size:1.5rem;}
+.pcard .pname{font-weight:900; font-size:1.05rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.pcard .pdot{width:14px; height:14px; border-radius:50%;}
+.pcard .prow2{display:flex; gap:10px; font-size:.85rem; font-weight:700; color:var(--muted); flex-wrap:wrap;}
+.pcard .prow2 b{color:var(--text);}
+.pcard .pjobs{font-size:.78rem; color:var(--muted); margin-top:2px; min-height:1em;}
+.pcard .pdebt{color:var(--coral); font-weight:800; font-size:.8rem;}
+
+#log{position:fixed; left:14px; bottom:14px; z-index:10; width:230px; background:rgba(255,255,255,.92);
+  border-radius:14px; padding:8px 12px; box-shadow:0 3px 0 var(--border); font-size:.78rem; font-weight:600;}
+#log .ltitle{font-weight:900; color:var(--muted); font-size:.75rem; margin-bottom:2px;}
+#log div{padding:1px 0; border-top:1px dashed var(--border);}
+#log div:first-of-type{border-top:none;}
+
+/* ---------- Handlingslinje ---------- */
+#actionbar{position:fixed; bottom:14px; left:50%; transform:translateX(-50%); z-index:10;
+  background:var(--white); border-radius:20px; padding:10px 20px; box-shadow:0 4px 0 var(--border);
+  display:flex; align-items:center; gap:16px;}
+#turnchip{display:flex; align-items:center; gap:8px; font-weight:900; font-size:1.1rem;}
+#turnchip .tavatar{font-size:1.6rem;}
+#rollbtn{font-family:'Fredoka One',cursive; font-size:1.25rem; background:var(--green); color:#fff;
+  border:none; border-radius:16px; padding:12px 26px; cursor:pointer; box-shadow:0 4px 0 var(--green-dark);
+  transition:transform .1s;}
+#rollbtn:hover:not(:disabled){transform:translateY(-2px);}
+#rollbtn:disabled{background:#b9cfc4; box-shadow:0 4px 0 #93a99e; cursor:not-allowed;}
+#camBtn{font-size:1.3rem; background:var(--bg); border:2px solid var(--border); border-radius:12px;
+  padding:8px 12px; cursor:pointer; box-shadow:0 3px 0 var(--border); transition:transform .1s;}
+#camBtn:hover{transform:translateY(-2px);}
+#hint{font-weight:700; color:var(--muted); max-width:240px; font-size:.85rem;}
+
+/* ---------- Modal ---------- */
+#modalwrap{position:fixed; inset:0; z-index:20; background:rgba(30,15,82,.45); display:none;
+  align-items:center; justify-content:center; padding:16px;}
+#modalwrap.show{display:flex;}
+#modal{background:var(--white); border-radius:22px; padding:24px; max-width:440px; width:100%;
+  box-shadow:0 10px 40px rgba(0,0,0,.3); text-align:center; max-height:88vh; overflow-y:auto;
+  animation:pop .25s;}
+@keyframes pop{from{transform:scale(.85); opacity:0;} to{transform:scale(1); opacity:1;}}
+#modal .memoji{font-size:3rem;}
+#modal h2{color:var(--blue-dark); font-size:1.5rem; margin:6px 0 10px;}
+#modal .mbody{font-size:1.05rem; font-weight:600; margin-bottom:16px; line-height:1.45;}
+#modal .mbody .big{font-size:1.3rem; font-weight:900;}
+.mbtns{display:flex; flex-direction:column; gap:10px;}
+.btn{font-family:'Nunito',sans-serif; font-weight:900; font-size:1.05rem; border:none; border-radius:14px;
+  padding:13px 18px; cursor:pointer; transition:transform .1s;}
+.btn:hover{transform:translateY(-2px);}
+.btn-green{background:var(--green); color:#fff; box-shadow:0 3px 0 var(--green-dark);}
+.btn-blue{background:var(--blue); color:#fff; box-shadow:0 3px 0 var(--blue-dark);}
+.btn-amber{background:var(--amber); color:#fff; box-shadow:0 3px 0 var(--amber-dark);}
+.btn-ghost{background:var(--bg); color:var(--text); border:2px solid var(--border); box-shadow:0 3px 0 var(--border);}
+.btn:disabled{opacity:.45; cursor:not-allowed; transform:none;}
+.quizopt{text-align:left;}
+.quizopt.correct{background:var(--green); color:#fff;}
+.quizopt.wrong{background:var(--coral); color:#fff;}
+
+/* ---------- Oppsett-skjerm (samme mal som Myntstigen/Myntjakten) ---------- */
+#setup{position:fixed; inset:0; z-index:30; background:var(--bg); overflow-y:auto;}
+#setup.hidden{display:none;}
+.topnav{background:var(--white); border-bottom:1px solid var(--border); padding:.85rem 1.5rem; position:sticky; top:0; z-index:100;}
+.topnav-inner{max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center;}
+.topnav-logo{font-family:'Fredoka One',cursive; font-size:1.5rem; color:var(--blue-dark); text-decoration:none;}
+.topnav-back{display:inline-flex; align-items:center; gap:6px; color:var(--muted); text-decoration:none; font-weight:700; font-size:.95rem;}
+.topnav-back:hover{color:var(--blue-dark);}
+.hero{background:linear-gradient(160deg,var(--blue-dark),#1a6648,var(--green)); color:#fff; padding:2rem 1.5rem 1.5rem; text-align:center; position:relative; overflow:hidden; margin-bottom:24px;}
+
+  /* Snurrende mynter i hero-bakgrunnen (bak innholdet) */
+  .hero { isolation: isolate; }
+  .hero-mynt {
+    position: absolute;
+    z-index: -1;
+    opacity: 0.13;
+    pointer-events: none;
+    user-select: none;
+    will-change: transform;
+    animation: myntspinn var(--fart, 16s) linear infinite;
+    animation-delay: var(--start, 0s);
+  }
+  @keyframes myntspinn {
+    from { transform: perspective(700px) rotate(var(--tilt, 0deg)) rotateY(0deg); }
+    to   { transform: perspective(700px) rotate(var(--tilt, 0deg)) rotateY(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { .hero-mynt { animation: none; } }
+
+.hero::before{content:''; position:absolute; inset:0; background-image:radial-gradient(circle at 20% 30%, rgba(239,159,39,.18) 0%, transparent 45%), radial-gradient(circle at 80% 70%, rgba(29,158,117,.20) 0%, transparent 45%); pointer-events:none;}
+.hero > *{position:relative; z-index:2;}
+.hero-brand{display:inline-flex; align-items:center; gap:10px; background:rgba(255,255,255,.12); padding:6px 16px; border-radius:20px; font-size:.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin-bottom:12px; border:1px solid rgba(255,255,255,.18);}
+.hero-brand-dot{width:8px; height:8px; border-radius:50%; background:var(--amber); box-shadow:0 0 12px var(--amber);}
+.hero h1{font-family:'Fredoka One',cursive; font-size:clamp(2.2rem,6vw,3.4rem); line-height:1; color:#fff; letter-spacing:-.01em;}
+.hero h1 .accent{color:var(--amber);}
+.hero p{color:rgba(255,255,255,.85); font-size:clamp(.95rem,1.5vw,1.1rem); margin-top:8px; font-weight:600; max-width:520px; margin-left:auto; margin-right:auto;}
+.myntico{height:1em; width:auto; vertical-align:-.18em; margin:0 .04em;}
+.setup-wrap{max-width:560px; margin:0 auto; padding:0 16px 48px; display:flex; flex-direction:column; gap:14px;}
+.scard{background:var(--white); border-radius:18px; padding:18px 20px; border:1px solid var(--border); box-shadow:0 2px 10px rgba(30,15,82,.05);}
+.scard h2{font-size:1.15rem; color:var(--blue-dark); margin-bottom:2px;}
+.scard .hint{font-size:.85rem; color:var(--muted); font-weight:600; margin-bottom:12px;}
+.level-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.level-opt{border:3px solid var(--border); border-radius:16px; padding:14px; cursor:pointer; background:var(--bg); text-align:center; transition:all .15s;}
+.level-opt.sel{border-color:var(--green); background:var(--green-light);}
+.level-opt .lv-emoji{font-size:2rem;}
+.level-opt .lv-title{font-weight:900; font-size:1.05rem;}
+.level-opt .lv-sub{font-size:.8rem; font-weight:600; color:var(--muted);}
+.cntrow{display:flex; gap:10px;}
+.cntbtn{font-family:'Fredoka One',cursive; font-size:1.4rem; width:58px; height:58px; border-radius:16px;
+  border:3px solid var(--border); background:var(--bg); cursor:pointer; color:var(--text);}
+.cntbtn.sel{border-color:var(--blue); background:var(--blue-light); color:var(--blue-dark);}
+.prow{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
+.prow .pe{font-size:1.7rem; width:40px;}
+.prow input{flex:1; font-family:'Nunito',sans-serif; font-weight:800; font-size:1.05rem; padding:10px 14px;
+  border:2px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text);}
+.prow .pc{width:22px; height:22px; border-radius:50%;}
+#startbtn{font-family:'Fredoka One',cursive; font-size:1.4rem; background:var(--amber); color:#fff; border:none;
+  border-radius:18px; padding:16px 40px; cursor:pointer; box-shadow:0 5px 0 var(--amber-dark); width:100%;}
+#startbtn:hover{transform:translateY(-2px);}
+#rules{text-align:left; background:var(--purple-light); border-radius:14px; padding:12px 16px; margin-top:16px;
+  font-size:.88rem; font-weight:600; line-height:1.5;}
+#rules b{color:var(--purple);}
+
+/* ---------- Toast ---------- */
+#toast{position:fixed; top:80px; left:50%; transform:translateX(-50%); z-index:15; background:var(--blue-dark);
+  color:#fff; font-weight:800; padding:10px 22px; border-radius:14px; opacity:0; transition:opacity .3s;
+  pointer-events:none; font-size:1rem; max-width:90vw; text-align:center;}
+#toast.show{opacity:1;}
+
+@media (max-width:900px){
+  #players{width:160px;} .pcard .prow2{font-size:.75rem;} #log{display:none;}
+  #hint{display:none;} #logo{font-size:1.2rem;}
+}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+
+<div id="topbar">
+  <div id="logo">MYNT<span>OPOL</span> <img class="myntico" src="mynt.webp" alt="mynt"></div>
+  <div id="goalbox">
+    <div class="gtitle">🎯 KLASSENS SPAREMÅL</div>
+    <div id="goalmeter"><div id="goalfill"></div></div>
+    <div id="goaltext">0 / 0 <img class="myntico" src="mynt.webp" alt="mynt"></div>
+  </div>
+  <div id="targetinfo">🏆 Først til 0 <img class="myntico" src="mynt.webp" alt="mynt"></div>
+</div>
+
+<div id="players"></div>
+
+<div id="log"><div class="ltitle">📜 SISTE HENDELSER</div><div id="logitems"></div></div>
+
+<div id="actionbar">
+  <div id="turnchip"><span class="tavatar">⭐</span><span id="turnname">–</span></div>
+  <button id="rollbtn">🎲 Kast terning</button>
+  <button id="camBtn" title="Bytt mellom å følge spilleren og se hele brettet">🗺️</button>
+  <div id="hint">Trykk for å kaste!</div>
+</div>
+
+<div id="modalwrap"><div id="modal"></div></div>
+<div id="toast"></div>
+
+<div id="setup">
+  <nav class="topnav">
+    <div class="topnav-inner">
+      <a href="index.html" class="topnav-logo">Myntland</a>
+      <a href="index.html" class="topnav-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <span>Tilbake til forsiden</span>
+      </a>
+    </div>
+  </nav>
+  <div class="hero">
+  <div aria-hidden="true">
+    <img class="hero-mynt" src="mynt.webp" alt="" style="width:90px;  top:-22px;  left:5%;   --tilt:-14deg; --fart:19s;">
+    <img class="hero-mynt" src="mynt.webp" alt="" style="width:60px;  top:18%;   right:16%; --tilt:-6deg;  --fart:28s; --start:-15s; opacity:0.10;">
+    <img class="hero-mynt" src="mynt.webp" alt="" style="width:110px; bottom:-30px; right:4%; --tilt:12deg; --fart:22s; --start:-5s;">
+  </div>
+    <div class="hero-brand"><span class="hero-brand-dot"></span> Myntland · Brettspill</div>
+    <h1><img class="myntico" src="mynt.webp" alt="mynt"> <span class="accent">Myntopol</span></h1>
+    <p>Kjøp jobber, ta kurs, spar i banken og invester – den første som når målsummen i formue, vinner!</p>
+  </div>
+  <div class="setup-wrap">
+
+    <div class="scard">
+      <h2>1. Velg nivå</h2>
+      <div class="hint">Styrer tallene – og om spillet har skatt, fond og lån.</div>
+      <div class="level-row">
+        <div class="level-opt sel" id="lvlSmall" onclick="pickLevel('small')">
+          <div class="lv-emoji">🧮</div>
+          <div class="lv-title">1.–4. trinn</div>
+          <div class="lv-sub">Enkle tall, jobber og hendelser</div>
+        </div>
+        <div class="level-opt" id="lvlBig" onclick="pickLevel('big')">
+          <div class="lv-emoji">💼</div>
+          <div class="lv-title">5.–7. trinn</div>
+          <div class="lv-sub">Med skatt, fond og lån</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <h2>2. Hvor mange spillere?</h2>
+      <div class="hint">2–4 spillere bytter på samme skjerm.</div>
+      <div class="cntrow">
+        <button class="cntbtn sel" id="cnt2" onclick="pickCount(2)">2</button>
+        <button class="cntbtn" id="cnt3" onclick="pickCount(3)">3</button>
+        <button class="cntbtn" id="cnt4" onclick="pickCount(4)">4</button>
+      </div>
+    </div>
+
+    <div class="scard">
+      <h2>3. Hvem spiller?</h2>
+      <div class="hint">Bruk kallenavn fra Myntland – ikke ekte navn.</div>
+      <div id="playerinputs"></div>
+    </div>
+
+    <div class="scard">
+      <button id="startbtn" onclick="startGame()">Start spillet! 🎉</button>
+      <div id="rules">
+        <b>Slik spiller dere:</b> Kast terningen – og flytt brikken selv: klikk på neste rute og tell høyt, 1–2–3 … Den gule ringen viser neste rute.
+        Ta <b>jobber</b> – da betaler de andre deg gebyr når de lander der. Lander du på din egen jobb, kan du ta <b>kurs</b> (Lærling → Fagperson → Mester) og øke gebyret – hvis du består kursprøven!
+        Pass på <b>hendelser</b>, svar på <b>quiz</b>, og sett mynter på <b>sparekontoen</b> – da får du renter hver gang du passerer START!
+        Når <b>klassens sparemål</b> blir fullt, får ALLE bonus.
+        Den første som når målsummen i formue, vinner! 🏆
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* Mynten fra Myntland: brukes som bilde i tekst (MYNT) og på brettet (myntImg) */
+const MYNT='<img class="myntico" src="mynt.webp" alt="mynt">';
+const myntImg=new Image(); myntImg.src='mynt.webp';
+
+/* =====================================================
+   MYNTOPOL – spilldata
+   ===================================================== */
+
+// Nivåinnstillinger
+const LEVELS = {
+  small: {
+    label:'1.–4. trinn', startCash:80, salary:40, salaryTax:0, target:250,
+    goalTarget:120, goalBonus:30, taxAmount:5, hasFund:false, hasLoan:false,
+    jobPrices:[15,20,25,30], jobFees:[5,5,10,10]
+  },
+  big: {
+    label:'5.–7. trinn', startCash:150, salary:60, salaryTax:12, target:500,
+    goalTarget:200, goalBonus:40, taxAmount:10, hasFund:true, hasLoan:true,
+    jobPrices:[30,40,50,60], jobFees:[8,10,12,15]
+  }
+};
+
+// Jobber: [navn, emoji, gruppe(0-3)]  gruppe: 0=grønn 1=blå 2=amber 3=korall
+const JOBS = {
+  1:['Bibliotekar','📚',0], 3:['Vannkanne-ansvarlig','🪴',0], 5:['Garderobesjef','🧥',0], 7:['Melkehenter','🥛',0],
+  10:['IT-ansvarlig','💻',1], 12:['Digital-vakt','📱',1], 14:['Dyrepasser','🐹',1], 16:['Postbud','📬',1],
+  19:['Miljøvakt','♻️',2], 21:['Energi-inspektør','💡',2], 23:['Vaktleder ute','🦺',2], 25:['Tavlevasker','🧽',2],
+  28:['Kasse i butikken','🛒',3], 30:['Ordenselev','🌟',3], 32:['Ballansvarlig','🏐',3], 34:['Bokrydder','📖',3]
+};
+const GROUPNAMES=['Grønn','Blå','Oransje','Korall'];
+const GROUPCOLORS=['#1D9E75','#1a5fa5','#EF9F27','#D85A30'];
+
+// Bygg de 24 rutene for valgt nivå
+function buildSquares(lv){
+  const L=LEVELS[lv]; const sq=[];
+  for(let i=0;i<36;i++){
+    if(JOBS[i]){
+      const [name,emoji,grp]=JOBS[i];
+      sq.push({i, type:'job', name, emoji, grp, price:L.jobPrices[grp], fee:L.jobFees[grp], owner:null, lvl:1});
+    } else if(i===0) sq.push({i,type:'start',name:'START Lønningsdag',emoji:'MYNTBILDE'});
+    else if(i===9)  sq.push({i,type:'bank',name:'Sparekontoen',emoji:'🏦'});
+    else if(i===18) sq.push({i,type:'rest',name:'Friminutt',emoji:'⚽'});
+    else if(i===27) sq.push({i,type:'goal',name:'Klassens sparemål',emoji:'🎯'});
+    else if(i===24) sq.push({i,type:'tax',name:'Skatt',emoji:'💸'});
+    else if(i===8||i===26) sq.push({i,type:'shop',name:'Butikken',emoji:'🛍️'});
+    else if(i===17||i===33) sq.push(L.hasFund ? {i,type:'fund',name:'Fond',emoji:'📈'} : {i,type:'event',name:'Hendelse',emoji:'🎲'});
+    else if(i===4||i===13||i===22||i===31) sq.push({i,type:'quiz',name:'Quiz',emoji:'❓'});
+    else sq.push({i,type:'event',name:'Hendelse',emoji:'🎲'}); // 2,6,11,15,20,29,35
+  }
+  return sq;
+}
+
+// Hendelseskort – mest positive, slik Myntland anbefaler
+const EVENTS = {
+  small: [
+    ['Du fant en mynt i skolegården!',''+MYNT+'',+10],
+    ['Du hjalp en venn med leksene. Takk!','🤝',+10],
+    ['Du ryddet garderoben uten å bli bedt om det.','🧹',+15],
+    ['Bursdagspenger fra bestemor!','🎁',+15],
+    ['Du vant ryddekonkurransen i klassen!','🏅',+10],
+    ['Du leverte boka til biblioteket i tide.','📚',+5],
+    ['Du var en god venn i friminuttet.','💚',+10],
+    ['Du sang så fint i musikktimen!','🎵',+5],
+    ['Du mistet en blyant og må kjøpe ny.','✏️',-5],
+    ['Du glemte matpakka og måtte kjøpe mat.','🥪',-10],
+    ['Du holdt døra for hele klassen. Snilt!','🚪',+5],
+    ['Du fant et fint pluggdyr på loppemarked – og solgte det videre!','🧸',+10],
+    ['Drikkeflaska di sprakk. Ny flaske trengs.','💧',-5],
+    ['Du hjalp læreren å dele ut bøker.','📖',+10]
+  ],
+  big: [
+    ['Du holdt et flott framlegg – ekstra lønn!','🎤',+20],
+    ['Du fant en feil i klassens regnskap. Belønning!','🧮',+25],
+    ['Bursdagspenger fra onkel!','🎁',+20],
+    ['Du vant ukens økonomiquiz!','🏆',+20],
+    ['Du reparerte en stol i klasserommet.','🔧',+15],
+    ['Du lånte bort laderen din hele uka.','🔌',+10],
+    ['Mobilskjermen sprakk. Au, det koster.','📱',-20],
+    ['Du glemte å levere boka – purregebyr.','📕',-10],
+    ['Strømprisen gikk opp denne uka.','⚡',-15],
+    ['Du solgte gamle tegneserier på loppemarked.','📚',+15],
+    ['Du passet naboens hund i helga.','🐕',+20],
+    ['Du arrangerte turnering i friminuttet. Alle jublet!','⚽',+15],
+    ['Sykkelen punkterte. Lappesaker må kjøpes.','🚲',-10],
+    ['Du sparte strøm hjemme – belønning fra mor!','💡',+10],
+    ['Du vant tippekonkurransen om fondskursen.','📈',+15],
+    ['Impulskjøp i kiosken… var det verdt det?','🍭',-10]
+  ]
+};
+
+// Quiz – 20 mynter for riktig svar (som ukesquizen i Myntland)
+const QUIZ = {
+  small: [
+    ['Hva betyr det å spare?',['Å bruke alle myntene med en gang','Å ta vare på mynter til senere','Å gi bort alle myntene'],1],
+    ['Hva er en bank?',['Et sted som tar vare på penger','En slags kake','Et dyr'],0],
+    ['Du har 10 mynter og får 5 til. Hvor mange har du?',['12','15','20'],1],
+    ['Hva trenger du mest?',['Godteri','Mat og klær','Leker'],1],
+    ['En is koster 8 mynter. Du har 10. Hvor mye har du igjen etter kjøpet?',['2 mynter','8 mynter','1 mynt'],0],
+    ['Hva er lurt hvis du vil kjøpe noe dyrt?',['Spare litt hver uke','Glemme det','Grine til noen kjøper det'],0],
+    ['Hva betyr «pris»?',['Hvor gammel noe er','Hvor mye noe koster','Hvor stort noe er'],1],
+    ['Du har 20 mynter og bruker 10. Hva har du igjen?',['0','5','10'],2],
+    ['Hvem bestemmer over sparepengene dine?',['Du (og de voksne hjemme)','Naboen','Butikken'],0],
+    ['Hva er forskjellen på å trenge og å ha lyst på?',['Det er det samme','Trenge er det du må ha, lyst er det som er gøy å ha','Lyst er viktigst'],1],
+    ['Hva skjer hvis du bruker alt med en gang?',['Du har ingenting igjen til senere','Du får mer','Ingenting'],0],
+    ['To epler koster 4 mynter. Hva koster ett eple?',['1 mynt','2 mynter','4 mynter'],1]
+  ],
+  big: [
+    ['Hva er rente på sparekonto?',['Et gebyr du betaler','Penger banken gir deg for å spare','En type skatt'],1],
+    ['Hva brukes skattepenger til?',['Ting vi eier sammen, som skole og veier','Bare til lærere','Ingenting'],0],
+    ['Hva er et fond med høy risiko?',['Trygt – du taper aldri','Du kan vinne mye, men også tape mye','En sparegris'],1],
+    ['Hva er et lån?',['Penger du får gratis','Penger du må betale tilbake – ofte med rente','En premie'],1],
+    ['Hva er et budsjett?',['En plan for hva du tjener og bruker','En bankboks','En regning'],0],
+    ['Du tjener 50 og betaler 20 % skatt. Hvor mye er skatten?',['5','10','20'],1],
+    ['Hva er lurest hvis du vil kjøpe noe om 3 uker?',['Sette av litt hver uke','Låne av alle du kjenner','Vente og håpe'],0],
+    ['Hva betyr «avdrag» på et lån?',['En del av lånet du betaler tilbake','Renten','Et nytt lån'],0],
+    ['Hva er forskjellen på brukskonto og sparekonto?',['Ingen forskjell','Sparekonto gir rente, brukskonto er til daglig bruk','Brukskonto gir mest rente'],1],
+    ['Hvorfor er det smart å sammenligne priser?',['Det er det ikke','Samme vare kan koste ulikt i ulike butikker','Fordi dyrt alltid er best'],1],
+    ['Du setter 100 i fond og kursen faller 10 %. Hva har du?',['90','100','110'],0],
+    ['Hva er en «impulskjøp»?',['Noe du planla lenge','Noe du kjøper brått uten å tenke deg om','En type sparing'],1],
+    ['Hva skjer med gevinst fra fond i Myntland?',['Den beskattes med 10 %','Den er skattefri','Den forsvinner'],0],
+    ['Hva er tryggest?',['Fond med høy risiko','Sparekonto','Å gjemme mynter i pennalet'],1]
+  ]
+};
+
+// Butikkvarer: [navn, emoji, pris(small), pris(big), 'behov'/'ønske']
+const SHOP = [
+  ['Ny blyant','✏️',5,8,'behov'],
+  ['Matboks','🍱',8,12,'behov'],
+  ['Drikkeflaske','💧',8,12,'behov'],
+  ['Refleksvest','🦺',6,10,'behov'],
+  ['Klistremerker','✨',6,10,'ønske'],
+  ['Kul kepsen','🧢',12,20,'ønske'],
+  ['Tegneserie','📖',10,15,'ønske'],
+  ['Spretball','🏀',8,14,'ønske'],
+  ['Glitterpenn','🖊️',7,12,'ønske'],
+  ['Plysjmonster','🧸',14,25,'ønske']
+];
+
+// Spillerforslag (kallenavn + monsterfarger fra Myntland)
+const PLAYER_PRESETS = [
+  {name:'Stjerne', emoji:'⭐', color:'#EF9F27'},
+  {name:'Drage',   emoji:'🐉', color:'#1D9E75'},
+  {name:'Måne',    emoji:'🌙', color:'#534AB7'},
+  {name:'Bølge',   emoji:'🌊', color:'#1a5fa5'}
+];
+
+/* =====================================================
+   Spilltilstand + oppsett
+   ===================================================== */
+let level='small', playerCount=2;
+let squares=[], players=[], current=0;
+let goalPot=0, goalRound=1, gameOver=false, busy=false;
+let quizDeck=[], eventDeck=[];
+
+function pickLevel(lv){
+  level=lv;
+  document.getElementById('lvlSmall').classList.toggle('sel', lv==='small');
+  document.getElementById('lvlBig').classList.toggle('sel', lv==='big');
+}
+function pickCount(n){
+  playerCount=n;
+  [2,3,4].forEach(k=>document.getElementById('cnt'+k).classList.toggle('sel',k===n));
+  renderPlayerInputs();
+}
+function renderPlayerInputs(){
+  const box=document.getElementById('playerinputs');
+  let html='';
+  for(let i=0;i<playerCount;i++){
+    const p=PLAYER_PRESETS[i];
+    html+=`<div class="prow"><span class="pe">${p.emoji}</span>
+      <input id="pname${i}" maxlength="14" value="${p.name}">
+      <span class="pc" style="background:${p.color}"></span></div>`;
+  }
+  box.innerHTML=html;
+}
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function drawQuiz(){ if(!quizDeck.length) quizDeck=shuffle(QUIZ[level].slice()); return quizDeck.pop(); }
+function drawEvent(){ if(!eventDeck.length) eventDeck=shuffle(EVENTS[level].slice()); return eventDeck.pop(); }
+function fmt(n){ return n.toLocaleString('nb-NO'); }
+
+function startGame(){
+  const L=LEVELS[level];
+  squares=buildSquares(level);
+  players=[];
+  for(let i=0;i<playerCount;i++){
+    const p=PLAYER_PRESETS[i];
+    const nm=(document.getElementById('pname'+i).value.trim()||p.name).slice(0,14);
+    players.push({id:i, name:nm, emoji:p.emoji, color:p.color,
+      cash:L.startCash, savings:0, debt:0, jobs:[], stars:0, pos:0});
+  }
+  current=0; goalPot=0; goalRound=1; gameOver=false; busy=false;
+  quizDeck=shuffle(QUIZ[level].slice());
+  eventDeck=shuffle(EVENTS[level].slice());
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('targetinfo').innerHTML='🏆 Først til '+fmt(L.target)+' '+MYNT+' i formue';
+  initScene();
+  renderPlayers(); renderGoal();
+  logMsg('Spillet er i gang! '+L.label+' – lykke til! 🎉');
+  startTurn();
+}
+
+/* ---------- UI-hjelpere ---------- */
+function wealth(p){
+  return p.cash + p.savings + p.jobs.reduce((s,j)=>s+squares[j].price*squares[j].lvl,0) - p.debt;
+}
+function renderPlayers(){
+  const box=document.getElementById('players');
+  box.innerHTML=players.map((p,ix)=>{
+    const jobNames=p.jobs.map(j=>squares[j].emoji+(squares[j].lvl===2?'²':squares[j].lvl===3?'³':'')).join(' ')||'–';
+    return `<div class="pcard ${ix===current&&!gameOver?'active':''}">
+      <div class="prow1"><span class="pavatar">${p.emoji}</span>
+        <span class="pname">${p.name}</span>
+        <span class="pdot" style="background:${p.color}"></span></div>
+      <div class="prow2">
+        <span>💰 <b>${fmt(p.cash)}</b></span>
+        <span>🏦 <b>${fmt(p.savings)}</b></span>
+        <span>🏆 <b>${fmt(wealth(p))}</b></span>
+        ${p.stars?`<span>⭐ <b>${p.stars}</b></span>`:''}
+      </div>
+      ${p.debt>0?`<div class="pdebt">💳 Gjeld: ${fmt(p.debt)} '+MYNT+'</div>`:''}
+      <div class="pjobs">Jobber: ${jobNames}</div>
+    </div>`;
+  }).join('');
+}
+function renderGoal(){
+  const L=LEVELS[level];
+  const pct=Math.min(100, Math.round(goalPot/L.goalTarget*100));
+  document.getElementById('goalfill').style.width=pct+'%';
+  document.getElementById('goaltext').innerHTML=fmt(goalPot)+' / '+fmt(L.goalTarget)+' '+MYNT+''+(goalRound>1?'  (mål nr. '+goalRound+')':'');
+}
+function logMsg(t){
+  const el=document.getElementById('logitems');
+  const d=document.createElement('div'); d.innerHTML=t;
+  el.prepend(d);
+  while(el.children.length>5) el.removeChild(el.lastChild);
+}
+let toastTimer=null;
+function toast(t){
+  const el=document.getElementById('toast');
+  el.innerHTML=t; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+}
+
+/* Generisk modal: showModal({emoji,title,body,buttons:[{label,cls,fn,disabled}]}) */
+function showModal(opt){
+  const m=document.getElementById('modal');
+  let html='';
+  if(opt.emoji) html+=`<div class="memoji">${opt.emoji}</div>`;
+  if(opt.title) html+=`<h2>${opt.title}</h2>`;
+  html+=`<div class="mbody">${opt.body||''}</div><div class="mbtns" id="mbtns"></div>`;
+  m.innerHTML=html;
+  const btnbox=m.querySelector('#mbtns');
+  (opt.buttons||[]).forEach(b=>{
+    const el=document.createElement('button');
+    el.className='btn '+(b.cls||'btn-green');
+    el.innerHTML=b.label;
+    if(b.disabled) el.disabled=true;
+    el.onclick=()=>{ if(!b.keepOpen) hideModal(); if(b.fn) b.fn(el); };
+    btnbox.appendChild(el);
+  });
+  document.getElementById('modalwrap').classList.add('show');
+}
+function hideModal(){ document.getElementById('modalwrap').classList.remove('show'); }
+
+/* =====================================================
+   Three.js – brett, brikker og terning
+   ===================================================== */
+let renderer, scene, camera, boardGroup, diceMesh, highlightRing;
+let camMode='follow';           // 'follow' = zoom på spilleren, 'overview' = hele brettet
+let camPos, camLook, _cv1, _cv2, _cv3, _cv4;
+const DICE_Y=1.2;
+let tokens=[], ownerMarkers={}, anims=[], tileMeshes=[];
+const TILE=2.2;
+let sceneReady=false;
+
+function tileGrid(i){
+  if(i<=9)  return {col:9-i, row:9};
+  if(i<=18) return {col:0, row:18-i};
+  if(i<=27) return {col:i-18, row:0};
+  return {col:9, row:i-27};
+}
+function tileWorld(i){
+  const g=tileGrid(i);
+  return {x:(g.col-4.5)*TILE, z:(g.row-4.5)*TILE};
+}
+function tileTextRot(i){
+  if(i<=9) return 0;            // nederste rad
+  if(i<=18) return -Math.PI/2;  // venstre side
+  if(i<=27) return Math.PI;     // øverste rad
+  return Math.PI/2;             // høyre side
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function wrapText(ctx,text,x,y,maxW,lh){
+  const words=text.split(' '); let line='', yy=y;
+  for(const w of words){
+    const test=line?line+' '+w:w;
+    if(ctx.measureText(test).width>maxW && line){ ctx.fillText(line,x,yy); line=w; yy+=lh; }
+    else line=test;
+  }
+  ctx.fillText(line,x,yy);
+  return yy;
+}
+
+const TILE_BG={start:'#E1F5EE', bank:'#dbeafe', rest:'#ffffff', goal:'#E1F5EE',
+  tax:'#FAECE7', shop:'#FAEEDA', event:'#EEEDFE', quiz:'#dbeafe', fund:'#FAEEDA', job:'#ffffff'};
+
+/* Finn største skriftstørrelse der det lengste ordet får plass i ruta */
+function fitFont(ctx,text,maxW,base){
+  let size=base;
+  const words=text.split(' ');
+  const longest=()=>{ ctx.font='900 '+size+'px Nunito, sans-serif';
+    return Math.max(...words.map(w=>ctx.measureText(w).width)); };
+  while(longest()>maxW && size>13) size--;
+  return size;
+}
+
+function makeTileTexture(sq){
+  const c=document.createElement('canvas'); c.width=256; c.height=256;
+  const x=c.getContext('2d');
+  x.fillStyle=TILE_BG[sq.type]||'#fff'; x.fillRect(0,0,256,256);
+  x.strokeStyle='#c8dfc8'; x.lineWidth=6; x.strokeRect(3,3,250,250);
+  x.textAlign='center'; x.textBaseline='top';
+  const isJob=sq.type==='job';
+  if(isJob){ x.fillStyle=GROUPCOLORS[sq.grp]; x.fillRect(6,6,244,36); }
+  if(sq.emoji==='MYNTBILDE' && myntImg.complete){
+    x.drawImage(myntImg,98,18,60,60);
+  } else {
+    x.font=(isJob?'52px':'60px')+' serif';
+    x.fillText(sq.emoji==='MYNTBILDE'?'\uD83E\uDE99':sq.emoji,128,isJob?48:22);
+  }
+  // bindestrek-ord (VANNKANNE-ANSVARLIG) brytes etter bindestreken
+  const name=sq.name.toUpperCase().replace(/-/g,'- ');
+  const maxW=222;
+  x.fillStyle='#1a2e1a';
+  const size=fitFont(x,name,maxW,isJob?24:26);
+  x.font='900 '+size+'px Nunito, sans-serif';
+  wrapText(x,name,128,isJob?112:96,maxW,size+4);
+  if(isJob){
+    x.font='800 22px Nunito, sans-serif'; x.fillStyle='#085041';
+    x.fillText('Pris '+sq.price+' · Gebyr '+sq.fee,128,222);
+  }
+  if(sq.type==='quiz'){
+    x.font='800 22px Nunito, sans-serif'; x.fillStyle='#1a5fa5';
+    x.fillText('+20 for riktig!',128,214);
+  }
+  const tx=new THREE.CanvasTexture(c);
+  tx.anisotropy=4;
+  return tx;
+}
+
+function makeCenterTexture(){
+  const c=document.createElement('canvas'); c.width=512; c.height=512;
+  const x=c.getContext('2d');
+  x.fillStyle='#1D9E75'; x.fillRect(0,0,512,512);
+  roundRect(x,20,20,472,472,40); x.fillStyle='#E1F5EE'; x.fill();
+  x.textAlign='center';
+  if(myntImg.complete) x.drawImage(myntImg,186,70,140,140);
+  else { x.font='110px serif'; x.fillText('\uD83E\uDE99',256,200); }
+  x.fillStyle='#1e0f52'; x.font='72px "Fredoka One", sans-serif';
+  x.fillText('MYNTOPOL',256,330);
+  x.fillStyle='#5a7a5a'; x.font='800 30px Nunito, sans-serif';
+  x.fillText('Et Myntland-spill',256,395);
+  return new THREE.CanvasTexture(c);
+}
+
+function makeDieFaceTexture(n){
+  const c=document.createElement('canvas'); c.width=128; c.height=128;
+  const x=c.getContext('2d');
+  x.fillStyle='#ffffff'; x.fillRect(0,0,128,128);
+  roundRect(x,4,4,120,120,22); x.strokeStyle='#1e0f52'; x.lineWidth=6; x.stroke();
+  x.fillStyle='#1e0f52';
+  const P={1:[[64,64]],2:[[36,36],[92,92]],3:[[32,32],[64,64],[96,96]],
+    4:[[38,38],[90,38],[38,90],[90,90]],5:[[36,36],[92,36],[64,64],[36,92],[92,92]],
+    6:[[38,32],[90,32],[38,64],[90,64],[38,96],[90,96]]};
+  P[n].forEach(([px,py])=>{ x.beginPath(); x.arc(px,py,12,0,7); x.fill(); });
+  return new THREE.CanvasTexture(c);
+}
+
+function createToken(color){
+  const g=new THREE.Group();
+  const mat=new THREE.MeshStandardMaterial({color, roughness:.5});
+  const body=new THREE.Mesh(new THREE.SphereGeometry(.42,24,18), mat);
+  body.scale.set(1,1.18,1); body.position.y=.45; g.add(body);
+  const horn=new THREE.Mesh(new THREE.ConeGeometry(.1,.28,12), mat);
+  horn.position.set(0,1.02,0); g.add(horn);
+  const eyeW=new THREE.MeshStandardMaterial({color:0xffffff, roughness:.3});
+  const eyeB=new THREE.MeshStandardMaterial({color:0x1e0f52, roughness:.3});
+  [-0.15,0.15].forEach(ex=>{
+    const e=new THREE.Mesh(new THREE.SphereGeometry(.11,12,10), eyeW);
+    e.position.set(ex,.62,.36); g.add(e);
+    const p=new THREE.Mesh(new THREE.SphereGeometry(.05,10,8), eyeB);
+    p.position.set(ex,.62,.455); g.add(p);
+  });
+  return g;
+}
+
+const TOKEN_OFFSETS=[[-.5,-.5],[.5,-.5],[-.5,.5],[.5,.5]];
+function tokenTarget(p){
+  const w=tileWorld(p.pos), o=TOKEN_OFFSETS[p.id];
+  return new THREE.Vector3(w.x+o[0]*.8, 0, w.z+o[1]*.8);
+}
+
+function initScene(){
+  if(sceneReady){ rebuildBoardState(); return; }
+  sceneReady=true;
+  const box=document.getElementById('scene');
+  renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(innerWidth,innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  box.appendChild(renderer.domElement);
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color('#cfe3f5');
+  camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,100);
+  camPos=new THREE.Vector3(0,20,17); camLook=new THREE.Vector3(0,0,0);
+  _cv1=new THREE.Vector3(); _cv2=new THREE.Vector3(); _cv3=new THREE.Vector3(); _cv4=new THREE.Vector3();
+  camera.position.copy(camPos); camera.lookAt(camLook);
+
+  scene.add(new THREE.AmbientLight(0xffffff,.65));
+  const sun=new THREE.DirectionalLight(0xffffff,.7);
+  sun.position.set(6,12,8); scene.add(sun);
+
+  boardGroup=new THREE.Group(); scene.add(boardGroup);
+
+  // bunnplate + senter
+  const base=new THREE.Mesh(new THREE.BoxGeometry(22.6,.5,22.6),
+    new THREE.MeshStandardMaterial({color:'#1a5fa5', roughness:.7}));
+  base.position.y=-.27; boardGroup.add(base);
+  const center=new THREE.Mesh(new THREE.PlaneGeometry(13,13),
+    new THREE.MeshBasicMaterial({map:makeCenterTexture()}));
+  center.rotation.x=-Math.PI/2; center.position.y=.02; boardGroup.add(center);
+
+  // ruter
+  tileMeshes=[];
+  squares.forEach(sq=>{
+    const w=tileWorld(sq.i);
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(2.08,2.08),
+      new THREE.MeshBasicMaterial({map:makeTileTexture(sq)}));
+    m.rotation.set(-Math.PI/2,0,tileTextRot(sq.i));
+    m.position.set(w.x,.03,w.z);
+    m.userData.sq=sq.i;
+    boardGroup.add(m);
+    tileMeshes.push(m);
+  });
+
+  // markeringsring for aktiv rute
+  highlightRing=new THREE.Mesh(new THREE.TorusGeometry(1.05,.09,10,40),
+    new THREE.MeshBasicMaterial({color:'#EF9F27', transparent:true, opacity:.9}));
+  highlightRing.rotation.x=-Math.PI/2; highlightRing.position.y=.08;
+  boardGroup.add(highlightRing);
+
+  // terning
+  const mats=[3,4,1,6,2,5].map(n=>new THREE.MeshStandardMaterial({map:makeDieFaceTexture(n), roughness:.4}));
+  diceMesh=new THREE.Mesh(new THREE.BoxGeometry(.95,.95,.95), mats);
+  diceMesh.position.set(0,DICE_Y,0); boardGroup.add(diceMesh);
+
+  // brikker
+  tokens=players.map(p=>{
+    const t=createToken(p.color);
+    t.position.copy(tokenTarget(p));
+    boardGroup.add(t);
+    return t;
+  });
+
+  // dra for å rotere brettet
+  let dragging=false, lastX=0, downX=0, downY=0, movedPx=0;
+  renderer.domElement.addEventListener('pointerdown',e=>{
+    dragging=true; lastX=e.clientX; downX=e.clientX; downY=e.clientY; movedPx=0;
+  });
+  addEventListener('pointermove',e=>{
+    if(!dragging) return;
+    movedPx=Math.max(movedPx, Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY));
+    boardGroup.rotation.y+=(e.clientX-lastX)*.005; lastX=e.clientX;
+  });
+  addEventListener('pointerup',e=>{
+    if(dragging && movedPx<7) handleBoardClick(e);
+    dragging=false;
+  });
+  addEventListener('resize',()=>{
+    camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+  });
+
+  let prev=performance.now();
+  (function loop(now){
+    requestAnimationFrame(loop);
+    const dt=Math.min((now-prev)/1000,.05); prev=now;
+    // Kjør animasjoner trygt: nye animasjoner som startes underveis
+    // (f.eks. brikkehopp etter terningkast) legges i en fersk liste
+    const running=anims; anims=[];
+    const keep=[];
+    running.forEach(a=>{ if(!a(dt)) keep.push(a); });
+    anims=keep.concat(anims);
+    highlightRing.material.opacity=.55+.4*Math.sin(now*.005);
+    const s=1+.04*Math.sin(now*.004);
+    highlightRing.scale.set(s,s,1);
+    updateCamera(dt);
+    renderer.render(scene,camera);
+  })(prev);
+}
+
+// Brukes ved «spill igjen» uten å bygge scenen på nytt
+function rebuildBoardState(){
+  Object.values(ownerMarkers).forEach(m=>boardGroup.remove(m));
+  ownerMarkers={};
+  tokens.forEach(t=>boardGroup.remove(t));
+  tokens=players.map(p=>{
+    const t=createToken(p.color);
+    t.position.copy(tokenTarget(p));
+    boardGroup.add(t);
+    return t;
+  });
+}
+
+/* Mykt kamera: følger spilleren som har turen, eller viser hele brettet */
+function updateCamera(dt){
+  let tx,ty,tz, lx,ly,lz;
+  if(camMode==='overview' || gameOver || !players.length){
+    tx=0; ty=24; tz=14.5; lx=0; ly=0; lz=0;
+  } else {
+    tokens[current].getWorldPosition(_cv3);
+    _cv4.copy(_cv3); _cv4.y=0;
+    if(_cv4.lengthSq()<1) _cv4.set(0,0,1); else _cv4.normalize();
+    const f=awaitClick?1.3:1;                    // zoom litt ut mens man teller ruter
+    _cv1.copy(_cv3).addScaledVector(_cv4,7*f);   // bak spilleren, utenfor brettkanten
+    tx=_cv1.x; ty=11.5*f; tz=_cv1.z;
+    _cv2.copy(_cv3).addScaledVector(_cv4,-5);    // se innover mot brettet
+    lx=_cv2.x; ly=0; lz=_cv2.z;
+  }
+  const k=1-Math.exp(-2.5*dt);
+  camPos.lerp(_cv1.set(tx,ty,tz),k);
+  camLook.lerp(_cv2.set(lx,ly,lz),k);
+  camera.position.copy(camPos);
+  camera.lookAt(camLook);
+}
+function toggleCam(){
+  camMode = camMode==='follow' ? 'overview' : 'follow';
+  document.getElementById('camBtn').textContent = camMode==='follow' ? '🗺️' : '🎯';
+  toast(camMode==='follow' ? 'Kameraet følger spilleren 🎯' : 'Hele brettet 🗺️');
+}
+/* Terningen ruller på innersiden av ruta der spilleren står */
+function placeDice(){
+  if(!sceneReady) return;
+  const w=tileWorld(players[current].pos);
+  const len=Math.hypot(w.x,w.z)||1;
+  diceMesh.position.set(w.x-(w.x/len)*2.6, DICE_Y, w.z-(w.z/len)*2.6);
+}
+
+function setHighlight(i){
+  const w=tileWorld(i);
+  highlightRing.position.set(w.x,.08,w.z);
+}
+
+function addOwnerMarker(sqi, player){
+  const g=new THREE.Group();
+  const w=tileWorld(sqi);
+  g.position.set(w.x,.06,w.z);
+  boardGroup.add(g);
+  ownerMarkers[sqi]=g;
+  addLevelRing(sqi, 1, player);
+}
+function addLevelRing(sqi, lvl, player){
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.95-.22*(lvl-1),.07,8,36),
+    new THREE.MeshBasicMaterial({color:player.color}));
+  ring.rotation.x=-Math.PI/2;
+  ownerMarkers[sqi].add(ring);
+}
+
+/* Hopp brikken én rute */
+function hopToken(token, toPos, dur, cb){
+  const from=token.position.clone();
+  const to=toPos.clone();
+  let t=0;
+  anims.push(dt=>{
+    t+=dt/dur;
+    if(t>=1){ token.position.copy(to); if(cb) cb(); return true; }
+    const k=t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; // easeInOut
+    token.position.lerpVectors(from,to,k);
+    token.position.y=Math.sin(t*Math.PI)*.9;
+    return false;
+  });
+}
+
+/* Terningkast-animasjon */
+const FACE_ROT={
+  1:new THREE.Euler(0,0,0), 6:new THREE.Euler(Math.PI,0,0),
+  2:new THREE.Euler(-Math.PI/2,0,0), 5:new THREE.Euler(Math.PI/2,0,0),
+  3:new THREE.Euler(0,0,Math.PI/2), 4:new THREE.Euler(0,0,-Math.PI/2)
+};
+function rollDiceAnim(value, cb){
+  const targetQ=new THREE.Quaternion().setFromEuler(FACE_ROT[value]);
+  const spinX=4+Math.random()*4, spinZ=4+Math.random()*4;
+  let t=0; const dur=1.0;
+  anims.push(dt=>{
+    t+=dt/dur;
+    if(t<.65){
+      diceMesh.rotation.x+=spinX*dt; diceMesh.rotation.z+=spinZ*dt;
+      diceMesh.position.y=DICE_Y+Math.sin(t*9)*0.5;
+      return false;
+    }
+    if(t>=1){
+      diceMesh.quaternion.copy(targetQ);
+      diceMesh.position.y=DICE_Y;
+      if(cb) cb();
+      return true;
+    }
+    const k=(t-.65)/.35;
+    diceMesh.quaternion.slerp(targetQ, Math.min(k*.35+.15,1));
+    diceMesh.position.y=DICE_Y+Math.sin((1-k)*3)*.3*(1-k);
+    return false;
+  });
+}
+
+/* =====================================================
+   Spillflyt – tur for tur
+   ===================================================== */
+let pendingGoalParty=false;
+
+function startTurn(){
+  if(gameOver) return;
+  busy=false;
+  const p=players[current];
+  document.querySelector('#turnchip .tavatar').textContent=p.emoji;
+  document.getElementById('turnname').textContent=p.name;
+  document.getElementById('hint').textContent='Din tur, '+p.name+'! Kast terningen 🎲';
+  document.getElementById('rollbtn').disabled=false;
+  renderPlayers();
+  setHighlight(p.pos);
+  placeDice();
+}
+
+function takeTurn(){
+  if(busy||gameOver) return;
+  busy=true;
+  document.getElementById('rollbtn').disabled=true;
+  const value=1+Math.floor(Math.random()*6);
+  rollDiceAnim(value, ()=>{
+    toast(players[current].name+' kastet '+value+'! Tell rutene høyt! 🎲');
+    startManualMove(value);
+  });
+}
+
+/* Spilleren flytter selv: klikk på neste rute for hvert steg, som i Myntstigen */
+let stepsLeft=0, rolled=0, awaitClick=false, hopBusy=false;
+const _ray=new THREE.Raycaster(), _mouse=new THREE.Vector2();
+
+function nextPos(){ return (players[current].pos+1)%36; }
+
+function startManualMove(v){
+  rolled=v; stepsLeft=v; awaitClick=true;
+  setHighlight(nextPos());
+  updateMoveHint();
+}
+function updateMoveHint(){
+  const done=rolled-stepsLeft+1;
+  document.getElementById('hint').innerHTML='🎲 '+rolled+'! Klikk på neste rute og tell høyt: <b>'+done+' av '+rolled+'</b>';
+}
+function handleBoardClick(e){
+  if(!awaitClick||hopBusy||gameOver) return;
+  _mouse.x=(e.clientX/innerWidth)*2-1;
+  _mouse.y=-(e.clientY/innerHeight)*2+1;
+  _ray.setFromCamera(_mouse,camera);
+  const hits=_ray.intersectObjects(tileMeshes);
+  if(!hits.length) return;
+  if(hits[0].object.userData.sq===nextPos()) advanceStep();
+  else toast('Tell videre! Klikk på ruta med den gule ringen 😊');
+}
+function advanceStep(){
+  const p=players[current];
+  hopBusy=true;
+  p.pos=nextPos();
+  if(p.pos===0) paySalary(p);
+  hopToken(tokens[current], tokenTarget(p), .3, ()=>{
+    hopBusy=false; stepsLeft--;
+    if(stepsLeft<=0){
+      awaitClick=false;
+      setHighlight(p.pos);
+      document.getElementById('hint').textContent='Flott telt! 🎉';
+      resolveSquare();
+    } else {
+      setHighlight(nextPos());
+      updateMoveHint();
+    }
+  });
+}
+
+function paySalary(p){
+  const L=LEVELS[level];
+  let net=L.salary;
+  let msg=p.name+' passerte START: +'+L.salary+' '+MYNT+' i lønn';
+  if(L.salaryTax>0){
+    net-=L.salaryTax;
+    addToPot(L.salaryTax);
+    msg+=' (–'+L.salaryTax+' skatt til sparemålet)';
+  }
+  if(p.debt>0){
+    const avdrag=Math.min(20, p.debt, net);
+    p.debt-=avdrag; net-=avdrag;
+    msg+=' – betalte '+avdrag+' i avdrag på lånet';
+  }
+  p.cash+=net;
+  if(p.savings>0){
+    const rente=Math.max(1, Math.round(p.savings*.1));
+    p.savings+=rente;
+    msg+=' og fikk '+rente+' '+MYNT+' i rente! 🏦';
+  }
+  logMsg(msg);
+  renderPlayers(); renderGoal();
+}
+
+function addToPot(n){
+  goalPot+=n; renderGoal();
+  if(goalPot>=LEVELS[level].goalTarget) pendingGoalParty=true;
+}
+
+/* Betal et beløp. Småtrinn: betaler maks det man har.
+   Mellomtrinn: tar fra sparekonto, deretter automatisk lån (+10 % rente). */
+function pay(p, amount, recipient){
+  let remaining=amount;
+  const fromCash=Math.min(p.cash, remaining);
+  p.cash-=fromCash; remaining-=fromCash;
+  if(remaining>0 && p.savings>0){
+    const fromSav=Math.min(p.savings, remaining);
+    p.savings-=fromSav; remaining-=fromSav;
+    logMsg(p.name+' tok '+fromSav+' '+MYNT+' fra sparekontoen.');
+  }
+  if(remaining>0){
+    if(LEVELS[level].hasLoan){
+      const loan=Math.round(remaining*1.1);
+      p.debt+=loan;
+      logMsg(p.name+' tok lån: '+remaining+' '+MYNT+' (+10 % rente = '+loan+' i gjeld) 💳');
+      remaining=0;
+    } else {
+      amount-=remaining; remaining=0; // småtrinn: betal det du har
+    }
+  }
+  if(recipient) recipient.cash+=amount;
+  return amount;
+}
+
+function canAfford(p, amount){ return p.cash+p.savings>=amount; }
+
+function ownsGroup(p, grp){
+  const all=Object.keys(JOBS).filter(k=>JOBS[k][2]===grp).map(Number);
+  return all.every(i=>p.jobs.includes(i));
+}
+
+/* ---------- Ruteløsning ---------- */
+function resolveSquare(){
+  const p=players[current], sq=squares[p.pos];
+  renderPlayers();
+  switch(sq.type){
+    case 'start': toast('Lønningsdag! '+MYNT+''); setTimeout(afterResolve,900); break;
+    case 'rest':  toast('Friminutt! ⚽ Pust ut.'); setTimeout(afterResolve,1100); break;
+    case 'job':   resolveJob(p,sq); break;
+    case 'event': resolveEvent(p); break;
+    case 'quiz':  resolveQuiz(p); break;
+    case 'shop':  resolveShop(p); break;
+    case 'bank':  openBank(p); break;
+    case 'goal':  resolveGoal(p); break;
+    case 'tax':   resolveTax(p); break;
+    case 'fund':  resolveFund(p); break;
+    default: afterResolve();
+  }
+}
+
+function resolveJob(p,sq){
+  if(sq.owner===null){
+    showModal({emoji:sq.emoji, title:sq.name,
+      body:'Jobben er ledig!<br>Pris: <span class="big">'+sq.price+' '+MYNT+'</span><br>'+
+        'Andre som lander her betaler deg <b>'+sq.fee+' '+MYNT+'</b> i gebyr.<br>'+
+        '<small>Gruppe: '+GROUPNAMES[sq.grp]+' – eier du hele gruppen, dobles gebyret! Lander du her igjen, kan du ta kurs og øke gebyret.</small>',
+      buttons:[
+        {label:'Ta jobben! ('+sq.price+' '+MYNT+')', cls:'btn-green', disabled:!canAfford(p,sq.price), fn:()=>{
+          pay(p,sq.price,null);
+          sq.owner=current; p.jobs.push(sq.i);
+          addOwnerMarker(sq.i,p);
+          logMsg(p.name+' tok jobben som '+sq.name+'! '+sq.emoji);
+          if(ownsGroup(p,sq.grp)) toast(p.name+' eier hele '+GROUPNAMES[sq.grp].toLowerCase()+'-gruppen! Dobbelt gebyr! 🔥');
+          afterResolve();
+        }},
+        {label:'Nei takk, jeg sparer 💪', cls:'btn-ghost', fn:afterResolve}
+      ]});
+  } else if(sq.owner===current){
+    jobCourse(p,sq);
+  } else {
+    const owner=players[sq.owner];
+    const fee=sq.fee*sq.lvl*(ownsGroup(owner,sq.grp)?2:1);
+    showModal({emoji:sq.emoji, title:sq.name,
+      body:p.name+' fikk hjelp av '+owner.name+'s '+sq.name.toLowerCase()+' (nivå '+sq.lvl+')!<br>'+
+        'Betal gebyr: <span class="big">'+fee+' '+MYNT+'</span> til '+owner.emoji+' '+owner.name,
+      buttons:[{label:'Betal '+fee+' '+MYNT+'', cls:'btn-blue', fn:()=>{
+        const paid=pay(p,fee,owner);
+        logMsg(p.name+' betalte '+paid+' '+MYNT+' i gebyr til '+owner.name+'.');
+        afterResolve();
+      }}]});
+  }
+}
+
+/* ---------- Kurs: invester i egen jobb (nivå 1-3) ---------- */
+const COURSE_TITLES=['','Lærling','Fagperson','Mester'];
+function coursePrice(sq){ return sq.lvl===1 ? Math.round(sq.price/2) : sq.price; }
+
+function jobCourse(p,sq){
+  if(sq.lvl>=3){
+    toast('Mester-jobb! 🥇 '+sq.name+' er på høyeste nivå.');
+    setTimeout(afterResolve,1100);
+    return;
+  }
+  const cost=coursePrice(sq);
+  const newFee=sq.fee*(sq.lvl+1);
+  showModal({emoji:'🎓', title:'Kurs: '+sq.name,
+    body:'Dette er din egen jobb! Du er <b>'+COURSE_TITLES[sq.lvl]+'</b> (nivå '+sq.lvl+').<br>'+
+      'Ta et kurs og bli <b>'+COURSE_TITLES[sq.lvl+1]+'</b> – da øker gebyret fra <b>'+
+      (sq.fee*sq.lvl)+'</b> til <b>'+newFee+' '+MYNT+'</b>.<br>'+
+      'Kurset koster <span class="big">'+cost+' '+MYNT+'</span><br>'+
+      '<small>… og du må bestå kursprøven for å fullføre!</small>',
+    buttons:[
+      {label:'Ta kurset! 🎓 ('+cost+' '+MYNT+')', cls:'btn-green', disabled:!canAfford(p,cost), fn:()=>courseExam(p,sq,cost)},
+      {label:'Ikke nå', cls:'btn-ghost', fn:afterResolve}
+    ]});
+}
+
+function courseExam(p,sq,cost){
+  pay(p,cost,null);
+  renderPlayers();
+  const [q,opts,correct]=drawQuiz();
+  let answered=false;
+  showModal({emoji:'📝', title:'Kursprøve!', body:q,
+    buttons:opts.map((o,ix)=>({label:o, cls:'btn-ghost quizopt', keepOpen:true, fn:(el)=>{
+      if(answered) return;
+      answered=true;
+      const btns=document.querySelectorAll('#mbtns .btn');
+      btns.forEach((b,bix)=>{ b.disabled=true; if(bix===correct) b.classList.add('correct'); });
+      if(ix===correct){
+        sq.lvl++;
+        addLevelRing(sq.i, sq.lvl, p);
+        toast('Bestått! '+p.name+' er nå '+COURSE_TITLES[sq.lvl]+' '+sq.emoji+' 🎉');
+        logMsg(p.name+' besto kurset og er '+COURSE_TITLES[sq.lvl]+' som '+sq.name+'! 🎓');
+      } else {
+        el.classList.add('wrong');
+        const refund=Math.round(cost/2);
+        p.cash+=refund;
+        toast('Ikke bestått – '+refund+' '+MYNT+' tilbake. Prøv igjen senere! 💪');
+        logMsg(p.name+' strøk på kursprøven ('+sq.name+'), fikk '+refund+' '+MYNT+' refundert.');
+      }
+      setTimeout(()=>{ hideModal(); afterResolve(); },1600);
+    }}))});
+}
+
+function resolveEvent(p){
+  const [text,emoji,v]=drawEvent();
+  showModal({emoji, title:'Hendelse!',
+    body:text+'<br><span class="big">'+(v>0?'+':'')+v+' '+MYNT+'</span>',
+    buttons:[{label:'OK!', cls:v>0?'btn-green':'btn-amber', fn:()=>{
+      if(v>0) p.cash+=v; else pay(p,-v,null);
+      logMsg(p.name+': '+text+' ('+(v>0?'+':'')+v+' '+MYNT+')');
+      afterResolve();
+    }}]});
+}
+
+function resolveQuiz(p){
+  const [q,opts,correct]=drawQuiz();
+  let answered=false;
+  showModal({emoji:'❓', title:'Quiz! (+20 '+MYNT+' for riktig)', body:q,
+    buttons:opts.map((o,ix)=>({label:o, cls:'btn-ghost quizopt', keepOpen:true, fn:(el)=>{
+      if(answered) return;
+      answered=true;
+      const btns=document.querySelectorAll('#mbtns .btn');
+      btns.forEach((b,bix)=>{ b.disabled=true; if(bix===correct) b.classList.add('correct'); });
+      if(ix===correct){
+        p.cash+=20;
+        toast('Riktig! +20 '+MYNT+' 🎉');
+        logMsg(p.name+' svarte riktig på quizen! +20 '+MYNT+'');
+      } else {
+        el.classList.add('wrong');
+        toast('Ikke helt – men nå vet du det! 💡');
+        logMsg(p.name+' bommet på quizen.');
+      }
+      setTimeout(()=>{ hideModal(); afterResolve(); },1600);
+    }}))});
+}
+
+function resolveShop(p){
+  const priceIx=level==='small'?2:3;
+  const items=shuffle(SHOP.slice()).slice(0,3);
+  showModal({emoji:'🛍️', title:'Butikken',
+    body:'Vil du kjøpe noe? Tenk deg om: er det noe du <b>trenger</b> – eller bare har <b>lyst på</b>?<br>Varer gir ⭐ (stjerner teller ved likt resultat).',
+    buttons:items.map(it=>({
+      label:it[1]+' '+it[0]+' – '+it[priceIx]+' '+MYNT+' <small>('+it[4]+')</small>',
+      cls:'btn-blue', disabled:!canAfford(p,it[priceIx]), fn:()=>{
+        pay(p,it[priceIx],null);
+        p.stars++;
+        logMsg(p.name+' kjøpte '+it[0]+' '+it[1]+' ('+it[4]+') ⭐');
+        afterResolve();
+      }})).concat([{label:'Nei takk, jeg sparer 💪', cls:'btn-ghost', fn:()=>{
+        logMsg(p.name+' sa nei takk i butikken. Sparepoeng! 💪');
+        afterResolve();
+      }}])});
+}
+
+function openBank(p){
+  const renteTxt=level==='small'?'10 %':'10 %';
+  showModal({emoji:'🏦', title:'Sparekontoen',
+    body:'Mynter på sparekontoen gir <b>'+renteTxt+' rente</b> hver gang du passerer START!<br>'+
+      '💰 Brukskonto: <b>'+fmt(p.cash)+'</b> &nbsp; 🏦 Sparekonto: <b>'+fmt(p.savings)+'</b>',
+    buttons:[
+      {label:'Sett inn 10 '+MYNT+'', cls:'btn-green', disabled:p.cash<10, fn:()=>{p.cash-=10;p.savings+=10; renderPlayers(); openBank(p);}},
+      {label:'Sett inn alt', cls:'btn-green', disabled:p.cash<1, fn:()=>{p.savings+=p.cash;p.cash=0; renderPlayers(); openBank(p);}},
+      {label:'Ta ut 10 '+MYNT+'', cls:'btn-amber', disabled:p.savings<10, fn:()=>{p.savings-=10;p.cash+=10; renderPlayers(); openBank(p);}},
+      {label:'Ferdig ✔️', cls:'btn-ghost', fn:()=>{logMsg(p.name+' var innom banken. 🏦'); afterResolve();}}
+    ]});
+}
+
+function resolveGoal(p){
+  showModal({emoji:'🎯', title:'Klassens sparemål',
+    body:'Vil du gi et bidrag til klassens sparemål?<br>Når målet er nådd, får <b>alle spillere bonus</b>! 🎉<br>'+
+      'Status: <b>'+fmt(goalPot)+' / '+fmt(LEVELS[level].goalTarget)+' '+MYNT+'</b>',
+    buttons:[
+      {label:'Gi 20 '+MYNT+' 💚', cls:'btn-green', disabled:!canAfford(p,20), fn:()=>{const a=pay(p,20,null); addToPot(a); logMsg(p.name+' ga '+a+' '+MYNT+' til sparemålet! 🎯'); afterResolve();}},
+      {label:'Gi 10 '+MYNT+'', cls:'btn-blue', disabled:!canAfford(p,10), fn:()=>{const a=pay(p,10,null); addToPot(a); logMsg(p.name+' ga '+a+' '+MYNT+' til sparemålet! 🎯'); afterResolve();}},
+      {label:'Ikke denne gangen', cls:'btn-ghost', fn:afterResolve}
+    ]});
+}
+
+function resolveTax(p){
+  const L=LEVELS[level];
+  const tax=level==='small' ? L.taxAmount : Math.max(5, Math.round(p.cash*.1));
+  const expl=level==='small' ? 'Alle betaler litt skatt til fellesskapet.' :
+    'Skatten er 10 % av brukskontoen din (minst 5 '+MYNT+').';
+  showModal({emoji:'💸', title:'Skatt',
+    body:expl+'<br>Skatten går rett til <b>klassens sparemål</b>! 🎯<br><span class="big">'+tax+' '+MYNT+'</span>',
+    buttons:[{label:'Betal skatten', cls:'btn-amber', fn:()=>{
+      const a=pay(p,tax,null); addToPot(a);
+      logMsg(p.name+' betalte '+a+' '+MYNT+' i skatt til sparemålet.');
+      afterResolve();
+    }}]});
+}
+
+function resolveFund(p){
+  const stake=20;
+  showModal({emoji:'📈', title:'Fond',
+    body:'Vil du sette <b>'+stake+' '+MYNT+'</b> i fond? Kursen kan gå opp – eller ned!<br>'+
+      '<small>Lav risiko: små svingninger. Høy risiko: stor gevinst eller stort tap.<br>Gevinst beskattes med 10 % som går til sparemålet.</small>',
+    buttons:[
+      {label:'🐢 Lav risiko', cls:'btn-blue', disabled:!canAfford(p,stake), fn:()=>fundResult(p,stake,'lav')},
+      {label:'🎢 Høy risiko', cls:'btn-amber', disabled:!canAfford(p,stake), fn:()=>fundResult(p,stake,'høy')},
+      {label:'Nei takk, jeg sparer trygt 💪', cls:'btn-ghost', fn:afterResolve}
+    ]});
+}
+function fundResult(p,stake,type){
+  pay(p,stake,null);
+  const out=type==='lav' ? [-5,-2,0,2,4,6,8] : [-20,-15,-10,0,10,20,30,40];
+  const change=out[Math.floor(Math.random()*out.length)];
+  let back=stake+change, taxMsg='';
+  if(change>0){
+    const t=Math.max(1,Math.round(change*.1));
+    back-=t; addToPot(t);
+    taxMsg='<br><small>Gevinstskatt: '+t+' '+MYNT+' til sparemålet.</small>';
+  }
+  p.cash+=back;
+  logMsg(p.name+' satte '+stake+' i fond ('+type+' risiko) og fikk '+back+' tilbake. 📈');
+  showModal({emoji:change>=0?'🚀':'📉',
+    title:change>0?'Kursen gikk opp!':(change<0?'Kursen falt…':'Kursen sto stille'),
+    body:'Du satte inn <b>'+stake+' '+MYNT+'</b>.<br>Endring: <span class="big">'+(change>0?'+':'')+change+' '+MYNT+'</span><br>Du får tilbake <b>'+back+' '+MYNT+'</b>.'+taxMsg,
+    buttons:[{label:'OK!', cls:'btn-green', fn:afterResolve}]});
+}
+
+/* ---------- Etter ruta: sparemål-fest, seier, neste spiller ---------- */
+function afterResolve(){
+  renderPlayers(); renderGoal();
+  if(pendingGoalParty){
+    pendingGoalParty=false;
+    const L=LEVELS[level];
+    const leftover=Math.max(0,goalPot-L.goalTarget);
+    players.forEach(pl=>pl.cash+=L.goalBonus);
+    goalPot=leftover; goalRound++;
+    renderPlayers(); renderGoal();
+    logMsg('SPAREMÅLET ER NÅDD! Alle fikk +'+L.goalBonus+' '+MYNT+' 🎉');
+    showModal({emoji:'🎉', title:'Sparemålet er nådd!',
+      body:'Hele klassen jobbet sammen – og nå feirer vi!<br>'+
+        '<span class="big">Alle spillere får +'+L.goalBonus+' '+MYNT+'!</span><br>Et nytt sparemål starter.',
+      buttons:[{label:'Hurra! 🎊', cls:'btn-green', fn:checkWinThenNext}]});
+    return;
+  }
+  checkWinThenNext();
+}
+
+function checkWinThenNext(){
+  const L=LEVELS[level];
+  const sorted=players.slice().sort((a,b)=>(wealth(b)-wealth(a))||(b.stars-a.stars));
+  const winner=sorted.find(p=>wealth(p)>=L.target);
+  if(winner){
+    gameOver=true;
+    renderPlayers();
+    const rows=sorted.map((p,ix)=>(ix===0?'🏆 ':(ix+1)+'. ')+p.emoji+' '+p.name+' – '+fmt(wealth(p))+' '+MYNT+''+(p.stars?' ⭐'+p.stars:'')).join('<br>');
+    showModal({emoji:'🏆', title:winner.name+' vant!',
+      body:'<b>'+winner.emoji+' '+winner.name+'</b> nådde '+fmt(L.target)+' '+MYNT+' i formue!<br><br>'+rows+
+        '<br><br><small><b>Snakk sammen:</b> Hva lønte seg best – jobber, sparing eller fond? '+
+        'Var det noe dere kjøpte som dere bare hadde lyst på, men ikke trengte?</small>',
+      buttons:[{label:'Spill igjen! 🔄', cls:'btn-green', fn:()=>location.reload()}]});
+    return;
+  }
+  current=(current+1)%players.length;
+  startTurn();
+}
+
+/* ---------- Init ---------- */
+document.getElementById('rollbtn').onclick=takeTurn;
+document.getElementById('camBtn').onclick=toggleCam;
+document.getElementById('rollbtn').disabled=true;
+renderPlayerInputs();
+</script>
+</body>
+</html>
