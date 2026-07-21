@@ -135,10 +135,21 @@
   .bank h3{margin:0 0 8px; text-align:center; font-size:.95rem; font-weight:800; opacity:.75;}
   .bank-shapes{display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
   .shape-card{
-    background:#f3eefc; border-radius:14px; padding:8px;
+    position:relative;
+    background:#f3eefc; border-radius:14px; padding:10px 12px 8px;
     display:flex; align-items:center; justify-content:center;
-    transition:transform .15s ease;
+    transition:transform .15s ease, opacity .15s ease;
   }
+  .shape-badge{
+    position:absolute; top:-8px; right:-8px;
+    min-width:24px; height:24px; padding:0 5px;
+    background:var(--vanskelig); color:#fff;
+    border-radius:12px; border:2px solid var(--card);
+    font-size:.85rem; font-weight:800; line-height:20px;
+    text-align:center; box-shadow:0 2px 0 rgba(58,45,92,.2);
+  }
+  .shape-card.used-up{opacity:.32;}
+  .shape-card.used-up .shape-badge{background:#b8afce;}
   .shape-card.pulse{animation:pulseCard .5s ease;}
   @keyframes pulseCard{0%{transform:scale(1);}40%{transform:scale(1.22) rotate(4deg);}100%{transform:scale(1);}}
   .shape-mini{display:grid; gap:3px;}
@@ -165,6 +176,13 @@
     transition:background .12s ease;
   }
   .cell.alt{background:#f1ebfa;}
+  .cell.blocked{
+    background:
+      repeating-linear-gradient(45deg,#d9cfe8 0 6px,#ccc0e0 6px 12px);
+    border-color:#b6a9d4;
+    box-shadow:inset 0 2px 5px rgba(58,45,92,.28);
+    cursor:default;
+  }
   .cell.paint{
     background:#ffe9a8 !important;
     border-color:#e0a93f;
@@ -244,9 +262,10 @@
   <div class="howto">
     <b>Slik spiller du:</b>
     <ol>
-      <li>Se på figurene øverst – det er formene du kan bruke.</li>
-      <li>Tegn over rutene med fingeren for å lage en form. Du kan snu formene!</li>
-      <li>Fyll hele brettet – ingen ruter til overs. Trykk på en farget form for å fjerne den.</li>
+      <li>Se på brikkene øverst – tallet (×2) viser hvor mange du har igjen av hver.</li>
+      <li>Tegn over rutene med fingeren for å lage en brikke. Du kan snu dem!</li>
+      <li>Bruk opp <b>alle</b> brikkene og fyll hele brettet. Noen brett har hull du må bygge rundt.</li>
+      <li>Trykk på en farget brikke for å fjerne den – da får du den tilbake i banken.</li>
     </ol>
   </div>
 </div>
@@ -271,7 +290,7 @@
   </div>
 
   <div class="bank">
-    <h3>Du kan bruke disse figurene (snu dem som du vil!)</h3>
+    <h3>Bruk akkurat disse brikkene – alle skal med! (snu dem som du vil)</h3>
     <div class="bank-shapes" id="bankShapes"></div>
   </div>
 
@@ -373,14 +392,22 @@ for(const name in SHAPES){
   SHAPE_KEYSETS[name] = new Set([...seen.keys()]);
 }
 
-/* ---------- Vanskelighetsgrader ---------- */
+/* ---------- Vanskelighetsgrader ----------
+   minDistinct : hvor mange ULIKE figurer et brett minst må bruke
+                 (hindrer at hele brettet kan løses med én type).
+   maxHoles(level) : hvor mange hele brikker som fjernes for å lage
+                 hull/hakk, slik at brettet ikke alltid er et rektangel.
+                 Trappes opp med brettnummeret. */
 const DIFFS = {
   lett:      { name:"Lett",      color:"var(--lett)",      emoji:"🐣", rows:4, cols:4,
-               pool:["D2","I3","L3","O4"], bankMin:2, bankMax:3, seedBase:1000 },
+               pool:["D2","I3","L3","O4"], bankMin:2, bankMax:3, seedBase:1000,
+               minDistinct:2, maxHoles:(l)=> l<4 ? 0 : l<10 ? 1 : 2 },
   middels:   { name:"Middels",   color:"var(--middels)",   emoji:"🦊", rows:6, cols:6,
-               pool:["O4","I4","L4","T4","S4","L3","I3"], bankMin:3, bankMax:3, seedBase:2000 },
+               pool:["O4","I4","L4","T4","S4","L3","I3"], bankMin:3, bankMax:3, seedBase:2000,
+               minDistinct:3, maxHoles:(l)=> l<3 ? 0 : l<9 ? 1 : l<15 ? 2 : 3 },
   vanskelig: { name:"Vanskelig", color:"var(--vanskelig)", emoji:"🐉", rows:8, cols:8,
-               pool:["I4","L4","T4","S4","P5","L5","U5","T5"], bankMin:3, bankMax:4, seedBase:3000 }
+               pool:["I4","L4","T4","S4","P5","L5","U5","T5"], bankMin:3, bankMax:4, seedBase:3000,
+               minDistinct:3, maxHoles:(l)=> l<2 ? 0 : l<7 ? 1 : l<13 ? 2 : l<18 ? 3 : 4 }
 };
 const LEVELS_PER_DIFF = 20;
 
@@ -437,23 +464,75 @@ function tileBoard(rows, cols, bank, rnd){
     return false;
   }
 
-  return solve() ? {grid, pieces:placements.length} : null;
+  if(!solve()) return null;
+  // Bygg liste over brikker med navn + hvilke ruter de dekker
+  const pieces = placements.map((name,id) => ({ name, cells:[] }));
+  for(let i=0;i<grid.length;i++){
+    const id = grid[i];
+    if(id >= 0) pieces[id].cells.push(i);
+  }
+  return { grid, pieces };
 }
 
-/* ---------- Generer et brett (deterministisk pr. nivå) ---------- */
+/* ---------- Generer et brett (deterministisk pr. nivå) ----------
+   1) Flislegg hele rektangelet med figurbanken.
+   2) Fjern noen hele brikker (helst i kanten) for å lage hull/hakk,
+      så brettet får en uregelmessig form.
+   3) De resterende brikkene blir det FASTE figursettet: spilleren får
+      akkurat disse brikkene, i akkurat dette antallet, og må bruke alle.
+   Fordi de resterende brikkene allerede dekker akkurat de gjenværende
+   rutene, er brettet garantert løsbart. */
+function isBorderCell(i, rows, cols){
+  const r = Math.floor(i/cols), c = i%cols;
+  return r===0 || r===rows-1 || c===0 || c===cols-1;
+}
+function buildInventory(pieces){
+  const inv = {};
+  for(const p of pieces) inv[p.name] = (inv[p.name]||0) + 1;
+  return inv;
+}
+function distinctCount(inv){ return Object.keys(inv).length; }
+
 function generateLevel(diffKey, levelIndex){
   const D = DIFFS[diffKey];
-  for(let attempt=0; attempt<40; attempt++){
+  const holeTarget = D.maxHoles ? D.maxHoles(levelIndex) : 0;
+  let fallback = null;
+
+  for(let attempt=0; attempt<80; attempt++){
     const rnd = mulberry32(D.seedBase + levelIndex*37 + attempt*7919);
     const bankSize = D.bankMin + Math.floor(rnd()*(D.bankMax - D.bankMin + 1));
     const bank = shuffled(D.pool, rnd).slice(0, bankSize);
     const sizes = bank.map(n => SHAPES[n].length);
     if(!areaFeasible(D.rows*D.cols, sizes)) continue;
     const tiled = tileBoard(D.rows, D.cols, bank, rnd);
-    if(tiled) return { rows:D.rows, cols:D.cols, bank, pieces:tiled.pieces };
+    if(!tiled) continue;
+
+    let pieces = tiled.pieces.slice();
+
+    // Velg brikker å fjerne (helst i kanten, for uregelmessig form)
+    const removeCount = Math.max(0, Math.min(holeTarget, pieces.length - 3));
+    if(removeCount > 0){
+      const border = pieces.filter(p => p.cells.some(i => isBorderCell(i, D.rows, D.cols)));
+      const removePool = shuffled(border.length >= removeCount ? border : pieces, rnd);
+      const removeSet = new Set(removePool.slice(0, removeCount));
+      pieces = pieces.filter(p => !removeSet.has(p));
+    }
+
+    const inventory = buildInventory(pieces);
+    const candidate = {
+      rows: D.rows, cols: D.cols,
+      bank: Object.keys(inventory),
+      inventory,
+      blocked: [].concat(...tiled.pieces.filter(p => pieces.indexOf(p)===-1).map(p=>p.cells))
+    };
+    if(!fallback) fallback = candidate;
+    // Krev nok figurvariasjon slik at ett triks ikke løser alt
+    if(distinctCount(inventory) >= D.minDistinct) return candidate;
   }
-  // nødløsning – skal i praksis aldri skje
-  return { rows:D.rows, cols:D.cols, bank:["O4","D2"], pieces:(D.rows*D.cols)/2 };
+  // Beste vi fant (skal i praksis alltid oppfylle kravet over)
+  if(fallback) return fallback;
+  return { rows:D.rows, cols:D.cols, bank:["O4","D2"],
+           inventory:{O4:(D.rows*D.cols)/8|0, D2:0}, blocked:[] };
 }
 
 /* ---------- Lyd (Web Audio, ingen filer) ---------- */
@@ -566,11 +645,17 @@ document.getElementById("btnBackStart").addEventListener("click", ()=>{ SFX.clic
 /* ---------- Start et brett ---------- */
 function startLevel(diff, level){
   const gen = generateLevel(diff, level);
+  const owner = new Array(gen.rows*gen.cols).fill(null);
+  const blocked = new Set(gen.blocked);
+  for(const i of blocked) owner[i] = "blk";   // "blk" = hull, kan ikke fylles
   state = {
     diff, level,
     rows: gen.rows, cols: gen.cols,
     bank: gen.bank,
-    owner: new Array(gen.rows*gen.cols).fill(null),
+    inventory: gen.inventory,               // fast figursett {navn:antall}
+    remaining: Object.assign({}, gen.inventory), // hvor mange igjen av hver
+    blocked,
+    owner,
     regions: {},
     nextRegionId: 1,
     colorIdx: 0,
@@ -607,8 +692,34 @@ function renderBank(){
       }
     }
     card.appendChild(mini);
+    // Antall-merke: hvor mange igjen av denne brikken
+    const badge = document.createElement("div");
+    badge.className = "shape-badge";
+    badge.dataset.badge = name;
+    card.appendChild(badge);
     wrap.appendChild(card);
   }
+  updateBankCounts();
+}
+/* Oppdater tallene på brikkene (hvor mange igjen) */
+function updateBankCounts(){
+  for(const name of state.bank){
+    const left = state.remaining[name] || 0;
+    const badge = document.querySelector(`.shape-badge[data-badge="${name}"]`);
+    if(badge) badge.textContent = "×" + left;
+    const card = document.querySelector(`.shape-card[data-shape="${name}"]`);
+    if(card) card.classList.toggle("used-up", left <= 0);
+  }
+}
+/* Kort beskjed i hint-linja som forsvinner av seg selv */
+let hintTimer = null;
+const HINT_DEFAULT = "Tegn over rutene – slipp for å sjekke formen!";
+function flashHint(text){
+  const el = document.querySelector(".hintline");
+  if(!el) return;
+  el.textContent = text;
+  if(hintTimer) clearTimeout(hintTimer);
+  hintTimer = setTimeout(()=>{ el.textContent = HINT_DEFAULT; }, 1600);
 }
 function pulseShapeCard(name){
   const card = document.querySelector(`.shape-card[data-shape="${name}"]`);
@@ -626,7 +737,8 @@ function renderBoard(){
   for(let i=0;i<state.rows*state.cols;i++){
     const d = document.createElement("div");
     const r = Math.floor(i/state.cols), c = i%state.cols;
-    d.className = "cell" + ((r+c)%2 ? " alt" : "");
+    const isBlk = state.owner[i] === "blk";
+    d.className = "cell" + (isBlk ? " blocked" : ((r+c)%2 ? " alt" : ""));
     d.dataset.i = i;
     boardEl.appendChild(d);
   }
@@ -644,6 +756,7 @@ function neighborsSameRegion(i, regionId){
 function repaintCell(i){
   const el = boardEl.children[i];
   const regionId = state.owner[i];
+  if(regionId === "blk") return;   // hull – rør ikke
   el.classList.toggle("paint", state.paintCells.has(i));
   el.classList.toggle("locked", regionId !== null);
   if(regionId !== null){
@@ -726,27 +839,39 @@ function evaluatePaint(){
     if(SHAPE_KEYSETS[name].has(key)){ matched = name; break; }
   }
 
-  if(matched){
+  const shakeBoard = ()=>{
+    cells.forEach(i => repaintCell(i));
+    const wrap = document.getElementById("boardWrap");
+    wrap.classList.remove("shake");
+    void wrap.offsetWidth;
+    wrap.classList.add("shake");
+  };
+
+  if(matched && (state.remaining[matched]||0) <= 0){
+    // Riktig form, men brikken er brukt opp
+    shakeBoard();
+    SFX.wrong();
+    pulseShapeCard(matched);
+    flashHint("Du har brukt opp den brikken! 🚫");
+  }else if(matched){
     const id = state.nextRegionId++;
     const color = REGION_COLORS[state.colorIdx++ % REGION_COLORS.length];
     state.regions[id] = { cells, color, shape: matched };
     for(const i of cells) state.owner[i] = id;
+    state.remaining[matched] = (state.remaining[matched]||0) - 1;
+    updateBankCounts();
     for(const i of cells) repaintCell(i);
     // naboceller kan trenge oppdaterte kanter
     cells.forEach(i => {
       [i-1,i+1,i-state.cols,i+state.cols].forEach(j=>{
-        if(j>=0 && j<state.owner.length && state.owner[j]!==null) repaintCell(j);
+        if(j>=0 && j<state.owner.length && state.owner[j]!==null && state.owner[j]!=="blk") repaintCell(j);
       });
     });
     SFX.lock();
     pulseShapeCard(matched);
     checkWin();
   }else{
-    cells.forEach(i => repaintCell(i));
-    const wrap = document.getElementById("boardWrap");
-    wrap.classList.remove("shake");
-    void wrap.offsetWidth;
-    wrap.classList.add("shake");
+    shakeBoard();
     SFX.wrong();
   }
 }
@@ -754,8 +879,10 @@ function removeRegion(id){
   const reg = state.regions[id];
   if(!reg) return;
   for(const i of reg.cells) state.owner[i] = null;
+  if(reg.shape) state.remaining[reg.shape] = (state.remaining[reg.shape]||0) + 1;
   delete state.regions[id];
   for(const i of reg.cells) repaintCell(i);
+  updateBankCounts();
   SFX.remove();
 }
 
@@ -766,7 +893,7 @@ function checkWin(){
   saveProgress();
   const pieces = Object.keys(state.regions).length;
   document.getElementById("winText").textContent =
-    "Du fylte brettet med " + pieces + " figurer!";
+    "Du brukte alle " + pieces + " brikkene – helt perfekt!";
   document.getElementById("winOverlay").classList.add("show");
   SFX.win();
   launchConfetti();
@@ -795,9 +922,12 @@ document.getElementById("btnClear").addEventListener("click", ()=>{
   if(!state) return;
   SFX.remove();
   state.owner.fill(null);
+  for(const i of state.blocked) state.owner[i] = "blk";  // behold hullene
   state.regions = {};
+  state.remaining = Object.assign({}, state.inventory);  // full figurbank igjen
   state.paintCells = new Set();
   repaintAll();
+  updateBankCounts();
 });
 const btnMute = document.getElementById("btnMute");
 function refreshMute(){ btnMute.textContent = muted ? "🔇" : "🔊"; }
