@@ -190,9 +190,16 @@ h1,h2,h3,.disp{font-family:'Fredoka One',cursive;font-weight:400;letter-spacing:
 #stick.show{display:block}
 #stickKnob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;
   background:rgba(233,162,59,.95);box-shadow:0 3px 10px rgba(0,0,0,.32);pointer-events:none}
+#nearBtn{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:26;border:none;cursor:pointer;
+  background:var(--leaf);color:#fff;font-family:'Fredoka One',cursive;font-size:15px;padding:11px 20px;border-radius:16px;
+  box-shadow:0 5px 0 var(--leaf-d);animation:pulsn 1.6s ease-in-out infinite}
+#nearBtn:active{transform:translateX(-50%) translateY(3px);box-shadow:0 2px 0 var(--leaf-d);animation:none}
+@keyframes pulsn{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
+@media(max-width:520px){#nearBtn{bottom:110px}}
 </style>
 <button id="modeBtn">🚶 Tredjeperson</button>
 <div id="stick"><div id="stickKnob"></div></div>
+<button id="nearBtn" class="hidden"></button>
 
 <!-- modals -->
 <div class="scrim" id="scrim">
@@ -375,7 +382,7 @@ function setMode(m){
   mode=m; const b=document.getElementById("modeBtn");
   if(m==="utforsk"){ exYaw=camYaw; exPitch=-0.12; if(b)b.textContent="🗺️ Oversikt";
     document.getElementById("stick").classList.add("show");
-    toast("Tredjeperson: dra for å snu kameraet · joystick/WASD for å gå 🚶","good"); }
+    toast("Tredjeperson: WASD/joystick for å gå · stå ved en plass og trykk E 🚶","good"); }
   else { if(b)b.textContent="🚶 Tredjeperson"; document.getElementById("stick").classList.remove("show"); }
   activeCamera = (m==="utforsk")? fpCam : camera;
   resize();
@@ -632,7 +639,7 @@ function buildSlots(){
     const tile=new THREE.Mesh(new THREE.BoxGeometry(1.15,0.14,1.15), mat(0x9c6b3e,{flatShading:true}));
     tile.position.y=0.6; tile.userData.slot=i; tile.receiveShadow=true; g.add(tile);
     g.userData.tile=tile;
-    g.add(makeHitPad(i,1.25,2.8,1.4));   // stor usynlig trykksone
+    g.add(makeHitPad(i,1.55,2.8,1.4));   // stor usynlig trykksone
     const content=new THREE.Group(); content.position.y=0.66; g.userData.content=content; g.add(content);
     scene.add(g); slotMeshes.push(g);
   }
@@ -643,7 +650,7 @@ function buildSlots(){
     const tile=new THREE.Mesh(new THREE.BoxGeometry(1.35,0.16,1.35), mat(0x5a3f28,{flatShading:true}));
     tile.position.y=0.3; tile.userData.slot=i; tile.receiveShadow=true; g.add(tile);
     g.userData.tile=tile; g.userData.bed=true;
-    g.add(makeHitPad(i,1.2,2.2,1.0));
+    g.add(makeHitPad(i,1.5,2.2,1.0));
     const content=new THREE.Group(); content.position.y=0.38; g.userData.content=content; g.add(content);
     scene.add(g); slotMeshes.push(g);
   }
@@ -674,9 +681,9 @@ function buildBenches(){
 let gardener=null;
 /* 3D-modell (Higgsfield). Prototype: hentes fra CDN. For en helt offline versjon
    kan du laste ned .glb-en til Assets/ og sette GARDENER_GLB="Assets/gartner.glb". */
-const GARDENER_GLB   = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/b4be62ab-4e06-4b0c-ad6e-0d08ea0c1c72.glb"; // gå (voxel-gartner)
-const GARDENER_CHEER = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/9761481e-d998-4695-914e-2bf8ac970f72.glb"; // jubel (høsting, voxel)
-const GARDENER_SHRUG = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/f6edf32c-828c-4b6b-8592-69e46f27c9e2.glb"; // skuldertrekk (død, voxel)
+const GARDENER_GLB   = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/1fddcd7f-1cd7-4ec8-9a59-466e3dde2ab1.glb"; // gå (voxel-gartner, tomme hender)
+const GARDENER_CHEER = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/021afb5d-0853-456f-8ac7-ef569d8bdfa7.glb"; // jubel (høsting, voxel)
+const GARDENER_SHRUG = "https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/9bdad44b-f67b-4511-a8fd-5837705087f0.glb"; // skuldertrekk (død, voxel)
 const GARDENER_FACING = 0;     // snu modellen 180° hvis den vender feil vei (0 eller Math.PI)
 const GARDENER_HEIGHT = 1.95;  // ønsket høyde i spillet (juster om gartneren blir for stor/liten)
 const GARDENER_DROP = 0.03;    // liten finjustering (øk hvis hen svever, gjør negativ hvis hen synker)
@@ -937,7 +944,8 @@ function renderAllSlots(){ for(let i=0;i<TOTAL_SLOTS;i++) renderSlot(i); }
  * ===================================================================== */
 let dragging=false,lastX=0,lastY=0,moved=0,pinchD=0;
 const keys={};
-addEventListener("keydown",e=>{ keys[e.code]=true; });
+addEventListener("keydown",e=>{ keys[e.code]=true;
+  if(e.code==="KeyE" && !e.repeat) nearAct(); });
 addEventListener("keyup",e=>{ keys[e.code]=false; });
 
 canvas.addEventListener("pointerdown",e=>{ dragging=true;moved=0;lastX=e.clientX;lastY=e.clientY; canvas.setPointerCapture(e.pointerId); });
@@ -1012,6 +1020,51 @@ function moveGardener(ox,oz,nx,nz){
 }
 
 /* ===================================================================== *
+ *  NÆRHETSAKTIVERING — stå ved en plass og trykk E (eller knappen)       *
+ * ===================================================================== */
+let nearSlot=-1, nearStand=null, nearRing=null;
+(function(){
+  nearRing=new THREE.Mesh(new THREE.BoxGeometry(1.55,0.08,1.55),
+    new THREE.MeshBasicMaterial({color:0x2f9e5e,transparent:true,opacity:0.8}));
+  nearRing.visible=false; scene.add(nearRing);
+})();
+function nearLabel(i){
+  if(!isBed(i) && i>=G.slotsUnlocked) return "🔒 Låst plass";
+  const s=G.slots[i];
+  if(!s) return isBed(i)?"🌷 Så frø":"🌰 Plant her";
+  if(s.dead) return "🧹 Rydd";
+  if(s.stage>=4) return "✂️ Høst og selg";
+  return "🪴 Stell planten";
+}
+function updateNear(){
+  if(!gardener||!G) return;
+  const btn=document.getElementById("nearBtn"), gp=gardener.position;
+  let best=-1, bd=2.1;
+  for(let i=0;i<TOTAL_SLOTS;i++){
+    const p=isBed(i)?bedPos(i):slotPos(i);
+    const d=Math.hypot(p.x-gp.x,p.z-gp.z);
+    if(d<bd){ bd=d; best=i; }
+  }
+  let stand=null;
+  stands.forEach(st=>{ if(Math.hypot(st.position.x-gp.x,st.position.z-gp.z)<2.6) stand=st.userData.hit.userData.stand; });
+  nearSlot=best; nearStand=stand;
+  if(stand){
+    btn.textContent=(stand==="shop"?"🛒 Åpne butikken":"🌟 Oppgraderinger")+" (E)";
+    btn.classList.remove("hidden"); nearRing.visible=false;
+  } else if(best>=0){
+    btn.textContent=nearLabel(best)+" (E)"; btn.classList.remove("hidden");
+    const p=isBed(best)?bedPos(best):slotPos(best);
+    nearRing.position.set(p.x, isBed(best)?0.42:0.72, p.z);
+    const pu=1+Math.sin(performance.now()*0.005)*0.07;
+    nearRing.scale.set(pu,1,pu); nearRing.visible=true;
+  } else { btn.classList.add("hidden"); nearRing.visible=false; }
+}
+function nearAct(){
+  if(nearStand){ if(nearStand==="shop") openShop(); else openUpgrades(); return; }
+  if(nearSlot>=0) openSlot(nearSlot);
+}
+
+/* ===================================================================== *
  *  RENDER-LOOP                                                           *
  * ===================================================================== */
 let selSlot=-1;
@@ -1079,6 +1132,7 @@ function tick(){
   camFocus.lerp(gardener.position,0.09); placeCamera();
   for(let i=0;i<TOTAL_SLOTS;i++){ const s=G.slots[i]; if(s&&!s.dead&&s.stage>0){
     slotMeshes[i].userData.content.rotation.z=Math.sin(time*1.2+i)*0.025; }}
+  updateNear();
   renderer.render(scene,activeCamera);
 }
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
@@ -1558,6 +1612,7 @@ let joy={x:0,z:0,active:false};
   st.addEventListener("pointerup",end); st.addEventListener("pointercancel",end);
 })();
 $("modeBtn").onclick=()=>setMode(mode==="utforsk"?"oversikt":"utforsk");
+$("nearBtn").onclick=nearAct;
 
 window.hideCard=hideCard; window.openSlot=openSlot; window.openPlanting=openPlanting; window.renderPlanting=renderPlanting;
 window.doPlant=doPlant; window.openShop=openShop; window.buySeed=buySeed; window.openUpgrades=openUpgrades;
