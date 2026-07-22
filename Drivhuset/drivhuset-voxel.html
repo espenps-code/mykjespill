@@ -191,7 +191,7 @@ h1,h2,h3,.disp{font-family:'Fredoka One',cursive;font-weight:400;letter-spacing:
 #stickKnob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;
   background:rgba(233,162,59,.95);box-shadow:0 3px 10px rgba(0,0,0,.32);pointer-events:none}
 </style>
-<button id="modeBtn">🚶 Gå rundt</button>
+<button id="modeBtn">🚶 Tredjeperson</button>
 <div id="stick"><div id="stickKnob"></div></div>
 
 <!-- modals -->
@@ -333,10 +333,13 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfe3d2);
-(function(){ const ld=new THREE.TextureLoader(); ld.crossOrigin="anonymous";
-  const ok=t=>{ scene.background=t; };
-  ld.load("Assets/vox_bg_world.png", ok, undefined,
-    ()=>ld.load("https://d8j0ntlcm91z4.cloudfront.net/user_3CdYUPSOzmh7OXn0ZcBWtMDV0N4/hf_20260722_174753_4c085cc6-8dbb-4246-95d9-ed0231bdfb09.png", ok, undefined, ()=>{/* behold farge */})); })();
+(function(){ // myk gradient-himmel (ingen bildefil)
+  const cv=document.createElement("canvas"); cv.width=32; cv.height=256;
+  const ctx=cv.getContext("2d");
+  const gr=ctx.createLinearGradient(0,0,0,256);
+  gr.addColorStop(0,"#a8e0f6"); gr.addColorStop(0.55,"#c8ece2"); gr.addColorStop(1,"#e6f4d8");
+  ctx.fillStyle=gr; ctx.fillRect(0,0,32,256);
+  scene.background=new THREE.CanvasTexture(cv); })();
 scene.fog = new THREE.Fog(0xbfe3d2, 40, 82);
 
 /* ---- to kameraer: oversikt (orbit) + utforsk (gå rundt) ---- */
@@ -350,12 +353,14 @@ const fpCam  = new THREE.PerspectiveCamera(68, innerWidth/innerHeight, 0.1, 260)
 let activeCamera = camera;
 function placeCamera(){
   if(mode==="utforsk" && typeof gardener!=="undefined" && gardener){
-    const back=1.9, eyeH=2.05, cp=Math.cos(exPitch), sx=Math.sin(exYaw), sz=Math.cos(exYaw);
-    fpCam.position.set(gardener.position.x - sx*back, eyeH, gardener.position.z - sz*back);
-    fpCam.lookAt(
-      fpCam.position.x + sx*cp*5,
-      fpCam.position.y + Math.sin(exPitch)*5,
-      fpCam.position.z + sz*cp*5);
+    /* tredjeperson: kameraet henger bak og over gartneren og ser på hen */
+    const dist=4.5, el=clamp(0.42 - exPitch, 0.08, 1.2);   // dra opp/ned = høyere/lavere kamera
+    const sx=Math.sin(exYaw), sz=Math.cos(exYaw), ce=Math.cos(el);
+    fpCam.position.set(
+      gardener.position.x - sx*ce*dist,
+      Math.max(0.6 + Math.sin(el)*dist, 0.5),
+      gardener.position.z - sz*ce*dist);
+    fpCam.lookAt(gardener.position.x, gardener.position.y+1.4, gardener.position.z);
     return;
   }
   const d = 36, cp=Math.cos(camPitch), sp=Math.sin(camPitch);
@@ -370,8 +375,8 @@ function setMode(m){
   mode=m; const b=document.getElementById("modeBtn");
   if(m==="utforsk"){ exYaw=camYaw; exPitch=-0.12; if(b)b.textContent="🗺️ Oversikt";
     document.getElementById("stick").classList.add("show");
-    toast("Gå rundt: dra for å se deg om · joystick/WASD for å gå 🚶","good"); }
-  else { if(b)b.textContent="🚶 Gå rundt"; document.getElementById("stick").classList.remove("show"); }
+    toast("Tredjeperson: dra for å snu kameraet · joystick/WASD for å gå 🚶","good"); }
+  else { if(b)b.textContent="🚶 Tredjeperson"; document.getElementById("stick").classList.remove("show"); }
   activeCamera = (m==="utforsk")? fpCam : camera;
   resize();
 }
@@ -397,38 +402,38 @@ const fill=new THREE.DirectionalLight(0xbfe0ff,0.28); fill.position.set(-9,8,-6)
 /* ---- materialer + teksturlasting (med fargefallback) ---- */
 function mat(col,opts){ return new THREE.MeshLambertMaterial(Object.assign({color:col},opts||{})); }
 const ASSET_BASE = "Assets/";       // legg de genererte bildene her ved deploy
-/* Higgsfield-genererte voxel-teksturer: lastes lokalt hvis fila finnes, ellers fra CDN, ellers flat farge */
-const CDN = "https://d8j0ntlcm91z4.cloudfront.net/user_3CdYUPSOzmh7OXn0ZcBWtMDV0N4/";
-const ASSET_URLS = {
-  "vox_grass.png":  CDN+"hf_20260722_174736_9143b3ae-5004-417c-8429-005f80991901.png",
-  "vox_gravel.png": CDN+"hf_20260722_174739_d8837d79-18ae-4cd3-aca5-85592b8f1943.png",
-  "vox_soil.png":   CDN+"hf_20260722_174742_2b5633f8-04b4-4424-af1c-ff17d4b673c3.png",
-  "vox_wood.png":   CDN+"hf_20260722_174746_882ca7e2-ce19-477a-bc38-73d410f7fdc5.png",
-  "vox_floor.png":  CDN+"hf_20260722_174749_aef4d5d4-0e3d-4116-a207-655045e51a62.png",
-  "vox_bg_world.png": CDN+"hf_20260722_174753_4c085cc6-8dbb-4246-95d9-ed0231bdfb09.png",
-  "vox_intro.png":  CDN+"hf_20260722_174756_9111d390-44ca-40fd-b38a-df645d049630.png",
-};
-function textured(colorFallback, file, rx, ry){
-  const m = new THREE.MeshLambertMaterial({color:colorFallback});
-  const ld = new THREE.TextureLoader(); ld.crossOrigin="anonymous";
-  const apply = t=>{
-    t.wrapS=t.wrapT=THREE.MirroredRepeatWrapping;          // speilvendt flislegging → alltid sømløst
-    t.repeat.set(rx||1,ry||1);
-    t.magFilter=THREE.NearestFilter;                       // pikselskarpe voxel-teksturer
-    t.anisotropy=renderer.capabilities.getMaxAnisotropy(); t.minFilter=THREE.LinearMipmapLinearFilter; t.generateMipmaps=true;
-    m.map=t; m.color.set(0xcacaca); m.needsUpdate=true;   // svak nedtoning så lyse flater ikke vaskes ut
-  };
-  ld.load(ASSET_BASE+file, apply, undefined, ()=>{
-    if(ASSET_URLS[file]) ld.load(ASSET_URLS[file], apply, undefined, ()=>{/* behold farge */});
-  });
-  return m;
+/* ---- rene voxel-materialer bygget i kode: alltid sømløse, rolige flater ----
+   (AI-bilder brukes kun til himmel, intro og 3D-gartneren) */
+function pixTex(px, painter, rx, ry){
+  const cv=document.createElement("canvas"); cv.width=cv.height=px;
+  painter(cv.getContext("2d"), px);
+  const t=new THREE.CanvasTexture(cv);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx||1,ry||1);
+  t.magFilter=THREE.NearestFilter;                        // pikselskarpe kanter
+  t.minFilter=THREE.LinearMipmapLinearFilter; t.generateMipmaps=true;
+  t.anisotropy=renderer.capabilities.getMaxAnisotropy();
+  return new THREE.MeshLambertMaterial({map:t});
 }
+let _sd=7; function _rnd(){ _sd=(_sd*16807)%2147483647; return _sd/2147483647; }   // deterministisk
+function speckle(cols){ return (ctx,n)=>{ for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+  ctx.fillStyle=cols[(_rnd()*cols.length)|0]; ctx.fillRect(x,y,1,1); } }; }
+function planks(cols,seam){ return (ctx,n)=>{ const bh=n/4;
+  for(let b=0;b<4;b++){ ctx.fillStyle=cols[b%cols.length]; ctx.fillRect(0,b*bh,n,bh);
+    for(let x=0;x<n;x++){ if(_rnd()<0.18){ ctx.fillStyle=cols[(b+1)%cols.length]; ctx.fillRect(x,b*bh+((_rnd()*(bh-1))|0)+1,1,1);} }
+    ctx.fillStyle=seam; ctx.fillRect(0,b*bh,n,1);                       // plankeskille
+    ctx.fillRect(((b*5+3)%n),b*bh,1,bh); }                              // forskjøvet skjøt
+  }; }
+function bricks(cols,mortar){ return (ctx,n)=>{ const bh=n/4, bw=n/2;
+  ctx.fillStyle=mortar; ctx.fillRect(0,0,n,n);
+  for(let r=0;r<4;r++){ const off=(r%2)?bw/2:0;
+    for(let c=-1;c<3;c++){ ctx.fillStyle=cols[((r*3+c+3)%cols.length)];
+      ctx.fillRect(c*bw+off+1,r*bh+1,bw-1,bh-1); } } }; }
 const MAT = {
-  grass:  textured(0x8fd47a, "vox_grass.png", 5, 5),
-  floor:  textured(0xd08a5c, "vox_floor.png", 5, 4),
-  gravel: textured(0xd9cbab, "vox_gravel.png", 6, 6),
-  wood:   textured(0xc79a62, "vox_wood.png", 1, 1),
-  soil:   textured(0x6b4a2e, "vox_soil.png", 2, 1),
+  grass:  pixTex(16, speckle(["#98d884","#90d07c","#a2de8e","#8aca76"]), 20, 20),
+  floor:  pixTex(16, bricks(["#d99a6c","#d08f60","#c98757"],"#b8865e"), 7, 5),
+  gravel: pixTex(16, speckle(["#e6dabc","#dfd2b2","#d8caa8","#ece1c8"]), 10, 10),
+  wood:   pixTex(16, planks(["#cfa068","#c69760","#bd8d58"],"#a97c4a"), 1, 1),
+  soil:   pixTex(16, speckle(["#6b4a2e","#61432a","#755434","#5a4124"]), 3, 2),
 };
 
 /* ---- voxel-hjelpere: alt bygges av små klosser ---- */
@@ -477,7 +482,7 @@ function buildWorld(){
   const apron=new THREE.Mesh(new THREE.BoxGeometry(GH_W+9,0.52,GH_D+9), MAT.gravel);
   apron.position.y=-0.55; apron.receiveShadow=true; scene.add(apron);
   // egen grus-tekstur for stien så steinene blir like store som på grusplassen rundt
-  const pathMat=textured(0xd9cbab,"vox_gravel.png",1.3,5);
+  const pathMat=pixTex(16, speckle(["#e6dabc","#dfd2b2","#d8caa8","#ece1c8"]), 1.5, 5);
   const path=new THREE.Mesh(new THREE.BoxGeometry(4.5,0.54,14), pathMat);
   path.position.set(0,-0.53,GH_D/2+8.5); path.receiveShadow=true; scene.add(path);
   // drivhusgulv (terrakotta)
@@ -688,7 +693,7 @@ function buildGardener(){
   const legL=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.62,0.2),mat(overalls,{flatShading:true})); legL.position.set(-0.14,0.32,0); legL.castShadow=true; g.add(legL);
   const legR=legL.clone(); legR.position.x=0.14; g.add(legR);
   const procParts=[torso,head,brim,crown,armL,armR,legL,legR];   // den enkle figuren (reserve)
-  g.userData={legL,legR,armL,armR, procParts, model:null, target:null, pending:-1, standAct:null, path:[], phase:0, moving:false, speed:6.4};
+  g.userData={legL,legR,armL,armR, procParts, model:null, target:null, pending:-1, standAct:null, path:[], phase:0, moving:false, speed:3.9};
   g.position.set(0,0,GH_D/2+3.5);
   scene.add(g); gardener=g; camFocus.copy(g.position);
   loadGardenerModel(g);
@@ -731,7 +736,7 @@ function loadGardenerModel(g){
     let mixer=null, walkAct=null;
     if(gltf.animations && gltf.animations.length){
       mixer=new THREE.AnimationMixer(m);
-      walkAct=mixer.clipAction(gltf.animations[0]); walkAct.play(); walkAct.paused=true;
+      walkAct=mixer.clipAction(gltf.animations[0]); walkAct.timeScale=1.35; walkAct.play(); walkAct.paused=true;
       mixer.update(0);
     }
     // 3) sentrer vannrett (bein) + plant sålen på bakken (faktiske skinn-punkter)
@@ -1066,6 +1071,11 @@ function tick(){
     g.model.rotation.z=Math.sin(g.phase)*0.04*(moving?1:0);
   }
   g.moving=moving;
+  /* tredjeperson: kameraet svinger mykt inn bak gartneren når hen går (ikke mens man drar) */
+  if(mode==="utforsk" && moving && !dragging){
+    const dY=((gardener.rotation.y-exYaw+Math.PI*3)%(Math.PI*2))-Math.PI;
+    exYaw+=dY*0.045;
+  }
   camFocus.lerp(gardener.position,0.09); placeCamera();
   for(let i=0;i<TOTAL_SLOTS;i++){ const s=G.slots[i]; if(s&&!s.dead&&s.stage>0){
     slotMeshes[i].userData.content.rotation.z=Math.sin(time*1.2+i)*0.025; }}
