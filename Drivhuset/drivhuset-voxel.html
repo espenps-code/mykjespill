@@ -462,8 +462,9 @@ let stands=[];
 const OBSTACLES=[];
 function addObstacle(cx,cz,w,d,pad){ pad=pad||0;
   OBSTACLES.push({minx:cx-w/2-pad, maxx:cx+w/2+pad, minz:cz-d/2-pad, maxz:cz+d/2+pad}); }
-function blocked(x,z){ for(let i=0;i<OBSTACLES.length;i++){ const o=OBSTACLES[i];
-  if(x>o.minx && x<o.maxx && z>o.minz && z<o.maxz) return true; } return false; }
+function blocked(x,z){ const R=0.3;   // kroppsradius så figuren ikke klipper inn i kasser/benker
+  for(let i=0;i<OBSTACLES.length;i++){ const o=OBSTACLES[i];
+  if(x>o.minx-R && x<o.maxx+R && z>o.minz-R && z<o.maxz+R) return true; } return false; }
 function buildStand(x,z,emoji,act){
   const g=new THREE.Group(); g.position.set(x,0,z);
   const counter=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.0,1.2), MAT.wood);
@@ -1012,7 +1013,15 @@ function walkToSlot(i){
   }
   const sp=bedPos(i);
   const dir=new THREE.Vector3(gp.x-sp.x,0,gp.z-sp.z); if(dir.lengthSq()<0.01)dir.set(0,0,1); dir.normalize();
-  walkPath(sp.x+dir.x*1.5, sp.z+dir.z*1.5, i, null);
+  walkPath(sp.x+dir.x*2.0, sp.z+dir.z*2.0, i, null);
+}
+/* bakkehøyde under gartneren: gulvet inne ligger på 0, terrenget ute lavere */
+function groundY(x,z){
+  const hw=GH_W/2, hd=GH_D/2;
+  if(Math.abs(x)<hw && Math.abs(z)<hd) return 0;             // terrakottagulv inne
+  if(Math.abs(x)<2.25 && z>=hd && z<23.5) return -0.26;      // grussti foran
+  if(Math.abs(x)<hw+4.5 && Math.abs(z)<hd+4.5) return -0.29; // grusplass rundt
+  return -0.35;                                              // plen
 }
 /* vegg-kollisjon: stopp ved drivhusveggene, slipp gjennom døra foran */
 function moveGardener(ox,oz,nx,nz){
@@ -1139,6 +1148,9 @@ function tick(){
     g.model.rotation.z=Math.sin(g.phase)*0.04*(moving?1:0);
   }
   g.moving=moving;
+  /* følg terrenget: senk/hev figuren mykt mot bakkehøyden der hen står */
+  const gy=groundY(gardener.position.x,gardener.position.z);
+  gardener.position.y += (gy-gardener.position.y)*Math.min(1,dt*12);
   /* tredjeperson: kameraet svinger mykt inn bak gartneren når hen går (ikke mens man drar) */
   if(mode==="utforsk" && moving && !dragging){
     const dY=((gardener.rotation.y-exYaw+Math.PI*3)%(Math.PI*2))-Math.PI;
