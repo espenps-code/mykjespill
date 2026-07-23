@@ -196,6 +196,7 @@ h1,h2,h3,.disp{font-family:'Fredoka One',cursive;font-weight:400;letter-spacing:
 #nearBtn:active{transform:translateX(-50%) translateY(3px);box-shadow:0 2px 0 var(--leaf-d);animation:none}
 @keyframes pulsn{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
 @media(max-width:520px){#nearBtn{bottom:110px}}
+@media(pointer:coarse){#nearBtn{font-size:17px;padding:14px 26px}}
 </style>
 <button id="modeBtn">🚶 Tredjeperson</button>
 <div id="stick"><div id="stickKnob"></div></div>
@@ -382,7 +383,9 @@ function setMode(m){
   mode=m; const b=document.getElementById("modeBtn");
   if(m==="utforsk"){ exYaw=camYaw; exPitch=-0.12; if(b)b.textContent="🗺️ Oversikt";
     document.getElementById("stick").classList.add("show");
-    toast("Tredjeperson: WASD/joystick for å gå · stå ved en plass og trykk E 🚶","good"); }
+    toast(matchMedia("(pointer: coarse)").matches
+      ? "Tredjeperson: styrespaken for å gå · trykk den grønne knappen ved en plass 🚶"
+      : "Tredjeperson: WASD for å gå · stå ved en plass og trykk E 🚶","good"); }
   else { if(b)b.textContent="🚶 Tredjeperson"; document.getElementById("stick").classList.remove("show"); }
   activeCamera = (m==="utforsk")? fpCam : camera;
   resize();
@@ -527,8 +530,9 @@ function buildWorld(){
   beamX(-HW,HW,KNEE,-HD); beamZ(-HD,HD,KNEE,-HW); beamZ(-HD,HD,KNEE,HW);
   // tak: glassflater
   const roofLen=Math.hypot(HW,PEAK), rA=Math.atan2(PEAK,HW);
-  const roofL=new THREE.Mesh(new THREE.PlaneGeometry(roofLen,GH_D),glass);
-  roofL.position.set(-HW/2,GH_H+PEAK/2,0); roofL.rotation.y=Math.PI/2; roofL.rotation.z=rA; scene.add(roofL);
+  const roofGeo=new THREE.PlaneGeometry(roofLen,GH_D); roofGeo.rotateX(-Math.PI/2);
+  const roofL=new THREE.Mesh(roofGeo,glass);
+  roofL.position.set(-HW/2,GH_H+PEAK/2,0); roofL.rotation.z=rA; scene.add(roofL);
   const roofR=roofL.clone(); roofR.position.x=HW/2; roofR.rotation.z=-rA; scene.add(roofR);
   const ridge=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.32,GH_D),timber()); ridge.position.set(0,GH_H+PEAK,0); ridge.castShadow=true; scene.add(ridge);
   // synlige takbjelker (raftere)
@@ -749,7 +753,16 @@ function loadGardenerModel(g){
     // 3) sentrer vannrett (bein) + plant sålen på bakken (faktiske skinn-punkter)
     mr=measure(m); const c=new THREE.Vector3(); mr.b.getCenter(c);
     m.position.x-=c.x; m.position.z-=c.z;
-    let floorY=NaN; try{ floorY=skinnedFloorY(m); }catch(e){}
+    /* mål over hele gå-syklusen (ikke bare frame 0) og bruk snittet — ellers svever hen */
+    let floorY=NaN; try{
+      if(mixer && walkAct){
+        const dur=walkAct.getClip().duration, N=8; let sum=0,cnt=0;
+        for(let i=0;i<N;i++){ walkAct.time=dur*i/N; mixer.update(0);
+          const fy=skinnedFloorY(m); if(isFinite(fy)){ sum+=fy; cnt++; } }
+        walkAct.time=0; mixer.update(0);
+        if(cnt) floorY=sum/cnt;
+      } else floorY=skinnedFloorY(m);
+    }catch(e){}
     m.position.y = isFinite(floorY) ? -floorY - GARDENER_DROP : -mr.b.min.y - GARDENER_DROP;
     // 4) fest modellen og skjul reservefiguren
     holder.add(m);
@@ -1022,6 +1035,8 @@ function moveGardener(ox,oz,nx,nz){
 /* ===================================================================== *
  *  NÆRHETSAKTIVERING — stå ved en plass og trykk E (eller knappen)       *
  * ===================================================================== */
+const TOUCH = matchMedia("(pointer: coarse)").matches;   // iPad/mobil: ingen tastatur-hint
+const E_HINT = TOUCH ? "" : " (E)";
 let nearSlot=-1, nearStand=null, nearRing=null;
 (function(){
   nearRing=new THREE.Mesh(new THREE.BoxGeometry(1.55,0.08,1.55),
@@ -1049,10 +1064,10 @@ function updateNear(){
   stands.forEach(st=>{ if(Math.hypot(st.position.x-gp.x,st.position.z-gp.z)<2.6) stand=st.userData.hit.userData.stand; });
   nearSlot=best; nearStand=stand;
   if(stand){
-    btn.textContent=(stand==="shop"?"🛒 Åpne butikken":"🌟 Oppgraderinger")+" (E)";
+    btn.textContent=(stand==="shop"?"🛒 Åpne butikken":"🌟 Oppgraderinger")+E_HINT;
     btn.classList.remove("hidden"); nearRing.visible=false;
   } else if(best>=0){
-    btn.textContent=nearLabel(best)+" (E)"; btn.classList.remove("hidden");
+    btn.textContent=nearLabel(best)+E_HINT; btn.classList.remove("hidden");
     const p=isBed(best)?bedPos(best):slotPos(best);
     nearRing.position.set(p.x, isBed(best)?0.42:0.72, p.z);
     const pu=1+Math.sin(performance.now()*0.005)*0.07;
