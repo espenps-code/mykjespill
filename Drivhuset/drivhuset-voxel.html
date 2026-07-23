@@ -345,10 +345,10 @@ scene.background = new THREE.Color(0xbfe3d2);
   const cv=document.createElement("canvas"); cv.width=32; cv.height=256;
   const ctx=cv.getContext("2d");
   const gr=ctx.createLinearGradient(0,0,0,256);
-  gr.addColorStop(0,"#a8e0f6"); gr.addColorStop(0.55,"#c8ece2"); gr.addColorStop(1,"#e6f4d8");
+  gr.addColorStop(0,"#8fd2f4"); gr.addColorStop(0.55,"#c6ebe0"); gr.addColorStop(1,"#e8f2cd");
   ctx.fillStyle=gr; ctx.fillRect(0,0,32,256);
   scene.background=new THREE.CanvasTexture(cv); })();
-scene.fog = new THREE.Fog(0xbfe3d2, 40, 82);
+scene.fog = new THREE.Fog(0xcfe9d0, 42, 85);
 
 /* ---- to kameraer: oversikt (orbit) + utforsk (gå rundt) ---- */
 let mode = "oversikt";                   // "oversikt" | "utforsk"
@@ -401,8 +401,8 @@ function resize(){
 addEventListener("resize",resize);
 
 /* ---- lys ---- */
-const hemi=new THREE.HemisphereLight(0xffffff,0x8fb89a,0.8); scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xfff1cf,0.5);
+const hemi=new THREE.HemisphereLight(0xfff6e4,0x8fb89a,0.78); scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xffe9b8,0.6);
 sun.position.set(12,24,9); sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-24; sun.shadow.camera.right=24; sun.shadow.camera.top=24; sun.shadow.camera.bottom=-24;
@@ -439,7 +439,7 @@ function bricks(cols,mortar){ return (ctx,n)=>{ const bh=n/4, bw=n/2;
     for(let c=-1;c<3;c++){ ctx.fillStyle=cols[((r*3+c+3)%cols.length)];
       ctx.fillRect(c*bw+off+1,r*bh+1,bw-1,bh-1); } } }; }
 const MAT = {
-  grass:  pixTex(16, speckle(["#98d884","#90d07c","#a2de8e","#8aca76"]), 20, 20),
+  grass:  pixTex(16, speckle(["#8fd478","#86cc70","#9adc84","#7ec46a"]), 20, 20),
   floor:  pixTex(16, bricks(["#d99a6c","#d08f60","#c98757"],"#b8865e"), 7, 5),
   gravel: pixTex(16, speckle(["#e6dabc","#dfd2b2","#d8caa8","#ece1c8"]), 10, 10),
   wood:   pixTex(16, planks(["#cfa068","#c69760","#bd8d58"],"#a97c4a"), 1, 1),
@@ -479,16 +479,29 @@ function buildWorld(){
   // utendørs plen
   const lawn=new THREE.Mesh(new THREE.BoxGeometry(72,0.5,72), MAT.grass);
   lawn.position.y=-0.6; lawn.receiveShadow=true; scene.add(lawn);
-  // gjerde rundt hagen
-  const fenceMat=mat(0xe9dcc0), fH=1.1, R=30;
-  function fenceLine(x1,z1,x2,z2){
-    const len=Math.hypot(x2-x1,z2-z1), n=Math.max(1,Math.round(len/2.4));
-    for(let i=0;i<=n;i++){ const tx=x1+(x2-x1)*i/n, tz=z1+(z2-z1)*i/n;
-      const p=new THREE.Mesh(new THREE.BoxGeometry(0.18,fH,0.18),fenceMat); p.position.set(tx,fH/2-0.35,tz); p.castShadow=true; scene.add(p); }
-    const rail=new THREE.Mesh(new THREE.BoxGeometry((Math.abs(x2-x1)||0.14),0.12,(Math.abs(z2-z1)||0.14)),fenceMat);
-    rail.position.set((x1+x2)/2,fH*0.55-0.35,(z1+z2)/2); scene.add(rail);
+  // stakittgjerde rundt hagen: tette spiler med «spiss» topp + to tverr-rekker
+  const fenceMat=mat(0xf2e6c8), fH=1.15, R=30;
+  const fenceSides=[[-R,-R,R,-R],[-R,R,R,R],[-R,-R,-R,R],[R,-R,R,R]];
+  const picketPos=[];
+  fenceSides.forEach(([x1,z1,x2,z2])=>{
+    const len=Math.hypot(x2-x1,z2-z1), n=Math.round(len/0.62);
+    for(let i=0;i<=n;i++) picketPos.push([x1+(x2-x1)*i/n, z1+(z2-z1)*i/n, Math.abs(x2-x1)>0.1?0:Math.PI/2]);
+  });
+  const picket=new THREE.InstancedMesh(new THREE.BoxGeometry(0.16,fH,0.07),fenceMat,picketPos.length);
+  const picketCap=new THREE.InstancedMesh(new THREE.BoxGeometry(0.1,0.12,0.07),fenceMat,picketPos.length);
+  {
+    const M=new THREE.Matrix4(), Q=new THREE.Quaternion(), S=new THREE.Vector3(1,1,1), E=new THREE.Euler(), P=new THREE.Vector3();
+    picketPos.forEach(([tx,tz,ry],i)=>{
+      E.set(0,ry,0); Q.setFromEuler(E);
+      M.compose(P.set(tx,fH/2-0.35,tz),Q,S); picket.setMatrixAt(i,M);
+      M.compose(P.set(tx,fH-0.35+0.06,tz),Q,S); picketCap.setMatrixAt(i,M);
+    });
   }
-  fenceLine(-R,-R,R,-R); fenceLine(-R,R,R,R); fenceLine(-R,-R,-R,R); fenceLine(R,-R,R,R);
+  picket.castShadow=true; scene.add(picket); scene.add(picketCap);
+  fenceSides.forEach(([x1,z1,x2,z2])=>{ [0.35,0.78].forEach(hy=>{
+    const rail=new THREE.Mesh(new THREE.BoxGeometry((Math.abs(x2-x1)||0.1),0.1,(Math.abs(z2-z1)||0.1)),fenceMat);
+    rail.position.set((x1+x2)/2,hy-0.35,(z1+z2)/2); scene.add(rail); });
+  });
   // grusplass + sti inn forfra
   const apron=new THREE.Mesh(new THREE.BoxGeometry(GH_W+9,0.52,GH_D+9), MAT.gravel);
   apron.position.y=-0.55; apron.receiveShadow=true; scene.add(apron);
@@ -501,7 +514,7 @@ function buildWorld(){
   floor.position.y=-0.25; floor.receiveShadow=true; scene.add(floor);
   // ---- ORANGERI: solide trestolper, knevegger, glass over, takbjelker ----
   const HW=GH_W/2, HD=GH_D/2, KNEE=1.2, PEAK=2.4, DW=GH_DOOR; // DW = halv dørbredde
-  const timber = ()=> mat(0xc79a62,{flatShading:true});       // varmt honninggult treverk (voxel)
+  const timber = ()=> mat(0xdcc08e,{flatShading:true});       // lyst kremgult treverk (som referansen)
   const glass  = new THREE.MeshLambertMaterial({color:0xd6efe7,transparent:true,opacity:0.20,side:THREE.DoubleSide});
   function postAt(x,z,th){ th=th||0.34; const p=new THREE.Mesh(new THREE.BoxGeometry(th,GH_H,th),timber());
     p.position.set(x,GH_H/2,z); p.castShadow=true; scene.add(p); }
@@ -529,6 +542,10 @@ function buildWorld(){
   beamX(-HW,HW,GH_H,-HD); beamX(-HW,HW,GH_H,HD);
   beamZ(-HD,HD,GH_H,-HW); beamZ(-HD,HD,GH_H,HW);
   beamX(-HW,HW,KNEE,-HD); beamZ(-HD,HD,KNEE,-HW); beamZ(-HD,HD,KNEE,HW);
+  // vannrette sprosser midt i glassveggene (rutenett-look som i referansen)
+  const MIDY=KNEE+(GH_H-KNEE)*0.55;
+  beamX(-HW,HW,MIDY,-HD,0.13); beamZ(-HD,HD,MIDY,-HW,0.13); beamZ(-HD,HD,MIDY,HW,0.13);
+  [-segC,segC].forEach(cx=> beamX(cx-segW/2,cx+segW/2,MIDY,HD,0.13));
   // tak: glassflater
   const roofLen=Math.hypot(HW,PEAK), rA=Math.atan2(PEAK,HW);
   const roofGeo=new THREE.PlaneGeometry(roofLen,GH_D); roofGeo.rotateX(-Math.PI/2);
@@ -541,11 +558,27 @@ function buildWorld(){
     const rl=new THREE.Mesh(new THREE.BoxGeometry(roofLen,0.18,0.15),timber()); rl.position.set(-HW/2,GH_H+PEAK/2,z); rl.rotation.z=rA; rl.castShadow=true; scene.add(rl);
     const rr=new THREE.Mesh(new THREE.BoxGeometry(roofLen,0.18,0.15),timber()); rr.position.set(HW/2,GH_H+PEAK/2,z); rr.rotation.z=-rA; rr.castShadow=true; scene.add(rr);
   });
-  // gavl-trekanter (glass + kongsstolpe) foran og bak
+  // åser på tvers av taket → glasset får synlige ruter
+  [1/3,2/3].forEach(t=>{
+    [-1,1].forEach(sgn=>{
+      const p=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.14,GH_D),timber());
+      p.position.set(sgn*HW*(1-t),GH_H+PEAK*t,0); p.castShadow=true; scene.add(p);
+    });
+  });
+  // «trappetrinn»-list langs mønet (som i referansen)
+  for(let mz=-HD+0.3;mz<=HD-0.29;mz+=0.8){
+    const tb=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.2,0.42),timber());
+    tb.position.set(0,GH_H+PEAK+0.26,mz); tb.castShadow=true; scene.add(tb);
+  }
+  // gavl-trekanter (glass + kongsstolpe + A-skråstivere) foran og bak
   [HD,-HD].forEach(z=>{
     const sh=new THREE.Shape(); sh.moveTo(-HW,0); sh.lineTo(HW,0); sh.lineTo(0,PEAK); sh.lineTo(-HW,0);
     const gg=new THREE.Mesh(new THREE.ShapeGeometry(sh),glass); gg.position.set(0,GH_H,z); scene.add(gg);
     const kp=new THREE.Mesh(new THREE.BoxGeometry(0.22,PEAK,0.22),timber()); kp.position.set(0,GH_H+PEAK/2,z); scene.add(kp);
+    [-1,1].forEach(sgn=>{                          // skråstivere: fra midten opp til takfoten-midt
+      const br=new THREE.Mesh(new THREE.BoxGeometry(roofLen/2,0.16,0.16),timber());
+      br.position.set(sgn*HW/4,GH_H+PEAK/4,z); br.rotation.z=sgn*rA; br.castShadow=true; scene.add(br);
+    });
   });
   // disker framme
   buildStand(-GH_W/2+2.6, GH_D/2-1.7, "🛒", "shop");
@@ -569,23 +602,34 @@ function bedPos(i){
   return new THREE.Vector3(def.x, 0, def.z0 + k*def.dz);
 }
 function makeTree(x,z,s){
-  // voxel-tre: blokkete stamme + klossekrone i tre grønntoner
+  // voxel-tre: fyldig, avrundet klossekrone — lys topp, mørk underside (som referansen)
   const g=new THREE.Group(); g.position.set(x,-0.45,z);
-  const th=2.6*s;                                  // stammehøyde
-  voxBox(g,0,th/2,0, 0.55*s,th,0.55*s, 0x8a5f3a);
-  const cols=[0x5fae67,0x6fbe72,0x4f9e57];
-  const cs=2.5*s;
-  voxBox(g,0,th+cs*0.32,0, cs,cs*0.72,cs, cols[0]);
-  voxBox(g,cs*0.38,th+cs*0.55,cs*0.25, cs*0.6,cs*0.5,cs*0.6, cols[1]);
-  voxBox(g,-cs*0.35,th+cs*0.6,-cs*0.2, cs*0.55,cs*0.45,cs*0.55, cols[2]);
-  voxBox(g,0,th+cs*0.92,0, cs*0.55,cs*0.4,cs*0.55, cols[1]);
+  const th=2.4*s;                                  // stammehøyde
+  voxBox(g,0,th/2,0, 0.6*s,th,0.6*s, 0x8a5f3a);
+  voxBox(g,0.3*s,th*0.42,0.1*s, 0.22*s,th*0.5,0.22*s, 0x7a5433);   // liten grein
+  const dark=0x449454, mid=0x5cb464, light=0x74cc74, top=0x8adc84;
+  const cs=2.6*s, cy=th+cs*0.42;
+  voxBox(g,0,cy-cs*0.28,0, cs*0.92,cs*0.36,cs*0.92, dark);    // mørk underside
+  voxBox(g,0,cy,0, cs,cs*0.55,cs, mid);                       // hovedkrone
+  voxBox(g,0,cy+cs*0.38,0, cs*0.72,cs*0.4,cs*0.72, light);    // øvre lag
+  voxBox(g,0,cy+cs*0.66,0, cs*0.42,cs*0.3,cs*0.42, top);      // topplokk
+  // «bulker» rundt kronen så den blir rund og frodig
+  [[0.52,0.08,0.2],[-0.5,0.02,-0.15],[0.15,0.05,0.52],[-0.2,0.12,-0.5],[0.4,0.4,-0.28],[-0.38,0.42,0.28]]
+    .forEach(([bx,by,bz],i)=>{
+      voxBox(g,bx*cs,cy+by*cs,bz*cs, cs*(0.34+(i%3)*0.06),cs*(0.3+(i%2)*0.08),cs*(0.34+((i+1)%3)*0.06), vary(i%2?mid:light));
+    });
+  // små lysglimt øverst
+  voxBox(g,cs*0.2,cy+cs*0.52,cs*0.18, cs*0.16,cs*0.12,cs*0.16, top,true);
+  voxBox(g,-cs*0.24,cy+cs*0.45,-cs*0.1, cs*0.14,cs*0.1,cs*0.14, top,true);
   scene.add(g);
 }
 function makeBush(x,z){ const g=new THREE.Group(); g.position.set(x,-0.32,z);
-  const c=0x5aa85f;
-  voxBox(g,0,0.35,0, 0.95,0.7,0.95, c);
-  voxBox(g,0.35,0.72,0.2, 0.5,0.4,0.5, vary(c));
-  voxBox(g,-0.3,0.66,-0.25, 0.45,0.35,0.45, vary(c));
+  const dark=0x4c9c58, mid=0x5fb066, light=0x74c470;
+  voxBox(g,0,0.28,0, 1.15,0.5,1.15, dark);
+  voxBox(g,0,0.6,0, 0.9,0.45,0.9, mid);
+  voxBox(g,0.38,0.5,0.25, 0.5,0.45,0.5, vary(mid));
+  voxBox(g,-0.34,0.48,-0.28, 0.48,0.4,0.48, vary(mid));
+  voxBox(g,0,0.85,0, 0.5,0.3,0.5, light);
   scene.add(g); }
 function makeFlowers(x,z){ const g=new THREE.Group(); g.position.set(x,-0.32,z);
   const cols=[0xe0567c,0xf4c542,0x9b6fd0,0xff7ab0,0x6fc0e0];
@@ -593,6 +637,19 @@ function makeFlowers(x,z){ const g=new THREE.Group(); g.position.set(x,-0.32,z);
     voxBox(g,Math.cos(a)*r,0.2,Math.sin(a)*r, 0.07,0.4,0.07, 0x3f8e4f);
     voxBox(g,Math.cos(a)*r,0.46,Math.sin(a)*r, 0.18,0.15,0.18, cols[k%cols.length]);
   } scene.add(g); }
+function makeSunflowers(x,z){ const g=new THREE.Group(); g.position.set(x,-0.32,z);
+  for(let k=0;k<3;k++){ const ox=(k-1)*0.45, oz=(k%2)?0.22:-0.18, h=1.15+(k%2)*0.35;
+    voxBox(g,ox,h/2,oz, 0.09,h,0.09, 0x3f8e4f);
+    voxBox(g,ox+0.16,h*0.45,oz, 0.24,0.1,0.14, 0x4fa05a,true);   // blad
+    voxBox(g,ox,h+0.12,oz, 0.42,0.42,0.14, 0xf4c542);            // kronblad
+    voxBox(g,ox,h+0.12,oz+0.09, 0.2,0.2,0.1, 0x7a5433,true);     // brun midte
+  } scene.add(g); }
+function makePot(x,z,s){ s=s||1; const g=new THREE.Group(); g.position.set(x,-0.3,z);
+  voxBox(g,0,0.25*s,0, 0.55*s,0.5*s,0.55*s, 0xc97e4e);           // terrakottapotte
+  voxBox(g,0,0.53*s,0, 0.66*s,0.14*s,0.66*s, 0xd68a58);          // kant
+  voxBox(g,0,0.74*s,0, 0.5*s,0.32*s,0.5*s, 0x5fb066);            // plante
+  voxBox(g,0,0.96*s,0, 0.32*s,0.18*s,0.32*s, 0x74c470,true);
+  scene.add(g); }
 function buildGardenExtras(){
   // to lange blomsterbed (under bed-plassene)
   BED_DEFS.forEach(def=>{
@@ -616,9 +673,26 @@ function buildGardenExtras(){
     const rR=rL.clone(); rR.position.x=x+w/2; scene.add(rR);
     const rF=new THREE.Mesh(new THREE.BoxGeometry(w+0.3,0.45,0.18),rm); rF.position.set(x,0.02,z-d/2); rF.castShadow=true; scene.add(rF);
     const rB=rF.clone(); rB.position.z=z+d/2; scene.add(rB);
-    // blomster oppå
-    for(let fx=-1;fx<=1;fx++) for(let fz=-1;fz<=1;fz++){
-      makeFlowers(x+fx*(w*0.28), z+fz*(d*0.28));
+    // tett beplantning i rutenett — rosebusker, tulipaner og grønne dotter om hverandre
+    const g=new THREE.Group(); g.position.set(x,0.2,z); scene.add(g);
+    const nx=Math.max(2,Math.round(w/1.4)), nzc=Math.max(2,Math.round(d/1.4));
+    for(let ix=0;ix<nx;ix++) for(let iz=0;iz<nzc;iz++){
+      const px=(ix/(nx-1)-0.5)*(w-1.0), pz=(iz/(nzc-1)-0.5)*(d-1.0);
+      const kind=(ix*7+iz*5+Math.abs(Math.round(x+z)))%4;
+      if(kind===0||kind===2){                       // rosebusk (rosa/hvit/gul)
+        const bloom=[0xe86f8e,0xfff1f4,0xf4c542,0xf2a0b4][(ix*3+iz+kind)%4];
+        voxBox(g,px,0.22,pz, 0.8,0.45,0.8, vary(0x4f9e58));
+        for(let k=0;k<4;k++){ const a=(k/4+ix*0.13)*6.28, r=0.2+(k%2)*0.12;
+          voxBox(g,px+Math.cos(a)*r,0.5,pz+Math.sin(a)*r, 0.2,0.18,0.2, vary(bloom),true); }
+      } else if(kind===1){                          // tulipaner
+        const cols=[0xe0567c,0xf4c542,0x9b6fd0,0xff7ab0];
+        for(let k=0;k<4;k++){ const a=k/4*6.28, r=0.22+(k%2)*0.14;
+          voxBox(g,px+Math.cos(a)*r,0.25,pz+Math.sin(a)*r, 0.07,0.5,0.07, 0x3f8e4f,true);
+          voxBox(g,px+Math.cos(a)*r,0.56,pz+Math.sin(a)*r, 0.17,0.16,0.17, cols[(k+ix)%4],true); }
+      } else {                                      // grønn dott
+        voxBox(g,px,0.25,pz, 0.7,0.5,0.7, vary(0x5fb066));
+        voxBox(g,px,0.56,pz, 0.42,0.24,0.42, vary(0x74c470),true);
+      }
     }
     addObstacle(x,z,w+0.3,d+0.3,0.1);     // pyntebedet blokkerer gjennomgang
   }
@@ -626,7 +700,40 @@ function buildGardenExtras(){
     .forEach(([x,z,w,d])=>decoBed(x,z,w,d));
   // busker + blomsterklynger
   [[-20,-13],[20,-13],[-25,1],[25,1],[-9,21],[9,21],[-19,17],[19,17],[-23,-19],[23,-19]].forEach(([x,z])=>makeBush(x,z));
-  [[-23,-7],[23,-7],[-9,-21],[9,-21],[0,23],[-26,-9],[26,-9]].forEach(([x,z])=>makeFlowers(x,z));
+  [[-9,-21],[9,-21],[0,23],[-26,-9],[26,-9]].forEach(([x,z])=>makeFlowers(x,z));
+  // solsikker ved bedene (som i referansen)
+  [[-23,-7],[23,-7],[-21,20],[21,20]].forEach(([x,z])=>makeSunflowers(x,z));
+  // terrakottapotter langs fasaden og innkjørselen
+  [[-9.5,9.6],[-6.8,9.6],[6.8,9.6],[9.5,9.6],[-3.6,14],[3.6,14],[-3.6,19],[3.6,19]].forEach(([x,z])=>makePot(x,z,1));
+  // liten bod med grønt trappetak (som i referansen)
+  (function makeShed(x,z){
+    const g=new THREE.Group(); g.position.set(x,-0.35,z);
+    const w=3.6,d=2.8,h=2.3;
+    const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(0xead9b0,{flatShading:true}));
+    body.position.y=h/2; body.castShadow=true; body.receiveShadow=true; g.add(body);
+    const door=new THREE.Mesh(new THREE.BoxGeometry(0.1,1.6,1.0),mat(0xcaa96e));
+    door.position.set(-w/2-0.03,0.8,0); g.add(door);                 // dør mot hagen
+    const knob=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.12,0.12),mat(0x8a6a3e));
+    knob.position.set(-w/2-0.1,0.8,0.3); g.add(knob);
+    for(let i=0;i<4;i++){                                            // grønt trappetak
+      const slab=new THREE.Mesh(new THREE.BoxGeometry(w+0.5,0.22,d+0.6-i*0.62),mat(0x4c9c58,{flatShading:true}));
+      slab.position.set(0,h+0.11+i*0.22,0); slab.castShadow=true; g.add(slab);
+    }
+    scene.add(g); addObstacle(x,z,w,d,0.15);
+  })(26.5,15);
+  // voxel-skyer på himmelen
+  [[-20,16,-24,1.4],[18,18,-20,1.1],[8,15,26,1.2],[-15,17,22,1.0]].forEach(([cx,cy,cz,s])=>{
+    const c=new THREE.Group(); c.position.set(cx,cy,cz);
+    [[0,0,0,3.2,0.8,1.6],[1.4,0.5,0.2,1.6,0.7,1.2],[-1.5,0.4,-0.1,1.4,0.6,1.1]].forEach(([ox,oy,oz,sx,sy,sz])=>{
+      const b=new THREE.Mesh(new THREE.BoxGeometry(sx*s,sy*s,sz*s),mat(0xffffff));
+      b.position.set(ox*s,oy*s,oz*s); c.add(b); });
+    scene.add(c);
+  });
+  // kanter langs grusstien
+  [-2.35,2.35].forEach(ox=>{
+    const edge=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.12,14),mat(0xcbb089));
+    edge.position.set(ox,-0.28,GH_D/2+8.5); scene.add(edge);
+  });
 }
 
 const slotMeshes=[];
