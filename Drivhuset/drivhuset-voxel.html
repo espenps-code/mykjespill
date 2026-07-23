@@ -362,13 +362,13 @@ let activeCamera = camera;
 function placeCamera(){
   if(mode==="utforsk" && typeof gardener!=="undefined" && gardener){
     /* tredjeperson: kameraet henger bak og over gartneren og ser på hen */
-    const dist=4.5, el=clamp(0.42 - exPitch, 0.08, 1.2);   // dra opp/ned = høyere/lavere kamera
+    const dist=7.0, el=clamp(0.42 - exPitch, 0.08, 1.2);   // dra opp/ned = høyere/lavere kamera
     const sx=Math.sin(exYaw), sz=Math.cos(exYaw), ce=Math.cos(el);
     fpCam.position.set(
       gardener.position.x - sx*ce*dist,
-      Math.max(0.6 + Math.sin(el)*dist, 0.5),
+      Math.max(1.1 + Math.sin(el)*dist, 0.9),
       gardener.position.z - sz*ce*dist);
-    fpCam.lookAt(gardener.position.x, gardener.position.y+1.4, gardener.position.z);
+    fpCam.lookAt(gardener.position.x, gardener.position.y+2.8, gardener.position.z);
     return;
   }
   const d = 36, cp=Math.cos(camPitch), sp=Math.sin(camPitch);
@@ -814,6 +814,7 @@ function buildGardener(){
   const procParts=[torso,head,brim,crown,armL,armR,legL,legR];   // den enkle figuren (reserve)
   g.userData={legL,legR,armL,armR, procParts, model:null, target:null, pending:-1, standAct:null, path:[], phase:0, moving:false, speed:3.9};
   g.position.set(0,0,GH_D/2+3.5);
+  g.scale.setScalar(2);       // dobbelt så stor gartner (juster her: 1 = original)
   scene.add(g); gardener=g; camFocus.copy(g.position);
   loadGardenerModel(g);
 }
@@ -1133,16 +1134,18 @@ function groundY(x,z){
 /* vegg-kollisjon: stopp ved drivhusveggene, slipp gjennom døra foran */
 function moveGardener(ox,oz,nx,nz){
   const hw=GH_W/2, hd=GH_D/2, m=0.4, dw=GH_DOOR;
+  const WR=0.5;                                   // kroppsbuffer mot veggene
+  const hits=(nv,ov,p)=> (ov-p)*(nv-p)<0 || (Math.abs(nv-p)<WR && Math.abs(ov-p)>=WR);
   let x=nx;
   if(oz>-hd-m && oz<hd-m){                       // i høyde med sideveggene
-    if((ox+hw)*(x+hw)<0) x=ox;                    // venstre vegg
-    if((ox-hw)*(x-hw)<0) x=ox;                    // høyre vegg
+    if(hits(x,ox,-hw)) x=ox;                      // venstre vegg
+    if(hits(x,ox,hw)) x=ox;                       // høyre vegg
   }
   if(blocked(x,oz)) x=ox;                         // benker/bed (x-akse)
   let z=nz;
   if(x>-hw-m && x<hw+m){
-    if((oz+hd)*(z+hd)<0) z=oz;                              // bakvegg
-    if((oz-hd)*(z-hd)<0 && !(x>-dw && x<dw)) z=oz;          // framvegg (åpen i døra)
+    if(hits(z,oz,-hd)) z=oz;                                // bakvegg
+    if(hits(z,oz,hd) && !(x>-dw+0.25 && x<dw-0.25)) z=oz;   // framvegg (åpen i døra)
   }
   if(blocked(x,z)) z=oz;                          // benker/bed (z-akse)
   return {x,z};
