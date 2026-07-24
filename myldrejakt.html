@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Myldrejakt · Mykje spill</title>
+
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#4c1d95">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --natt-1:#2a1a5e;
+  --natt-2:#4c1d95;
+  --natt-3:#1b1147;
+  --teal:#2dd4bf;
+  --lilla:#a855f7;
+  --oransje:#fb923c;
+  --gul:#fbbf24;
+  --rosa:#f472b6;
+  --gronn:#34d399;
+  --kort:#ffffff;
+  --blekk:#241a52;
+  --krite:#fff7ed;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+
+body{
+  font-family:'Atkinson Hyperlegible',system-ui,sans-serif;
+  color:var(--krite);
+  background:
+    radial-gradient(900px 500px at 80% -5%, rgba(168,85,247,.55), transparent 60%),
+    radial-gradient(700px 500px at 10% 10%, rgba(45,212,191,.30), transparent 55%),
+    linear-gradient(170deg, var(--natt-2) 0%, var(--natt-1) 40%, var(--natt-3) 100%);
+  background-attachment:fixed;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-text-size-adjust:100%;
+}
+
+/* to visninger: forside og spill */
+#forside{display:block;min-height:100%;overflow-y:auto;}
+#spill{display:none;height:100%;flex-direction:column;}
+body.spiller{overflow:hidden;}
+body.spiller #forside{display:none;}
+body.spiller #spill{display:flex;}
+
+/* ===================== FORSIDE ===================== */
+.wrap{max-width:1000px;margin:0 auto;padding:28px 20px 60px;}
+
+.hjem{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;
+  color:#fff;text-decoration:none;
+  background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.25);
+  padding:7px 16px;border-radius:999px;touch-action:manipulation;
+}
+.hjem:active{transform:translateY(2px);}
+
+.topptekst{margin:26px 0 30px;}
+.topptekst h1{
+  font-family:'Fredoka',sans-serif;font-weight:700;
+  font-size:clamp(2.3rem,7vw,3.6rem);line-height:1;letter-spacing:-1px;color:#fff;
+  text-shadow:0 4px 0 rgba(0,0,0,.25), 0 0 30px rgba(168,85,247,.5);
+}
+.topptekst h1 .gul{color:var(--gul);}
+.topptekst p{margin-top:12px;font-size:clamp(1rem,2.4vw,1.2rem);color:#e9defc;max-width:46ch;}
+
+.serier{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;}
+
+.serie{
+  background:var(--kort);border-radius:22px;overflow:hidden;
+  border:3px solid var(--natt-3);box-shadow:0 10px 0 rgba(0,0,0,.28);
+  color:var(--blekk);text-align:left;
+  display:flex;flex-direction:column;
+  cursor:pointer;font:inherit;
+  transition:transform .15s ease, box-shadow .15s ease;
+  touch-action:manipulation;
+}
+.serie:hover,.serie:focus-visible{
+  transform:translateY(-8px) rotate(-1deg);
+  box-shadow:0 18px 0 rgba(0,0,0,.28);outline:none;
+}
+.serie:focus-visible{outline:4px solid var(--gul);outline-offset:3px;}
+
+.serie-bilde{position:relative;aspect-ratio:2400/1792;overflow:hidden;background:#eee;}
+.serie-bilde img{width:100%;height:100%;object-fit:cover;display:block;}
+.merke{
+  position:absolute;top:10px;left:10px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:.85rem;
+  color:#fff;padding:5px 12px;border-radius:999px;
+  border:2px solid var(--natt-3);
+}
+.merke.f-teal{background:var(--teal);color:var(--natt-3);}
+.merke.f-rosa{background:var(--rosa);}
+
+.serie-tekst{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1;}
+.serie-tekst h2{font-family:'Fredoka',sans-serif;font-size:1.45rem;line-height:1.1;}
+.serie-tekst p{font-size:.97rem;color:#4b4470;flex:1;}
+
+.stolpe{height:12px;background:#ece7f8;border-radius:999px;overflow:hidden;border:2px solid var(--natt-3);}
+.stolpe i{display:block;height:100%;background:var(--gronn);width:0;transition:width .4s ease;}
+.framgang{font-size:.87rem;font-weight:700;color:#4b4470;}
+
+.start{
+  align-self:flex-start;margin-top:4px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.05rem;
+  color:#fff;background:var(--gronn);border:0;border-radius:12px;
+  padding:9px 22px;border-bottom:4px solid rgba(0,0,0,.25);
+}
+.serie:active .start{transform:translateY(2px);border-bottom-width:2px;}
+
+.nullstill{
+  margin-top:30px;background:none;border:0;color:#cbbdf0;
+  font:inherit;font-size:.9rem;text-decoration:underline;cursor:pointer;
+  touch-action:manipulation;
+}
+
+/* ===================== SPILL ===================== */
+.topp{
+  flex:0 0 auto;display:flex;align-items:center;gap:12px;
+  padding:10px clamp(10px,2vw,20px);
+  padding-top:calc(10px + env(safe-area-inset-top));
+}
+.tilbake{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;
+  color:#fff;background:rgba(255,255,255,.12);
+  border:2px solid rgba(255,255,255,.25);
+  padding:7px 14px;border-radius:999px;cursor:pointer;
+  touch-action:manipulation;
+}
+.tilbake:active{transform:translateY(2px);}
+.tittel{
+  font-family:'Fredoka',sans-serif;font-weight:700;
+  font-size:clamp(1.1rem,3vw,1.6rem);color:#fff;letter-spacing:-.5px;
+  text-shadow:0 2px 0 rgba(0,0,0,.25);margin-right:auto;
+}
+.tittel .gul{color:var(--gul);}
+.teller{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.2);
+  padding:6px 14px;border-radius:999px;
+  font-family:'Fredoka',sans-serif;font-weight:600;
+  font-size:clamp(.85rem,2.2vw,1rem);white-space:nowrap;
+}
+.teller b{color:var(--gul);}
+
+.scene-boks{
+  flex:1 1 auto;min-height:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 clamp(6px,1.5vw,16px);
+}
+.scene{
+  position:relative;aspect-ratio:2400/1792;
+  max-width:100%;max-height:100%;width:auto;height:100%;
+  border-radius:18px;overflow:hidden;
+  border:4px solid var(--natt-3);box-shadow:0 10px 0 rgba(0,0,0,.35);
+  cursor:crosshair;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;
+}
+.scene img{display:block;width:100%;height:100%;object-fit:fill;
+  pointer-events:none;-webkit-user-drag:none;}
+
+.scene.rist{animation:rist .4s cubic-bezier(.36,.07,.19,.97);}
+@keyframes rist{
+  10%,90%{transform:translateX(-3px) rotate(-.4deg);}
+  20%,80%{transform:translateX(5px) rotate(.5deg);}
+  30%,50%,70%{transform:translateX(-8px) rotate(-.6deg);}
+  40%,60%{transform:translateX(8px) rotate(.6deg);}
+}
+.funn{
+  position:absolute;transform:translate(-50%,-50%);
+  width:74px;height:74px;border-radius:50%;
+  border:6px solid var(--gronn);
+  box-shadow:0 0 0 4px rgba(255,255,255,.85), 0 0 22px rgba(52,211,153,.9);
+  pointer-events:none;animation:funnInn .45s cubic-bezier(.2,.9,.3,1.5);
+}
+@keyframes funnInn{from{transform:translate(-50%,-50%) scale(2.1);opacity:0;}
+                   to{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+.bom{
+  position:absolute;transform:translate(-50%,-50%);
+  font-size:2.6rem;line-height:1;pointer-events:none;
+  animation:bomUt .55s ease-out forwards;
+}
+@keyframes bomUt{from{opacity:.95;transform:translate(-50%,-50%) scale(.6);}
+                 to{opacity:0;transform:translate(-50%,-60%) scale(1.3);}}
+.debug-rute{position:absolute;border:3px dashed #ff2d55;background:rgba(255,45,85,.16);pointer-events:none;}
+.debug-rute span{
+  position:absolute;left:0;top:-2px;transform:translateY(-100%);
+  background:#ff2d55;color:#fff;font-size:11px;font-weight:700;
+  padding:2px 6px;border-radius:5px;white-space:nowrap;
+}
+
+.liste{
+  flex:0 0 auto;display:flex;flex-wrap:wrap;gap:clamp(10px,1.6vw,14px);
+  justify-content:center;align-items:stretch;
+  padding:clamp(8px,1.6vw,14px) clamp(8px,2vw,18px);
+  padding-bottom:calc(clamp(8px,1.6vw,14px) + env(safe-area-inset-bottom));
+}
+.ting{
+  position:relative;width:clamp(60px,11vw,104px);
+  background:var(--kort);border:3px solid var(--natt-3);border-radius:16px;
+  box-shadow:0 5px 0 rgba(0,0,0,.3);padding:6px;
+  display:grid;place-items:center;
+  transition:transform .18s ease, background .25s ease;
+}
+.ting img{
+  display:block;width:100%;aspect-ratio:1;object-fit:contain;border-radius:9px;
+  pointer-events:none;-webkit-user-drag:none;transition:opacity .25s ease;
+}
+.ting .hake{
+  position:absolute;top:-9px;right:-9px;width:29px;height:29px;border-radius:50%;
+  border:3px solid #b9b0d8;background:#efeaff;
+  display:grid;place-items:center;font-size:16px;font-weight:700;color:#efeaff;
+  transition:background .25s ease, color .25s ease, border-color .25s ease;
+}
+.ting.funnet{background:var(--gronn);transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.3);}
+.ting.funnet img{opacity:.45;}
+.ting.funnet .hake{background:var(--gronn);border-color:var(--natt-3);color:#fff;}
+
+.overlegg{
+  position:fixed;inset:0;z-index:20;display:none;place-items:center;
+  background:rgba(27,17,71,.86);backdrop-filter:blur(5px);padding:20px;
+}
+.overlegg.vis{display:grid;}
+.boks{
+  background:var(--kort);color:var(--blekk);
+  border:4px solid var(--natt-3);border-radius:24px;
+  box-shadow:0 14px 0 rgba(0,0,0,.35);
+  padding:clamp(24px,5vw,40px);text-align:center;max-width:440px;width:100%;
+  animation:pop .35s cubic-bezier(.2,.9,.3,1.5);
+}
+@keyframes pop{from{opacity:0;transform:scale(.85) translateY(20px);}to{opacity:1;transform:none;}}
+.boks .stort{font-size:clamp(3rem,12vw,4.5rem);line-height:1;}
+.boks h2{font-family:'Fredoka',sans-serif;font-size:clamp(1.5rem,5vw,2.1rem);margin:10px 0 6px;}
+.boks p{color:#4b4470;font-size:1.05rem;}
+.knapp{
+  margin-top:20px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.2rem;
+  color:#fff;background:var(--gronn);border:0;border-radius:14px;
+  padding:13px 32px;border-bottom:5px solid rgba(0,0,0,.28);
+  cursor:pointer;touch-action:manipulation;
+}
+.knapp:active{transform:translateY(3px);border-bottom-width:2px;}
+.knapp.sekundar{background:var(--lilla);margin-top:10px;}
+
+@media (max-width:560px){
+  .tittel{font-size:1.05rem;}
+  .tilbake span{display:none;}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;}}
+</style>
+</head>
+<body>
+
+<!-- ===================== FORSIDE ===================== -->
+<div id="forside">
+  <div class="wrap">
+    <a class="hjem" href="index.html">← Alle spill</a>
+
+    <div class="topptekst">
+      <h1>Myldre<span class="gul">jakt</span></h1>
+      <p>Velg en bildeserie og finn fem skjulte ting i hvert bilde. Hver serie har ti bilder.</p>
+    </div>
+
+    <div class="serier" id="serier"></div>
+
+    <button class="nullstill" id="nullstill">Nullstill framgangen min</button>
+  </div>
+</div>
+
+<!-- ===================== SPILL ===================== -->
+<div id="spill">
+  <header class="topp">
+    <button class="tilbake" id="tilbake">← <span>Velg serie</span></button>
+    <div class="tittel" id="serieTittel">Myldre<span class="gul">jakt</span></div>
+    <div class="teller">Bilde <b id="bildeNr">1</b>/<span id="bildeTot">10</span> · <b id="funnetTal">0</b>/5 funnet</div>
+  </header>
+
+  <div class="scene-boks">
+    <div class="scene" id="scene"><img id="bilde" alt="Myldrebilde å lete i"></div>
+  </div>
+
+  <div class="liste" id="liste"></div>
+</div>
+
+<div class="overlegg" id="overlegg">
+  <div class="boks">
+    <div class="stort" id="oIkon">🎉</div>
+    <h2 id="oTittel">Alle fem funnet!</h2>
+    <p id="oTekst">Godt sett! Klar for neste bilde?</p>
+    <div>
+      <button class="knapp" id="oKnapp">Neste bilde</button><br>
+      <button class="knapp sekundar" id="oKnapp2">Velg en annen serie</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =======================================================================
+   MYLDREJAKT
+   -----------------------------------------------------------------------
+   Spillet har to deler: en FORSIDE der man velger bildeserie, og selve
+   SPILLET. Begge ligger i denne ene fila.
+
+   HVER SERIE har ti bilder, og hvert bilde har fem ting som skal finnes.
+
+   Klikkfeltet (felt) er oppgitt i PROSENT av bildet:
+       x = venstrekant, y = topp, b = bredde, h = høyde
+   Da blir feltene riktige uansett hvor stor skjermen er.
+
+   BILDEBRIKKENE NEDERST
+   Nederst vises et utklipp av hver ting i stedet for navnet. Utklippene
+   hentes automatisk etter nummer, så du slipper å skrive filnavn:
+
+       serie 1, bilde 3, ting 2  ->  myldrebilder/utklipp/03-2.webp
+       serie 2, bilde 10, ting 5 ->  myldrebilder/serie2/utklipp/10-5.webp
+
+   Vil du bytte et utklipp? Lagre et nytt bilde med samme filnavn oppå
+   det gamle – du trenger ikke endre noe i koden.
+
+   Navnet (navn) vises ikke på skjermen, men leses opp av skjermlesere
+   og dukker opp om du holder pekeren over brikka.
+
+   VIL DU SJEKKE AT KLIKKFELTENE TREFFER?
+   Legg til  ?debug  i adressen, f.eks.  myldrejakt.html?debug
+   Da tegnes rammene oppå bildet mens du spiller.
+   ======================================================================= */
+
+const SERIER = [
+{
+  id: "serie1",
+  navn: "Ute i verden",
+  beskrivelse: "Tegnede myldrebilder fra marked, sirkus, strand, romstasjon og mer.",
+  omslag: "myldrebilder/omslag-serie1.webp",
+  mappe: "myldrebilder/",
+  utklipp: "myldrebilder/utklipp/",
+  farge: "f-teal",
+  bilder: [
+  { fil:"01-marked.webp", scene:"Markedet", ting:[
+    { navn:"Luftballong",  felt:{x:66, y:0,  b:9,  h:11} },
+    { navn:"Rød ballong",  felt:{x:30, y:45, b:11, h:14} },
+    { navn:"Rød sykkel",   felt:{x:0,  y:81, b:16, h:19} },
+    { navn:"Gul badeand",  felt:{x:32, y:78, b:11, h:13} },
+    { navn:"Rød tekanne",  felt:{x:88, y:80, b:10, h:11} } ]},
+  { fil:"02-sirkus.webp", scene:"Sirkuset", ting:[
+    { navn:"Popcornvogn",     felt:{x:0,  y:44, b:16, h:28} },
+    { navn:"Trapeskunstner",  felt:{x:34, y:18, b:14, h:24} },
+    { navn:"Puddel",          felt:{x:86, y:53, b:14, h:20} },
+    { navn:"Trompet",         felt:{x:21, y:84, b:13, h:12} },
+    { navn:"Tromme",          felt:{x:58, y:81, b:14, h:17} } ]},
+  { fil:"03-dyrepark.webp", scene:"Dyreparken", ting:[
+    { navn:"Sjiraff",      felt:{x:4,  y:5,  b:20, h:50} },
+    { navn:"Iskremvogn",   felt:{x:59, y:17, b:17, h:26} },
+    { navn:"Grønn slange", felt:{x:5,  y:58, b:15, h:15} },
+    { navn:"Pingviner",    felt:{x:43, y:65, b:14, h:18} },
+    { navn:"Flamingo",     felt:{x:82, y:57, b:8,  h:15} } ]},
+  { fil:"04-strand.webp", scene:"Stranda", ting:[
+    { navn:"Lilla drage", felt:{x:27, y:0,  b:13, h:16} },
+    { navn:"Surfebrett",  felt:{x:50, y:22, b:11, h:23} },
+    { navn:"Livbøye",     felt:{x:0,  y:52, b:13, h:17} },
+    { navn:"Sandslott",   felt:{x:18, y:44, b:25, h:32} },
+    { navn:"Piknikkurv",  felt:{x:59, y:71, b:15, h:20} } ]},
+  { fil:"05-romstasjon.webp", scene:"Romstasjonen", ting:[
+    { navn:"Jorda",        felt:{x:0,  y:0,  b:16, h:20} },
+    { navn:"Gul robot",    felt:{x:83, y:0,  b:17, h:24} },
+    { navn:"Skiftenøkkel", felt:{x:57, y:50, b:11, h:11} },
+    { navn:"Romvesen",     felt:{x:0,  y:81, b:16, h:19} },
+    { navn:"Verktøykasse", felt:{x:84, y:84, b:16, h:16} } ]},
+  { fil:"06-jul.webp", scene:"Julemarkedet", ting:[
+    { navn:"Pepperkakehus", felt:{x:55, y:9,  b:18, h:26} },
+    { navn:"Juletre",       felt:{x:41, y:26, b:22, h:49} },
+    { navn:"Rød slede",     felt:{x:75, y:55, b:19, h:20} },
+    { navn:"Blå kjelke",    felt:{x:6,  y:73, b:17, h:20} },
+    { navn:"Julenissen",    felt:{x:32, y:69, b:16, h:25} } ]},
+  { fil:"07-skog.webp", scene:"Skogen", ting:[
+    { navn:"Ugle",   felt:{x:5,  y:22, b:16, h:19} },
+    { navn:"Bikube", felt:{x:60, y:12, b:13, h:18} },
+    { navn:"Bjørn",  felt:{x:83, y:37, b:17, h:24} },
+    { navn:"Frosk",  felt:{x:11, y:81, b:15, h:15} },
+    { navn:"Trebro", felt:{x:25, y:59, b:28, h:26} } ]},
+  { fil:"08-undervann.webp", scene:"Under vann", ting:[
+    { navn:"Hai",          felt:{x:78, y:1,  b:21, h:18} },
+    { navn:"Blekksprut",   felt:{x:15, y:11, b:19, h:22} },
+    { navn:"Gul ubåt",     felt:{x:44, y:19, b:18, h:22} },
+    { navn:"Anker",        felt:{x:6,  y:52, b:21, h:26} },
+    { navn:"Sunket robåt", felt:{x:60, y:63, b:31, h:25} } ]},
+  { fil:"09-byggeplass.webp", scene:"Byggeplassen", ting:[
+    { navn:"Heisekran",         felt:{x:0,  y:0,  b:28,   h:56} },
+    { navn:"Betongbil",         felt:{x:71, y:5,  b:29,   h:26} },
+    { navn:"Gul vater",         felt:{x:33, y:45, b:6.5,  h:17} },
+    { navn:"Oransje kabelrull", felt:{x:69, y:44, b:11.5, h:11} },
+    { navn:"Sovende katt",      felt:{x:54, y:81, b:11,   h:9 } } ]},
+  { fil:"10-bondegard.webp", scene:"Bondegården", ting:[
+    { navn:"Sola",           felt:{x:49, y:0,  b:14, h:17} },
+    { navn:"Fugleskremsel",  felt:{x:83, y:24, b:15, h:27} },
+    { navn:"Gul vannkanne",  felt:{x:36, y:44, b:10, h:13} },
+    { navn:"Grønn traktor",  felt:{x:22, y:56, b:20, h:24} },
+    { navn:"Brun hund",      felt:{x:66, y:82, b:15, h:18} } ]}
+  ]
+},
+{
+  id: "serie2",
+  navn: "Eventyrland",
+  beskrivelse: "Myldrebilder klippet i farget papir – drageborg, trollskog, piratskip og mer.",
+  omslag: "myldrebilder/omslag-serie2.webp",
+  mappe: "myldrebilder/serie2/",
+  utklipp: "myldrebilder/serie2/utklipp/",
+  farge: "f-rosa",
+  bilder: [
+  { fil:"01-drageborg.webp", scene:"Drageborgen", ting:[
+    { navn:"Grønn drage",        felt:{x:0,  y:56, b:26,   h:44} },
+    { navn:"Gullkrone",          felt:{x:2,  y:11, b:9,    h:14} },
+    { navn:"Skjold med stjerne", felt:{x:88, y:17, b:10,   h:14} },
+    { navn:"Svart katt",         felt:{x:50, y:53, b:10.5, h:12} },
+    { navn:"Sverd i stein",      felt:{x:77, y:58, b:8,    h:15} } ]},
+  { fil:"02-trollskog.webp", scene:"Trollskogen", ting:[
+    { navn:"Stor troll", felt:{x:49, y:23, b:22, h:48} },
+    { navn:"Blå lykt",   felt:{x:9,  y:11, b:9,  h:17} },
+    { navn:"Lilla bær",  felt:{x:76, y:12, b:9,  h:14} },
+    { navn:"Rev",        felt:{x:21, y:65, b:10, h:12} },
+    { navn:"Trebøtte",   felt:{x:70, y:84, b:10, h:16} } ]},
+  { fil:"03-heksekjokken.webp", scene:"Heksekjøkkenet", ting:[
+    { navn:"Svart gryte",     felt:{x:35, y:41, b:25, h:32} },
+    { navn:"Ugle",            felt:{x:69, y:3,  b:10, h:17} },
+    { navn:"Blått garnnøste", felt:{x:83, y:26, b:9,  h:13} },
+    { navn:"Svart katt",      felt:{x:16, y:57, b:12, h:22} },
+    { navn:"Hodeskalle",      felt:{x:42, y:81, b:11, h:15} } ]},
+  { fil:"04-ridderturnering.webp", scene:"Ridderturneringen", ting:[
+    { navn:"Stort stripet telt", felt:{x:37, y:41, b:24, h:32} },
+    { navn:"Gullpokal",          felt:{x:2,  y:36, b:9,  h:12} },
+    { navn:"Sola",               felt:{x:51, y:0,  b:15, h:12} },
+    { navn:"Kurv med epler",     felt:{x:70, y:57, b:10, h:13} },
+    { navn:"Vannbøtte",          felt:{x:91, y:87, b:9,  h:13} } ]},
+  { fil:"05-alvelandsby.webp", scene:"Alvelandsbyen", ting:[
+    { navn:"Rødt sopphus",     felt:{x:34, y:14, b:30, h:45} },
+    { navn:"Grønn vannkanne",  felt:{x:2,  y:2,  b:11, h:13} },
+    { navn:"Gul sommerfugl",   felt:{x:87, y:2,  b:11, h:14} },
+    { navn:"Ekorn",            felt:{x:32, y:75, b:12, h:16} },
+    { navn:"Trillebår",        felt:{x:79, y:83, b:15, h:15} } ]},
+  { fil:"06-piratskip.webp", scene:"Piratskipet", ting:[
+    { navn:"Piratflagg",      felt:{x:1,  y:18, b:12, h:17} },
+    { navn:"Grønn papegøye",  felt:{x:52, y:7,  b:9,  h:13} },
+    { navn:"Kikkert",         felt:{x:78, y:31, b:11, h:10} },
+    { navn:"Skattekiste",     felt:{x:21, y:73, b:11, h:14} },
+    { navn:"Flaske med brev", felt:{x:83, y:81, b:13, h:15} } ]},
+  { fil:"07-kjempehage.webp", scene:"Kjempens hage", ting:[
+    { navn:"Kjempen",         felt:{x:43, y:40, b:28, h:44} },
+    { navn:"Marihøne",        felt:{x:6,  y:1,  b:12, h:14} },
+    { navn:"Blå sommerfugl",  felt:{x:82, y:6,  b:13, h:16} },
+    { navn:"Rød støvel",      felt:{x:6,  y:68, b:21, h:31} },
+    { navn:"Sølvnøkkel",      felt:{x:82, y:72, b:16, h:27} } ]},
+  { fil:"08-trylleverksted.webp", scene:"Trylleverkstedet", ting:[
+    { navn:"Krystallkule", felt:{x:30, y:38, b:13, h:22} },
+    { navn:"Ugle",         felt:{x:15, y:1,  b:12, h:17} },
+    { navn:"Fjærpenn",     felt:{x:85, y:1,  b:12, h:21} },
+    { navn:"Fløyelspose",  felt:{x:1,  y:58, b:13, h:19} },
+    { navn:"Hvit kanin",   felt:{x:80, y:80, b:14, h:18} } ]},
+  { fil:"09-enhjorningdal.webp", scene:"Enhjørningdalen", ting:[
+    { navn:"Hvit enhjørning",   felt:{x:36, y:29, b:30, h:30} },
+    { navn:"Regnbue",           felt:{x:0,  y:1,  b:24, h:22} },
+    { navn:"Flamingo",          felt:{x:88, y:12, b:12, h:22} },
+    { navn:"Blå paraply",       felt:{x:3,  y:72, b:17, h:20} },
+    { navn:"Kurv med jordbær",  felt:{x:81, y:76, b:14, h:18} } ]},
+  { fil:"10-skyby.webp", scene:"Skybyen", ting:[
+    { navn:"Luftballong",   felt:{x:49, y:2,  b:19, h:41} },
+    { navn:"Blå drage",     felt:{x:6,  y:3,  b:15, h:22} },
+    { navn:"Værhane",       felt:{x:87, y:1,  b:13, h:17} },
+    { navn:"Hvit katt",     felt:{x:0,  y:82, b:14, h:16} },
+    { navn:"Rød postkasse", felt:{x:90, y:77, b:10, h:17} } ]}
+  ]
+}
+];
+
+/* ----------------------- under her trenger du ikke endre ---------------- */
+
+const DEBUG = location.search.includes('debug');
+const LAGER = 'myldrejakt-framgang';
+
+const el = id => document.getElementById(id);
+const scene=el('scene'), bilde=el('bilde'), liste=el('liste');
+const bildeNr=el('bildeNr'), bildeTot=el('bildeTot'), funnetTal=el('funnetTal');
+const overlegg=el('overlegg'), oIkon=el('oIkon'), oTittel=el('oTittel');
+const oTekst=el('oTekst'), oKnapp=el('oKnapp'), oKnapp2=el('oKnapp2');
+const serieTittel=el('serieTittel'), serieListe=el('serier');
+
+let serie = null;   // serien som spilles nå
+let naa = 0;        // hvilket bilde i serien
+let funnet = [];    // true/false for hver av de 5 tingene
+
+/* --- framgang lagres bare i denne nettleseren, ingen konto, ingen server --- */
+function lesFramgang(){
+  try{ return JSON.parse(localStorage.getItem(LAGER)) || {}; }
+  catch(e){ return {}; }
+}
+function lagreFramgang(serieId, bildeIndeks){
+  try{
+    const f = lesFramgang();
+    f[serieId] = Math.max(f[serieId] || 0, bildeIndeks + 1);
+    localStorage.setItem(LAGER, JSON.stringify(f));
+  }catch(e){ /* privat modus e.l. – da huskes det bare ikke */ }
+}
+
+/* ===================== FORSIDE ===================== */
+function tegnForside(){
+  const f = lesFramgang();
+  serieListe.innerHTML = "";
+  SERIER.forEach(s => {
+    const klart = Math.min(f[s.id] || 0, s.bilder.length);
+    const pst = Math.round(klart / s.bilder.length * 100);
+    const kort = document.createElement('button');
+    kort.className = 'serie';
+    kort.innerHTML = `
+      <div class="serie-bilde">
+        <span class="merke ${s.farge}">${s.bilder.length} bilder</span>
+        <img src="${s.omslag}" alt="" loading="lazy">
+      </div>
+      <div class="serie-tekst">
+        <h2>${s.navn}</h2>
+        <p>${s.beskrivelse}</p>
+        <div class="stolpe"><i style="width:${pst}%"></i></div>
+        <div class="framgang">${klart} av ${s.bilder.length} bilder klart</div>
+        <span class="start">${klart === 0 ? 'Start' : (klart === s.bilder.length ? 'Spill igjen' : 'Fortsett')}</span>
+      </div>`;
+    kort.addEventListener('click', () => startSerie(s, klart >= s.bilder.length ? 0 : klart));
+    serieListe.appendChild(kort);
+  });
+}
+
+el('nullstill').addEventListener('click', () => {
+  try{ localStorage.removeItem(LAGER); }catch(e){}
+  tegnForside();
+});
+
+/* ===================== SPILL ===================== */
+function startSerie(s, fraBilde){
+  serie = s;
+  naa = fraBilde || 0;
+  bildeTot.textContent = s.bilder.length;
+  serieTittel.innerHTML = s.navn;
+  document.body.classList.add('spiller');
+  tegnBilde();
+}
+
+function tilForsida(){
+  document.body.classList.remove('spiller');
+  overlegg.classList.remove('vis');
+  tegnForside();
+}
+el('tilbake').addEventListener('click', tilForsida);
+oKnapp2.addEventListener('click', tilForsida);
+
+function tegnBilde(){
+  const b = serie.bilder[naa];
+  funnet = b.ting.map(() => false);
+
+  bilde.src = serie.mappe + b.fil;
+  bilde.alt = "Myldrebilde: " + b.scene;
+  bildeNr.textContent = naa + 1;
+
+  scene.querySelectorAll('.funn,.bom,.debug-rute').forEach(e => e.remove());
+
+  liste.innerHTML = "";
+  const nr = String(naa + 1).padStart(2, '0');
+  b.ting.forEach((t, i) => {
+    const d = document.createElement('div');
+    d.className = 'ting';
+    d.id = 'ting-' + i;
+    d.title = t.navn;
+    d.innerHTML = `<img src="${serie.utklipp}${nr}-${i + 1}.webp" alt="${t.navn}">` +
+                  `<span class="hake">✓</span>`;
+    liste.appendChild(d);
+  });
+
+  if(DEBUG) tegnDebug();
+  oppdaterTeller();
+}
+
+function tegnDebug(){
+  serie.bilder[naa].ting.forEach((t, i) => {
+    const d = document.createElement('div');
+    d.className = 'debug-rute';
+    d.style.left = t.felt.x + '%';
+    d.style.top = t.felt.y + '%';
+    d.style.width = t.felt.b + '%';
+    d.style.height = t.felt.h + '%';
+    d.innerHTML = `<span>${i + 1}. ${t.navn}</span>`;
+    scene.appendChild(d);
+  });
+}
+
+function oppdaterTeller(){ funnetTal.textContent = funnet.filter(Boolean).length; }
+
+function traff(px, py){
+  const ting = serie.bilder[naa].ting;
+  for(let i = 0; i < ting.length; i++){
+    if(funnet[i]) continue;
+    const f = ting[i].felt;
+    if(px >= f.x && px <= f.x + f.b && py >= f.y && py <= f.y + f.h) return i;
+  }
+  return -1;
+}
+
+function merk(klasse, px, py, tekst){
+  const m = document.createElement('div');
+  m.className = klasse;
+  m.style.left = px + '%';
+  m.style.top = py + '%';
+  if(tekst) m.textContent = tekst;
+  scene.appendChild(m);
+  if(klasse === 'bom') setTimeout(() => m.remove(), 600);
+}
+
+scene.addEventListener('click', e => {
+  if(overlegg.classList.contains('vis')) return;
+  const r = scene.getBoundingClientRect();
+  const px = ((e.clientX - r.left) / r.width) * 100;
+  const py = ((e.clientY - r.top) / r.height) * 100;
+  const i = traff(px, py);
+
+  if(i === -1){
+    scene.classList.remove('rist');
+    void scene.offsetWidth;
+    scene.classList.add('rist');
+    merk('bom', px, py, '✗');
+    return;
+  }
+
+  funnet[i] = true;
+  el('ting-' + i).classList.add('funnet');
+  const f = serie.bilder[naa].ting[i].felt;
+  merk('funn', f.x + f.b / 2, f.y + f.h / 2);
+  oppdaterTeller();
+
+  if(funnet.every(Boolean)) setTimeout(ferdigBilde, 750);
+});
+
+function ferdigBilde(){
+  lagreFramgang(serie.id, naa);
+  const siste = naa === serie.bilder.length - 1;
+  if(siste){
+    oIkon.textContent = '🏆';
+    oTittel.textContent = 'Du klarte hele ' + serie.navn + '!';
+    oTekst.textContent = 'Femti ting funnet. Skikkelig skarpt blikk!';
+    oKnapp.textContent = 'Spill serien om igjen';
+  }else{
+    oIkon.textContent = '🎉';
+    oTittel.textContent = 'Alle fem funnet!';
+    oTekst.textContent = 'Godt sett! Klar for neste bilde?';
+    oKnapp.textContent = 'Neste bilde';
+  }
+  overlegg.classList.add('vis');
+}
+
+oKnapp.addEventListener('click', () => {
+  overlegg.classList.remove('vis');
+  naa = (naa === serie.bilder.length - 1) ? 0 : naa + 1;
+  tegnBilde();
+});
+
+/* last neste bilde i bakgrunnen, så det er klart med én gang */
+bilde.addEventListener('load', () => {
+  if(!serie) return;
+  const neste = serie.bilder[naa + 1];
+  if(neste){ const f = new Image(); f.src = serie.mappe + neste.fil; }
+});
+
+tegnForside();
+</script>
+</body>
+</html>
