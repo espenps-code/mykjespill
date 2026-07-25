@@ -103,6 +103,7 @@ body.spiller #spill{display:flex;}
 .merke.f-teal{background:var(--teal);color:var(--natt-3);}
 .merke.f-rosa{background:var(--rosa);}
 .merke.f-oransje{background:var(--oransje);color:var(--natt-3);}
+.merke.f-gronn{background:var(--gronn);color:var(--natt-3);}
 
 .serie-tekst{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1;}
 .serie-tekst h2{font-family:'Fredoka',sans-serif;font-size:1.45rem;line-height:1.1;}
@@ -549,6 +550,77 @@ const SERIER = [
     { navn:"Blå robot",   felt:{x:11.65, y:71.7, b:4.6,  h:8.0 } },
     { navn:"Sitron",      felt:{x:87.5, y:85.3, b:4.6,  h:5.2 } },
     { navn:"Trekkspill",  felt:{x:4.95, y:86.4, b:4.8,  h:6.2 } } ] }
+  ]
+},
+{
+  id: "serie4",
+  navn: "Rundt i verden",
+  beskrivelse: "Ti reiser ut i verden – basar, karneval, safari og flytemarked, tegnet med penn og akvarell. Alle tingene er små, som i Storbyen.",
+  omslag: "myldrebilder/omslag-serie4.webp",
+  mappe: "myldrebilder/serie4/",
+  utklipp: "myldrebilder/serie4/utklipp/",
+  farge: "f-gronn",
+  bilder: [
+  { fil:"01-basar.webp", scene:"Basaren i Marrakesh", ting:[
+    { navn:"Grønn øgle", felt:{x:81.5, y:7.0, b:6.4, h:4.6 } },
+    { navn:"Blå hengelås", felt:{x:76.6, y:62.5, b:4.8, h:5.4 } },
+    { navn:"Messingbjelle", felt:{x:89.1, y:45.6, b:4.2, h:6.0 } },
+    { navn:"Runde briller", felt:{x:79.1, y:81.4, b:5.6, h:4.2 } },
+    { navn:"Blå-hvit krukke", felt:{x:17.8, y:80.5, b:4.8, h:5.6 } } ] },
+  { fil:"02-tokyo.webp", scene:"Gata i Tokyo", ting:[
+    { navn:"Grønn vannkanne", felt:{x:11.7, y:29.1, b:5.0, h:4.6 } },
+    { navn:"Revemaske", felt:{x:15.0, y:61.7, b:4.4, h:5.0 } },
+    { navn:"Hvit kanin", felt:{x:87.8, y:37.3, b:4.6, h:5.4 } },
+    { navn:"Blått kamera", felt:{x:82.6, y:64.6, b:4.6, h:5.4 } },
+    { navn:"Papirvifte", felt:{x:71.2, y:51.5, b:4.6, h:4.6 } } ] },
+  { fil:"03-karneval.webp", scene:"Karnevalet i Rio", ting:[
+    { navn:"Blå sommerfugl", felt:{x:85.9, y:79.5, b:5.0, h:5.0 } },
+    { navn:"Rød sko", felt:{x:58.7, y:66.9, b:5.0, h:4.6 } },
+    { navn:"Grønn papegøye", felt:{x:41.7, y:13.8, b:4.6, h:5.6 } },
+    { navn:"Gul ball", felt:{x:15.9, y:85.6, b:4.4, h:5.2 } },
+    { navn:"Sølvfløyte", felt:{x:6.3, y:55.7, b:4.4, h:5.6 } } ] },
+  { fil:"04-safari.webp", scene:"Safarien i Kenya", ting:[
+    { navn:"Kameleon", felt:{x:7.0, y:83.9, b:6.0, h:4.6 } },
+    { navn:"Rød termos", felt:{x:29.9, y:42.4, b:4.2, h:5.6 } },
+    { navn:"Strutseegg", felt:{x:72.3, y:86.8, b:4.4, h:4.4 } },
+    { navn:"Møkkbille", felt:{x:58.5, y:85.1, b:5.0, h:5.0 } },
+    { navn:"Liggeunderlag", felt:{x:36.1, y:34.6, b:5.6, h:4.4 } } ] },
+  { fil:"05-gronland.webp", scene:"Bygda på Grønland", ting:[
+    { navn:"Rød vott", felt:{x:85.2, y:89.1, b:4.8, h:5.2 } },
+    { navn:"Kompass", felt:{x:37.7, y:40.3, b:4.6, h:5.4 } },
+    { navn:"Sel på isflak", felt:{x:68.0, y:62.2, b:7.0, h:5.0 } },
+    { navn:"Gul bøtte", felt:{x:31.9, y:75.9, b:4.4, h:5.2 } },
+    { navn:"Svart ravn", felt:{x:85.6, y:42.1, b:4.8, h:5.4 } } ] },
+  { fil:"06-flytemarked.webp", scene:"Flytemarkedet i Bangkok", ting:[
+    { navn:"Grønn frosk", felt:{x:14.1, y:78.6, b:4.8, h:5.2 } },
+    { navn:"Gul badeand", felt:{x:39.1, y:52.3, b:4.6, h:5.0 } },
+    { navn:"Messingbjelle", felt:{x:75.8, y:60.6, b:4.4, h:6.0 } },
+    { navn:"Rosa flipflop", felt:{x:46.1, y:86.3, b:5.0, h:5.0 } },
+    { navn:"Blå kjele", felt:{x:59.9, y:73.7, b:5.2, h:5.4 } } ] },
+  { fil:"07-venezia.webp", scene:"Kanalen i Venezia", ting:[
+    { navn:"Løvehode på dør", felt:{x:6.3, y:48.5, b:4.6, h:5.4 } },
+    { navn:"Stråhatt i vannet", felt:{x:46.0, y:68.0, b:5.0, h:4.6 } },
+    { navn:"Rød lekebåt", felt:{x:35.8, y:81.7, b:4.8, h:5.0 } },
+    { navn:"Blå postkasse", felt:{x:84.1, y:71.2, b:4.6, h:6.0 } },
+    { navn:"Grønn sykkel", felt:{x:21.7, y:31.5, b:6.0, h:5.6 } } ] },
+  { fil:"08-fjellmarked.webp", scene:"Fjellmarkedet i Andes", ting:[
+    { navn:"Hvit fotball", felt:{x:79.8, y:82.9, b:4.4, h:4.8 } },
+    { navn:"Rød saks", felt:{x:44.7, y:83.5, b:5.0, h:5.0 } },
+    { navn:"Gul kjele", felt:{x:63.7, y:81.3, b:5.0, h:5.4 } },
+    { navn:"Marsvin", felt:{x:86.5, y:59.8, b:4.6, h:5.0 } },
+    { navn:"Vannflaske", felt:{x:77.0, y:88.3, b:4.0, h:5.0 } } ] },
+  { fil:"09-hamn.webp", scene:"Havna i Sydney", ting:[
+    { navn:"Rød drage", felt:{x:10.3, y:6.9, b:5.0, h:5.4 } },
+    { navn:"Blå svømmeføtter", felt:{x:31.4, y:81.6, b:5.6, h:6.0 } },
+    { navn:"Grønt rullebrett", felt:{x:77.5, y:78.6, b:4.6, h:6.0 } },
+    { navn:"Sølvnøkkel", felt:{x:56.7, y:93.6, b:5.0, h:4.4 } },
+    { navn:"Gitarkasse", felt:{x:48.7, y:59.8, b:8.0, h:5.6 } } ] },
+  { fil:"10-utgraving.webp", scene:"Utgravingen i Egypt", ting:[
+    { navn:"Blå skarabé", felt:{x:10.7, y:71.9, b:4.4, h:4.6 } },
+    { navn:"Ørkenrev", felt:{x:84.6, y:66.2, b:5.2, h:5.6 } },
+    { navn:"Gult vater", felt:{x:79.5, y:75.9, b:9.0, h:4.6 } },
+    { navn:"Stripet flaske", felt:{x:84.0, y:86.4, b:4.2, h:5.6 } },
+    { navn:"Spade", felt:{x:35.8, y:72.6, b:4.6, h:5.6 } } ] }
   ]
 }
 ];
