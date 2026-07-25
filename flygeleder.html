@@ -63,6 +63,14 @@
     width:min(560px,94vw);background:var(--panel);border:1px solid var(--panel-line);
     border-radius:20px;padding:30px 30px 26px;box-shadow:0 30px 80px rgba(0,0,0,.5);
   }
+  .tilbake-alle{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:inherit;font-weight:700;font-size:14px;
+    color:#fff;text-decoration:none;
+    background:rgba(255,255,255,.10);border:2px solid rgba(255,255,255,.22);
+    padding:6px 14px;border-radius:999px;margin:0 0 14px;touch-action:manipulation;
+  }
+  .tilbake-alle:active{transform:translateY(2px);}
   .eyebrow{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);font-weight:700;}
   h1{font-size:clamp(30px,6vw,46px);margin:8px 0 2px;line-height:1.02;}
   h2{font-size:clamp(24px,5vw,34px);margin:6px 0 4px;}
@@ -109,6 +117,7 @@
   <!-- Startskjerm -->
   <div class="overlay" id="ovStart">
     <div class="card">
+      <a class="tilbake-alle" href="index.html">← Alle spill</a>
       <div class="eyebrow">Kontrolltårnet</div>
       <h1>Flygeleder</h1>
       <p class="lead">Du styrer trafikken. Få flyene trygt ned – tegn ruter, hold avstand, og bygg ut flyplassen nivå for nivå med flere rullebaner og mer trafikk.</p>

@@ -57,6 +57,17 @@
   @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-6px) rotate(2deg);}}
   .tagline{text-align:center; font-size:1.1rem; margin:0 0 22px; opacity:.8; font-weight:700;}
 
+  /* ---------- Tilbake til Mykje spill ---------- */
+  .tilbake-alle{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:inherit; font-weight:700; font-size:1rem;
+    color:var(--ink); text-decoration:none;
+    background:var(--card); border:2px solid rgba(58,45,92,.18);
+    padding:7px 16px; border-radius:999px; box-shadow:var(--shadow);
+    touch-action:manipulation; margin-bottom:6px;
+  }
+  .tilbake-alle:active{transform:translateY(2px); box-shadow:0 3px 0 rgba(58,45,92,.18);}
+
   .diff-card{
     display:flex; align-items:center; gap:14px;
     width:100%; border:none; cursor:pointer;
@@ -238,6 +249,7 @@
 
 <!-- ======== START ======== -->
 <div class="screen active" id="screenStart">
+  <a class="tilbake-alle" href="index.html">← Alle spill</a>
   <h1 class="logo" aria-label="Formjakt">
     <span style="color:#ff6b6b">F</span><span style="color:#ff9f3f">o</span><span style="color:#ffd23f">r</span><span style="color:#3fbf7f">m</span><span style="color:#4aa8ff">j</span><span style="color:#9b6bf2">a</span><span style="color:#ff6b9d">k</span><span style="color:#3fbf7f">t</span>
   </h1>

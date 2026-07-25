@@ -49,6 +49,16 @@
   }
   .brand p{ color:var(--cream-dim); margin:4px 0 0; font-size:.95rem; }
 
+  /* ---------- Tilbake til Mykje spill ---------- */
+  .tilbake-alle{
+    display:inline-flex; align-items:center; gap:6px; align-self:flex-start;
+    font-family:var(--font-display); font-weight:600; font-size:1rem;
+    color:var(--cream); text-decoration:none;
+    background:rgba(255,255,255,.10); border:2px solid rgba(255,255,255,.22);
+    padding:7px 16px; border-radius:999px; touch-action:manipulation;
+  }
+  .tilbake-alle:active{ transform:translateY(2px); }
+
   .plank{
     background:linear-gradient(180deg,var(--panel),var(--panel-2));
     border:1px solid rgba(255,255,255,.07);
@@ -145,6 +155,7 @@
 <div id="app">
 
   <section class="screen active" id="screen-home">
+    <a class="tilbake-alle" href="index.html">← Alle spill</a>
     <div class="brand">
       <h1>Fargeflukt</h1>
       <p>Tøm det fulle brettet – ut gjennom riktig farge!</p>
