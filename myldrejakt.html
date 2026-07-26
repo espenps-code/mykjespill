@@ -104,6 +104,7 @@ body.spiller #spill{display:flex;}
 .merke.f-rosa{background:var(--rosa);}
 .merke.f-oransje{background:var(--oransje);color:var(--natt-3);}
 .merke.f-gronn{background:var(--gronn);color:var(--natt-3);}
+.merke.f-lilla{background:var(--lilla);}
 
 .serie-tekst{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1;}
 .serie-tekst h2{font-family:'Fredoka',sans-serif;font-size:1.45rem;line-height:1.1;}
@@ -621,6 +622,77 @@ const SERIER = [
     { navn:"Gult vater", felt:{x:79.5, y:75.9, b:9.0, h:4.6 } },
     { navn:"Stripet flaske", felt:{x:84.0, y:86.4, b:4.2, h:5.6 } },
     { navn:"Spade", felt:{x:35.8, y:72.6, b:4.6, h:5.6 } } ] }
+  ]
+},
+{
+  id: "serie5",
+  navn: "Gjennom tidene",
+  beskrivelse: "Ti reiser i tid – fra steinalderleiren til framtidsbyen. Alle tingene er små og godt gjemt.",
+  omslag: "myldrebilder/omslag-serie5.webp",
+  mappe: "myldrebilder/serie5/",
+  utklipp: "myldrebilder/serie5/utklipp/",
+  farge: "f-lilla",
+  bilder: [
+  { fil:"01-steinalder.webp", scene:"Steinalderleiren", ting:[
+    { navn:"Snøugle",              felt:{x:2.4,  y:33.8, b:4.4,  h:7.2 } },
+    { navn:"Blått perlekjede",     felt:{x:88.8, y:67.0, b:4.2,  h:12.0} },
+    { navn:"Snømann",              felt:{x:0.4,  y:56.6, b:6.2,  h:8.0 } },
+    { navn:"Bolle med bær",        felt:{x:73.4, y:87.3, b:3.6,  h:4.0 } },
+    { navn:"Hulemaleri av mammut", felt:{x:20.7, y:29.2, b:6.6,  h:6.6 } } ] },
+  { fil:"02-egypt.webp", scene:"Pyramidene", ting:[
+    { navn:"Blå skarabé",   felt:{x:30.2, y:71.3, b:4.2, h:6.4 } },
+    { navn:"Ibis",          felt:{x:45.2, y:50.2, b:4.2, h:8.8 } },
+    { navn:"Turkis flaske", felt:{x:56.8, y:87.8, b:2.6, h:4.4 } },
+    { navn:"Gullvekt",      felt:{x:86.6, y:78.6, b:5.4, h:7.2 } },
+    { navn:"Byggekran",     felt:{x:3.0,  y:10.0, b:8.0, h:8.0 } } ] },
+  { fil:"03-roma.webp", scene:"Forum Romanum", ting:[
+    { navn:"Hvit due",       felt:{x:9.2,  y:3.6,  b:4.2, h:4.2 } },
+    { navn:"Påfugl",         felt:{x:70.6, y:40.0, b:9.0, h:10.5} },
+    { navn:"Røde terninger", felt:{x:55.0, y:94.2, b:4.2, h:4.0 } },
+    { navn:"Brun hund",      felt:{x:90.2, y:55.0, b:6.0, h:6.2 } },
+    { navn:"Sovende katt",   felt:{x:61.6, y:61.8, b:4.6, h:5.2 } } ] },
+  { fil:"04-vikingtid.webp", scene:"Vikinghavna", ting:[
+    { navn:"Sel",                felt:{x:4.2,  y:85.4, b:7.0, h:8.8 } },
+    { navn:"Hvitt geitekje",     felt:{x:88.3, y:87.6, b:6.6, h:7.2 } },
+    { navn:"Sølvsmykke på kista",felt:{x:7.4,  y:64.8, b:4.2, h:5.0 } },
+    { navn:"Rød vott",           felt:{x:58.9, y:54.6, b:3.0, h:5.0 } },
+    { navn:"Rød vimpel",         felt:{x:28.0, y:12.2, b:4.4, h:4.0 } } ] },
+  { fil:"05-borg.webp", scene:"Ridderborgen", ting:[
+    { navn:"Jaktfalk",    felt:{x:5.0,  y:8.8,  b:4.4, h:6.4 } },
+    { navn:"Narrelue",    felt:{x:54.4, y:33.6, b:3.6, h:3.8 } },
+    { navn:"Sjakkbrett",  felt:{x:24.8, y:57.6, b:5.4, h:4.6 } },
+    { navn:"Grønn frosk", felt:{x:52.7, y:85.0, b:4.2, h:4.6 } },
+    { navn:"Hvit hare",   felt:{x:95.5, y:83.6, b:4.2, h:6.0 } } ] },
+  { fil:"06-renessanse.webp", scene:"Oppfinnerverkstedet", ting:[
+    { navn:"Kameleon",           felt:{x:42.0, y:62.4, b:9.4, h:7.8 } },
+    { navn:"Globus",             felt:{x:71.6, y:8.0,  b:8.4, h:12.0} },
+    { navn:"Forstørrelsesglass", felt:{x:74.6, y:82.6, b:9.5, h:6.6 } },
+    { navn:"Oransje snegle",     felt:{x:84.6, y:49.4, b:5.6, h:6.6 } },
+    { navn:"Hestesko",           felt:{x:31.8, y:79.8, b:6.2, h:7.2 } } ] },
+  { fil:"07-villevesten.webp", scene:"Ville vesten", ting:[
+    { navn:"Ørkenrev",     felt:{x:31.3, y:55.6, b:4.8, h:5.8 } },
+    { navn:"Hakkespett",   felt:{x:48.4, y:31.4, b:3.2, h:5.0 } },
+    { navn:"Sølvlommeur",  felt:{x:11.0, y:71.6, b:3.0, h:3.4 } },
+    { navn:"Grønn øgle",   felt:{x:93.0, y:85.6, b:4.2, h:3.6 } },
+    { navn:"Damptog",      felt:{x:90.2, y:16.6, b:8.4, h:7.4 } } ] },
+  { fil:"08-dampby.webp", scene:"Dampbyen", ting:[
+    { navn:"Skjære med nøkkel", felt:{x:64.8, y:26.4, b:8.6,  h:8.4 } },
+    { navn:"Gullfisk i bolle",  felt:{x:69.4, y:62.8, b:5.0,  h:6.4 } },
+    { navn:"Hvit terrier",      felt:{x:85.8, y:88.8, b:4.8,  h:6.4 } },
+    { navn:"Kanalbåt",          felt:{x:84.6, y:53.6, b:11.5, h:9.5 } },
+    { navn:"Messingkompass",    felt:{x:68.4, y:45.6, b:4.6,  h:7.0 } } ] },
+  { fil:"09-femtitalet.webp", scene:"Femtitallsgata", ting:[
+    { navn:"Rosa flamingo",    felt:{x:44.6, y:83.2, b:4.8,  h:6.6 } },
+    { navn:"Ekorn med iskrem", felt:{x:1.6,  y:2.6,  b:4.4,  h:6.6 } },
+    { navn:"Blå radio",        felt:{x:45.8, y:40.4, b:4.4,  h:4.0 } },
+    { navn:"Rød postkasse",    felt:{x:47.8, y:73.4, b:3.6,  h:5.4 } },
+    { navn:"Brannbil",         felt:{x:68.6, y:8.6,  b:11.6, h:5.4 } } ] },
+  { fil:"10-framtid.webp", scene:"Framtidsbyen", ting:[
+    { navn:"Gul koffert",         felt:{x:79.4, y:24.4, b:6.5, h:7.4 } },
+    { navn:"Plante i glasskuppel",felt:{x:11.4, y:50.6, b:7.8, h:12.2} },
+    { navn:"Tukan",               felt:{x:69.2, y:31.6, b:6.6, h:6.6 } },
+    { navn:"Oransje robotkatt",   felt:{x:31.2, y:44.9, b:6.2, h:7.4 } },
+    { navn:"Rød sklie",           felt:{x:46.3, y:18.3, b:4.0, h:4.6 } } ] }
   ]
 }
 ];
