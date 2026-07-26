@@ -593,9 +593,116 @@ function lagSkilt(tekst){
   x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillText(tekst, 256, 70);
   const tex = new THREE.CanvasTexture(c);
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthTest:false}));
-  sp.scale.set(7, 1.75, 1);
+  tex.anisotropy = 4;   // holder teksten skarp når skiltet sees på skrå
+  // depthTest: true = skiltet er et ekte objekt i rommet og blir skjult av alt
+  // som står foran det. depthWrite: false = skiltet skriver ikke selv til
+  // dybdebufferet, slik at de gjennomsiktige hjørnene ikke lager firkanthull.
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: tex, depthTest: true, depthWrite: false, transparent: true
+  }));
+  sp.scale.set(6, 1.5, 1);
   return sp;
+}
+
+// ===================== ÅRSTIDER I 3D-BYEN =====================
+// Scenen bytter utseende med måneden. Ingen ny scene bygges – vi endrer
+// fargene på materialene og lysene som allerede finnes.
+const HORISONT = 0xd8ebf7;   // grunnfarge på himmelranden (og dermed på tåka)
+
+let solLys = null, ambientLys = null, hemiLys = null, himmelMat = null;
+let bakkeMat = null, snoFlate = null;
+let treKroner = [];          // {mat, mesh, v} – v er treets faste tilfeldighet 0–1
+let snoDeler = [];           // snølag på takene
+const snoMat = new THREE.MeshLambertMaterial({color:0xfbfdff, transparent:true, opacity:0});
+
+// Én «oppskrift» per årstid. Alt her tones mykt fra en årstid til den neste.
+// gress/tre1/tre2/sol/... er farger, resten er tall.
+const AARSTIDSTEMA = {
+  'vår':    {gress:0xe8ffd8, tre1:0x7fd06a, tre2:0xa9e28c, kroneSkala:1.00,
+             sol:0xfff3d6, solStyrke:1.00, solY:26, ambient:0.38,
+             hemiOpp:0x9fd0f0, hemiNed:0x6f9a4e, hemiStyrke:0.50,
+             himmelTint:0xffffff, taakeNaer:40, taakeFjern:95, sno:0},
+  'sommer': {gress:0x9fd48a, tre1:0x3f8a38, tre2:0x63ad50, kroneSkala:1.06,
+             sol:0xfff0c0, solStyrke:1.22, solY:36, ambient:0.42,
+             hemiOpp:0xa8dcf5, hemiNed:0x6f9a4e, hemiStyrke:0.55,
+             himmelTint:0xfffaf0, taakeNaer:48, taakeFjern:108, sno:0},
+  'høst':   {gress:0xd8c070, tre1:0xe89030, tre2:0xc4552e, kroneSkala:0.94,
+             sol:0xffd08a, solStyrke:0.82, solY:14, ambient:0.34,
+             hemiOpp:0xd8c9a8, hemiNed:0x8a7a4e, hemiStyrke:0.45,
+             himmelTint:0xffe2b8, taakeNaer:32, taakeFjern:86, sno:0},
+  'vinter': {gress:0xdfe8f2, tre1:0xeaf2fb, tre2:0xb6c6d8, kroneSkala:0.78,
+             sol:0xdfe9ff, solStyrke:0.68, solY:11, ambient:0.46,
+             hemiOpp:0xc8d8e8, hemiNed:0xdfe8f2, hemiStyrke:0.58,
+             himmelTint:0xd4e2f2, taakeNaer:20, taakeFjern:60, sno:1}
+};
+const AARSTID_FARGER = ['gress','tre1','tre2','sol','hemiOpp','hemiNed','himmelTint'];
+const AARSTID_TID = 1.0;     // sekunder på overgangen
+
+const _fA = new THREE.Color(), _fB = new THREE.Color();
+function lerpFarge(a, b, k){ _fA.setHex(a); _fB.setHex(b); _fA.lerp(_fB, k); return _fA.getHex(); }
+// Tåka og bakgrunnen må alltid matche himmelranden, ellers ser man en skjøt
+function taakeFarge(tint){ _fA.setHex(HORISONT); _fB.setHex(tint); _fA.multiply(_fB); return _fA.getHex(); }
+function blandTema(a, b, k){
+  const ut = {};
+  for(const n in a) ut[n] = AARSTID_FARGER.indexOf(n) >= 0 ? lerpFarge(a[n], b[n], k) : a[n] + (b[n]-a[n])*k;
+  return ut;
+}
+
+let aarstidNaa = null, aarstidFra = null, aarstidTil = null, aarstidT = 1;
+
+function brukAarstid(t){
+  if(!scene) return;
+  if(bakkeMat) bakkeMat.color.setHex(t.gress);
+  if(solLys){ solLys.color.setHex(t.sol); solLys.intensity = t.solStyrke; solLys.position.set(-24, t.solY, 20); }
+  if(ambientLys) ambientLys.intensity = t.ambient;
+  if(hemiLys){ hemiLys.color.setHex(t.hemiOpp); hemiLys.groundColor.setHex(t.hemiNed); hemiLys.intensity = t.hemiStyrke; }
+  if(himmelMat) himmelMat.color.setHex(t.himmelTint);
+  const tf = taakeFarge(t.himmelTint);
+  if(scene.fog){ scene.fog.color.setHex(tf); scene.fog.near = t.taakeNaer; scene.fog.far = t.taakeFjern; }
+  if(scene.background && scene.background.setHex) scene.background.setHex(tf);
+  for(const tr of treKroner){
+    tr.mat.color.setHex(lerpFarge(t.tre1, t.tre2, tr.v));
+    tr.mesh.scale.setScalar(t.kroneSkala);
+  }
+  const synlig = t.sno > 0.01;
+  snoMat.opacity = t.sno;
+  for(const m of snoDeler) m.visible = synlig;
+  if(snoFlate) snoFlate.visible = synlig;
+}
+
+// Kalles ved månedsskifte og ved spillstart. direkte=true hopper rett dit.
+function settAarstid(mnd, direkte){
+  const maal = AARSTIDSTEMA[aarstid(mnd).navn];
+  if(!maal || !scene) return;
+  if(direkte || !aarstidNaa){
+    aarstidNaa = Object.assign({}, maal);
+    aarstidFra = aarstidTil = null; aarstidT = 1;
+    brukAarstid(aarstidNaa);
+    return;
+  }
+  aarstidFra = Object.assign({}, aarstidNaa);
+  aarstidTil = Object.assign({}, maal);
+  aarstidT = 0;
+}
+
+// Ett lite steg per bilde – overgangen blokkerer aldri spillet
+function stegAarstid(dt){
+  if(!aarstidTil) return;
+  aarstidT = Math.min(1, aarstidT + dt / AARSTID_TID);
+  const k = aarstidT * aarstidT * (3 - 2*aarstidT);  // myk start og stopp
+  aarstidNaa = blandTema(aarstidFra, aarstidTil, k);
+  brukAarstid(aarstidNaa);
+  if(aarstidT >= 1){ aarstidNaa = Object.assign({}, aarstidTil); aarstidFra = aarstidTil = null; }
+}
+
+// Snøbit som ligger på et tak – usynlig til vinteren kommer
+function snoBit(geo, x, y, z, rotY){
+  const m = new THREE.Mesh(geo, snoMat);
+  m.position.set(x, y, z);
+  if(rotY) m.rotation.y = rotY;
+  m.visible = false;
+  snoDeler.push(m);
+  return m;
 }
 
 // ---- Bygninger som ligner på hva de er (rene kodede former) ----
@@ -612,97 +719,235 @@ function lagDoer(dz, color){
   d.position.set(0, 1.1, dz); return d;
 }
 
+// ---- Rekvisitter: småting som står utenfor bygningene ----
+// Alt her ligger tett inntil husveggen, godt innenfor skyvesirkelen på 4,2
+// (se «Enkel kollisjon» i spillsløyfa). Der kommer spilleren aldri, så
+// ingenting kan sperre veien. Dørfeltet foran hver dør (|x| under 0,7) holdes
+// alltid fritt.
+//
+// Rekvisittene deler et lite sett materialer og kaster ikke skygge. Hvert
+// materiale og hver skygge koster tegnetid, og dette er de billigste knappene
+// å skru på når spillet skal gå greit på en skole-iPad.
+const RMAT = {
+  metall: new THREE.MeshLambertMaterial({color:0x9aa4b2}),
+  moerk:  new THREE.MeshLambertMaterial({color:0x3d4450}),
+  tre:    new THREE.MeshLambertMaterial({color:0xa9743f}),
+  hekk:   new THREE.MeshLambertMaterial({color:0x4e8a44}),
+  roed:   new THREE.MeshLambertMaterial({color:0xe2725b}),
+  gul:    new THREE.MeshLambertMaterial({color:0xf6b23a}),
+  gronn:  new THREE.MeshLambertMaterial({color:0x6cc24a}),
+  tau:    new THREE.MeshLambertMaterial({color:0xd9c08a})
+};
+function rSett(m, x, y, z){
+  m.position.set(x, y, z);
+  m.castShadow = false; m.receiveShadow = false;
+  return m;
+}
+function rBoks(w, h, d, x, y, z, mat){
+  return rSett(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat), x, y, z);
+}
+// staaendeHjul=true legger sylinderen på siden, så den blir et hjul sett fra sida
+function rSyl(r, h, x, y, z, mat, staaendeHjul){
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 10), mat);
+  if(staaendeHjul) m.rotation.z = Math.PI/2;
+  return rSett(m, x, y, z);
+}
+function rKule(r, x, y, z, mat){
+  return rSett(new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), mat), x, y, z);
+}
+// Enkel sykkel: to hjul, ramme og styre. Står med framhjulet inn i stativet.
+function rSykkel(g, x, z, mat){
+  g.add(rSyl(0.30, 0.08, x, 0.30, z - 0.32, RMAT.moerk, true));
+  g.add(rSyl(0.30, 0.08, x, 0.30, z + 0.32, RMAT.moerk, true));
+  g.add(rBoks(0.10, 0.40, 0.66, x, 0.60, z, mat));
+  g.add(rBoks(0.40, 0.07, 0.07, x, 0.90, z + 0.23, RMAT.moerk));
+}
+
+// Jobbsenteret: sykkelstativ med to sykler, til venstre for inngangen
+function rekvJobb(g){
+  g.add(rBoks(1.60, 0.08, 0.08, -1.60, 0.38, 2.45, RMAT.metall));
+  g.add(rSyl(0.05, 0.40, -2.35, 0.20, 2.45, RMAT.metall));
+  g.add(rSyl(0.05, 0.40, -0.85, 0.20, 2.45, RMAT.metall));
+  rSykkel(g, -1.95, 2.62, RMAT.roed);
+  rSykkel(g, -1.05, 2.62, RMAT.gronn);
+}
+
+// Boligkontoret: postkasse med vippeflagg på høyre side, hekk på venstre
+function rekvBolig(g){
+  g.add(rSyl(0.07, 1.00, 1.85, 0.50, 2.50, RMAT.moerk));
+  g.add(rBoks(0.48, 0.32, 0.66, 1.85, 1.16, 2.50, RMAT.roed));
+  g.add(rBoks(0.06, 0.26, 0.10, 2.12, 1.38, 2.50, RMAT.gul));
+  g.add(rBoks(1.70, 0.55, 0.50, -1.75, 0.28, 2.45, RMAT.hekk));
+  g.add(rBoks(0.60, 0.40, 0.45, -2.60, 0.20, 1.85, RMAT.hekk));
+}
+
+// Banken: to lave stolpesperrer med tau, én på hver side av trappa
+function rekvBank(g){
+  for(const s of [-1, 1]){
+    g.add(rSyl(0.09, 0.70, s*2.60, 0.35, 2.20, RMAT.gul));
+    g.add(rSyl(0.09, 0.70, s*2.60, 0.35, 2.75, RMAT.gul));
+    g.add(rBoks(0.07, 0.07, 0.55, s*2.60, 0.62, 2.48, RMAT.tau));
+  }
+}
+
+// Butikken: fruktkasser under utstillingsvinduet, handlekurv ved døra
+function rekvButikk(g){
+  g.add(rBoks(0.70, 0.65, 0.65, -2.35, 0.33, 2.25, RMAT.tre));
+  g.add(rBoks(0.58, 0.55, 0.55, -2.90, 0.28, 1.90, RMAT.tre));
+  const frukt = [RMAT.roed, RMAT.gul, RMAT.gronn];
+  for(let i=0;i<3;i++) g.add(rKule(0.15, -3.05 + i*0.15, 0.68, 1.90, frukt[i]));
+  g.add(rSyl(0.26, 0.32, 2.70, 0.16, 2.15, RMAT.roed));
+  g.add(rBoks(0.46, 0.06, 0.06, 2.70, 0.38, 2.15, RMAT.moerk));
+}
+
+// Fritidsklubben: kafébord med to krakker, og en ball som ligger igjen
+function rekvKlubb(g){
+  g.add(rSyl(0.13, 0.70, -1.55, 0.35, 2.50, RMAT.moerk));
+  g.add(rSyl(0.48, 0.12, -1.55, 0.76, 2.50, RMAT.tre));
+  g.add(rSyl(0.21, 0.42, -2.45, 0.21, 2.35, RMAT.gul));
+  g.add(rSyl(0.21, 0.42, -0.95, 0.21, 3.00, RMAT.gronn));
+  g.add(rKule(0.28, 2.15, 0.28, 2.55, RMAT.roed));
+}
+
+// Skolen: benk på venstre side, sykkelstativ med én sykkel på høyre
+function rekvSkole(g){
+  g.add(rBoks(1.40, 0.12, 0.48, -2.00, 0.44, 2.40, RMAT.tre));
+  g.add(rBoks(1.40, 0.34, 0.10, -2.00, 0.68, 2.21, RMAT.tre));
+  g.add(rBoks(0.12, 0.44, 0.44, -2.60, 0.22, 2.40, RMAT.moerk));
+  g.add(rBoks(0.12, 0.44, 0.44, -1.40, 0.22, 2.40, RMAT.moerk));
+  g.add(rBoks(1.20, 0.08, 0.08, 2.10, 0.38, 2.30, RMAT.metall));
+  g.add(rSyl(0.05, 0.40, 1.55, 0.20, 2.30, RMAT.metall));
+  g.add(rSyl(0.05, 0.40, 2.65, 0.20, 2.30, RMAT.metall));
+  rSykkel(g, 2.10, 2.62, RMAT.gronn);
+}
+
 function byggStandard(b){
   const g = new THREE.Group();
   const kropp = mkMesh(new THREE.BoxGeometry(5.5, 4, 5), b.farge); kropp.position.y = 2; g.add(kropp);
   const tak = mkMesh(new THREE.ConeGeometry(4.6, 2.4, 4), 0x8a4a3a); tak.position.y = 5.2; tak.rotation.y = Math.PI/4; g.add(tak);
+  g.add(snoBit(new THREE.ConeGeometry(4.66, 2.44, 4), 0, 5.22, 0, Math.PI/4));
   g.add(lagDoer(2.55, 0x4a3220));
   g.add(lagVindu(-1.7, 2.4, 2.55, 1.1, 1.1)); g.add(lagVindu(1.7, 2.4, 2.55, 1.1, 1.1));
-  g.userData.skiltY = 7.2; return g;
+  g.userData.skiltY = 7.5; return g;   // over tårnspissen på taket
 }
 
-// Jobbsenteret – kontorblokk med vindusrekker og flatt tak
+// Jobbsenteret – smal og høy kontorblokk. Den smaleste grunnflata i byen
+// (4,2 x 4,2) og den høyeste veggen, så tårnsilhuetten er lett å kjenne igjen.
 function byggKontor(b){
-  const g = new THREE.Group(); const h = 6.6;
-  const kropp = mkMesh(new THREE.BoxGeometry(5.4, h, 5), b.farge); kropp.position.y = h/2; g.add(kropp);
-  const tak = mkMesh(new THREE.BoxGeometry(5.8, 0.4, 5.4), 0x2f4374); tak.position.y = h+0.2; g.add(tak);
-  const boks = mkMesh(new THREE.BoxGeometry(1.6, 0.8, 1.6), 0x46608f); boks.position.set(1.2, h+0.6, -0.5); g.add(boks);
-  for(let r=0;r<3;r++) for(const c of [-1.6,0,1.6]) g.add(lagVindu(c, 2.4+r*1.6, 2.55, 1.1, 1.1));
-  g.add(lagDoer(2.55, 0x223a5e));
-  g.userData.skiltY = 7.9; return g;
+  const g = new THREE.Group(); const h = 8.2;
+  const kropp = mkMesh(new THREE.BoxGeometry(4.2, h, 4.2), b.farge); kropp.position.y = h/2; g.add(kropp);
+  const tak = mkMesh(new THREE.BoxGeometry(4.6, 0.4, 4.6), 0x2f4374); tak.position.y = h+0.2; g.add(tak);
+  const boks = mkMesh(new THREE.BoxGeometry(1.4, 0.7, 1.4), 0x46608f); boks.position.set(0.8, h+0.75, -0.4); g.add(boks);
+  g.add(snoBit(new THREE.BoxGeometry(4.65, 0.18, 4.65), 0, h+0.49, 0));
+  g.add(snoBit(new THREE.BoxGeometry(1.46, 0.14, 1.46), 0.8, h+1.17, -0.4));
+  for(let r=0;r<4;r++) for(const c of [-1.25,0,1.25]) g.add(lagVindu(c, 3.0+r*1.4, 2.15, 0.9, 0.9));
+  g.add(lagDoer(2.15, 0x223a5e));
+  rekvJobb(g);
+  g.userData.skiltY = 10.1; return g;   // over takboksen (topp 9,3)
 }
 
 // Boligkontoret – koselig hus med pyramidetak og pipe
+// Boligkontoret – lavt og bredt hus. Veggen er bare 3,0 høy, og det store
+// pyramidetaket henger godt ut over. Byens tydeligste «hytteform».
 function byggHus(b){
   const g = new THREE.Group();
-  const kropp = mkMesh(new THREE.BoxGeometry(5, 3.4, 4.6), b.farge); kropp.position.y = 1.7; g.add(kropp);
-  const tak = mkMesh(new THREE.ConeGeometry(4.0, 2.4, 4), 0x8a4a3a); tak.position.y = 4.6; tak.rotation.y = Math.PI/4; g.add(tak);
-  const pipe = mkMesh(new THREE.BoxGeometry(0.6, 1.4, 0.6), 0x7a4a3a); pipe.position.set(1.3, 4.4, -0.5); g.add(pipe);
-  g.add(lagDoer(2.35, 0x5a3a22));
-  g.add(lagVindu(-1.5, 2.2, 2.35, 1.0, 1.0)); g.add(lagVindu(1.5, 2.2, 2.35, 1.0, 1.0));
-  g.userData.skiltY = 6.9; return g;
+  const kropp = mkMesh(new THREE.BoxGeometry(5.4, 3.0, 4.2), b.farge); kropp.position.y = 1.5; g.add(kropp);
+  const tak = mkMesh(new THREE.ConeGeometry(4.1, 2.2, 4), 0x8a4a3a); tak.position.y = 4.1; tak.rotation.y = Math.PI/4; g.add(tak);
+  const pipe = mkMesh(new THREE.BoxGeometry(0.6, 1.4, 0.6), 0x7a4a3a); pipe.position.set(1.5, 3.9, -0.5); g.add(pipe);
+  g.add(snoBit(new THREE.ConeGeometry(4.16, 2.24, 4), 0, 4.11, 0, Math.PI/4));
+  g.add(snoBit(new THREE.BoxGeometry(0.66, 0.12, 0.66), 1.5, 4.64, -0.5));
+  g.add(lagDoer(2.15, 0x5a3a22));
+  g.add(lagVindu(-1.7, 1.9, 2.15, 1.0, 1.0)); g.add(lagVindu(1.7, 1.9, 2.15, 1.0, 1.0));
+  rekvBolig(g);
+  g.userData.skiltY = 6.4; return g;   // over taknokken (topp 5,2)
 }
 
 // Banken – klassisk fasade med søyler, trapp og kuppel
+// Banken – bred og lav tempelfasade. Grunnflata er grunn (4,0 dyp) og brei
+// (6,0), så bygget leses som en liggende blokk med søylerekke og kuppel.
 function byggBank(b){
-  const g = new THREE.Group(); const h = 4.4;
-  const kropp = mkMesh(new THREE.BoxGeometry(5.4, h, 5), 0xf3ead2); kropp.position.y = h/2; g.add(kropp);
-  const tak = mkMesh(new THREE.BoxGeometry(5.8, 0.5, 5.4), 0xe3d6b8); tak.position.y = h+0.25; g.add(tak);
-  const steg = mkMesh(new THREE.BoxGeometry(5.6, 0.5, 1.2), 0xd9cdb0); steg.position.set(0, 0.25, 2.7); g.add(steg);
-  for(const dx of [-1.8,-0.6,0.6,1.8]){
-    const sol = mkMesh(new THREE.CylinderGeometry(0.32, 0.32, 3.4, 12), 0xfffaf0); sol.position.set(dx, 1.95, 2.5); g.add(sol);
+  const g = new THREE.Group(); const h = 4.2;
+  const kropp = mkMesh(new THREE.BoxGeometry(6.0, h, 4.0), 0xf3ead2); kropp.position.y = h/2; g.add(kropp);
+  const tak = mkMesh(new THREE.BoxGeometry(6.4, 0.5, 4.3), 0xe3d6b8); tak.position.y = h+0.25; g.add(tak);
+  const steg = mkMesh(new THREE.BoxGeometry(4.4, 0.5, 1.1), 0xd9cdb0); steg.position.set(0, 0.25, 2.55); g.add(steg);
+  for(const dx of [-2.35,-1.05,1.05,2.35]){
+    const sol = mkMesh(new THREE.CylinderGeometry(0.3, 0.3, 3.2, 12), 0xfffaf0); sol.position.set(dx, 1.9, 2.1); g.add(sol);
   }
-  const bjelke = mkMesh(new THREE.BoxGeometry(5.0, 0.7, 0.9), 0xe9dcc0); bjelke.position.set(0, 3.9, 2.5); g.add(bjelke);
-  const dome = mkMesh(new THREE.SphereGeometry(1.1, 16, 10, 0, Math.PI*2, 0, Math.PI/2), b.farge); dome.position.set(0, h+0.4, 0); g.add(dome);
-  g.add(lagDoer(2.55, 0x6a5230));
-  g.userData.skiltY = 6.9; return g;
+  const bjelke = mkMesh(new THREE.BoxGeometry(5.4, 0.7, 0.9), 0xe9dcc0); bjelke.position.set(0, 3.75, 2.1); g.add(bjelke);
+  const dome = mkMesh(new THREE.SphereGeometry(1.2, 16, 10, 0, Math.PI*2, 0, Math.PI/2), b.farge); dome.position.set(0, h+0.3, 0); g.add(dome);
+  g.add(snoBit(new THREE.BoxGeometry(6.45, 0.16, 4.35), 0, h+0.58, 0));
+  g.add(snoBit(new THREE.SphereGeometry(1.24, 16, 10, 0, Math.PI*2, 0, Math.PI/2.6), 0, h+0.32, 0));
+  g.add(lagDoer(2.05, 0x6a5230));
+  rekvBank(g);
+  g.userData.skiltY = 6.8; return g;   // over kuppelen (topp 5,7)
 }
 
 // Butikken – utstillingsvindu, dør og stripet markise
+// Butikken – byens bredeste og laveste hus (7,0 bredt, bare 3,2 høyt).
+// Den lange, flate formen med markise skiller seg klart fra tårnene.
 function byggButikk(b){
-  const g = new THREE.Group(); const h = 3.8;
-  const kropp = mkMesh(new THREE.BoxGeometry(5.2, h, 5), b.farge); kropp.position.y = h/2; g.add(kropp);
-  const tak = mkMesh(new THREE.BoxGeometry(5.5, 0.4, 5.3), 0x4e9636); tak.position.y = h+0.2; g.add(tak);
-  const rute = mkMesh(new THREE.BoxGeometry(2.6, 1.8, 0.2), 0xcfeaff, {emissive:0x223344}); rute.position.set(-0.9, 1.5, 2.55); g.add(rute);
-  const d = mkMesh(new THREE.BoxGeometry(1.2, 2.2, 0.25), 0x355c2a); d.position.set(1.6, 1.1, 2.55); g.add(d);
+  const g = new THREE.Group(); const h = 3.2;
+  const kropp = mkMesh(new THREE.BoxGeometry(7.0, h, 3.6), b.farge); kropp.position.y = h/2; g.add(kropp);
+  const tak = mkMesh(new THREE.BoxGeometry(7.2, 0.4, 3.8), 0x4e9636); tak.position.y = h+0.2; g.add(tak);
+  g.add(snoBit(new THREE.BoxGeometry(7.25, 0.16, 3.85), 0, h+0.48, 0));
+  const rute = mkMesh(new THREE.BoxGeometry(3.2, 1.7, 0.2), 0xcfeaff, {emissive:0x223344}); rute.position.set(-1.4, 1.6, 1.85); g.add(rute);
+  const d = mkMesh(new THREE.BoxGeometry(1.2, 2.2, 0.25), 0x355c2a); d.position.set(1.9, 1.1, 1.85); g.add(d);
   const stripeF = [0xe2725b, 0xfff3e0];
+  // Markisa dekker vindu og dør, men ikke fruktkassene lengst til venstre
   for(let i=0;i<6;i++){
-    const a = mkMesh(new THREE.BoxGeometry(0.7, 0.12, 1.0), stripeF[i%2]);
-    a.position.set(-2.0+i*0.72, 2.7, 2.9); a.rotation.x = -0.5; g.add(a);
+    const a = mkMesh(new THREE.BoxGeometry(0.78, 0.12, 1.0), stripeF[i%2]);
+    a.position.set(-2.0+i*0.8, 2.5, 2.15); a.rotation.x = -0.5; g.add(a);
   }
-  g.userData.skiltY = 6.4; return g;
+  rekvButikk(g);
+  g.userData.skiltY = 5.6; return g;
 }
 
 // Fritidsklubben – rundt telttak, lekne runde vinduer og vimpel
+// Fritidsklubben – lav og nesten kvadratisk, men med et stort rundt telttak
+// og vimpel. Det runde taket er den eneste kjeglen i byen med myk kant, og
+// gjør klubben lett å skille fra husene med firkantede tak.
 function byggKlubb(b){
-  const g = new THREE.Group(); const h = 3.6;
-  const kropp = mkMesh(new THREE.BoxGeometry(5.2, h, 5), b.farge); kropp.position.y = h/2; g.add(kropp);
-  const tak = mkMesh(new THREE.ConeGeometry(4.0, 2.6, 16), 0xe2725b); tak.position.y = h+1.3; g.add(tak);
-  const stang = mkMesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 8), 0x333333); stang.position.set(0, h+3.2, 0); g.add(stang);
-  const flagg = mkMesh(new THREE.BoxGeometry(0.9, 0.5, 0.05), 0xffd34d); flagg.position.set(0.5, h+3.6, 0); g.add(flagg);
-  g.add(lagDoer(2.55, 0x5a3a6a));
-  for(const dx of [-1.6, 1.6]){
+  const g = new THREE.Group(); const h = 3.4;
+  const kropp = mkMesh(new THREE.BoxGeometry(5.6, h, 4.4), b.farge); kropp.position.y = h/2; g.add(kropp);
+  const tak = mkMesh(new THREE.ConeGeometry(3.2, 2.8, 16), 0xe2725b); tak.position.y = h+1.4; g.add(tak);
+  g.add(snoBit(new THREE.ConeGeometry(3.25, 2.84, 16), 0, h+1.41, 0));
+  const stang = mkMesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 8), 0x333333); stang.position.set(0, h+3.6, 0); g.add(stang);
+  const flagg = mkMesh(new THREE.BoxGeometry(0.9, 0.5, 0.05), 0xffd34d); flagg.position.set(0.5, h+4.0, 0); g.add(flagg);
+  g.add(lagDoer(2.25, 0x5a3a6a));
+  for(const dx of [-1.7, 1.7]){
     const v = mkMesh(new THREE.CylinderGeometry(0.5, 0.5, 0.2, 16), 0xffe08a, {emissive:0x4a3a00});
-    v.rotation.x = Math.PI/2; v.position.set(dx, 2.2, 2.55); g.add(v);
+    v.rotation.x = Math.PI/2; v.position.set(dx, 2.2, 2.25); g.add(v);
   }
-  g.userData.skiltY = 8.2; return g;
+  rekvKlubb(g);
+  g.userData.skiltY = 8.9; return g;   // over flaggstanga (topp 7,8)
 }
 
 // Skolen – klokketårn med spir, klokke, flagg og vindusrad
+// Skolen – lang og bred fløy (6,6 x 4,0) med klokketårn midt på. Bred som
+// butikken, men mye høyere og med tårn, så de to blandes ikke.
 function byggSkole(b){
-  const g = new THREE.Group(); const h = 4.2;
-  const kropp = mkMesh(new THREE.BoxGeometry(5.4, h, 5), b.farge); kropp.position.y = h/2; g.add(kropp);
-  const tak = mkMesh(new THREE.BoxGeometry(5.7, 0.4, 5.3), 0x2c7a76); tak.position.y = h+0.2; g.add(tak);
-  const taarn = mkMesh(new THREE.BoxGeometry(1.5, 1.8, 1.5), 0x49b7b1); taarn.position.set(0, h+1.1, 0); g.add(taarn);
-  const spir = mkMesh(new THREE.ConeGeometry(1.1, 1.2, 4), 0xe2725b); spir.position.set(0, h+2.6, 0); spir.rotation.y = Math.PI/4; g.add(spir);
-  const flaggstang = mkMesh(new THREE.CylinderGeometry(0.05, 0.05, 1.4, 8), 0x444444); flaggstang.position.set(0, h+3.9, 0); g.add(flaggstang);
-  const flagg = mkMesh(new THREE.BoxGeometry(0.8, 0.5, 0.05), 0xff5a4d); flagg.position.set(0.45, h+4.3, 0); g.add(flagg);
-  const klokke = mkMesh(new THREE.CylinderGeometry(0.45, 0.45, 0.12, 16), 0xfff7e6); klokke.rotation.x = Math.PI/2; klokke.position.set(0, h+1.3, 0.78); g.add(klokke);
-  const d1 = mkMesh(new THREE.BoxGeometry(0.9, 2.2, 0.25), 0x355a58); d1.position.set(-0.55, 1.1, 2.55); g.add(d1);
-  const d2 = mkMesh(new THREE.BoxGeometry(0.9, 2.2, 0.25), 0x355a58); d2.position.set(0.55, 1.1, 2.55); g.add(d2);
-  for(const dx of [-1.9,-0.65,0.65,1.9]) g.add(lagVindu(dx, 3.0, 2.55, 0.9, 0.9));
-  g.userData.skiltY = 9.4; return g;
+  const g = new THREE.Group(); const h = 4.0;
+  const kropp = mkMesh(new THREE.BoxGeometry(6.6, h, 4.0), b.farge); kropp.position.y = h/2; g.add(kropp);
+  const tak = mkMesh(new THREE.BoxGeometry(6.9, 0.4, 4.3), 0x2c7a76); tak.position.y = h+0.2; g.add(tak);
+  const taarn = mkMesh(new THREE.BoxGeometry(1.6, 2.0, 1.6), 0x49b7b1); taarn.position.set(0, h+1.0, 0); g.add(taarn);
+  const spir = mkMesh(new THREE.ConeGeometry(1.2, 1.3, 4), 0xe2725b); spir.position.set(0, h+2.65, 0); spir.rotation.y = Math.PI/4; g.add(spir);
+  g.add(snoBit(new THREE.BoxGeometry(6.95, 0.16, 4.35), 0, h+0.48, 0));
+  g.add(snoBit(new THREE.ConeGeometry(1.24, 1.32, 4), 0, h+2.67, 0, Math.PI/4));
+  const flaggstang = mkMesh(new THREE.CylinderGeometry(0.05, 0.05, 1.4, 8), 0x444444); flaggstang.position.set(0, h+4.0, 0); g.add(flaggstang);
+  const flagg = mkMesh(new THREE.BoxGeometry(0.8, 0.5, 0.05), 0xff5a4d); flagg.position.set(0.45, h+4.4, 0); g.add(flagg);
+  const klokke = mkMesh(new THREE.CylinderGeometry(0.45, 0.45, 0.12, 16), 0xfff7e6); klokke.rotation.x = Math.PI/2; klokke.position.set(0, h+1.2, 0.82); g.add(klokke);
+  const d1 = mkMesh(new THREE.BoxGeometry(0.9, 2.2, 0.25), 0x355a58); d1.position.set(-0.6, 1.1, 2.05); g.add(d1);
+  const d2 = mkMesh(new THREE.BoxGeometry(0.9, 2.2, 0.25), 0x355a58); d2.position.set(0.6, 1.1, 2.05); g.add(d2);
+  for(const dx of [-2.5,-1.35,1.35,2.5]) g.add(lagVindu(dx, 3.0, 2.05, 0.9, 0.9));
+  rekvSkole(g);
+  g.userData.skiltY = 9.6; return g;   // over flaggstanga på klokketårnet (topp 8,7)
 }
+
+// Fire av husene står noen få grader ut av rutenettet, så byen ikke ser ut
+// som et regneark. Vinklene er små (3-6 grader) og fasaden vender fortsatt
+// mot torget. Banken og Skolen står rett, så torget beholder en rolig akse.
+// Vridninga påvirker ikke kollisjon: skyvesonen er en sirkel rundt midtpunktet.
+const BYGG_VRI = {jobb: 0.10, bolig: -0.08, butikk: 0.07, klubb: -0.06};
 
 function lagBygning(b){
   let g;
@@ -715,7 +960,7 @@ function lagBygning(b){
     case 'skole':  g = byggSkole(b); break;
     default:       g = byggStandard(b);
   }
-  g.rotation.y = (b.z > 0 ? Math.PI : 0); // fasaden mot torget
+  g.rotation.y = (b.z > 0 ? Math.PI : 0) + (BYGG_VRI[b.id] || 0); // fasaden mot torget
   const skilt = lagSkilt(b.emoji + ' ' + b.navn);
   skilt.position.y = g.userData.skiltY || 7.2;
   g.add(skilt);
@@ -730,11 +975,16 @@ function lagTre(x, z){
     new THREE.MeshLambertMaterial({color:0x6b4a2e}));
   stamme.position.y = 0.7; stamme.castShadow = true;
   g.add(stamme);
+  // Hvert tre får sin egen faste tilfeldighet (0–1). Den bestemmer hvor treet
+  // ligger i årstidens fargeskala, så skogen aldri blir helt ensfarget.
+  const v = Math.random();
+  const kroneMat = new THREE.MeshLambertMaterial({color: lerpFarge(0x7fd06a, 0xa9e28c, v)});
   const krone = new THREE.Mesh(
     new THREE.SphereGeometry(1.1 + Math.random()*0.5, 8, 7),
-    new THREE.MeshLambertMaterial({color: Math.random() > .5 ? 0x4f9e45 : 0x6cb95c}));
+    kroneMat);
   krone.position.y = 2.1; krone.castShadow = true;
   g.add(krone);
+  treKroner.push({mat:kroneMat, mesh:krone, v:v});
   g.position.set(x, 0, z);
   return g;
 }
@@ -785,8 +1035,10 @@ function initTre(){
   const texLoader = new THREE.TextureLoader();
   texLoader.setCrossOrigin("anonymous");
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x87c5e8);
-  scene.fog = new THREE.Fog(0x87c5e8, 40, 95);
+  // Horisontfargen (HORISONT, definert i årstidsblokka over) brukes både i
+  // himmelgradienten og i tåka, så overgangen blir usynlig
+  scene.background = new THREE.Color(HORISONT);
+  scene.fog = new THREE.Fog(HORISONT, 40, 95);
 
   kamera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 200);
   kamera.position.set(0, 15, 14);
@@ -798,9 +1050,38 @@ function initTre(){
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   el('spill').appendChild(renderer.domElement);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-  const sol = new THREE.DirectionalLight(0xfff3d6, 0.85);
-  sol.position.set(18, 30, 12);
+  // --- Gradert himmel: stor kule rundt scenen, gradienten males i kode ---
+  const himmelCanvas = document.createElement('canvas');
+  himmelCanvas.width = 2; himmelCanvas.height = 512;
+  const hctx = himmelCanvas.getContext('2d');
+  const grad = hctx.createLinearGradient(0, 0, 0, 512);
+  grad.addColorStop(0.00, '#2f6fbe'); // dypere blå rett over hodet
+  grad.addColorStop(0.32, '#6ba9e0');
+  grad.addColorStop(0.46, '#a8d3ef');
+  grad.addColorStop(0.50, '#d8ebf7'); // horisont – må matche tåkefargen
+  grad.addColorStop(1.00, '#d8ebf7');
+  hctx.fillStyle = grad;
+  hctx.fillRect(0, 0, 2, 512);
+  const himmelTex = new THREE.CanvasTexture(himmelCanvas);
+  himmelTex.magFilter = THREE.LinearFilter;
+  himmelTex.minFilter = THREE.LinearFilter;
+  // Materialet tas vare på – årstiden tonner himmelen varmere eller kaldere
+  himmelMat = new THREE.MeshBasicMaterial({map: himmelTex, side: THREE.BackSide, fog: false, depthWrite: false});
+  const himmel = new THREE.Mesh(
+    new THREE.SphereGeometry(100, 32, 24),
+    himmelMat
+  );
+  himmel.renderOrder = -1;
+  scene.add(himmel);
+
+  ambientLys = new THREE.AmbientLight(0xffffff, 0.35);
+  scene.add(ambientLys);
+  // Himmel over / gress under – gir myke fargede skygger i stedet for grå
+  hemiLys = new THREE.HemisphereLight(0x9fd0f0, 0x6f9a4e, 0.5);
+  scene.add(hemiLys);
+  const sol = new THREE.DirectionalLight(0xfff3d6, 1.0);
+  solLys = sol;
+  sol.position.set(-24, 26, 20);
   sol.castShadow = true;
   sol.shadow.mapSize.set(2048, 2048);
   sol.shadow.camera.left = -35; sol.shadow.camera.right = 35;
@@ -808,16 +1089,25 @@ function initTre(){
   scene.add(sol);
 
   // Bakke
-  const bakkeMat = new THREE.MeshLambertMaterial({color:0x7cc06a});
+  bakkeMat = new THREE.MeshLambertMaterial({color:0x7cc06a});
   texLoader.load(GRESS_URI, function(tex){
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(30, 30);
-    bakkeMat.map = tex; bakkeMat.color.set(0xffffff); bakkeMat.needsUpdate = true;
+    bakkeMat.map = tex; bakkeMat.needsUpdate = true;
+    // Teksturen fargelegges av årstiden (hvit = teksturen slik den er)
+    bakkeMat.color.setHex(aarstidNaa ? aarstidNaa.gress : 0xffffff);
   });
   const bakke = new THREE.Mesh(
     new THREE.PlaneGeometry(120, 120),
     bakkeMat);
   bakke.rotation.x = -Math.PI/2; bakke.receiveShadow = true;
   scene.add(bakke);
+
+  // Tynt snølag rett over gresset. Veiene ligger høyere (y = 0.02), så de
+  // ser ut som om de er brøytet. Toner inn og ut med årstiden.
+  snoFlate = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), snoMat);
+  snoFlate.rotation.x = -Math.PI/2; snoFlate.position.y = 0.012;
+  snoFlate.receiveShadow = true; snoFlate.visible = false;
+  scene.add(snoFlate);
 
   // Veier (kors + ring rundt torget) – med brostein-tekstur (faller tilbake til grå)
   function veiMatMed(rx, ry){
@@ -904,6 +1194,9 @@ function initTre(){
   spiller.position.set(0, 0, 12);
   scene.add(spiller);
 
+  // Årstiden settes med én gang – spillet starter i måned 1 (vinter)
+  settAarstid(1, true);
+
   klokke = new THREE.Clock();
   addEventListener('resize', ()=>{
     kamera.aspect = innerWidth/innerHeight;
@@ -914,6 +1207,13 @@ function initTre(){
 
 // ===================== KONTROLLER =====================
 addEventListener('keydown', e=>{
+  // Testsnarvei for læreren/utvikleren: Shift + 1/2/3/4 bytter årstid
+  // (1 = vår, 2 = sommer, 3 = høst, 4 = vinter). Endrer ikke spillet.
+  if(e.shiftKey && ['!','"','#','¤','1','2','3','4'].indexOf(e.key) >= 0){
+    const nr = {'!':1,'"':2,'#':3,'¤':4,'1':1,'2':2,'3':3,'4':4}[e.key];
+    settAarstid([0, 4, 7, 10, 1][nr]);
+    return;
+  }
   taster[e.key.toLowerCase()] = true;
   if((e.key === 'e' || e.key === 'E' || e.key === 'Enter') && !uiAapen){
     gjorInteraksjon();
@@ -974,6 +1274,9 @@ function sloyfe(){
   requestAnimationFrame(sloyfe);
   const dt = Math.min(klokke.getDelta(), 0.12);
   const t = klokke.elapsedTime;
+
+  // Myk overgang mellom årstidene – litt for hvert bilde, aldri blokkerende
+  stegAarstid(dt);
 
   // Bevegelse
   let mx = 0, mz = 0;
@@ -1506,6 +1809,7 @@ async function nesteMaaned(){
     S.mnd++;
     S.klubbBrukt = false;
     S.bonusBrukt = false;
+    if(S.mnd <= 12) settAarstid(S.mnd);   // byen skifter utseende med årstiden
     if(S.mnd > 12){ sluttSpill(); }
     else { oppdaterHUD(); await startMaaned(); }
   } finally {
@@ -1925,6 +2229,7 @@ document.querySelectorAll('.vanskKnapp').forEach(k=>{
   k.addEventListener('click', async ()=>{
     ac(); lydSuksess();
     nyttSpill(k.dataset.v);
+    settAarstid(S.mnd, true);   // start alltid i riktig årstid
     el('start').style.display = 'none';
     el('hud').style.display = 'flex';
     if(ERTOUCH) el('joySone').style.display = 'block';
@@ -1945,14 +2250,39 @@ document.querySelectorAll('.vanskKnapp').forEach(k=>{
   document.addEventListener(ev, function(e){ e.preventDefault(); }, {passive:false});
 });
 
-initTre();
-sloyfe();
+// Testhjelp i nettleserkonsollen: aarstidTest(7) hopper til juli (sommer)
+window.aarstidTest = function(mnd){ settAarstid(mnd); return aarstid(mnd).navn; };
 
-// Alt er bygget og klart – fjern lasteskjermen
-(function(){
+// ---- Vent på skriften før byen bygges ----
+// Skiltene over bygningene tegnes på et canvas med Fredoka One. Hvis skriften
+// ikke er ferdig nedlastet fra Google Fonts i det øyeblikket, bytter canvas
+// stille til vanlig sans-serif – og skiltene blir stående med feil font resten
+// av økta. Derfor ber vi nettleseren laste skriften først, og bygger byen når
+// den er klar. Vi venter aldri lenger enn maksMs, så spillet henger ikke om
+// Google Fonts skulle være nede.
+function ventPaaSkrift(maksMs){
+  return new Promise(function(ferdig){
+    var avgjort = false;
+    function ok(){ if(!avgjort){ avgjort = true; clearTimeout(nodbrems); ferdig(); } }
+    var nodbrems = setTimeout(function(){ if(!avgjort){ avgjort = true; ferdig(); } }, maksMs);
+    if(!document.fonts || !document.fonts.load){ ok(); return; }
+    var jobber = [];
+    // Be eksplisitt om de to størrelsene vi tegner med på canvas
+    try { jobber.push(document.fonts.load("62px 'Fredoka One'")); } catch(e){}
+    try { jobber.push(document.fonts.load("13px 'Fredoka One'")); } catch(e){}
+    Promise.all(jobber)
+      .then(function(){ return document.fonts.ready; })
+      .then(ok, ok);   // uansett utfall: gå videre
+  });
+}
+
+ventPaaSkrift(3500).then(function(){
+  initTre();
+  sloyfe();
+  // Alt er bygget og klart – fjern lasteskjermen
   var l = document.getElementById('laster');
   if(l){ l.classList.add('borte'); setTimeout(function(){ l.style.display='none'; }, 450); }
-})();
+});
 </script>
 </body>
 </html>
