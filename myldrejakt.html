@@ -27,6 +27,7 @@
   --gul:#fbbf24;
   --rosa:#f472b6;
   --gronn:#34d399;
+  --gull:#fbbf24;
   --kort:#ffffff;
   --blekk:#241a52;
   --krite:#fff7ed;
@@ -105,6 +106,7 @@ body.spiller #spill{display:flex;}
 .merke.f-oransje{background:var(--oransje);color:var(--natt-3);}
 .merke.f-gronn{background:var(--gronn);color:var(--natt-3);}
 .merke.f-lilla{background:var(--lilla);}
+.merke.f-gull{background:var(--gull);color:var(--natt-3);}
 
 .serie-tekst{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1;}
 .serie-tekst h2{font-family:'Fredoka',sans-serif;font-size:1.45rem;line-height:1.1;}
@@ -693,6 +695,78 @@ const SERIER = [
     { navn:"Tukan",               felt:{x:69.2, y:31.6, b:6.6, h:6.6 } },
     { navn:"Oransje robotkatt",   felt:{x:31.2, y:44.9, b:6.2, h:7.4 } },
     { navn:"Rød sklie",           felt:{x:46.3, y:18.3, b:4.0, h:4.6 } } ] }
+  ]
+}
+,
+{
+  id: "serie6",
+  navn: "Tvers gjennom",
+  beskrivelse: "Ti bilder skåret i to som et dukkehus – maurtua, ubåten, museet og raketten. Den vanskeligste serien: alt er lite og gjemt i etasjer og ganger.",
+  omslag: "myldrebilder/omslag-serie6.webp",
+  mappe: "myldrebilder/serie6/",
+  utklipp: "myldrebilder/serie6/utklipp/",
+  farge: "f-gull",
+  bilder: [
+  { fil:"01-maurtua.webp", scene:"Maurtua", ting:[
+    { navn:"Fingerbøl", felt:{x:36.8, y:40.2, b:4.0, h:5.5 } },
+    { navn:"Blå glasskule", felt:{x:88.5, y:17.2, b:3.4, h:4.6 } },
+    { navn:"Gullnøkkel", felt:{x:51.7, y:60.6, b:3.9, h:2.7 } },
+    { navn:"Marihøne", felt:{x:83.7, y:46.8, b:4.2, h:5.4 } },
+    { navn:"Snegle", felt:{x:62.7, y:87.2, b:4.6, h:6.0 } } ] },
+  { fil:"02-gruva.webp", scene:"Gruva i fjellet", ting:[
+    { navn:"Kanarifugl i bur", felt:{x:60.0, y:19.5, b:3.3, h:7.4 } },
+    { navn:"Grønn lykt", felt:{x:11.6, y:76.9, b:2.3, h:4.9 } },
+    { navn:"Grønn gassflaske", felt:{x:26.8, y:67.3, b:2.5, h:5.7 } },
+    { navn:"Robåt", felt:{x:60.8, y:82.6, b:10.0, h:5.6 } },
+    { navn:"Dinosaurhode", felt:{x:79.2, y:60.4, b:4.4, h:4.6 } } ] },
+  { fil:"03-treet.webp", scene:"Det gamle treet", ting:[
+    { navn:"Rød tekanne", felt:{x:36.9, y:52.1, b:3.8, h:3.8 } },
+    { navn:"Runde briller", felt:{x:35.6, y:45.3, b:4.1, h:2.6 } },
+    { navn:"Stripete sokk", felt:{x:73.2, y:81.5, b:3.5, h:8.6 } },
+    { navn:"Vekkerklokke", felt:{x:70.1, y:49.1, b:4.6, h:5.6 } },
+    { navn:"Rødstrupe", felt:{x:89.8, y:14.2, b:4.0, h:3.9 } } ] },
+  { fil:"04-ubaten.webp", scene:"Ubåten", ting:[
+    { navn:"Bamse", felt:{x:30.1, y:27.6, b:3.3, h:4.4 } },
+    { navn:"Skattekiste", felt:{x:74.9, y:91.0, b:5.6, h:5.6 } },
+    { navn:"Krabbe", felt:{x:90.4, y:90.3, b:4.6, h:4.7 } },
+    { navn:"Mikroskop", felt:{x:58.4, y:61.3, b:4.1, h:6.3 } },
+    { navn:"Sjøstjerne", felt:{x:18.1, y:93.2, b:4.3, h:4.6 } } ] },
+  { fil:"05-lasteskipet.webp", scene:"Lasteskipet", ting:[
+    { navn:"Grønn papegøye", felt:{x:67.9, y:49.0, b:2.8, h:5.4 } },
+    { navn:"Rød verktøykasse", felt:{x:57.4, y:84.4, b:4.4, h:5.4 } },
+    { navn:"Leketog", felt:{x:48.6, y:51.4, b:4.4, h:4.8 } },
+    { navn:"Gul bil", felt:{x:31.0, y:67.2, b:5.8, h:5.2 } },
+    { navn:"Bananer", felt:{x:42.0, y:47.7, b:4.3, h:6.2 } } ] },
+  { fil:"06-badelandet.webp", scene:"Badelandet", ting:[
+    { navn:"Lilla vannkanne", felt:{x:31.4, y:12.3, b:3.5, h:2.3 } },
+    { navn:"Frosk-badering", felt:{x:14.5, y:85.2, b:4.7, h:4.6 } },
+    { navn:"Gul bøtte", felt:{x:41.4, y:65.6, b:3.4, h:4.2 } },
+    { navn:"Stripet parasoll", felt:{x:48.8, y:43.2, b:5.7, h:4.0 } },
+    { navn:"Gul luftmadrass", felt:{x:17.2, y:61.4, b:7.4, h:5.6 } } ] },
+  { fil:"07-bygarden.webp", scene:"Bygården", ting:[
+    { navn:"Gullfisk i bolle", felt:{x:29.9, y:42.3, b:3.8, h:4.0 } },
+    { navn:"Vannmelon", felt:{x:72.3, y:26.4, b:4.2, h:2.8 } },
+    { navn:"Robotleke", felt:{x:74.6, y:44.8, b:4.4, h:6.2 } },
+    { navn:"Veggur", felt:{x:38.0, y:39.6, b:3.0, h:3.3 } },
+    { navn:"Blå skateboard", felt:{x:40.5, y:90.3, b:1.7, h:4.6 } } ] },
+  { fil:"08-museet.webp", scene:"Museet", ting:[
+    { navn:"Kost", felt:{x:91.8, y:94.1, b:2.9, h:3.0 } },
+    { navn:"Mumie", felt:{x:15.5, y:39.3, b:3.6, h:14.7 } },
+    { navn:"Ørn", felt:{x:71.4, y:37.2, b:4.4, h:4.2 } },
+    { navn:"Potteplante", felt:{x:91.4, y:30.2, b:4.0, h:6.4 } },
+    { navn:"Steinbyste", felt:{x:39.8, y:57.1, b:2.9, h:4.9 } } ] },
+  { fil:"09-flyet.webp", scene:"Flyet", ting:[
+    { navn:"Grønn paraply", felt:{x:47.2, y:55.8, b:5.6, h:3.4 } },
+    { navn:"Rosa koffert", felt:{x:17.4, y:76.0, b:5.9, h:3.9 } },
+    { navn:"Kasse med appelsiner", felt:{x:42.1, y:70.0, b:5.7, h:3.7 } },
+    { navn:"Bamse", felt:{x:54.6, y:27.8, b:3.4, h:4.4 } },
+    { navn:"Hund i bur", felt:{x:63.0, y:47.8, b:4.1, h:4.2 } } ] },
+  { fil:"10-raketten.webp", scene:"Raketten", ting:[
+    { navn:"Trafikkjegle", felt:{x:6.9, y:75.3, b:2.3, h:3.1 } },
+    { navn:"Planetflagg", felt:{x:38.8, y:3.0, b:5.0, h:4.4 } },
+    { navn:"Romdrakt på hylla", felt:{x:34.0, y:11.4, b:3.4, h:6.9 } },
+    { navn:"Sovepose", felt:{x:46.6, y:31.1, b:5.5, h:4.5 } },
+    { navn:"Gule kveiler", felt:{x:30.8, y:15.1, b:2.7, h:2.9 } } ] }
   ]
 }
 ];
