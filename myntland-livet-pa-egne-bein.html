@@ -47,7 +47,7 @@
   .verdi.glimtOpp{animation:hudGlimtOpp .75s ease-out;}
   .verdi.glimtNed{animation:hudGlimtNed .75s ease-out;}
 
-  /* Liten flytende «−500 🪙» som stiger opp fra tallet */
+  /* Liten flytende «−500 <img class="ik" src="ikoner/mynt.png" alt="mynt">» som stiger opp fra tallet */
   .hudFlyt{position:absolute;left:50%;top:0;white-space:nowrap;pointer-events:none;z-index:3;
     font-family:'Fredoka One';font-size:16px;text-shadow:0 1px 4px rgba(0,0,0,.7);
     animation:hudFlyt 1.1s ease-out forwards;}
@@ -164,7 +164,9 @@
     table.sml td.delsum{font-size:15px;opacity:1;}
     table.sml td.delsum .del{display:block;padding:2px 0;}
     table.sml td.delsum .del::before{content:attr(data-etikett) " ";font-size:14px;opacity:.7;}
-    table.sml td.delsum .del::after{content:" 🪙";}
+    table.sml td.delsum .del::after{content:"";display:inline-block;
+      width:.95em;height:.95em;margin-left:.3em;vertical-align:-.14em;
+      background:url('ikoner/mynt.png') center/contain no-repeat;}
     table.sml td.delsum .pluss{display:none;}
 
     /* Totalsummen er den pedagogisk viktige – den skal være størst */
@@ -230,7 +232,8 @@
     justify-content:center;background:linear-gradient(180deg,#1d2a4d,#27376a);color:var(--krem);
     transition:opacity .4s ease;text-align:center;padding:20px;}
   #laster.borte{opacity:0;pointer-events:none;}
-  #laster .lasteMynt{font-size:64px;animation:lasteSnurr 1.4s linear infinite;}
+  #laster .lasteMynt{width:64px;height:64px;margin:0 auto;
+    animation:lasteSnurr 1.4s linear infinite;}
   #laster h2{font-family:'Fredoka One',cursive;color:var(--gull2);margin:14px 0 6px;font-size:24px;}
   #laster p{font-size:15px;opacity:.9;margin:0;}
   .lastePrikker{margin-top:18px;display:flex;gap:9px;}
@@ -263,6 +266,20 @@
     .lastePrikker span{animation:none;opacity:1;}
   }
 
+  /* ---------- Egne ikoner (erstatter emoji) ---------- */
+  /* Ikonene i ikoner/ er 256x256 PNG med gjennomsiktig bakgrunn. Bredden er
+     satt i em, så ikonet vokser og krymper sammen med teksten rundt det. */
+  .ik{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.22em;
+    object-fit:contain;}
+  .ikonKnapp .ik{width:22px;height:22px;vertical-align:-5px;}
+  .stjerner .ik{vertical-align:-.16em;}
+  /* Brukskontoen teller opp mange ganger i sekundet. Mynten legges derfor
+     på med CSS, slik at selve tallet kan settes som ren tekst. */
+  #hudPenger::after{content:'';display:inline-block;width:1em;height:1em;
+    margin-left:.26em;vertical-align:-.14em;
+    background:url('ikoner/mynt.png') center/contain no-repeat;}
+
+
   /* Hindre dobbelttrykk-zoom på knapper og felter (iPad) */
   button,input,select,textarea,a{touch-action:manipulation;}
 </style>
@@ -270,7 +287,7 @@
 <body>
 <!-- Lasteskjerm: ligger over alt til spillet er klart -->
 <div id="laster">
-  <div class="lasteMynt">🪙</div>
+  <div class="lasteMynt"><img src="ikoner/mynt.png" alt="" style="width:100%;height:100%;display:block;"></div>
   <h2>Laster spillet …</h2>
   <p>Vent litt – byen bygges opp!</p>
   <div class="lastePrikker"><span></span><span></span><span></span></div>
@@ -291,16 +308,16 @@
 <div id="hud">
   <div class="hudBoks">
     <div class="hudStat"><span class="verdi" id="hudMnd">1/12</span><span class="navn">Måned</span></div>
-    <div class="hudStat"><span class="verdi" id="hudPenger">0 🪙</span><span class="navn">Brukskonto</span></div>
+    <div class="hudStat"><span class="verdi" id="hudPenger">0</span><span class="navn">Brukskonto</span></div>
     <div class="hudStat klikkbar" id="statTrivsel" title="Hva er trivsel?"><span class="verdi" id="hudTrivsel">50%</span><span class="navn">Trivsel</span>
       <div class="maaler" id="trivselBar"><div style="width:50%"></div></div></div>
     <div class="hudStat klikkbar" id="statMaal" title="Åpne Banken"><span class="verdi" id="hudMaal">0%</span><span class="navn">Sparemål</span>
       <div class="maaler" id="maalBar"><div style="width:0%"></div></div></div>
   </div>
   <div style="display:flex;gap:8px;align-items:center;">
-    <button class="ikonKnapp" id="lydKnapp" title="Lyd av/på">🔊</button>
-    <button class="ikonKnapp" id="hjelpKnapp" title="Hjelp">❓</button>
-    <button class="hudKnapp" id="nesteMndKnapp">Neste måned ➜</button>
+    <button class="ikonKnapp" id="lydKnapp" title="Lyd av/på"><img class="ik" src="ikoner/lyd-paa.png" alt="Lyd av/på"></button>
+    <button class="ikonKnapp" id="hjelpKnapp" title="Hjelp"><img class="ik" src="ikoner/hjelp.png" alt="Hjelp"></button>
+    <button class="hudKnapp" id="nesteMndKnapp">Neste måned <img class="ik" src="ikoner/pil-hoyre.png" alt=""></button>
   </div>
 </div>
 
@@ -354,11 +371,11 @@
       🎮 PC: piltaster/WASD + E for å gå inn &nbsp;|&nbsp; 📱 iPad: styrespak nede til venstre + grønn knapp
     </p>
     <button class="vanskKnapp" style="background:var(--groenn);" data-v="lett">
-      🟢 Lett <small>1 500 🪙 i start • sparemål 3 000 🪙 • rolige måneder</small></button>
+      🟢 Lett <small>1 500 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i start • sparemål 3 000 <img class="ik" src="ikoner/mynt.png" alt="mynt"> • rolige måneder</small></button>
     <button class="vanskKnapp" style="background:#e8a13a;" data-v="middels">
-      🟡 Middels <small>1 000 🪙 i start • sparemål 5 000 🪙 • litt av hvert kan skje</small></button>
+      🟡 Middels <small>1 000 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i start • sparemål 5 000 <img class="ik" src="ikoner/mynt.png" alt="mynt"> • litt av hvert kan skje</small></button>
     <button class="vanskKnapp" style="background:var(--roed);" data-v="utfordring">
-      🔴 Utfordring <small>800 🪙 i start • sparemål 8 000 🪙 • dyrere priser og flere overraskelser</small></button>
+      🔴 Utfordring <small>800 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i start • sparemål 8 000 <img class="ik" src="ikoner/mynt.png" alt="mynt"> • dyrere priser og flere overraskelser</small></button>
   </div>
 </div>
 
@@ -378,11 +395,11 @@ const JOBBER = {
   hundepass: {navn:'Hundepasser',      emoji:'🐕', lonn:[600,2200],  trivsel:+1, tid:'Varierer fra uke til uke', krav:null, spill:'plukkOpp',
               info:'Lønnen varierer! Noen måneder mange hunder, andre nesten ingen.'},
   sykkelbud: {navn:'Sykkelbud',        emoji:'🚴', lonn:[2200,2200], trivsel:+1, tid:'Ettermiddag, 5 t/uke', krav:'trafikk', spill:'labyrint',
-              info:'God lønn for raske bein — krever trafikkurset på Skolen (800 🪙).'},
+              info:'God lønn for raske bein — krever trafikkurset på Skolen (800 <img class="ik" src="ikoner/mynt.png" alt="mynt">).'},
   regnskap:  {navn:'Regnskapshjelp',   emoji:'🧮', lonn:[2600,2600], trivsel:0,  tid:'Kveld, 4 t/uke', krav:'tall', spill:'kvittering',
-              info:'Du hjelper butikkene med tallene. Krever tallkurset på Skolen (1 500 🪙).'},
+              info:'Du hjelper butikkene med tallene. Krever tallkurset på Skolen (1 500 <img class="ik" src="ikoner/mynt.png" alt="mynt">).'},
   kode:      {navn:'Kodehjelp',        emoji:'💻', lonn:[3000,3000], trivsel:0,  tid:'Kveld, 5 t/uke', krav:'kode', spill:'regne',
-              info:'Best lønn i byen — krever kodekurset på Skolen (2 000 🪙).'}
+              info:'Best lønn i byen — krever kodekurset på Skolen (2 000 <img class="ik" src="ikoner/mynt.png" alt="mynt">).'}
 };
 
 // Kurs på Skolen: pris + en liten prøve. laaser = jobben kurset åpner.
@@ -392,15 +409,15 @@ const KURS = {
         {q:'Et bud skal levere 3 pakker i Solgata, 4 i Månegata og 5 i Stjernegata. Hvor mange pakker til sammen?', svar:12}]},
   tall:    {navn:'Tallkurs',   emoji:'🧮', pris:1500, laaser:'Regnskapshjelp',
     sp:[{q:'Hva er 25 % av 200?', svar:50},
-        {q:'En butikk selger varer for 348 🪙 og 267 🪙. Hva er summen?', svar:615}]},
+        {q:'En butikk selger varer for 348 <img class="ik" src="ikoner/mynt.png" alt="mynt"> og 267 <img class="ik" src="ikoner/mynt.png" alt="mynt">. Hva er summen?', svar:615}]},
   kode:    {navn:'Kodekurs',   emoji:'💻', pris:2000, laaser:'Kodehjelp',
     sp:[{q:'Tallmønster: 2, 4, 8, 16, … Hva er neste tall?', svar:32},
         {q:'En kode gjentar 🔴🔵🔵 om og om igjen. Roboten skriver 9 tegn. Hvor mange 🔵 blir det?', svar:6}]}
 };
 // Videreutdanning: +25 % lønn på alle jobber
 const VIDERE = {pris:2500, bonus:0.25,
-  sp:[{q:'Du tjener 2 000 🪙 og bruker 1 500 🪙 i måneden. Hvor mange prosent av lønnen sparer du?', svar:25},
-      {q:'Lønnen din er 2 000 🪙 og øker med 25 %. Hva blir den nye lønnen?', svar:2500}]};
+  sp:[{q:'Du tjener 2 000 <img class="ik" src="ikoner/mynt.png" alt="mynt"> og bruker 1 500 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i måneden. Hvor mange prosent av lønnen sparer du?', svar:25},
+      {q:'Lønnen din er 2 000 <img class="ik" src="ikoner/mynt.png" alt="mynt"> og øker med 25 %. Hva blir den nye lønnen?', svar:2500}]};
 
 const BOLIGER = {
   hjemme: {navn:'Bo hjemme',  emoji:'🏡', leie:0,    strom:0,   nett:0,   trivsel:-2,
@@ -428,69 +445,69 @@ const KLUBB = [
 // Hendelser: t=tekst, valg=[{l:knapp, p:penger, h:trivsel, svar:tilbakemelding}]
 const HENDELSER = [
   {t:'📱 Uff! Mobilen din falt i bakken og skjermen knuste. Hva gjør du?',
-   valg:[{l:'Reparere (300 🪙)', p:-300, h:0,  svar:'Smart! Reparasjon er ofte billigst.'},
-         {l:'Kjøpe brukt (800 🪙)', p:-800, h:2, svar:'Brukt fungerer fint og sparer deg for mye.'},
-         {l:'Kjøpe ny (2 000 🪙)', p:-2000, h:5, svar:'Ny og fin — men det kostet!'},
+   valg:[{l:'Reparere (300 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-300, h:0,  svar:'Smart! Reparasjon er ofte billigst.'},
+         {l:'Kjøpe brukt (800 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-800, h:2, svar:'Brukt fungerer fint og sparer deg for mye.'},
+         {l:'Kjøpe ny (2 000 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-2000, h:5, svar:'Ny og fin — men det kostet!'},
          {l:'Vente med mobil', p:0, h:-8, svar:'Gratis, men kjipt å være uten mobil…'}]},
-  {t:'🎬 Vennene dine skal på kino i helga. Billetten koster 150 🪙.',
-   valg:[{l:'Bli med (150 🪙)', p:-150, h:8, svar:'Kjempekoselig kveld med gjengen!'},
-         {l:'Spare pengene', p:0, h:-4, svar:'Du sparte 150 🪙, men savnet vennene litt.'}]},
+  {t:'🎬 Vennene dine skal på kino i helga. Billetten koster 150 <img class="ik" src="ikoner/mynt.png" alt="mynt">.',
+   valg:[{l:'Bli med (150 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-150, h:8, svar:'Kjempekoselig kveld med gjengen!'},
+         {l:'Spare pengene', p:0, h:-4, svar:'Du sparte 150 <img class="ik" src="ikoner/mynt.png" alt="mynt">, men savnet vennene litt.'}]},
   {t:'🚲 Sykkelen din punkterte på vei hjem.',
-   valg:[{l:'Fikse den (120 🪙)', p:-120, h:0, svar:'Sykkelen ruller igjen!'},
+   valg:[{l:'Fikse den (120 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-120, h:0, svar:'Sykkelen ruller igjen!'},
          {l:'Gå til fots en stund', p:0, h:-5, svar:'Gratis, men beina blir slitne.'}]},
-  {t:'🎉 Du vant 500 🪙 i skolens loddtrekning!',
+  {t:'🎉 Du vant 500 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i skolens loddtrekning!',
    valg:[{l:'Jippi!', p:500, h:5, svar:'Flaks! Husk: uventede penger kan også spares.'}]},
-  {t:'🎂 Bursdagen din! Bestemor sender 300 🪙.',
+  {t:'🎂 Bursdagen din! Bestemor sender 300 <img class="ik" src="ikoner/mynt.png" alt="mynt">.',
    valg:[{l:'Takk, bestemor!', p:300, h:4, svar:'Hurra for deg!'}]},
   {t:'⚡ Strømprisen har gått opp denne måneden.',
    bolig:true,
-   valg:[{l:'Au da… (100 🪙 ekstra)', p:-100, h:0, svar:'Strøm koster — det merker alle som betaler egne regninger.'}]},
-  {t:'🎤 Hele vennegjengen skal på konsert. Billetten koster 400 🪙.',
-   valg:[{l:'Bli med (400 🪙)', p:-400, h:12, svar:'For en kveld! Verdt det?'},
+   valg:[{l:'Au da… (100 <img class="ik" src="ikoner/mynt.png" alt="mynt"> ekstra)', p:-100, h:0, svar:'Strøm koster — det merker alle som betaler egne regninger.'}]},
+  {t:'🎤 Hele vennegjengen skal på konsert. Billetten koster 400 <img class="ik" src="ikoner/mynt.png" alt="mynt">.',
+   valg:[{l:'Bli med (400 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-400, h:12, svar:'For en kveld! Verdt det?'},
          {l:'Stå over denne gangen', p:0, h:-6, svar:'Du sparte mye, men det var litt kjipt å være hjemme.'}]},
   {t:'🧥 Genseren din røk opp i sømmen.',
-   valg:[{l:'Kjøpe ny (350 🪙)', p:-350, h:2, svar:'Ny genser, klar for vinteren.'},
-         {l:'Sy den selv (50 🪙 til utstyr)', p:-50, h:2, svar:'Reparere fremfor å kjøpe nytt — bra for lommeboka og kloden!'}]},
-  {t:'🪙 Du fant 100 🪙 på fortauet, og ingen eier dem.',
+   valg:[{l:'Kjøpe ny (350 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-350, h:2, svar:'Ny genser, klar for vinteren.'},
+         {l:'Sy den selv (50 <img class="ik" src="ikoner/mynt.png" alt="mynt"> til utstyr)', p:-50, h:2, svar:'Reparere fremfor å kjøpe nytt — bra for lommeboka og kloden!'}]},
+  {t:'<img class="ik" src="ikoner/mynt.png" alt="mynt"> Du fant 100 <img class="ik" src="ikoner/mynt.png" alt="mynt"> på fortauet, og ingen eier dem.',
    valg:[{l:'Heldig!', p:100, h:2, svar:'Små summer blir store hvis du tar vare på dem.'}]},
-  {t:'🎮 Spillet ALLE snakker om har kommet ut. Det koster 600 🪙.',
-   valg:[{l:'Kjøpe nå (600 🪙)', p:-600, h:10, svar:'Gøy! Men nye spill blir ofte billigere etter noen måneder.'},
+  {t:'🎮 Spillet ALLE snakker om har kommet ut. Det koster 600 <img class="ik" src="ikoner/mynt.png" alt="mynt">.',
+   valg:[{l:'Kjøpe nå (600 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-600, h:10, svar:'Gøy! Men nye spill blir ofte billigere etter noen måneder.'},
          {l:'Vente på salg', p:0, h:-3, svar:'Tålmodighet lønner seg ofte — salget kommer!'}]},
   {t:'🦷 Tannlegetime: et lite hull må fikses.',
-   valg:[{l:'Betale regningen (250 🪙)', p:-250, h:0, svar:'Noen utgifter kan man ikke velge bort.'}]},
+   valg:[{l:'Betale regningen (250 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-250, h:0, svar:'Noen utgifter kan man ikke velge bort.'}]},
   {t:'🍿 Klassen skal på tur og du trenger niste og utstyr.',
-   valg:[{l:'Handle inn (90 🪙)', p:-90, h:3, svar:'Klar for tur!'}]},
+   valg:[{l:'Handle inn (90 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-90, h:3, svar:'Klar for tur!'}]},
   {t:'💳 En selger tilbyr deg et «kjøp nå, betal senere»-kort. Du kan få en kul ryggsekk uten å betale med en gang.',
    valg:[{l:'Nei takk, jeg sparer heller', p:0, h:-2, svar:'Lurt! «Betal senere» betyr nesten alltid at det blir dyrere til slutt.'},
-         {l:'Ja, kjøp på kreditt (850 🪙 med renter)', p:-850, h:6, svar:'Au – kreditt koster ekstra. Det du «slipper» å betale nå, betaler du mer for senere.'}]},
-  {t:'🤝 En nabo spør om å låne 200 🪙 til neste måned.',
-   valg:[{l:'Låne bort (200 🪙)', p:-200, h:4, svar:'Fint å hjelpe! Naboen ble veldig glad. Men husk: lån bare bort det du klarer deg uten.'},
+         {l:'Ja, kjøp på kreditt (850 <img class="ik" src="ikoner/mynt.png" alt="mynt"> med renter)', p:-850, h:6, svar:'Au – kreditt koster ekstra. Det du «slipper» å betale nå, betaler du mer for senere.'}]},
+  {t:'🤝 En nabo spør om å låne 200 <img class="ik" src="ikoner/mynt.png" alt="mynt"> til neste måned.',
+   valg:[{l:'Låne bort (200 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-200, h:4, svar:'Fint å hjelpe! Naboen ble veldig glad. Men husk: lån bare bort det du klarer deg uten.'},
          {l:'Si nei, høflig', p:0, h:-1, svar:'Helt greit å si nei. En god regel: lån bare bort penger du har råd til å miste.'}]},
   {t:'📬 Det kom en regning i posten du hadde glemt.',
-   valg:[{l:'Betale med en gang (180 🪙)', p:-180, h:0, svar:'Best å betale regninger med en gang – da slipper du gebyr på toppen.'}]},
-  {t:'🧹 Naboen trenger hjelp med å rydde garasjen i helga, og betaler 250 🪙 for jobben.',
-   valg:[{l:'Ta jobben (+250 🪙)', p:250, h:-2, svar:'Litt slitsomt, men ekstra mynter i kassa!'},
+   valg:[{l:'Betale med en gang (180 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:-180, h:0, svar:'Best å betale regninger med en gang – da slipper du gebyr på toppen.'}]},
+  {t:'🧹 Naboen trenger hjelp med å rydde garasjen i helga, og betaler 250 <img class="ik" src="ikoner/mynt.png" alt="mynt"> for jobben.',
+   valg:[{l:'Ta jobben (+250 <img class="ik" src="ikoner/mynt.png" alt="mynt">)', p:250, h:-2, svar:'Litt slitsomt, men ekstra mynter i kassa!'},
          {l:'Slappe av i helga', p:0, h:3, svar:'Hvile er også viktig. Du valgte fri framfor mynter denne gangen.'}]}
 ];
 
 // Tenkestopp: sp=spørsmål, regn=vis regnestykke, fasit=tall, fork=forklaring
 const TENKESTOPP = [
-  {sp:'Jobb A betaler 1 200 🪙 i måneden. Jobb B betaler 350 🪙 i uka (regn 4 uker i måneden). Hvor mye gir jobb B på ett år (12 måneder)?',
-   regn:'350 × 4 × 12 = ?', fasit:16800, fork:'350 × 4 = 1 400 i måneden. 1 400 × 12 = 16 800 🪙. Jobb B lønner seg!'},
-  {sp:'En hybel koster 600 🪙 i leie, 200 🪙 i strøm og 100 🪙 i internett. Hva er totalkostnaden per måned?',
+  {sp:'Jobb A betaler 1 200 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i måneden. Jobb B betaler 350 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i uka (regn 4 uker i måneden). Hvor mye gir jobb B på ett år (12 måneder)?',
+   regn:'350 × 4 × 12 = ?', fasit:16800, fork:'350 × 4 = 1 400 i måneden. 1 400 × 12 = 16 800 <img class="ik" src="ikoner/mynt.png" alt="mynt">. Jobb B lønner seg!'},
+  {sp:'En hybel koster 600 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i leie, 200 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i strøm og 100 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i internett. Hva er totalkostnaden per måned?',
    regn:'600 + 200 + 100 = ?', fasit:900, fork:'Husk å regne med ALLE kostnadene, ikke bare leien.'},
-  {sp:'Du har 1 000 🪙 på sparekonto og får 5 % rente denne måneden. Hvor mange mynter får du i rente?',
-   regn:'5 % av 1 000 = ?', fasit:50, fork:'5 % betyr 5 av hver 100. 1 000 ÷ 100 × 5 = 50 🪙.'},
-  {sp:'Du kjøpte fond for 500 🪙. Nå er det verdt 650 🪙. Hvor stor er gevinsten din?',
+  {sp:'Du har 1 000 <img class="ik" src="ikoner/mynt.png" alt="mynt"> på sparekonto og får 5 % rente denne måneden. Hvor mange mynter får du i rente?',
+   regn:'5 % av 1 000 = ?', fasit:50, fork:'5 % betyr 5 av hver 100. 1 000 ÷ 100 × 5 = 50 <img class="ik" src="ikoner/mynt.png" alt="mynt">.'},
+  {sp:'Du kjøpte fond for 500 <img class="ik" src="ikoner/mynt.png" alt="mynt">. Nå er det verdt 650 <img class="ik" src="ikoner/mynt.png" alt="mynt">. Hvor stor er gevinsten din?',
    regn:'650 − 500 = ?', fasit:150, fork:'Gevinst = det fondet er verdt nå minus det du betalte.'},
-  {sp:'Du går på kino 3 ganger denne måneden. Hver billett koster 150 🪙. Hva koster det til sammen?',
+  {sp:'Du går på kino 3 ganger denne måneden. Hver billett koster 150 <img class="ik" src="ikoner/mynt.png" alt="mynt">. Hva koster det til sammen?',
    regn:'3 × 150 = ?', fasit:450, fork:'Småutgifter som gjentar seg blir fort store summer.'},
-  {sp:'Du sparer 200 🪙 hver måned i ett helt år. Hvor mye har du spart etter 12 måneder (uten rente)?',
+  {sp:'Du sparer 200 <img class="ik" src="ikoner/mynt.png" alt="mynt"> hver måned i ett helt år. Hvor mye har du spart etter 12 måneder (uten rente)?',
    regn:'200 × 12 = ?', fasit:2400, fork:'Faste, små sparebeløp blir til mye over tid!'},
-  {sp:'En ny mobil koster 2 000 🪙. Å reparere den gamle koster 300 🪙. Hvor mye sparer du på å reparere?',
+  {sp:'En ny mobil koster 2 000 <img class="ik" src="ikoner/mynt.png" alt="mynt">. Å reparere den gamle koster 300 <img class="ik" src="ikoner/mynt.png" alt="mynt">. Hvor mye sparer du på å reparere?',
    regn:'2 000 − 300 = ?', fasit:1700, fork:'Å reparere fremfor å kjøpe nytt sparer ofte mest penger.'},
-  {sp:'Strømmen øker fra 200 🪙 til 250 🪙 i måneden. Hvor mye mer betaler du på ett år?',
-   regn:'(250 − 200) × 12 = ?', fasit:600, fork:'50 🪙 mer i måneden høres lite ut — men blir 600 🪙 på et år.'}
+  {sp:'Strømmen øker fra 200 <img class="ik" src="ikoner/mynt.png" alt="mynt"> til 250 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i måneden. Hvor mye mer betaler du på ett år?',
+   regn:'(250 − 200) × 12 = ?', fasit:600, fork:'50 <img class="ik" src="ikoner/mynt.png" alt="mynt"> mer i måneden høres lite ut — men blir 600 <img class="ik" src="ikoner/mynt.png" alt="mynt"> på et år.'}
 ];
 
 const VANSKER = {
@@ -583,7 +600,7 @@ function hudFlyt(id, tekst, opp){
   const e = el(id); if(!e || !e.parentElement) return;
   const boble = document.createElement('span');
   boble.className = 'hudFlyt ' + (opp ? 'opp' : 'ned');
-  boble.textContent = tekst;
+  boble.innerHTML = tekst;
   e.parentElement.appendChild(boble);
   setTimeout(function(){ if(boble.parentElement) boble.remove(); }, 1300);
 }
@@ -598,11 +615,11 @@ function oppdaterHUD(direkte){
   const penger = Math.round(S.penger);
   const dPenger = (hudSist.penger === undefined) ? 0 : penger - hudSist.penger;
   if(dPenger !== 0){
-    tellTil('hudPenger', hudSist.penger, penger, 600, function(v){ return fmt(v) + ' 🪙'; });
+    tellTil('hudPenger', hudSist.penger, penger, 600, function(v){ return fmt(v); });
     hudGlimt('hudPenger', dPenger > 0);
-    hudFlyt('hudPenger', (dPenger > 0 ? '+' : '−') + fmt(Math.abs(dPenger)) + ' 🪙', dPenger > 0);
+    hudFlyt('hudPenger', (dPenger > 0 ? '+' : '−') + fmt(Math.abs(dPenger)) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">', dPenger > 0);
   } else if(hudAnim['hudPenger'] == null){
-    el('hudPenger').textContent = fmt(penger) + ' 🪙';
+    el('hudPenger').textContent = fmt(penger);
   }
   hudSist.penger = penger;
   el('hudPenger').style.color = (S.penger < 0) ? '#ff8a7a' : '';
@@ -613,7 +630,7 @@ function oppdaterHUD(direkte){
   if(dTri !== 0){
     tellTil('hudTrivsel', hudSist.trivsel, tri, 600, function(v){ return Math.round(v) + '%'; });
     hudGlimt('hudTrivsel', dTri > 0);
-    hudFlyt('hudTrivsel', (dTri > 0 ? '+' : '−') + Math.abs(dTri) + ' ❤️', dTri > 0);
+    hudFlyt('hudTrivsel', (dTri > 0 ? '+' : '−') + Math.abs(dTri) + ' <img class="ik" src="ikoner/hjerte.png" alt="trivsel">', dTri > 0);
   } else if(hudAnim['hudTrivsel'] == null){
     el('hudTrivsel').textContent = tri + '%';
   }
@@ -651,13 +668,13 @@ function justerTrivsel(d){ S.trivsel = Math.max(0, Math.min(100, S.trivsel + d))
 function visValg(tittel, html, knapper){
   return new Promise(res=>{
     uiAapen = true;
-    el('valgTittel').textContent = tittel;
+    el('valgTittel').innerHTML = tittel;
     el('valgInnhold').innerHTML = html;
     const kn = el('valgKnapper'); kn.innerHTML = '';
     knapper.forEach(k=>{
       const b = document.createElement('button');
       b.className = 'knapp' + (k.klass ? ' '+k.klass : '');
-      b.textContent = k.l;
+      b.innerHTML = k.l;   // knappeteksten kan inneholde et myntikon
       b.addEventListener('click', ()=>{
         lydKlikk();
         const inp = document.getElementById('modalInput');
@@ -678,7 +695,7 @@ async function visInfo(tittel, html, knappetekst){
 // Bygningspanel (åpen meny med egne knapper inni)
 function visPanel(tittel, html){
   uiAapen = true;
-  el('panelTittel').textContent = tittel;
+  el('panelTittel').innerHTML = tittel;
   el('panelInnhold').innerHTML = html;
   el('panelOverlegg').style.display = 'flex';
 }
@@ -727,7 +744,7 @@ const NPCDATA = [
     'Jeg lånte for å kjøpe noe jeg ikke trengte. Dumt. Ikke gjør som meg.',
     'Havner brukskontoen i minus, koster det rente hver måned. Pass på!',
     'Tenk deg godt om før du låner – både når du låner, og når du låner bort.']},
-  {navn:'Bonus-Bork', emoji:'⭐', farge:0xffd34d, type:'bonus', replikker:[
+  {navn:'Bonus-Bork', emoji:'<img class="ik" src="ikoner/stjerne.png" alt="">', farge:0xffd34d, type:'bonus', replikker:[
     'Hei! Klarer du en regneoppgave, gir jeg deg mynter!']}
 ];
 const NPCWP = [[-13,-4],[13,-4],[-13,4],[13,4],[0,-13],[0,13],[-9,0],[9,0],[6,6]];
@@ -789,23 +806,70 @@ function lagTorgbod(){
   return g;
 }
 
-function lagSkilt(tekst){
+// Liten <img> som følger tekststørrelsen rundt seg. Brukes overalt der en
+// emoji før byttet sto midt i en setning.
+function ikonTag(navn, alt){
+  return '<img class="ik" src="ikoner/' + navn + '.png" alt="' + (alt || '') + '">';
+}
+
+// Skiltet over huset. Canvas kan ikke ta imot et <img> som tekst, så ikonet
+// må tegnes med drawImage. Bildet lastes i bakgrunnen: vi tegner først skiltet
+// med bare navnet, og tegner det om igjen når PNG-en er nede. needsUpdate
+// forteller Three.js at teksturen har endret seg.
+function lagSkilt(ikonNavn, tekst){
   const c = document.createElement('canvas'); c.width = 512; c.height = 128;
   const x = c.getContext('2d');
-  x.fillStyle = 'rgba(29,42,77,0.92)';
-  const r = 28;
-  x.beginPath();
-  x.moveTo(r,4); x.lineTo(512-r,4); x.quadraticCurveTo(508,4,508,4+r);
-  x.lineTo(508,124-r); x.quadraticCurveTo(508,124,512-r,124);
-  x.lineTo(r,124); x.quadraticCurveTo(4,124,4,124-r);
-  x.lineTo(4,4+r); x.quadraticCurveTo(4,4,r,4); x.closePath(); x.fill();
-  x.strokeStyle = '#f6b23a'; x.lineWidth = 6; x.stroke();
-  x.fillStyle = '#fff7e6';
-  x.font = "62px 'Fredoka One', sans-serif";
-  x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(tekst, 256, 70);
   const tex = new THREE.CanvasTexture(c);
   tex.anisotropy = 4;   // holder teksten skarp når skiltet sees på skrå
+
+  const IKON = 66, LUFT = 16;   // ikonets kantlengde og luft mellom ikon og tekst
+
+  function tegn(bilde){
+    x.clearRect(0, 0, 512, 128);
+    x.fillStyle = 'rgba(29,42,77,0.92)';
+    const r = 28;
+    x.beginPath();
+    x.moveTo(r,4); x.lineTo(512-r,4); x.quadraticCurveTo(508,4,508,4+r);
+    x.lineTo(508,124-r); x.quadraticCurveTo(508,124,512-r,124);
+    x.lineTo(r,124); x.quadraticCurveTo(4,124,4,124-r);
+    x.lineTo(4,4+r); x.quadraticCurveTo(4,4,r,4); x.closePath(); x.fill();
+    x.strokeStyle = '#f6b23a'; x.lineWidth = 6; x.stroke();
+    x.fillStyle = '#fff7e6';
+    x.textBaseline = 'middle';
+
+    // Skrifta krympes til navnet får plass. «Fritidsklubben» er det lengste,
+    // og med ikonet ved siden av ville det ellers blitt klippet i kantene.
+    const PLASS = 512 - 34;                    // innafor gullkanten
+    const fast = bilde ? IKON + LUFT : 0;
+    let str = 62;
+    x.font = str + "px 'Fredoka One', sans-serif";
+    const tekstBredde = x.measureText(tekst).width;
+    if(fast + tekstBredde > PLASS){
+      str = Math.max(30, Math.floor(str * (PLASS - fast) / tekstBredde));
+      x.font = str + "px 'Fredoka One', sans-serif";
+    }
+
+    // Ikon + tekst sentreres som én blokk, ellers hopper navnet sidelengs
+    // i det øyeblikket ikonet dukker opp.
+    if(bilde){
+      x.textAlign = 'left';
+      const bredde = fast + x.measureText(tekst).width;
+      const start = (512 - bredde) / 2;
+      x.drawImage(bilde, start, 70 - IKON/2, IKON, IKON);
+      x.fillText(tekst, start + IKON + LUFT, 70);
+    } else {
+      x.textAlign = 'center';
+      x.fillText(tekst, 256, 70);
+    }
+    tex.needsUpdate = true;
+  }
+
+  tegn(null);
+  if(ikonNavn){
+    const bilde = new Image();
+    bilde.onload = function(){ tegn(bilde); };
+    bilde.src = 'ikoner/' + ikonNavn + '.png';
+  }
   // depthTest: true = skiltet er et ekte objekt i rommet og blir skjult av alt
   // som står foran det. depthWrite: false = skiltet skriver ikke selv til
   // dybdebufferet, slik at de gjennomsiktige hjørnene ikke lager firkanthull.
@@ -1240,7 +1304,7 @@ function lagBygning(b){
   }
   settFasade(g, b.id);                                            // illustrert forside
   g.rotation.y = (b.z > 0 ? Math.PI : 0) + (BYGG_VRI[b.id] || 0); // fasaden mot torget
-  const skilt = lagSkilt(b.emoji + ' ' + b.navn);
+  const skilt = lagSkilt(b.id, b.navn);
   skilt.position.y = g.userData.skiltY || 7.2;
   g.add(skilt);
   g.position.set(b.x, 0, b.z);
@@ -1670,7 +1734,7 @@ function sloyfe(){
           (ERTOUCH ? 'Trykk den grønne knappen' : 'Trykk <b>E</b>') + ' for å snakke';
         el('interakt').textContent = 'Snakk';
       } else {
-        el('naerSkilt').innerHTML = naerBygg.emoji + ' <b>' + naerBygg.navn + '</b><br>' +
+        el('naerSkilt').innerHTML = ikonTag(naerBygg.id) + ' <b>' + naerBygg.navn + '</b><br>' +
           (ERTOUCH ? 'Trykk den grønne knappen' : 'Trykk <b>E</b> for å gå inn');
         el('interakt').textContent = 'Gå inn';
       }
@@ -1742,7 +1806,7 @@ async function bonusMonster(n){
   S.bonusBrukt = true;
   if(parseInt(r.input, 10) === o.svar){
     S.penger += 100; lydSuksess(); oppdaterHUD();
-    await visInfo('Riktig! 🎉', '<div class="regnestykke">+100 🪙</div><p>«Godt regnet! Vi ses neste måned.»</p>');
+    await visInfo('Riktig! 🎉', '<div class="regnestykke">+100 <img class="ik" src="ikoner/mynt.png" alt="mynt"></div><p>«Godt regnet! Vi ses neste måned.»</p>');
   } else {
     lydFeil();
     await visInfo('Nesten!', '<p>Riktig svar var <b>' + fmt(o.svar) + '</b>.</p><p>«Ikke gi opp – prøv igjen neste måned!»</p>');
@@ -1771,22 +1835,22 @@ function jobbMeny(){
   for(const [id, j] of Object.entries(JOBBER)){
     const laast = j.krav && !S.kursBestatt[j.krav];
     const l0 = lonnMed(j.lonn[0]), l1 = lonnMed(j.lonn[1]);
-    const lonnTekst = (l0 === l1 ? fmt(l0) : fmt(l0) + '–' + fmt(l1)) + ' 🪙' + (S.videre ? ' ⭐' : '');
+    const lonnTekst = (l0 === l1 ? fmt(l0) : fmt(l0) + '–' + fmt(l1)) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">' + (S.videre ? ' <img class="ik" src="ikoner/stjerne.png" alt="">' : '');
     rader += '<tr class="' + (S.jobb === id ? 'valgt' : '') + '">' +
       '<td>' + j.emoji + ' <b>' + j.navn + '</b><br><span class="lite">' + j.tid + '</span></td>' +
       '<td data-etikett="Lønn">' + lonnTekst + '/mnd</td>' +
-      '<td data-etikett="Trivsel">' + (j.trivsel > 0 ? '+'+j.trivsel : j.trivsel) + ' ❤️</td>' +
-      '<td>' + (S.jobb === id ? '✅ Din jobb' :
+      '<td data-etikett="Trivsel">' + (j.trivsel > 0 ? '+'+j.trivsel : j.trivsel) + ' <img class="ik" src="ikoner/hjerte.png" alt="trivsel"></td>' +
+      '<td>' + (S.jobb === id ? '<img class="ik" src="ikoner/hake.png" alt=""> Din jobb' :
         '<button class="valgKnapp" ' + (laast ? 'disabled' : '') + ' onclick="velgJobb(\'' + id + '\')">' +
-        (laast ? '🔒 ' + KURS[j.krav].navn : 'Velg') + '</button>') + '</td></tr>';
+        (laast ? '<img class="ik" src="ikoner/laas.png" alt=""> ' + KURS[j.krav].navn : 'Velg') + '</button>') + '</td></tr>';
   }
-  visPanel('💼 Jobbsenteret',
+  visPanel('<img class="ik" src="ikoner/jobb.png" alt=""> Jobbsenteret',
     '<p>Sammenlign jobbene! Og husk: hver måned må du faktisk <b>gjøre jobben</b> for å få lønn.</p>' +
     '<table class="sml"><tr><th>Jobb</th><th>Lønn</th><th>Trivsel/mnd</th><th></th></tr>' + rader + '</table>' +
     (S.jobb ? '<div class="infoRad">' + JOBBER[S.jobb].emoji + ' ' + JOBBER[S.jobb].info + '</div>' :
-     '<div class="infoRad">⚠️ Du har ingen jobb ennå — uten jobb får du ikke lønn!</div>') +
-    (S.videre ? '<p class="lite">⭐ Du har videreutdanning: all lønn er 25 % høyere!</p>' :
-     '<p class="lite">💡 Jobber med 🔒 krever kurs fra 🏫 Skolen. Der finnes også videreutdanning som gir +25 % lønn. Lønner det seg? Regn på det!</p>'));
+     '<div class="infoRad"><img class="ik" src="ikoner/varsel.png" alt=""> Du har ingen jobb ennå — uten jobb får du ikke lønn!</div>') +
+    (S.videre ? '<p class="lite"><img class="ik" src="ikoner/stjerne.png" alt=""> Du har videreutdanning: all lønn er 25 % høyere!</p>' :
+     '<p class="lite"><img class="ik" src="ikoner/tips.png" alt=""> Jobber med <img class="ik" src="ikoner/laas.png" alt=""> krever kurs fra <img class="ik" src="ikoner/skole.png" alt=""> Skolen. Der finnes også videreutdanning som gir +25 % lønn. Lønner det seg? Regn på det!</p>'));
 }
 function velgJobb(id){
   S.jobb = id; lydSuksess(); jobbMeny(); oppdaterHUD();
@@ -1809,17 +1873,17 @@ function boligMeny(){
         '<span class="del" data-etikett="Strøm">' + fmt(strom) + '</span>' +
         '<span class="pluss"> + </span>' +
         '<span class="del" data-etikett="Internett">' + fmt(b.nett) + '</span></td>' +
-      '<td class="totalt" data-etikett="Totalt"><b>' + fmt(tot) + ' 🪙</b></td>' +
-      '<td data-etikett="Trivsel">' + (b.trivsel > 0 ? '+'+b.trivsel : b.trivsel) + ' ❤️</td>' +
-      '<td>' + (S.bolig === id ? '✅ Her bor du' :
+      '<td class="totalt" data-etikett="Totalt"><b>' + fmt(tot) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></b></td>' +
+      '<td data-etikett="Trivsel">' + (b.trivsel > 0 ? '+'+b.trivsel : b.trivsel) + ' <img class="ik" src="ikoner/hjerte.png" alt="trivsel"></td>' +
+      '<td>' + (S.bolig === id ? '<img class="ik" src="ikoner/hake.png" alt=""> Her bor du' :
         '<button class="valgKnapp" onclick="velgBolig(\'' + id + '\')">Flytt inn</button>') + '</td></tr>';
   }
-  visPanel('🏠 Boligkontoret',
+  visPanel('<img class="ik" src="ikoner/bolig.png" alt=""> Boligkontoret',
     '<p>Hvor vil du bo? Regn ut <b>totalkostnaden</b>: leie + strøm + internett. Den trekkes automatisk hver måned.</p>' +
     '<table class="sml"><tr><th>Bolig</th><th>Leie+strøm+nett</th><th>Totalt/mnd</th><th>Trivsel</th><th></th></tr>' + rader + '</table>' +
     '<div class="infoRad">' + BOLIGER[S.bolig].emoji + ' ' + BOLIGER[S.bolig].info + '</div>' +
     '<p class="lite">' + aar.emoji + ' Strømmen vises for ' + aar.navn + ' og varierer gjennom året – dyrere om vinteren, billigere om sommeren.</p>' +
-    '<p class="lite">💡 Tips: Billigst er ikke alltid best, og dyrest er ikke alltid lurt. Hva har du råd til med lønnen din?</p>');
+    '<p class="lite"><img class="ik" src="ikoner/tips.png" alt=""> Tips: Billigst er ikke alltid best, og dyrest er ikke alltid lurt. Hva har du råd til med lønnen din?</p>');
 }
 function velgBolig(id){
   S.bolig = id; lydSuksess(); boligMeny(); oppdaterHUD();
@@ -1829,30 +1893,30 @@ function velgBolig(id){
 function bankMeny(fane){
   const faner =
     '<div class="faneRad">' +
-    '<button class="fane' + (fane==='konto'?' aktiv':'') + '" onclick="bankMeny(\'konto\')">💰 Sparekonto</button>' +
-    '<button class="fane' + (fane==='fond'?' aktiv':'') + '" onclick="bankMeny(\'fond\')">📈 Fond</button>' +
+    '<button class="fane' + (fane==='konto'?' aktiv':'') + '" onclick="bankMeny(\'konto\')"><img class="ik" src="ikoner/sparegris.png" alt=""> Sparekonto</button>' +
+    '<button class="fane' + (fane==='fond'?' aktiv':'') + '" onclick="bankMeny(\'fond\')"><img class="ik" src="ikoner/graf-opp.png" alt=""> Fond</button>' +
     '</div>';
   let innhold = '';
 
   if(fane === 'konto'){
     innhold =
-      '<div class="infoRad">Brukskonto: <b>' + fmt(S.penger) + ' 🪙</b> &nbsp;|&nbsp; Sparekonto: <b>' + fmt(S.spare) + ' 🪙</b></div>' +
+      '<div class="infoRad">Brukskonto: <b>' + fmt(S.penger) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></b> &nbsp;|&nbsp; Sparekonto: <b>' + fmt(S.spare) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></b></div>' +
       '<p>Sparekontoen gir <b>5 % rente hver måned</b>. Trygt og forutsigbart — pengene vokser litt og litt.</p>' +
       '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
       '<input class="tall" id="bankBelop" type="number" inputmode="numeric" min="0" step="10" placeholder="Beløp">' +
       '<button class="knapp groenn" onclick="bankInn()">Sett inn</button>' +
       '<button class="knapp sekundaer" onclick="bankUt()">Ta ut</button></div>' +
-      '<p class="lite" style="margin-top:12px;">💡 Regn selv: hvor mye blir 5 % av det du har på sparekontoen?</p>';
+      '<p class="lite" style="margin-top:12px;"><img class="ik" src="ikoner/tips.png" alt=""> Regn selv: hvor mye blir 5 % av det du har på sparekontoen?</p>';
   }
   else {
     const verdi = fondVerdi();
     const gevinst = verdi - S.fondBetalt;
     innhold =
-      '<div class="infoRad">Fondskurs i dag: <b>' + fmt(S.fondKurs) + ' 🪙</b> per andel<br>' +
-      'Du eier <b>' + S.fondAndeler.toFixed(1) + '</b> andeler verdt <b>' + fmt(verdi) + ' 🪙</b>' +
-      (S.fondAndeler > 0 ? '<br>Du har betalt ' + fmt(S.fondBetalt) + ' 🪙 → ' +
-        (gevinst >= 0 ? '<b style="color:#3f8b3f">gevinst ' + fmt(gevinst) + ' 🪙 📈</b>'
-                      : '<b style="color:#c0392b">tap ' + fmt(-gevinst) + ' 🪙 📉</b>') : '') +
+      '<div class="infoRad">Fondskurs i dag: <b>' + fmt(S.fondKurs) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></b> per andel<br>' +
+      'Du eier <b>' + S.fondAndeler.toFixed(1) + '</b> andeler verdt <b>' + fmt(verdi) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></b>' +
+      (S.fondAndeler > 0 ? '<br>Du har betalt ' + fmt(S.fondBetalt) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"> → ' +
+        (gevinst >= 0 ? '<b style="color:#3f8b3f">gevinst ' + fmt(gevinst) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"> <img class="ik" src="ikoner/graf-opp.png" alt=""></b>'
+                      : '<b style="color:#c0392b">tap ' + fmt(-gevinst) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"> <img class="ik" src="ikoner/graf-ned.png" alt=""></b>') : '') +
       '</div>' +
       '<canvas id="fondGraf" style="display:block;width:100%;height:160px;border-radius:12px;background:#1d2a4d;"></canvas>' +
       '<p>Fond kan gi <b>mer enn sparekontoens 5 %</b> — men kursen går både opp og ned. Hva lønner seg over tid? Følg med på grafen!</p>' +
@@ -1861,7 +1925,7 @@ function bankMeny(fane){
       '<button class="knapp groenn" onclick="fondKjop()">Kjøp</button>' +
       '<button class="knapp sekundaer" onclick="fondSelg()">Selg</button></div>';
   }
-  visPanel('🏦 Banken', faner + innhold);
+  visPanel('<img class="ik" src="ikoner/bank.png" alt=""> Banken', faner + innhold);
   if(fane === 'fond') tegnFondGraf();
 }
 function lesBelop(id){
@@ -1870,24 +1934,24 @@ function lesBelop(id){
 }
 function bankInn(){
   const b = lesBelop('bankBelop'); if(!b) return;
-  if(b > S.penger){ lydFeil(); visInfo('Hmm…', 'Du har bare ' + fmt(Math.max(0,S.penger)) + ' 🪙 på brukskontoen.'); return; }
+  if(b > S.penger){ lydFeil(); visInfo('Hmm…', 'Du har bare ' + fmt(Math.max(0,S.penger)) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"> på brukskontoen.'); return; }
   S.penger -= b; S.spare += b; lydMynt(); bankMeny('konto'); oppdaterHUD();
 }
 function bankUt(){
   const b = lesBelop('bankBelop'); if(!b) return;
-  if(b > S.spare){ lydFeil(); visInfo('Hmm…', 'Du har bare ' + fmt(S.spare) + ' 🪙 på sparekontoen.'); return; }
+  if(b > S.spare){ lydFeil(); visInfo('Hmm…', 'Du har bare ' + fmt(S.spare) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"> på sparekontoen.'); return; }
   S.spare -= b; S.penger += b; lydMynt(); bankMeny('konto'); oppdaterHUD();
 }
 function fondKjop(){
   const b = lesBelop('fondBelop'); if(!b) return;
-  if(b > S.penger){ lydFeil(); visInfo('Hmm…', 'Du har bare ' + fmt(Math.max(0,S.penger)) + ' 🪙 på brukskontoen.'); return; }
+  if(b > S.penger){ lydFeil(); visInfo('Hmm…', 'Du har bare ' + fmt(Math.max(0,S.penger)) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"> på brukskontoen.'); return; }
   S.penger -= b; S.fondAndeler += b / S.fondKurs; S.fondBetalt += b;
   lydMynt(); bankMeny('fond'); oppdaterHUD();
 }
 function fondSelg(){
   const b = lesBelop('fondBelop'); if(!b) return;
   const verdi = fondVerdi();
-  if(b > verdi + 0.01){ lydFeil(); visInfo('Hmm…', 'Fondet ditt er bare verdt ' + fmt(verdi) + ' 🪙.'); return; }
+  if(b > verdi + 0.01){ lydFeil(); visInfo('Hmm…', 'Fondet ditt er bare verdt ' + fmt(verdi) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">.'); return; }
   const andel = b / verdi;
   S.fondBetalt = Math.max(0, S.fondBetalt * (1 - andel));
   S.fondAndeler = Math.max(0, S.fondAndeler - b / S.fondKurs);
@@ -1948,41 +2012,41 @@ function butikkMeny(){
   BUTIKKVARER.forEach((v,i)=>{
     const p = pris(v.pris);
     rader += '<tr><td>' + v.emoji + ' <b>' + v.navn + '</b></td>' +
-      '<td data-etikett="Pris">' + fmt(p) + ' 🪙</td>' +
-      '<td data-etikett="Trivsel">+' + v.trivsel + ' ❤️</td>' +
+      '<td data-etikett="Pris">' + fmt(p) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></td>' +
+      '<td data-etikett="Trivsel">+' + v.trivsel + ' <img class="ik" src="ikoner/hjerte.png" alt="trivsel"></td>' +
       '<td><button class="valgKnapp" onclick="kjopVare(' + i + ')">Kjøp</button></td></tr>';
   });
-  visPanel('🛒 Butikken',
+  visPanel('<img class="ik" src="ikoner/butikk.png" alt=""> Butikken',
     '<p>Ting som gjør livet litt bedre — mot betaling. Sammenlign: hvor mye trivsel får du per mynt?</p>' +
     '<table class="sml"><tr><th>Vare</th><th>Pris</th><th>Trivsel</th><th></th></tr>' + rader + '</table>' +
-    '<p class="lite">💡 Trivselen din synker litt hver måned hvis du aldri unner deg noe. Men ikke bruk opp alt heller!</p>');
+    '<p class="lite"><img class="ik" src="ikoner/tips.png" alt=""> Trivselen din synker litt hver måned hvis du aldri unner deg noe. Men ikke bruk opp alt heller!</p>');
 }
 function kjopVare(i){
   const v = BUTIKKVARER[i], p = pris(v.pris);
-  if(S.penger < p){ lydFeil(); visInfo('Hmm…', 'Du har ikke råd til ' + v.navn.toLowerCase() + ' akkurat nå (' + fmt(p) + ' 🪙).'); return; }
+  if(S.penger < p){ lydFeil(); visInfo('Hmm…', 'Du har ikke råd til ' + v.navn.toLowerCase() + ' akkurat nå (' + fmt(p) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">).'); return; }
   S.penger -= p; justerTrivsel(v.trivsel); S.kjoept++;
   lydMynt(); oppdaterHUD();
-  visInfo('Kjøpt!', v.emoji + ' ' + v.navn + ' — du fikk +' + v.trivsel + ' ❤️ trivsel for ' + fmt(p) + ' 🪙.');
+  visInfo('Kjøpt!', v.emoji + ' ' + v.navn + ' — du fikk +' + v.trivsel + ' <img class="ik" src="ikoner/hjerte.png" alt="trivsel"> trivsel for ' + fmt(p) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">.');
 }
 
 // ----- FRITIDSKLUBBEN -----
 function klubbMeny(){
-  let html = '<p>Her skjer det gratis ting hver måned! <b>Én aktivitet per måned</b> gir +5 ❤️ trivsel — helt uten å bruke en eneste mynt.</p>';
+  let html = '<p>Her skjer det gratis ting hver måned! <b>Én aktivitet per måned</b> gir +5 <img class="ik" src="ikoner/hjerte.png" alt="trivsel"> trivsel — helt uten å bruke en eneste mynt.</p>';
   if(S.klubbBrukt){
-    html += '<div class="infoRad">✅ Du har vært på en aktivitet denne måneden. Kom tilbake neste måned!</div>';
+    html += '<div class="infoRad"><img class="ik" src="ikoner/hake.png" alt=""> Du har vært på en aktivitet denne måneden. Kom tilbake neste måned!</div>';
   } else {
     KLUBB.forEach((a,i)=>{
       html += '<button class="knapp groenn" style="display:block;width:100%;margin:8px 0;text-align:left;" onclick="klubbAktivitet(' + i + ')">' +
-        a.emoji + ' ' + a.navn + ' (gratis, +5 ❤️)</button>';
+        a.emoji + ' ' + a.navn + ' (gratis, +5 <img class="ik" src="ikoner/hjerte.png" alt="trivsel">)</button>';
     });
   }
-  html += '<p class="lite">💡 Lærdom: trivsel trenger ikke alltid å koste penger.</p>';
-  visPanel('🎲 Fritidsklubben', html);
+  html += '<p class="lite"><img class="ik" src="ikoner/tips.png" alt=""> Lærdom: trivsel trenger ikke alltid å koste penger.</p>';
+  visPanel('<img class="ik" src="ikoner/klubb.png" alt=""> Fritidsklubben', html);
 }
 function klubbAktivitet(i){
   if(S.klubbBrukt) return;
   S.klubbBrukt = true; justerTrivsel(5); lydSuksess(); oppdaterHUD();
-  visInfo('Så gøy!', KLUBB[i].emoji + ' ' + KLUBB[i].navn + ' var en suksess. +5 ❤️ trivsel — og det kostet ingenting!');
+  visInfo('Så gøy!', KLUBB[i].emoji + ' ' + KLUBB[i].navn + ' var en suksess. +5 <img class="ik" src="ikoner/hjerte.png" alt="trivsel"> trivsel — og det kostet ingenting!');
   klubbMeny();
 }
 
@@ -1995,7 +2059,7 @@ async function nesteMaaned(){
     // 0) Uten jobb? Bekreft.
     if(!S.jobb){
       const r = await visValg('Vent litt!',
-        '<p>⚠️ Du har <b>ingen jobb</b> — da får du ikke lønn denne måneden.</p><p>Stikk innom 💼 Jobbsenteret først?</p>',
+        '<p><img class="ik" src="ikoner/varsel.png" alt=""> Du har <b>ingen jobb</b> — da får du ikke lønn denne måneden.</p><p>Stikk innom <img class="ik" src="ikoner/jobb.png" alt=""> Jobbsenteret først?</p>',
         [{l:'Jeg går til Jobbsenteret', v:'nei', klass:'groenn'}, {l:'Fortsett uten jobb', v:'ja', klass:'sekundaer'}]);
       if(r.v === 'nei'){ mndPaagaar = false; return; }
     }
@@ -2009,7 +2073,7 @@ async function nesteMaaned(){
       lydDunk();
       await visInfo('Banken ringer 📞',
         '<p>Brukskontoen din er i minus — det betyr at du <b>skylder banken penger</b>.</p>' +
-        '<div class="regnestykke">5 % rente på gjelden: −' + fmt(rente) + ' 🪙</div>' +
+        '<div class="regnestykke">5 % rente på gjelden: −' + fmt(rente) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></div>' +
         '<p>Gjeld vokser hvis du ikke betaler den ned. Prøv å komme i pluss!</p>');
       oppdaterHUD();
     }
@@ -2025,11 +2089,11 @@ async function nesteMaaned(){
         S.penger += lonn;
         justerTrivsel(j.trivsel);
         lydMynt();
-        await visInfo('Lønning! 🪙',
+        await visInfo('Lønning! <img class="ik" src="ikoner/mynt.png" alt="mynt">',
           '<p>' + j.emoji + ' Godt jobbet! Lønn fra jobben som <b>' + j.navn.toLowerCase() + '</b>:</p>' +
           '<div class="regnestykke">' + (S.videre ?
-            fmt(grunn) + ' + videreutdanning ' + fmt(lonn - grunn) + ' = +' + fmt(lonn) + ' 🪙' :
-            '+' + fmt(lonn) + ' 🪙') +
+            fmt(grunn) + ' + videreutdanning ' + fmt(lonn - grunn) + ' = +' + fmt(lonn) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">' :
+            '+' + fmt(lonn) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">') +
           (S.jobb === 'hundepass' ? '<br><span style="font-size:13px;">(' +
             (grunn > 1400 ? 'mange hunder denne måneden! 🐕🐕🐕' : grunn < 900 ? 'rolig hundemåned… 🐕' : 'helt grei hundemåned 🐕🐕') +
             ')</span>' : '') + '</div>');
@@ -2038,7 +2102,7 @@ async function nesteMaaned(){
         justerTrivsel(-2);
         await visInfo('Ingen jobb gjort 😬',
           '<p>Du droppet jobben denne måneden — og uten arbeid, ingen lønn.</p>' +
-          '<p class="lite">Sjefen ble litt sur (−2 ❤️), men du beholder jobben.</p>');
+          '<p class="lite">Sjefen ble litt sur (−2 <img class="ik" src="ikoner/hjerte.png" alt="trivsel">), men du beholder jobben.</p>');
         oppdaterHUD();
       }
     }
@@ -2055,7 +2119,7 @@ async function nesteMaaned(){
       await visInfo('Faste utgifter 🧾',
         '<p>' + b.emoji + ' Regningene for <b>' + b.navn.toLowerCase() + '</b> trekkes automatisk:</p>' +
         '<div class="regnestykke">Leie ' + fmt(b.leie) + ' + strøm ' + fmt(strom) + ' + internett ' + fmt(b.nett) +
-        ' = −' + fmt(tot) + ' 🪙</div>' +
+        ' = −' + fmt(tot) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></div>' +
         (b.strom > 0 ? '<p class="lite">' + aar.emoji + ' ' +
           (aar.strom > 1 ? 'Det er ' + aar.navn + ' – strømmen er dyrere nå (×' + aar.strom + ').'
            : aar.strom < 1 ? 'Det er ' + aar.navn + ' – strømmen er billigere nå (×' + aar.strom + ').'
@@ -2069,9 +2133,9 @@ async function nesteMaaned(){
       if(rente > 0){
         S.spare += rente;
         lydMynt();
-        await visInfo('Renter! 🏦',
+        await visInfo('Renter! <img class="ik" src="ikoner/bank.png" alt="">',
           '<p>Sparekontoen din vokser av seg selv:</p>' +
-          '<div class="regnestykke">5 % av ' + fmt(S.spare - rente) + ' 🪙 = +' + fmt(rente) + ' 🪙</div>' +
+          '<div class="regnestykke">5 % av ' + fmt(S.spare - rente) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"> = +' + fmt(rente) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></div>' +
           '<p class="lite">Dette kalles rente — banken betaler deg for å spare.</p>');
         oppdaterHUD();
       }
@@ -2085,9 +2149,9 @@ async function nesteMaaned(){
       S.fondHist.push(S.fondKurs);
       if(S.fondAndeler > 0){
         const pst = Math.round(endring * 100);
-        await visInfo('Fondsnytt 📈',
+        await visInfo('Fondsnytt <img class="ik" src="ikoner/graf-opp.png" alt="">',
           '<p>Fondskursen ' + (pst >= 0 ? 'steg' : 'falt') + ' med ca. <b>' + Math.abs(pst) + ' %</b> denne måneden.</p>' +
-          '<div class="regnestykke">Fondet ditt er nå verdt ' + fmt(fondVerdi()) + ' 🪙</div>' +
+          '<div class="regnestykke">Fondet ditt er nå verdt ' + fmt(fondVerdi()) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></div>' +
           '<p class="lite">Opp og ned er helt normalt for fond. Det er derfor det både frister og skremmer!</p>');
       }
     }
@@ -2116,8 +2180,8 @@ async function nesteMaaned(){
       S.hendelseslogg.push({mnd:S.mnd, valg:valg.l});
       await visInfo('Resultat', '<p>' + valg.svar + '</p>' +
         ((p !== 0 || valg.h !== 0) ? '<div class="regnestykke">' +
-          (p !== 0 ? (p > 0 ? '+' : '−') + fmt(Math.abs(p)) + ' 🪙 ' : '') +
-          (valg.h !== 0 ? (valg.h > 0 ? ' +' : ' −') + Math.abs(valg.h) + ' ❤️' : '') + '</div>' : ''));
+          (p !== 0 ? (p > 0 ? '+' : '−') + fmt(Math.abs(p)) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"> ' : '') +
+          (valg.h !== 0 ? (valg.h > 0 ? ' +' : ' −') + Math.abs(valg.h) + ' <img class="ik" src="ikoner/hjerte.png" alt="trivsel">' : '') + '</div>' : ''));
       oppdaterHUD();
     }
 
@@ -2133,10 +2197,10 @@ async function nesteMaaned(){
     // 9) Månedsoppsummering
     const diffP = S.penger - startPenger;
     const diffS = spareSum() - startSpare;
-    await visInfo('Måned ' + S.mnd + ' er over 📅',
+    await visInfo('Måned ' + S.mnd + ' er over <img class="ik" src="ikoner/kalender.png" alt="">',
       '<div class="infoRad">' +
-      'Brukskonto: <b>' + fmt(S.penger) + ' 🪙</b> (' + (diffP >= 0 ? '+' : '−') + fmt(Math.abs(diffP)) + ' denne måneden)<br>' +
-      'Sparing totalt: <b>' + fmt(spareSum()) + ' 🪙</b> av målet på ' + fmt(S.V.maal) + ' 🪙<br>' +
+      'Brukskonto: <b>' + fmt(S.penger) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></b> (' + (diffP >= 0 ? '+' : '−') + fmt(Math.abs(diffP)) + ' denne måneden)<br>' +
+      'Sparing totalt: <b>' + fmt(spareSum()) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></b> av målet på ' + fmt(S.V.maal) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"><br>' +
       'Trivsel: <b>' + Math.round(S.trivsel) + '%</b></div>' +
       (S.trivsel < 25 ? '<p>😟 Trivselen din er lav! Unn deg noe i butikken eller stikk innom fritidsklubben.</p>' : '') +
       (S.penger < 0 ? '<p>💸 Du er i minus — gjelden koster deg rente hver måned!</p>' : '') +
@@ -2161,13 +2225,13 @@ async function tenkestopp(ts){
     '<p>' + ts.sp + '</p>' +
     '<div class="regnestykke">' + ts.regn + '</div>' +
     '<p style="text-align:center;"><input class="tall" id="modalInput" type="number" inputmode="numeric" placeholder="Svar"></p>' +
-    '<p class="lite" style="text-align:center;">Riktig svar gir 150 🪙 i bonus!</p>',
+    '<p class="lite" style="text-align:center;">Riktig svar gir 150 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i bonus!</p>',
     [{l:'Svar!', v:'svar', klass:'groenn'}]);
   const svar = parseInt(r.input, 10);
   if(svar === ts.fasit){
     S.penger += 150; S.riktigeTenk++;
     lydSuksess(); oppdaterHUD();
-    await visInfo('Riktig! 🎉', '<div class="regnestykke">+150 🪙 i bonus!</div><p>' + ts.fork + '</p>');
+    await visInfo('Riktig! 🎉', '<div class="regnestykke">+150 <img class="ik" src="ikoner/mynt.png" alt="mynt"> i bonus!</div><p>' + ts.fork + '</p>');
   } else {
     lydFeil();
     await visInfo('Ikke helt…', '<p>Riktig svar var <b>' + fmt(ts.fasit) + '</b>.</p><p>' + ts.fork + '</p><p class="lite">Ingen fare — du lærte noe, og det er gratis!</p>');
@@ -2186,13 +2250,13 @@ function sluttSpill(){
     tittel = 'Balansekunstner'; emoji = '🤹';
     tekst = 'Du nådde sparemålet OG hadde det bra på veien. Det er akkurat det personlig økonomi handler om!';
   } else if(fondVerdi() > S.spare && fondVerdi() > 1000){
-    tittel = 'Investoren'; emoji = '📈';
+    tittel = 'Investoren'; emoji = '<img class="ik" src="ikoner/graf-opp.png" alt="">';
     tekst = 'Du turte å la pengene jobbe i fond. Modig — og du lærte at kursen går både opp og ned!';
   } else if(t >= 75){
     tittel = 'Livsnyter'; emoji = '🎉';
     tekst = 'Du prioriterte opplevelser og venner. Livet ble godt — men husk at litt sparing gir trygghet også!';
   } else if(maalNaadd){
-    tittel = 'Sparemester'; emoji = '🏦';
+    tittel = 'Sparemester'; emoji = '<img class="ik" src="ikoner/bank.png" alt="">';
     tekst = 'Du nådde sparemålet med god margin! Neste utfordring: klare det og samtidig holde trivselen oppe.';
   } else {
     tittel = 'Økonomilærling'; emoji = '🌱';
@@ -2210,14 +2274,14 @@ function sluttSpill(){
     '<div style="font-size:40px;">' + emoji + '</div>' +
     '<div class="lite">DIPLOM tildeles</div>' +
     '<h2>' + tittel + '</h2>' +
-    '<div class="stjerner">' + '⭐'.repeat(stjerner) + '<span style="opacity:.25">' + '⭐'.repeat(5-stjerner) + '</span></div>' +
+    '<div class="stjerner">' + '<img class="ik" src="ikoner/stjerne.png" alt="">'.repeat(stjerner) + '<span style="opacity:.25">' + '<img class="ik" src="ikoner/stjerne.png" alt="">'.repeat(5-stjerner) + '</span></div>' +
     '<p style="font-size:15px;">' + tekst + '</p></div>' +
     '<div style="text-align:center;">' +
-    '<span class="statRute">💰 Sparing: ' + fmt(sparing) + ' / ' + fmt(S.V.maal) + ' 🪙</span>' +
-    '<span class="statRute">🪙 Brukskonto: ' + fmt(S.penger) + '</span>' +
-    '<span class="statRute">❤️ Trivsel: ' + Math.round(t) + '%</span>' +
+    '<span class="statRute"><img class="ik" src="ikoner/sparegris.png" alt=""> Sparing: ' + fmt(sparing) + ' / ' + fmt(S.V.maal) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></span>' +
+    '<span class="statRute"><img class="ik" src="ikoner/mynt.png" alt="mynt"> Brukskonto: ' + fmt(S.penger) + '</span>' +
+    '<span class="statRute"><img class="ik" src="ikoner/hjerte.png" alt="trivsel"> Trivsel: ' + Math.round(t) + '%</span>' +
     '<span class="statRute">🧠 Tenkestopp: ' + S.riktigeTenk + '/' + S.antallTenk + ' riktige</span>' +
-    '<span class="statRute">🎓 Kurs: ' + (Object.keys(S.kursBestatt).length + (S.videre ? 1 : 0)) + '</span>' +
+    '<span class="statRute"><img class="ik" src="ikoner/kurs.png" alt=""> Kurs: ' + (Object.keys(S.kursBestatt).length + (S.videre ? 1 : 0)) + '</span>' +
     '<span class="statRute">🎚️ ' + S.V.navn + '</span></div>' +
     '<p style="text-align:center;" class="lite">Snakk sammen: Hvilket valg var du mest fornøyd med? Hva ville du gjort annerledes?</p>';
 
@@ -2231,28 +2295,28 @@ function lonnMed(l){ return Math.round(l * (S.videre ? 1 + VIDERE.bonus : 1)); }
 
 function skoleMeny(fane){
   const faner = '<div class="faneRad">' +
-    '<button class="fane' + (fane==='kurs'?' aktiv':'') + '" onclick="skoleMeny(\'kurs\')">🎓 Kurs</button>' +
+    '<button class="fane' + (fane==='kurs'?' aktiv':'') + '" onclick="skoleMeny(\'kurs\')"><img class="ik" src="ikoner/kurs.png" alt=""> Kurs</button>' +
     '<button class="fane' + (fane==='videre'?' aktiv':'') + '" onclick="skoleMeny(\'videre\')">🚀 Videreutdanning</button></div>';
   let innhold = '';
   if(fane === 'kurs'){
     innhold = '<p>Et kurs koster mynter <b>og</b> en liten kursprøve. Å lære noe nytt er å <b>investere i seg selv</b> — det kan gi bedre lønn lenge!</p>';
     for(const [id, k] of Object.entries(KURS)){
       innhold += '<div class="infoRad" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">' +
-        '<span>' + k.emoji + ' <b>' + k.navn + '</b> (' + fmt(k.pris) + ' 🪙)<br>' +
+        '<span>' + k.emoji + ' <b>' + k.navn + '</b> (' + fmt(k.pris) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">)<br>' +
         '<span class="lite">Låser opp jobben ' + k.laaser + '</span></span>' +
-        (S.kursBestatt[id] ? '<b>🎓 Bestått!</b>' :
+        (S.kursBestatt[id] ? '<b><img class="ik" src="ikoner/kurs.png" alt=""> Bestått!</b>' :
           '<button class="valgKnapp" onclick="taKurs(\'' + id + '\')">Ta kurset</button>') + '</div>';
     }
-    innhold += '<p class="lite">💡 Regn på det: hvor mye mer lønn gir jobben — og hvor mange måneder tar det å tjene inn kurset?</p>';
+    innhold += '<p class="lite"><img class="ik" src="ikoner/tips.png" alt=""> Regn på det: hvor mye mer lønn gir jobben — og hvor mange måneder tar det å tjene inn kurset?</p>';
   } else {
     innhold = S.videre ?
-      '<div class="infoRad">⭐ Du har fullført videreutdanningen! All lønn er <b>25 % høyere</b>.</div>' :
-      '<p>🚀 <b>Videreutdanning — ' + fmt(VIDERE.pris) + ' 🪙</b></p>' +
+      '<div class="infoRad"><img class="ik" src="ikoner/stjerne.png" alt=""> Du har fullført videreutdanningen! All lønn er <b>25 % høyere</b>.</div>' :
+      '<p>🚀 <b>Videreutdanning — ' + fmt(VIDERE.pris) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></b></p>' +
       '<p>Etter videreutdanning får du <b>+25 % lønn</b> i alle jobber — for resten av året. Men prøven er litt vanskeligere enn kursprøvene!</p>' +
       '<div class="regnestykke">Lønner det seg? Regn: hvor mye mer tjener du i måneden, og når har du tjent inn de ' + fmt(VIDERE.pris) + ' myntene?</div>' +
-      '<button class="knapp groenn" onclick="taVidere()">Start videreutdanning (' + fmt(VIDERE.pris) + ' 🪙)</button>';
+      '<button class="knapp groenn" onclick="taVidere()">Start videreutdanning (' + fmt(VIDERE.pris) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">)</button>';
   }
-  visPanel('🏫 Skolen', faner + innhold);
+  visPanel('<img class="ik" src="ikoner/skole.png" alt=""> Skolen', faner + innhold);
 }
 
 async function provePaaSkolen(tittel, sp){
@@ -2271,25 +2335,25 @@ async function provePaaSkolen(tittel, sp){
 async function taKurs(id){
   const k = KURS[id];
   if(S.kursBestatt[id]) return;
-  if(S.penger < k.pris){ lydFeil(); visInfo('Hmm…', 'Kurset koster ' + fmt(k.pris) + ' 🪙, og du har ' + fmt(Math.max(0,S.penger)) + ' 🪙. Spar litt til!'); return; }
+  if(S.penger < k.pris){ lydFeil(); visInfo('Hmm…', 'Kurset koster ' + fmt(k.pris) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">, og du har ' + fmt(Math.max(0,S.penger)) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">. Spar litt til!'); return; }
   S.penger -= k.pris; lydMynt(); oppdaterHUD();
   lukkPanel();
   await visInfo(k.emoji + ' ' + k.navn, '<p>Velkommen til kurs! Klarer du kursprøven, er kurset bestått.</p>' +
     '<p class="lite">Du kan prøve så mange ganger du vil — du har jo betalt for kurset!</p>', 'Start prøven');
   await provePaaSkolen(k.emoji + ' ' + k.navn, k.sp);
   S.kursBestatt[id] = true;
-  await visInfo('Kurs bestått! 🎓', '<p>Gratulerer! Jobben <b>' + k.laaser + '</b> er nå åpen for deg på 💼 Jobbsenteret.</p>');
+  await visInfo('Kurs bestått! <img class="ik" src="ikoner/kurs.png" alt="">', '<p>Gratulerer! Jobben <b>' + k.laaser + '</b> er nå åpen for deg på <img class="ik" src="ikoner/jobb.png" alt=""> Jobbsenteret.</p>');
   skoleMeny('kurs');
 }
 async function taVidere(){
   if(S.videre) return;
-  if(S.penger < VIDERE.pris){ lydFeil(); visInfo('Hmm…', 'Videreutdanning koster ' + fmt(VIDERE.pris) + ' 🪙, og du har ' + fmt(Math.max(0,S.penger)) + ' 🪙. Spar litt til!'); return; }
+  if(S.penger < VIDERE.pris){ lydFeil(); visInfo('Hmm…', 'Videreutdanning koster ' + fmt(VIDERE.pris) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">, og du har ' + fmt(Math.max(0,S.penger)) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt">. Spar litt til!'); return; }
   S.penger -= VIDERE.pris; lydMynt(); oppdaterHUD();
   lukkPanel();
   await visInfo('🚀 Videreutdanning', '<p>To skikkelige oppgaver står mellom deg og høyere lønn. Lykke til!</p>', 'Start prøven');
   await provePaaSkolen('🚀 Videreutdanning', VIDERE.sp);
   S.videre = true;
-  await visInfo('Bestått! ⭐', '<p>Du har fullført videreutdanningen — all lønn er nå <b>25 % høyere</b>!</p>');
+  await visInfo('Bestått! <img class="ik" src="ikoner/stjerne.png" alt="">', '<p>Du har fullført videreutdanningen — all lønn er nå <b>25 % høyere</b>!</p>');
   skoleMeny('videre');
 }
 
@@ -2521,7 +2585,7 @@ function spillKvittering(){
   for(let i = 0; i < 4; i++){
     const pr = (2 + Math.floor(Math.random()*58)) * 5;
     sum += pr;
-    linjer += '<div style="display:flex;justify-content:space-between;"><span>' + varer[i] + '</span><b>' + pr + ' 🪙</b></div>';
+    linjer += '<div style="display:flex;justify-content:space-between;"><span>' + varer[i] + '</span><b>' + pr + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></b></div>';
   }
   kvitteringSum = sum;
   return visSpill('Jobb: Regnskapshjelp 🧮',
@@ -2539,15 +2603,15 @@ function svarKvittering(){
 
 // ===================== HJELP =====================
 function visHjelp(){
-  visInfo('❓ Slik spiller du',
-    '<p><b>Målet:</b> nå sparemålet (' + fmt(S.V.maal) + ' 🪙 på sparekonto + fond) i løpet av 12 måneder — og hold trivselen oppe!</p>' +
-    '<p>💼 <b>Jobbsenteret</b> — velg og bytt jobb<br>' +
-    '🏠 <b>Boligkontoret</b> — velg hvor du bor<br>' +
-    '🏦 <b>Banken</b> — sparekonto (5 % rente) og fond<br>' +
-    '🏫 <b>Skolen</b> — kurs låser opp bedre jobber, videreutdanning gir +25 % lønn<br>' +
-    '🛒 <b>Butikken</b> — kjøp ting som gir trivsel<br>' +
-    '🎲 <b>Fritidsklubben</b> — gratis trivsel én gang i måneden</p>' +
-    '<p>🚶 <b>Monstrene i byen</b> rusler rundt – gå bort og trykk «Snakk» for et økonomitips. ⭐ Bonus-Bork gir deg 100 🪙 hvis du klarer en regneoppgave (én gang i måneden)!</p>' +
+  visInfo('<img class="ik" src="ikoner/hjelp.png" alt=""> Slik spiller du',
+    '<p><b>Målet:</b> nå sparemålet (' + fmt(S.V.maal) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"> på sparekonto + fond) i løpet av 12 måneder — og hold trivselen oppe!</p>' +
+    '<p><img class="ik" src="ikoner/jobb.png" alt=""> <b>Jobbsenteret</b> — velg og bytt jobb<br>' +
+    '<img class="ik" src="ikoner/bolig.png" alt=""> <b>Boligkontoret</b> — velg hvor du bor<br>' +
+    '<img class="ik" src="ikoner/bank.png" alt=""> <b>Banken</b> — sparekonto (5 % rente) og fond<br>' +
+    '<img class="ik" src="ikoner/skole.png" alt=""> <b>Skolen</b> — kurs låser opp bedre jobber, videreutdanning gir +25 % lønn<br>' +
+    '<img class="ik" src="ikoner/butikk.png" alt=""> <b>Butikken</b> — kjøp ting som gir trivsel<br>' +
+    '<img class="ik" src="ikoner/klubb.png" alt=""> <b>Fritidsklubben</b> — gratis trivsel én gang i måneden</p>' +
+    '<p>🚶 <b>Monstrene i byen</b> rusler rundt – gå bort og trykk «Snakk» for et økonomitips. <img class="ik" src="ikoner/stjerne.png" alt=""> Bonus-Bork gir deg 100 <img class="ik" src="ikoner/mynt.png" alt="mynt"> hvis du klarer en regneoppgave (én gang i måneden)!</p>' +
     '<p>Gå rundt i byen og besøk husene. Når du er klar, trykk <b>«Neste måned»</b> — da må du først gjøre månedens jobboppgave, og så kommer lønn, regninger og overraskelser!</p>' +
     '<p class="lite">🎮 PC: piltaster/WASD + E. 📱 iPad: styrespak nede til venstre + grønn knapp.</p>');
 }
@@ -2557,7 +2621,7 @@ el('nesteMndKnapp').addEventListener('click', ()=>{ ac(); if(!uiAapen) nesteMaan
 el('hjelpKnapp').addEventListener('click', ()=>{ if(!uiAapen) visHjelp(); });
 el('lydKnapp').addEventListener('click', function(){
   lydPaa = !lydPaa;
-  this.textContent = lydPaa ? '🔊' : '🔇';
+  this.innerHTML = lydPaa ? '<img class="ik" src="ikoner/lyd-paa.png" alt="">' : '<img class="ik" src="ikoner/lyd-av.png" alt="">';
   if(lydPaa){ ac(); lydKlikk(); }
 });
 el('panelLukk').addEventListener('click', ()=>{ lydKlikk(); lukkPanel(); });
@@ -2570,14 +2634,14 @@ el('statMaal').addEventListener('click', ()=>{
 el('statTrivsel').addEventListener('click', ()=>{
   if(uiAapen || !S) return;
   lydKlikk();
-  visInfo('❤️ Hva er trivsel?',
+  visInfo('<img class="ik" src="ikoner/hjerte.png" alt="trivsel"> Hva er trivsel?',
     '<p>Trivsel viser hvor bra du har det — ikke hvor mye penger du har. Du starter på 50 %, ' +
     'og hver måned som går tærer litt på den. Å bare spare og aldri unne seg noe gir et surt år!</p>' +
     '<div class="infoRad"><b>Slik hever du trivselen:</b><br>' +
-    '🎲 <b>Fritidsklubben</b> — én aktivitet i måneden, helt gratis<br>' +
-    '🛒 <b>Butikken</b> — ting som gir trivsel, men de koster mynter<br>' +
-    '🏠 <b>Boligen</b> og 💼 <b>jobben</b> din gir litt trivsel opp eller ned hver måned</div>' +
-    '<p class="lite">💡 Sammenlign før du kjøper: hvor mye ❤️ får du per 🪙? Fritidsklubben er alltid det beste kjøpet.</p>');
+    '<img class="ik" src="ikoner/klubb.png" alt=""> <b>Fritidsklubben</b> — én aktivitet i måneden, helt gratis<br>' +
+    '<img class="ik" src="ikoner/butikk.png" alt=""> <b>Butikken</b> — ting som gir trivsel, men de koster mynter<br>' +
+    '<img class="ik" src="ikoner/bolig.png" alt=""> <b>Boligen</b> og <img class="ik" src="ikoner/jobb.png" alt=""> <b>jobben</b> din gir litt trivsel opp eller ned hver måned</div>' +
+    '<p class="lite"><img class="ik" src="ikoner/tips.png" alt=""> Sammenlign før du kjøper: hvor mye <img class="ik" src="ikoner/hjerte.png" alt="trivsel"> får du per <img class="ik" src="ikoner/mynt.png" alt="mynt">? Fritidsklubben er alltid det beste kjøpet.</p>');
 });
 
 document.querySelectorAll('.vanskKnapp').forEach(k=>{
@@ -2592,9 +2656,9 @@ document.querySelectorAll('.vanskKnapp').forEach(k=>{
     uiAapen = false;
     await visInfo('Velkommen til byen! 🏙️',
       '<p>Du er ny i byen og skal klare deg selv i <b>12 måneder</b>.</p>' +
-      '<div class="infoRad">🎯 Sparemål: <b>' + fmt(S.V.maal) + ' 🪙</b> (sparekonto + fond)<br>' +
-      '❤️ Hold trivselen oppe på veien!</div>' +
-      '<p>Start med å gå til 💼 <b>Jobbsenteret</b> og skaff deg en jobb. På 🏫 <b>Skolen</b> finnes kurs som åpner bedre betalte jobber. Trykk «Neste måned» øverst når du er klar for lønning!</p>',
+      '<div class="infoRad">🎯 Sparemål: <b>' + fmt(S.V.maal) + ' <img class="ik" src="ikoner/mynt.png" alt="mynt"></b> (sparekonto + fond)<br>' +
+      '<img class="ik" src="ikoner/hjerte.png" alt="trivsel"> Hold trivselen oppe på veien!</div>' +
+      '<p>Start med å gå til <img class="ik" src="ikoner/jobb.png" alt=""> <b>Jobbsenteret</b> og skaff deg en jobb. På <img class="ik" src="ikoner/skole.png" alt=""> <b>Skolen</b> finnes kurs som åpner bedre betalte jobber. Trykk «Neste måned» øverst når du er klar for lønning!</p>',
       'Da setter vi i gang!');
     await startMaaned();
   });
