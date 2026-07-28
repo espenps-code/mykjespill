@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ikonsett – Livet på egne bein</title>
+<style>
+  :root{ --gull:#f6b23a; --gull-lys:#ffd34d; --marine:#1d2a4d; --krem:#fff7e6;
+         --gronn:#5cb85c; --terra:#e2725b; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; padding:28px 20px 60px; background:var(--krem); color:var(--marine);
+        font:16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  h1{ font-size:26px; margin:0 0 4px; }
+  h2{ font-size:19px; margin:38px 0 10px; padding-bottom:6px; border-bottom:3px solid var(--gull); }
+  p.ing{ margin:0 0 6px; max-width:70ch; }
+  .lite{ font-size:14px; opacity:.75; }
+
+  .bytt{ display:flex; gap:10px; margin:14px 0 22px; }
+  .bytt button{ font:inherit; font-weight:600; cursor:pointer; padding:8px 16px;
+    border:2px solid var(--marine); background:#fff; color:var(--marine); border-radius:999px; }
+  .bytt button.aktiv{ background:var(--marine); color:var(--krem); }
+
+  table{ border-collapse:collapse; width:100%; max-width:1000px; }
+  th{ text-align:left; font-size:13px; text-transform:uppercase; letter-spacing:.06em;
+      padding:6px 10px; border-bottom:2px solid var(--marine); }
+  td{ padding:10px; border-bottom:1px solid rgba(29,42,77,.15); vertical-align:middle; }
+  tr:hover td{ background:rgba(246,178,58,.13); }
+  .ikon{ width:56px; height:56px; display:block; }
+  .sml{ width:26px; height:26px; vertical-align:-7px; }
+  .xs{ width:17px; height:17px; vertical-align:-3px; }
+  .emo{ font-size:26px; }
+  code{ background:rgba(29,42,77,.09); padding:2px 6px; border-radius:5px; font-size:13px; }
+
+  /* mørk visning */
+  body.mork{ background:var(--marine); color:var(--krem); }
+  body.mork th{ border-bottom-color:var(--gull); }
+  body.mork td{ border-bottom-color:rgba(255,247,230,.18); }
+  body.mork tr:hover td{ background:rgba(255,211,77,.14); }
+  body.mork code{ background:rgba(255,247,230,.14); }
+  body.mork .bytt button{ background:transparent; color:var(--krem); border-color:var(--krem); }
+  body.mork .bytt button.aktiv{ background:var(--gull); color:var(--marine); border-color:var(--gull); }
+</style>
+</head>
+<body>
+
+<h1>Ikonsett – Livet på egne bein</h1>
+<p class="ing">22 egne ikoner som erstatter emoji i HUD, tabeller og tilbakemeldinger.
+Alle er 256×256 PNG med gjennomsiktig bakgrunn, felles lyskilde oppe til venstre
+og lik marineblå kontur.</p>
+<p class="lite">Kolonnene «HUD» og «Tabell» viser ikonet i faktisk brukstørrelse (26 px og 17 px),
+så du ser om det fortsatt er lesbart.</p>
+
+<div class="bytt">
+  <button class="aktiv" onclick="sett('lys',this)">Lys bakgrunn</button>
+  <button onclick="sett('mork',this)">Marineblå bakgrunn</button>
+</div>
+
+<h2>Ark 1 — systemikoner (16)</h2>
+<table>
+<tr><th>Ikon</th><th>HUD</th><th>Tabell</th><th>Erstatter</th><th>Filnavn</th><th>Brukes der</th></tr>
+<tbody id="t1"></tbody>
+</table>
+
+<h2>Ark 2 — bygninger (6)</h2>
+<p class="ing lite">Disse brukes tre steder: skiltet over huset i 3D-verdenen, nærskiltet når
+eleven går bort til huset, og tittelen på panelet som åpner seg.</p>
+<table>
+<tr><th>Ikon</th><th>HUD</th><th>Tabell</th><th>Erstatter</th><th>Filnavn</th><th>Brukes der</th></tr>
+<tbody id="t2"></tbody>
+</table>
+
+<h2>Ikke erstattet</h2>
+<p class="ing">Disse står fortsatt som emoji, og det er helt greit — de opptrer én gang hver,
+i løpende tekst, der små forskjeller mellom enheter ikke gjør skade:
+jobbikonene 📰🐕🚴🧮💻, butikkvarene 🍕🎂⚡🧥🦷🍿💳, klubbaktivitetene,
+årstidene ❄️🌸☀️🍂, hendelsene og diplomfigurene 🤹🌱🏁.</p>
+<p class="ing lite">Vanskelighetsknappene 🟢🟡🔴 og monsterfargene trenger heller ikke ikoner —
+en farget CSS-sirkel er penere og koster ingen nedlasting.</p>
+<p class="ing lite">Mangler foreløpig: 🚀 videreutdanning og 🧠 tenkestopp. De hører hjemme i
+nivå 1, men falt utenfor 4×4-rutenettet. Enkelt å kjøre en liten runde til i samme stil.</p>
+
+<script>
+const ARK1 = [
+ ['mynt','🪙','Mynt','110 steder: HUD-brukskonto, alle priser og regnestykker, flytende «−500», diplom'],
+ ['hjerte','❤️','Trivsel','HUD-etikett, trivselkolonnen i jobb-, bolig- og butikktabellen, alle trivselendringer'],
+ ['sparegris','💰','Sparekonto','Bankfanen «Sparekonto» og diplomet'],
+ ['graf-opp','📈','Fond opp','Bankfanen «Fond», gevinst, fondsnytt, diplomtittelen «Investoren»'],
+ ['graf-ned','📉','Fond ned','Tap på fondet'],
+ ['kalender','📅','Måned','Månedsoppsummeringen «Måned N er over»'],
+ ['stjerne','⭐','Stjerne / videreutdanning','De fem diplomstjernene, lønnsmerket, Bonus-Bork'],
+ ['hake','✅','Valgt / bestått','«Din jobb», «Her bor du», «Vært på aktivitet»'],
+ ['laas','🔒','Låst','Jobber som krever kurs, i jobbtabellen'],
+ ['varsel','⚠️','Advarsel','«Du har ingen jobb» — både i tabellen og i bekreftelsen'],
+ ['tips','💡','Tips','Bunnlinjen i så godt som hvert eneste panel'],
+ ['lyd-paa','🔊','Lyd på','HUD-knapp øverst til høyre'],
+ ['lyd-av','🔇','Lyd av','Samme knapp når lyden er slått av'],
+ ['hjelp','❓','Hjelp','HUD-knapp og tittelen «Slik spiller du»'],
+ ['pil-hoyre','➜','Neste måned','Pilen på «Neste måned»-knappen'],
+ ['kurs','🎓','Kurs','Skolefanen «Kurs», «Bestått!» og «Kurs bestått!»'],
+];
+const ARK2 = [
+ ['jobb','💼','Jobbsenteret','3D-skilt, nærskilt, paneltittel, hjelpetekst'],
+ ['bolig','🏠','Boligkontoret','3D-skilt, nærskilt, paneltittel, hjelpetekst'],
+ ['bank','🏦','Banken','3D-skilt, nærskilt, paneltittel, diplomtittelen «Sparemester»'],
+ ['butikk','🛒','Butikken','3D-skilt, nærskilt, paneltittel, hjelpetekst'],
+ ['klubb','🎲','Fritidsklubben','3D-skilt, nærskilt, paneltittel, hjelpetekst'],
+ ['skole','🏫','Skolen','3D-skilt, nærskilt, paneltittel, hjelpetekst'],
+];
+function rader(data, id){
+  document.getElementById(id).innerHTML = data.map(([f,e,navn,hvor]) =>
+    '<tr>' +
+      '<td><img class="ikon" src="'+f+'.png" alt=""></td>' +
+      '<td><img class="sml" src="'+f+'.png" alt=""></td>' +
+      '<td><img class="xs" src="'+f+'.png" alt=""></td>' +
+      '<td><span class="emo">'+e+'</span><br><b>'+navn+'</b></td>' +
+      '<td><code>ikoner/'+f+'.png</code></td>' +
+      '<td class="lite">'+hvor+'</td>' +
+    '</tr>').join('');
+}
+rader(ARK1,'t1'); rader(ARK2,'t2');
+function sett(t, knapp){
+  document.body.classList.toggle('mork', t === 'mork');
+  document.querySelectorAll('.bytt button').forEach(b => b.classList.remove('aktiv'));
+  knapp.classList.add('aktiv');
+}
+</script>
+</body>
+</html>
