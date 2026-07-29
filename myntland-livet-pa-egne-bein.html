@@ -817,7 +817,7 @@ function ikonTag(navn, alt){
 // med bare navnet, og tegner det om igjen når PNG-en er nede. needsUpdate
 // forteller Three.js at teksturen har endret seg.
 const skiltListe = [];   // alle husskilt – snus mot kameraet hvert bilde
-function lagSkilt(ikonNavn, tekst){
+function lagSkilt(ikonNavn, tekst, bredde){
   const c = document.createElement('canvas'); c.width = 512; c.height = 128;
   const x = c.getContext('2d');
   const tex = new THREE.CanvasTexture(c);
@@ -880,8 +880,9 @@ function lagSkilt(ikonNavn, tekst){
   // depthTest: true = skiltet er et ekte objekt i rommet og blir skjult av alt
   // som står foran det. depthWrite: false = skiltet skriver ikke selv til
   // dybdebufferet, slik at de gjennomsiktige hjørnene ikke lager firkanthull.
+  const br = bredde || 6;
   const plate = new THREE.Mesh(
-    new THREE.PlaneGeometry(6, 1.5),
+    new THREE.PlaneGeometry(br, br/4),
     new THREE.MeshBasicMaterial({
       map: tex, depthTest: true, depthWrite: false, transparent: true
     })
@@ -1180,7 +1181,7 @@ function byggStandard(b){
   g.add(snoBit(new THREE.ConeGeometry(4.66, 2.44, 4), 0, 5.22, 0, Math.PI/4));
   g.add(lagDoer(2.55, 0x4a3220));
   g.add(lagVindu(-1.7, 2.4, 2.55, 1.1, 1.1)); g.add(lagVindu(1.7, 2.4, 2.55, 1.1, 1.1));
-  g.userData.skiltY = 7.5; return g;   // over tårnspissen på taket
+  g.userData.skiltY = 6.0; g.userData.skiltFram = 3.1; g.userData.skiltBredde = 5.4; return g;
 }
 
 // Jobbsenteret – smal og høy kontorblokk. Den smaleste grunnflata i byen
@@ -1195,7 +1196,9 @@ function byggKontor(b){
   for(let r=0;r<4;r++) for(const c of [-1.25,0,1.25]) g.add(fasadeDetalj(lagVindu(c, 3.0+r*1.4, 2.15, 0.9, 0.9)));
   g.add(fasadeDetalj(lagDoer(2.15, 0x223a5e)));
   rekvJobb(g);
-  g.userData.skiltY = 10.1; return g;   // over takboksen (topp 9,3)
+  // Skiltet henger på fasaden i stedet for over taket: bygget er 9,3 høyt,
+  // og over taket havner skiltet utafor bildekanten.
+  g.userData.skiltY = 6.3; g.userData.skiltFram = 2.75; g.userData.skiltBredde = 4.4; return g;
 }
 
 // Boligkontoret – koselig hus med pyramidetak og pipe
@@ -1211,7 +1214,7 @@ function byggHus(b){
   g.add(fasadeDetalj(lagDoer(2.15, 0x5a3a22)));
   g.add(fasadeDetalj(lagVindu(-1.7, 1.9, 2.15, 1.0, 1.0))); g.add(fasadeDetalj(lagVindu(1.7, 1.9, 2.15, 1.0, 1.0)));
   rekvBolig(g);
-  g.userData.skiltY = 6.4; return g;   // over taknokken (topp 5,2)
+  g.userData.skiltY = 6.0; g.userData.skiltFram = 2.75; g.userData.skiltBredde = 5.2; return g;   // over taknokken (topp 5,2)
 }
 
 // Banken – klassisk fasade med søyler, trapp og kuppel
@@ -1231,7 +1234,7 @@ function byggBank(b){
   g.add(snoBit(new THREE.SphereGeometry(1.24, 16, 10, 0, Math.PI*2, 0, Math.PI/2.6), 0, h+0.32, 0));
   g.add(fasadeDetalj(lagDoer(2.05, 0x6a5230)));
   rekvBank(g);
-  g.userData.skiltY = 6.8; return g;   // over kuppelen (topp 5,7)
+  g.userData.skiltY = 6.4; g.userData.skiltFram = 2.95; g.userData.skiltBredde = 5.8; return g;   // over kuppelen (topp 5,7)
 }
 
 // Butikken – utstillingsvindu, dør og stripet markise
@@ -1245,13 +1248,16 @@ function byggButikk(b){
   const rute = mkMesh(new THREE.BoxGeometry(3.2, 1.7, 0.2), 0xcfeaff, {emissive:0x223344}); rute.position.set(-1.4, 1.6, 1.85); g.add(fasadeDetalj(rute));
   const d = mkMesh(new THREE.BoxGeometry(1.2, 2.2, 0.25), 0x355c2a); d.position.set(1.9, 1.1, 1.85); g.add(fasadeDetalj(d));
   const stripeF = [0xe2725b, 0xfff3e0];
-  // Markisa dekker vindu og dør, men ikke fruktkassene lengst til venstre
+  // Markisa henger fra takkanten og heller *nedover* utover. Før sto den med
+  // rotation.x = -0.5, som løfter ytterkanten – da pekte den feil vei, og lå
+  // dessuten midt oppå fasadetegninga. Nå fester innerkanten seg i takkanten
+  // (y 3,2 / z 1,8) og ytterkanten faller til y 2,7 / z 2,7.
   for(let i=0;i<6;i++){
     const a = mkMesh(new THREE.BoxGeometry(0.78, 0.12, 1.0), stripeF[i%2]);
-    a.position.set(-2.0+i*0.8, 2.5, 2.15); a.rotation.x = -0.5; g.add(a);
+    a.position.set(-2.0+i*0.8, 2.96, 2.24); a.rotation.x = 0.5; g.add(a);
   }
   rekvButikk(g);
-  g.userData.skiltY = 5.6; return g;
+  g.userData.skiltY = 4.7; g.userData.skiltFram = 2.45; g.userData.skiltBredde = 6.4; return g;   // rett over takkanten (3,6)
 }
 
 // Stripene til klubbens telttak. Kjeglen sin u-koordinat går rundt taket og
@@ -1306,7 +1312,7 @@ function byggKlubb(b){
     v.rotation.x = Math.PI/2; v.position.set(dx, 2.2, 2.25); g.add(fasadeDetalj(v));
   }
   rekvKlubb(g);
-  g.userData.skiltY = 8.4; return g;   // over vimpelen (topp 7,2 med nytt telttak)
+  g.userData.skiltY = 6.4; g.userData.skiltFram = 2.85; g.userData.skiltBredde = 5.4; return g;   // over teltspissen (5,8)
 }
 
 // Skolen – klokketårn med spir, klokke, flagg og vindusrad
@@ -1327,7 +1333,7 @@ function byggSkole(b){
   const d2 = mkMesh(new THREE.BoxGeometry(0.9, 2.2, 0.25), 0x355a58); d2.position.set(0.6, 1.1, 2.05); g.add(fasadeDetalj(d2));
   for(const dx of [-2.5,-1.35,1.35,2.5]) g.add(fasadeDetalj(lagVindu(dx, 3.0, 2.05, 0.9, 0.9)));
   rekvSkole(g);
-  g.userData.skiltY = 9.6; return g;   // over flaggstanga på klokketårnet (topp 8,7)
+  g.userData.skiltY = 6.5; g.userData.skiltFram = 2.65; g.userData.skiltBredde = 6.2; return g;   // foran klokketårnet
 }
 
 // Fire av husene står noen få grader ut av rutenettet, så byen ikke ser ut
@@ -1400,8 +1406,16 @@ function lagBygning(b){
 
   // Skiltet henges i scenen, ikke i husgruppa. Da slipper vi å regne bort
   // husets egen vridning når skiltet skal snus mot kameraet hvert bilde.
-  const skilt = lagSkilt(b.id, b.navn);
-  skilt.position.set(b.x, g.userData.skiltY || 7.2, b.z);
+  //
+  // Det henger et stykke *foran* fasaden (skiltFram), ikke over midten av
+  // huset. To grunner: takryggen kan ikke skygge for det, og høyden kan holdes
+  // nede. Over taket på Jobbsenteret ville skiltet ligge på 10 i høyde – godt
+  // over øvre bildekant, altså usynlig uansett hvor du står.
+  const yaw = g.rotation.y;
+  const skilt = lagSkilt(b.id, b.navn, g.userData.skiltBredde || 6);
+  skilt.position.set(b.x + Math.sin(yaw) * (g.userData.skiltFram || 2.7),
+                     g.userData.skiltY || 6.2,
+                     b.z + Math.cos(yaw) * (g.userData.skiltFram || 2.7));
   scene.add(skilt);
   return g;
 }
@@ -1737,36 +1751,36 @@ const ERTOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 // Styringen er fortsatt verdensbasert: «opp» er alltid nordover. Kameraet
 // svinger etter spilleren, ikke omvendt, så knappene oppfører seg likt hele
 // tiden – viktig for de yngste.
-const KAM_AVSTAND  = 12.0;   // hvor langt bak spilleren kameraet ligger
+// Høyde, avstand og siktepunkt henger sammen: de bestemmer hvor bratt vi ser
+// ned, og dermed hvor høyt opp i bildet det er plass. Med 9 i høyde og
+// siktepunkt 2,2 pekte øvre bildekant *nedover* – da falt både skiltene og
+// toppen av Jobbsenteret (9,3 høy) utafor skjermen uansett avstand. Nå ser vi
+// 22° ned, og øvre bildekant rekker over 10 i høyde på husavstand.
+const KAM_AVSTAND  = 13.0;   // hvor langt bak spilleren kameraet ligger
 const KAM_MINAVSTAND = 1.2;  // aldri nærmere enn dette når et hus sperrer
-const KAM_HOEYDE   = 9.0;    // høyde over bakken – ca. 30° ned mot spilleren
-const KAM_SEHOEYDE = 2.2;    // punktet kameraet ser på, litt over hodet
-const KAM_SVING    = 2.6;    // hvor kvikt kameraet svinger rundt (rad/s)
+const KAM_HOEYDE   = 8.5;    // høyde over bakken – ca. 22° ned mot spilleren
+const KAM_SEHOEYDE = 3.2;    // punktet kameraet ser på, i skulderhøyde
+const KAM_SVING    = 1.8;    // hvor kvikt kameraet svinger rundt (rad/s)
+const KAM_HOLDETID = 0.3;    // hvor lenge en ny retning må holdes før kameraet svinger
 let kamRetning = Math.PI;    // start: blikket nordover, som før
 const kamMaal = new THREE.Vector3();
 
-function oppdaterKamera(dt, gaaRetning){
-  // 1) Sving mykt mot gangretninga, korteste vei rundt sirkelen
-  if(gaaRetning !== null){
-    let d = gaaRetning - kamRetning;
-    while(d >  Math.PI) d -= Math.PI*2;
-    while(d < -Math.PI) d += Math.PI*2;
-    kamRetning += d * Math.min(1, KAM_SVING * dt);
-  }
-  // 2) Retningen spilleren ser er (sin, cos). Kameraet ligger motsatt vei.
-  const fx = Math.sin(kamRetning), fz = Math.cos(kamRetning);
-  const px = spiller.position.x, pz = spiller.position.z;
+// Kameraet svinger ikke på hvert lille tastetrykk. Vi måler hvor lenge du har
+// holdt samme retning, og først når den har stått stille i KAM_HOLDETID
+// begynner kameraet å følge etter. Bytter du retning mer enn ca. 35°,
+// nullstilles klokka. Da kan man vippe seg fram og tilbake uten at bildet
+// snurrer rundt, men et bevisst «nå går jeg dit» blir fulgt opp.
+let holdtRetning = null, holdtTid = 0;
+let kamAvvik = 0;            // hvor mye kameraet er svingt til side for å komme fri
+// Utveiene kameraet prøver når et hus sperrer rett bakover. 88° er nok til å
+// komme klar av veggen når spilleren står helt inntil den – da ser kameraet
+// langs fasaden i stedet for å stå inne i muren.
+const KAM_UTVEIER = [12, 24, 36, 48, 60, 72, 82, 88];
 
-  // 3) Står et hus rett bak oss, kortes avstanden inn og kameraet løftes i
-  //    samme slengen, så vi ser over taket istedenfor å havne inne i veggen.
-  //    Radiusen (4,15) er så vidt innafor skyvesirkelen på 4,2, slik at
-  //    spilleren alltid er utafor sirkelen og regnestykket alltid gir svar.
-  //
-  //    Går du rett ut fra en husvegg, er hele veien bak deg sperret. Da glir
-  //    kameraet helt inn over hodet ditt (KAM_MINAVSTAND) og ser nedover –
-  //    som det gamle kameraet gjorde hele tida. Løftet på 0,75 er valgt så
-  //    avstanden fra kamera til spiller holder seg nesten uendra (13–14),
-  //    slik at spilleren ikke pumper i størrelse mens kameraet flytter seg.
+// Hvor langt bakover er det fritt i denne retningen? Radiusen 4,15 er så vidt
+// innafor skyvesirkelen på 4,2, slik at spilleren alltid er utafor sirkelen –
+// da gir andregradslikninga alltid svar.
+function friAvstand(px, pz, fx, fz){
   let avstand = KAM_AVSTAND;
   for(const b of BYGG){
     const rx = px - b.x, rz = pz - b.z, r = 4.15;
@@ -1778,9 +1792,57 @@ function oppdaterKamera(dt, gaaRetning){
       if(t > 0 && t < avstand) avstand = t;
     }
   }
-  avstand = Math.max(KAM_MINAVSTAND, avstand);
-  const trangt = KAM_AVSTAND - avstand;
-  kamMaal.set(px - fx*avstand, KAM_HOEYDE + trangt*0.75, pz - fz*avstand);
+  return avstand;
+}
+function vinkelDiff(a, b){
+  let d = a - b;
+  while(d >  Math.PI) d -= Math.PI*2;
+  while(d < -Math.PI) d += Math.PI*2;
+  return d;
+}
+function stegRetning(dt, gaaRetning){
+  if(gaaRetning === null){ holdtRetning = null; holdtTid = 0; return null; }
+  if(holdtRetning === null || Math.abs(vinkelDiff(gaaRetning, holdtRetning)) > 0.6){
+    holdtRetning = gaaRetning; holdtTid = 0; return null;
+  }
+  holdtRetning = gaaRetning;
+  holdtTid += dt;
+  return holdtTid >= KAM_HOLDETID ? gaaRetning : null;
+}
+
+function oppdaterKamera(dt, gaaRetning){
+  // 1) Sving mykt mot gangretninga, korteste vei rundt sirkelen
+  const maal = stegRetning(dt, gaaRetning);
+  if(maal !== null){
+    kamRetning += vinkelDiff(maal, kamRetning) * Math.min(1, KAM_SVING * dt);
+  }
+  // 2) Retningen spilleren ser er (sin, cos). Kameraet ligger motsatt vei.
+  const fx = Math.sin(kamRetning), fz = Math.cos(kamRetning);
+  const px = spiller.position.x, pz = spiller.position.z;
+
+  // 3) Sperrer et hus veien rett bak oss, glir kameraet sidelengs rundt det i
+  //    stedet for å bli løftet opp. Å løfte kameraet var første forsøk, men da
+  //    ble blikket så bratt at hele byen foran spilleren havnet over
+  //    bildekanten. Ved å svinge til side beholder kameraet samme høyde og
+  //    samme avstand hele tida – ingen bratte kast, ingen pumping i størrelse.
+  let avvik = 0, best = friAvstand(px, pz, fx, fz);
+  if(best < KAM_AVSTAND - 0.05){
+    // Prøv gradvis større avvik til hver side, og ta det minste som blir fritt
+    for(const grader of KAM_UTVEIER){
+      for(const tegn of [1, -1]){
+        const v = kamRetning + tegn * grader * Math.PI/180;
+        const a = friAvstand(px, pz, Math.sin(v), Math.cos(v));
+        if(a > best + 0.05){ best = a; avvik = tegn * grader * Math.PI/180; }
+        if(best >= KAM_AVSTAND - 0.05) break;
+      }
+      if(best >= KAM_AVSTAND - 0.05) break;
+    }
+  }
+  // Avviket glir mykt på plass, ellers ville kameraet hoppe rundt hjørnet
+  kamAvvik += vinkelDiff(avvik, kamAvvik) * Math.min(1, 3 * dt);
+  const ax = Math.sin(kamRetning + kamAvvik), az = Math.cos(kamRetning + kamAvvik);
+  const avstand = Math.max(KAM_MINAVSTAND, friAvstand(px, pz, ax, az));
+  kamMaal.set(px - ax*avstand, KAM_HOEYDE, pz - az*avstand);
 
   // 4) Flyttinga skjer mykt, så kameraet aldri hopper
   kamera.position.lerp(kamMaal, Math.min(1, 6 * dt));
