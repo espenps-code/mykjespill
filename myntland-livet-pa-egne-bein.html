@@ -816,6 +816,7 @@ function ikonTag(navn, alt){
 // må tegnes med drawImage. Bildet lastes i bakgrunnen: vi tegner først skiltet
 // med bare navnet, og tegner det om igjen når PNG-en er nede. needsUpdate
 // forteller Three.js at teksturen har endret seg.
+const skiltListe = [];   // alle husskilt – snus mot kameraet hvert bilde
 function lagSkilt(ikonNavn, tekst){
   const c = document.createElement('canvas'); c.width = 512; c.height = 128;
   const x = c.getContext('2d');
@@ -870,14 +871,23 @@ function lagSkilt(ikonNavn, tekst){
     bilde.onload = function(){ tegn(bilde); };
     bilde.src = 'ikoner/' + ikonNavn + '.png';
   }
+  // Skiltet er en loddrett plate, ikke en Sprite. En Sprite legger seg helt
+  // flatt mot kameraet, og når kameraet ser nedover tipper skiltet bakover og
+  // skjærer ned i taket – da blir det klippet i to (det var «tullet» over de
+  // tre husene lengst vekke). Denne plata står bein og snus bare om ståaksen,
+  // mot kameraet, i oppdaterKamera().
+  //
   // depthTest: true = skiltet er et ekte objekt i rommet og blir skjult av alt
   // som står foran det. depthWrite: false = skiltet skriver ikke selv til
   // dybdebufferet, slik at de gjennomsiktige hjørnene ikke lager firkanthull.
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: tex, depthTest: true, depthWrite: false, transparent: true
-  }));
-  sp.scale.set(6, 1.5, 1);
-  return sp;
+  const plate = new THREE.Mesh(
+    new THREE.PlaneGeometry(6, 1.5),
+    new THREE.MeshBasicMaterial({
+      map: tex, depthTest: true, depthWrite: false, transparent: true
+    })
+  );
+  skiltListe.push(plate);
+  return plate;
 }
 
 // ===================== ÅRSTIDER I 3D-BYEN =====================
@@ -1006,6 +1016,52 @@ function mkKropp(w, h, d, farge){
 // Disse skjules når fasadebildet har lastet, for bildet tegner dør og vinduer
 // selv. Laster bildet ikke, blir klossene stående – da ser bygget ut som før.
 function fasadeDetalj(m){ m.userData.fasadeDetalj = true; return m; }
+
+// ---- Mørk tegnestrek rundt bygningene ----
+// Trikset er gammelt og billig: vi lager en kopi av forma, blåser den opp et
+// par centimeter og maler den mørk – men bare *innsida* av kopien (BackSide).
+// Da er kopien usynlig der vi ser huset, og stikker fram som en jevn strek
+// rundt silhuetten. Samme marineblå som strekene i fasadebildene.
+//
+// Uten denne streken forsvinner de kremhvite husene (Banken, Boligkontoret)
+// i snøen om vinteren, og det grønne (Butikken) i gresset om sommeren.
+const KONTUR_MAT = new THREE.MeshBasicMaterial({color:0x1d2a4d, side:THREE.BackSide});
+const _konturMaal = new THREE.Vector3();
+
+function kontur(m, tykkelse){
+  const t = tykkelse || 0.085;
+  m.geometry.computeBoundingBox();
+  m.geometry.boundingBox.getSize(_konturMaal);
+  const k = new THREE.Mesh(m.geometry, KONTUR_MAT);
+  k.position.copy(m.position);
+  k.rotation.copy(m.rotation);
+  // Skalaen regnes per akse, så streken blir like tjukk hele veien rundt
+  k.scale.set(1 + 2*t/Math.max(_konturMaal.x, 0.05),
+              1 + 2*t/Math.max(_konturMaal.y, 0.05),
+              1 + 2*t/Math.max(_konturMaal.z, 0.05));
+  k.castShadow = false; k.receiveShadow = false;
+  return k;
+}
+
+// Bare de store formene får strek: vegger, tak, tårn. Vi hopper over dører og
+// vinduer (de er malt i fasadebildet), snølaget, rekvisittene ute på fortauet
+// og alt smått som flagg, pipe og klokke – ellers blir huset et virvar av
+// streker. Testen er at den *nest største* kanten må være minst 1,2.
+function leggKonturer(g){
+  const nye = [];
+  for(const m of g.children){
+    if(!m.isMesh) continue;
+    if(m.userData.fasadeDetalj) continue;   // dør, vindu, utstillingsrute
+    if(m.material === snoMat) continue;     // snølag på taket
+    if(m.castShadow === false) continue;    // rekvisitter (rSett slår av skygge)
+    m.geometry.computeBoundingBox();
+    m.geometry.boundingBox.getSize(_konturMaal);
+    const kanter = [_konturMaal.x, _konturMaal.y, _konturMaal.z].sort(function(a, b){ return b - a; });
+    if(kanter[1] < 1.2) continue;
+    nye.push(kontur(m));
+  }
+  for(const k of nye) g.add(k);
+}
 function lagVindu(dx, dy, dz, w, h){
   const v = mkMesh(new THREE.BoxGeometry(w||1.0, h||1.0, 0.2), 0xcfeaff, {emissive:0x223344});
   v.position.set(dx, dy, dz); return v;
@@ -1198,6 +1254,27 @@ function byggButikk(b){
   g.userData.skiltY = 5.6; return g;
 }
 
+// Stripene til klubbens telttak. Kjeglen sin u-koordinat går rundt taket og
+// v-en nedafra og opp, så loddrette striper på lerretet blir striper som møtes
+// i toppen – akkurat som duken på et sirkustelt. Nederste kant får en gullbord.
+// Teksturen lages én gang og gjenbrukes.
+let _teltTex = null;
+function teltTekstur(){
+  if(_teltTex) return _teltTex;
+  const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+  const x = c.getContext('2d');
+  const STRIPER = 16, bredde = 256/STRIPER;
+  for(let i=0;i<STRIPER;i++){
+    x.fillStyle = i%2 ? '#fff3e0' : '#e2725b';
+    x.fillRect(i*bredde, 0, bredde+1, 64);
+  }
+  x.fillStyle = '#f6b23a';
+  x.fillRect(0, 56, 256, 8);          // nederst på lerretet = takskjegget
+  _teltTex = new THREE.CanvasTexture(c);
+  _teltTex.anisotropy = 4;
+  return _teltTex;
+}
+
 // Fritidsklubben – rundt telttak, lekne runde vinduer og vimpel
 // Fritidsklubben – lav og nesten kvadratisk, men med et stort rundt telttak
 // og vimpel. Det runde taket er den eneste kjeglen i byen med myk kant, og
@@ -1205,17 +1282,31 @@ function byggButikk(b){
 function byggKlubb(b){
   const g = new THREE.Group(); const h = 3.4;
   const kropp = mkKropp(5.6, h, 4.4, b.farge); kropp.position.y = h/2; g.add(kropp); g.userData.kropp = kropp;
-  const tak = mkMesh(new THREE.ConeGeometry(3.2, 2.8, 16), 0xe2725b); tak.position.y = h+1.4; g.add(tak);
-  g.add(snoBit(new THREE.ConeGeometry(3.25, 2.84, 16), 0, h+1.41, 0));
-  const stang = mkMesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 8), 0x333333); stang.position.set(0, h+3.6, 0); g.add(stang);
-  const flagg = mkMesh(new THREE.BoxGeometry(0.9, 0.5, 0.05), 0xffd34d); flagg.position.set(0.5, h+4.0, 0); g.add(flagg);
+  // Telttak: lavere og breiere enn den gamle glatte kjegla, og stripet i samme
+  // laks/krem/gull som fasadebildet. Stripene males på ett canvas og legges som
+  // tekstur, så taket fortsatt bare er én form å tegne (billig på iPad).
+  const TR = 3.6, TH = 2.4;
+  const tak = mkMesh(new THREE.ConeGeometry(TR, TH, 24), 0xffffff);
+  tak.material.map = teltTekstur(); tak.material.needsUpdate = true;
+  tak.position.y = h + TH/2; g.add(tak);
+  g.add(snoBit(new THREE.ConeGeometry(TR+0.05, TH+0.05, 24), 0, h + TH/2 + 0.01, 0));
+  // Bølgekant: små kuler langs takskjegget, slik teltduker henger
+  for(let i=0;i<16;i++){
+    const a = (i/16) * Math.PI*2;
+    const k = mkMesh(new THREE.SphereGeometry(0.26, 8, 6), i%2 ? 0xf6b23a : 0xfff3e0);
+    k.position.set(Math.cos(a)*TR*0.99, h + 0.06, Math.sin(a)*TR*0.99);
+    k.scale.y = 0.75; k.castShadow = false; k.receiveShadow = false;
+    g.add(k);
+  }
+  const stang = mkMesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 8), 0x333333); stang.position.set(0, h+TH+0.7, 0); g.add(stang);
+  const flagg = mkMesh(new THREE.BoxGeometry(0.9, 0.5, 0.05), 0xffd34d); flagg.position.set(0.5, h+TH+1.15, 0); g.add(flagg);
   g.add(fasadeDetalj(lagDoer(2.25, 0x5a3a6a)));
   for(const dx of [-1.7, 1.7]){
     const v = mkMesh(new THREE.CylinderGeometry(0.5, 0.5, 0.2, 16), 0xffe08a, {emissive:0x4a3a00});
     v.rotation.x = Math.PI/2; v.position.set(dx, 2.2, 2.25); g.add(fasadeDetalj(v));
   }
   rekvKlubb(g);
-  g.userData.skiltY = 8.9; return g;   // over flaggstanga (topp 7,8)
+  g.userData.skiltY = 8.4; return g;   // over vimpelen (topp 7,2 med nytt telttak)
 }
 
 // Skolen – klokketårn med spir, klokke, flagg og vindusrad
@@ -1303,11 +1394,15 @@ function lagBygning(b){
     default:       g = byggStandard(b);
   }
   settFasade(g, b.id);                                            // illustrert forside
+  leggKonturer(g);                                                // mørk tegnestrek rundt
   g.rotation.y = (b.z > 0 ? Math.PI : 0) + (BYGG_VRI[b.id] || 0); // fasaden mot torget
-  const skilt = lagSkilt(b.id, b.navn);
-  skilt.position.y = g.userData.skiltY || 7.2;
-  g.add(skilt);
   g.position.set(b.x, 0, b.z);
+
+  // Skiltet henges i scenen, ikke i husgruppa. Da slipper vi å regne bort
+  // husets egen vridning når skiltet skal snus mot kameraet hvert bilde.
+  const skilt = lagSkilt(b.id, b.navn);
+  skilt.position.set(b.x, g.userData.skiltY || 7.2, b.z);
+  scene.add(skilt);
   return g;
 }
 
@@ -1401,7 +1496,9 @@ function initTre(){
   scene.fog = new THREE.Fog(HORISONT, 40, 95);
 
   kamera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 200);
-  kamera.position.set(0, 15, 14);
+  // Startposisjon: bak spilleren med blikket nordover, slik kameraet alltid
+  // har stått. Resten av jobben gjør kameraet i spillsløyfa (se KAM_*).
+  kamera.position.set(0, KAM_HOEYDE, KAM_AVSTAND);
 
   renderer = new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(innerWidth, innerHeight);
@@ -1631,6 +1728,71 @@ el('interakt').addEventListener('click', ()=>{
 const ERTOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
 // ===================== SPILLSLØYFE =====================
+// ===================== KAMERA (third person) =====================
+// Kameraet ligger bak spilleren, i den retningen hen går. Slik får vi alltid
+// se fasaden på huset vi går mot. Med det gamle kameraet sto vi alltid rett
+// sør for spilleren, og de tre husene på sørsida av torget (Banken, Butikken,
+// Skolen) vendte fasaden nordover – altså bort fra oss.
+//
+// Styringen er fortsatt verdensbasert: «opp» er alltid nordover. Kameraet
+// svinger etter spilleren, ikke omvendt, så knappene oppfører seg likt hele
+// tiden – viktig for de yngste.
+const KAM_AVSTAND  = 12.0;   // hvor langt bak spilleren kameraet ligger
+const KAM_MINAVSTAND = 1.2;  // aldri nærmere enn dette når et hus sperrer
+const KAM_HOEYDE   = 9.0;    // høyde over bakken – ca. 30° ned mot spilleren
+const KAM_SEHOEYDE = 2.2;    // punktet kameraet ser på, litt over hodet
+const KAM_SVING    = 2.6;    // hvor kvikt kameraet svinger rundt (rad/s)
+let kamRetning = Math.PI;    // start: blikket nordover, som før
+const kamMaal = new THREE.Vector3();
+
+function oppdaterKamera(dt, gaaRetning){
+  // 1) Sving mykt mot gangretninga, korteste vei rundt sirkelen
+  if(gaaRetning !== null){
+    let d = gaaRetning - kamRetning;
+    while(d >  Math.PI) d -= Math.PI*2;
+    while(d < -Math.PI) d += Math.PI*2;
+    kamRetning += d * Math.min(1, KAM_SVING * dt);
+  }
+  // 2) Retningen spilleren ser er (sin, cos). Kameraet ligger motsatt vei.
+  const fx = Math.sin(kamRetning), fz = Math.cos(kamRetning);
+  const px = spiller.position.x, pz = spiller.position.z;
+
+  // 3) Står et hus rett bak oss, kortes avstanden inn og kameraet løftes i
+  //    samme slengen, så vi ser over taket istedenfor å havne inne i veggen.
+  //    Radiusen (4,15) er så vidt innafor skyvesirkelen på 4,2, slik at
+  //    spilleren alltid er utafor sirkelen og regnestykket alltid gir svar.
+  //
+  //    Går du rett ut fra en husvegg, er hele veien bak deg sperret. Da glir
+  //    kameraet helt inn over hodet ditt (KAM_MINAVSTAND) og ser nedover –
+  //    som det gamle kameraet gjorde hele tida. Løftet på 0,75 er valgt så
+  //    avstanden fra kamera til spiller holder seg nesten uendra (13–14),
+  //    slik at spilleren ikke pumper i størrelse mens kameraet flytter seg.
+  let avstand = KAM_AVSTAND;
+  for(const b of BYGG){
+    const rx = px - b.x, rz = pz - b.z, r = 4.15;
+    const bq = -(rx*fx + rz*fz);              // strålen peker bakover: −f
+    const c  = rx*rx + rz*rz - r*r;
+    const disk = bq*bq - c;
+    if(disk > 0){
+      const t = -bq - Math.sqrt(disk);
+      if(t > 0 && t < avstand) avstand = t;
+    }
+  }
+  avstand = Math.max(KAM_MINAVSTAND, avstand);
+  const trangt = KAM_AVSTAND - avstand;
+  kamMaal.set(px - fx*avstand, KAM_HOEYDE + trangt*0.75, pz - fz*avstand);
+
+  // 4) Flyttinga skjer mykt, så kameraet aldri hopper
+  kamera.position.lerp(kamMaal, Math.min(1, 6 * dt));
+  kamera.lookAt(px, KAM_SEHOEYDE, pz);
+
+  // 5) Husskiltene snur seg mot kameraet – bare om ståaksen, se lagSkilt()
+  for(const s of skiltListe){
+    s.rotation.y = Math.atan2(kamera.position.x - s.position.x,
+                              kamera.position.z - s.position.z);
+  }
+}
+
 const FART = 9;
 function sloyfe(){
   requestAnimationFrame(sloyfe);
@@ -1748,10 +1910,8 @@ function sloyfe(){
   if(uiAapen){ el('naerSkilt').style.display = 'none'; el('interakt').style.display = 'none'; }
   else if(naerBygg || naerNPC){ el('naerSkilt').style.display = 'block'; el('interakt').style.display = 'block'; }
 
-  // Kamera følger
-  const maalPos = new THREE.Vector3(spiller.position.x, 15, spiller.position.z + 14);
-  kamera.position.lerp(maalPos, 0.08);
-  kamera.lookAt(spiller.position.x, 1.5, spiller.position.z);
+  // Kamera følger (se KAM_* og kamRetning lenger opp)
+  oppdaterKamera(dt, ml > 0.08 ? spiller.rotation.y : null);
 
   // Skyer driver, mynten snurrer
   for(const s of skyer){
