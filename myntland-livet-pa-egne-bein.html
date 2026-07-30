@@ -817,7 +817,11 @@ function ikonTag(navn, alt){
 // med bare navnet, og tegner det om igjen når PNG-en er nede. needsUpdate
 // forteller Three.js at teksturen har endret seg.
 const skiltListe = [];   // alle husskilt – snus mot kameraet hvert bilde
-function lagSkilt(ikonNavn, tekst, bredde){
+// fast = true gir et skilt som IKKE snur seg. Det brukes på Jobbsenteret, der
+// veggen står rett bak skiltet: et skilt som snur seg der ville grave halve seg
+// selv inn i muren så snart du ser huset fra 20° skrått, og bli klippet i to.
+// Et fastmontert veggskilt kan ikke klippes, og ser dessuten riktigere ut.
+function lagSkilt(ikonNavn, tekst, bredde, fast){
   const c = document.createElement('canvas'); c.width = 512; c.height = 128;
   const x = c.getContext('2d');
   const tex = new THREE.CanvasTexture(c);
@@ -887,7 +891,7 @@ function lagSkilt(ikonNavn, tekst, bredde){
       map: tex, depthTest: true, depthWrite: false, transparent: true
     })
   );
-  skiltListe.push(plate);
+  if(!fast) skiltListe.push(plate);
   return plate;
 }
 
@@ -1181,7 +1185,8 @@ function byggStandard(b){
   g.add(snoBit(new THREE.ConeGeometry(4.66, 2.44, 4), 0, 5.22, 0, Math.PI/4));
   g.add(lagDoer(2.55, 0x4a3220));
   g.add(lagVindu(-1.7, 2.4, 2.55, 1.1, 1.1)); g.add(lagVindu(1.7, 2.4, 2.55, 1.1, 1.1));
-  g.userData.skiltY = 6.0; g.userData.skiltFram = 3.1; g.userData.skiltBredde = 5.4; return g;
+  g.userData.skiltY = 6.4; g.userData.skiltFram = 1.6; g.userData.skiltBredde = 4.9;
+  g.userData.skiltFot = 5.6; return g;
 }
 
 // Jobbsenteret – smal og høy kontorblokk. Den smaleste grunnflata i byen
@@ -1196,9 +1201,11 @@ function byggKontor(b){
   for(let r=0;r<4;r++) for(const c of [-1.25,0,1.25]) g.add(fasadeDetalj(lagVindu(c, 3.0+r*1.4, 2.15, 0.9, 0.9)));
   g.add(fasadeDetalj(lagDoer(2.15, 0x223a5e)));
   rekvJobb(g);
-  // Skiltet henger på fasaden i stedet for over taket: bygget er 9,3 høyt,
-  // og over taket havner skiltet utafor bildekanten.
-  g.userData.skiltY = 6.3; g.userData.skiltFram = 2.75; g.userData.skiltBredde = 4.4; return g;
+  // Skiltet henger på fasaden i stedet for over taket: bygget er 8,4 høyt,
+  // og over taket havner skiltet utafor bildekanten. Her trengs ingen mast –
+  // veggen står rett bak skiltet, så det ser montert ut av seg selv.
+  g.userData.skiltY = 6.3; g.userData.skiltFram = 2.25; g.userData.skiltBredde = 4.0;
+  g.userData.skiltFot = null; g.userData.skiltFast = true; return g;
 }
 
 // Boligkontoret – koselig hus med pyramidetak og pipe
@@ -1214,7 +1221,10 @@ function byggHus(b){
   g.add(fasadeDetalj(lagDoer(2.15, 0x5a3a22)));
   g.add(fasadeDetalj(lagVindu(-1.7, 1.9, 2.15, 1.0, 1.0))); g.add(fasadeDetalj(lagVindu(1.7, 1.9, 2.15, 1.0, 1.0)));
   rekvBolig(g);
-  g.userData.skiltY = 6.0; g.userData.skiltFram = 2.75; g.userData.skiltBredde = 5.2; return g;   // over taknokken (topp 5,2)
+  // Masta står på takflata (som er 4,06 høy 1,5 fra midten) og holder skiltet
+  // like over taknokken på 5,2. Da svever ikke skiltet fritt i lufta.
+  g.userData.skiltY = 6.0; g.userData.skiltFram = 1.5; g.userData.skiltBredde = 4.7;
+  g.userData.skiltFot = 4.06; return g;
 }
 
 // Banken – klassisk fasade med søyler, trapp og kuppel
@@ -1234,7 +1244,9 @@ function byggBank(b){
   g.add(snoBit(new THREE.SphereGeometry(1.24, 16, 10, 0, Math.PI*2, 0, Math.PI/2.6), 0, h+0.32, 0));
   g.add(fasadeDetalj(lagDoer(2.05, 0x6a5230)));
   rekvBank(g);
-  g.userData.skiltY = 6.4; g.userData.skiltFram = 2.95; g.userData.skiltBredde = 5.8; return g;   // over kuppelen (topp 5,7)
+  // Masta står på takplata (topp 4,45) rett ved siden av kuppelen (radius 1,2).
+  g.userData.skiltY = 6.4; g.userData.skiltFram = 1.4; g.userData.skiltBredde = 5.2;
+  g.userData.skiltFot = 4.45; return g;   // skiltet ligger over kuppelen (topp 5,7)
 }
 
 // Butikken – utstillingsvindu, dør og stripet markise
@@ -1257,7 +1269,10 @@ function byggButikk(b){
     a.position.set(-2.0+i*0.8, 2.96, 2.24); a.rotation.x = 0.5; g.add(a);
   }
   rekvButikk(g);
-  g.userData.skiltY = 4.7; g.userData.skiltFram = 2.45; g.userData.skiltBredde = 6.4; return g;   // rett over takkanten (3,6)
+  // Kort mast fra takplata (topp 3,4) – butikken er lav, så skiltet skal ligge
+  // lavt også. Masta står innafor markisa, som bare rekker ut til z 2,74.
+  g.userData.skiltY = 4.7; g.userData.skiltFram = 1.5; g.userData.skiltBredde = 5.7;
+  g.userData.skiltFot = 3.4; return g;
 }
 
 // Stripene til klubbens telttak. Kjeglen sin u-koordinat går rundt taket og
@@ -1312,7 +1327,10 @@ function byggKlubb(b){
     v.rotation.x = Math.PI/2; v.position.set(dx, 2.2, 2.25); g.add(fasadeDetalj(v));
   }
   rekvKlubb(g);
-  g.userData.skiltY = 6.4; g.userData.skiltFram = 2.85; g.userData.skiltBredde = 5.4; return g;   // over teltspissen (5,8)
+  // Masta står på teltduken (4,8 høy 1,5 fra midten) og løfter skiltet så vidt
+  // over teltspissen på 5,8.
+  g.userData.skiltY = 6.4; g.userData.skiltFram = 1.5; g.userData.skiltBredde = 4.9;
+  g.userData.skiltFot = 4.8; return g;
 }
 
 // Skolen – klokketårn med spir, klokke, flagg og vindusrad
@@ -1333,7 +1351,10 @@ function byggSkole(b){
   const d2 = mkMesh(new THREE.BoxGeometry(0.9, 2.2, 0.25), 0x355a58); d2.position.set(0.6, 1.1, 2.05); g.add(fasadeDetalj(d2));
   for(const dx of [-2.5,-1.35,1.35,2.5]) g.add(fasadeDetalj(lagVindu(dx, 3.0, 2.05, 0.9, 0.9)));
   rekvSkole(g);
-  g.userData.skiltY = 6.5; g.userData.skiltFram = 2.65; g.userData.skiltBredde = 6.2; return g;   // foran klokketårnet
+  // Masta står på takplata (topp 4,4) ved sida av klokketårnet, og skiltet
+  // ligger foran spiret uten å dekke klokka på 5,2.
+  g.userData.skiltY = 6.5; g.userData.skiltFram = 2.0; g.userData.skiltBredde = 5.5;
+  g.userData.skiltFot = 4.4; return g;
 }
 
 // Fire av husene står noen få grader ut av rutenettet, så byen ikke ser ut
@@ -1412,11 +1433,33 @@ function lagBygning(b){
   // nede. Over taket på Jobbsenteret ville skiltet ligge på 10 i høyde – godt
   // over øvre bildekant, altså usynlig uansett hvor du står.
   const yaw = g.rotation.y;
-  const skilt = lagSkilt(b.id, b.navn, g.userData.skiltBredde || 6);
-  skilt.position.set(b.x + Math.sin(yaw) * (g.userData.skiltFram || 2.7),
-                     g.userData.skiltY || 6.2,
-                     b.z + Math.cos(yaw) * (g.userData.skiltFram || 2.7));
+  const brd  = g.userData.skiltBredde || 6;
+  const fram = g.userData.skiltFram || 2.7;
+  const skiltY = g.userData.skiltY || 6.2;
+  const skilt = lagSkilt(b.id, b.navn, brd, g.userData.skiltFast);
+  skilt.position.set(b.x + Math.sin(yaw) * fram,
+                     skiltY,
+                     b.z + Math.cos(yaw) * fram);
+  // Fastmonterte veggskilt vender samme vei som fasaden, én gang for alle.
+  if(g.userData.skiltFast) skilt.rotation.y = yaw;
   scene.add(skilt);
+
+  // Mast fra taket opp til underkanten av skiltet, slik at skiltet ser montert
+  // ut i stedet for å sveve løsrevet i lufta. skiltFot er høyden på takflata
+  // rett under skiltet – den er regnet ut for hvert bygg der skiltet defineres.
+  // Er skiltFot null (Jobbsenteret), står veggen rett bak skiltet og masta
+  // trengs ikke. Masta er barn av husgruppa, så den følger husets vridning.
+  const fot = g.userData.skiltFot;
+  const underkant = skiltY - brd/8;          // plata er brd høy / 4 = brd/4
+  if(fot != null && underkant - fot > 0.12){
+    const lengde = underkant - fot + 0.10;   // litt overlapp, så det ikke glipper
+    const mast = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.075, 0.095, lengde, 8),
+      new THREE.MeshLambertMaterial({color:0x27324f}));
+    mast.position.set(0, fot + lengde/2, fram);
+    mast.castShadow = true;
+    g.add(mast);
+  }
   return g;
 }
 
@@ -1626,7 +1669,12 @@ function initTre(){
   for(const b of BYGG) scene.add(lagBygning(b));
 
   // Trær spredt rundt (utenfor veier og bygg)
-  const trePos = [[-20,-2],[-22,14],[20,2],[22,-16],[-7,16],[7,17],[-19,-19],[20,16],[-9,-23],[9,-24],[24,8],[-24,-8]];
+  // Veien langs x-aksen er 4,5 brei, altså z fra −2,25 til 2,25, og bilene
+  // kjører i z = ±1,4. Trekrona er opptil 1,6 i radius, så et tre må ha minst
+  // |z| = 4 for å være helt klar av bilene. Trærne som lå på [20, 2] og
+  // [−20, −2] sto midt i veibanen – bilene kjørte rett gjennom krona. De er
+  // flyttet ut til |z| = 5, som også holder dem klar av fortauskanten.
+  const trePos = [[-20,-5],[-22,14],[20,5],[22,-16],[-7,16],[7,17],[-19,-19],[20,16],[-9,-23],[9,-24],[24,8],[-24,-8]];
   for(const [x,z] of trePos) scene.add(lagTre(x, z));
 
   // Skyer
@@ -1763,6 +1811,11 @@ const KAM_SEHOEYDE = 3.2;    // punktet kameraet ser på, i skulderhøyde
 const KAM_SVING    = 1.8;    // hvor kvikt kameraet svinger rundt (rad/s)
 const KAM_HOLDETID = 0.3;    // hvor lenge en ny retning må holdes før kameraet svinger
 let kamRetning = Math.PI;    // start: blikket nordover, som før
+// kamYaw er retningen *innover i bildet* slik kameraet faktisk står akkurat nå
+// (kamRetning pluss det sidesteget kameraet tar for å komme klar av hus).
+// Både styringa og skiltene bruker den, så «framover» på skjermen og «framover»
+// for figuren alltid er samme retning.
+let kamYaw = Math.PI;
 const kamMaal = new THREE.Vector3();
 
 // Kameraet svinger ikke på hvert lille tastetrykk. Vi måler hvor lenge du har
@@ -1840,7 +1893,8 @@ function oppdaterKamera(dt, gaaRetning){
   }
   // Avviket glir mykt på plass, ellers ville kameraet hoppe rundt hjørnet
   kamAvvik += vinkelDiff(avvik, kamAvvik) * Math.min(1, 3 * dt);
-  const ax = Math.sin(kamRetning + kamAvvik), az = Math.cos(kamRetning + kamAvvik);
+  kamYaw = kamRetning + kamAvvik;
+  const ax = Math.sin(kamYaw), az = Math.cos(kamYaw);
   const avstand = Math.max(KAM_MINAVSTAND, friAvstand(px, pz, ax, az));
   kamMaal.set(px - ax*avstand, KAM_HOEYDE, pz - az*avstand);
 
@@ -1848,11 +1902,14 @@ function oppdaterKamera(dt, gaaRetning){
   kamera.position.lerp(kamMaal, Math.min(1, 6 * dt));
   kamera.lookAt(px, KAM_SEHOEYDE, pz);
 
-  // 5) Husskiltene snur seg mot kameraet – bare om ståaksen, se lagSkilt()
-  for(const s of skiltListe){
-    s.rotation.y = Math.atan2(kamera.position.x - s.position.x,
-                              kamera.position.z - s.position.z);
-  }
+  // 5) Husskiltene stilles PARALLELT MED SKJERMEN – alle får samme vinkel, den
+  //    kameraet selv har. Før pekte hvert skilt mot kamera*posisjonen*, og det
+  //    er nettopp derfor de sto på skrå: et skilt langt ute til siden i bildet
+  //    fikk en annen vinkel enn bildeflata, og perspektivet gjorde forskjellen
+  //    om til en synlig helling. Samme vinkel til alle = ingen skjevhet.
+  //    (+ PI fordi plata si forside peker langs +Z, og skal peke mot kameraet.)
+  const skiltVinkel = kamYaw + Math.PI;
+  for(const s of skiltListe){ s.rotation.y = skiltVinkel; }
 }
 
 const FART = 9;
@@ -1864,18 +1921,29 @@ function sloyfe(){
   // Myk overgang mellom årstidene – litt for hvert bilde, aldri blokkerende
   stegAarstid(dt);
 
-  // Bevegelse
-  let mx = 0, mz = 0;
+  // Bevegelse – KAMERA-RELATIV
+  // Før var styringa verdensbasert: W betydde alltid «nordover», uansett hvor
+  // kameraet sto. Så snart kameraet hadde svingt rundt, gikk figuren rett mot
+  // deg når du trykte W. Nå leses tastene som «framover / sidelengs på
+  // skjermen», og regnes om til verdensretning med kameraets egen vinkel.
+  // Da er W alltid framover for figuren, uansett hvilken vei hun ser.
+  let sid = 0, fram = 0;                 // sid = høyre positiv, fram = vekk fra kameraet
   if(!uiAapen){
-    if(taster['arrowup'] || taster['w']) mz -= 1;
-    if(taster['arrowdown'] || taster['s']) mz += 1;
-    if(taster['arrowleft'] || taster['a']) mx -= 1;
-    if(taster['arrowright'] || taster['d']) mx += 1;
-    mx += joy.x; mz += joy.y;
+    if(taster['arrowup'] || taster['w']) fram += 1;
+    if(taster['arrowdown'] || taster['s']) fram -= 1;
+    if(taster['arrowleft'] || taster['a']) sid -= 1;
+    if(taster['arrowright'] || taster['d']) sid += 1;
+    sid += joy.x; fram -= joy.y;         // spaken: ned = bakover, derfor minus
   }
-  const ml = Math.hypot(mx, mz);
+  const ml = Math.hypot(sid, fram);
   if(ml > 0.08){
-    if(ml > 1){ mx /= ml; mz /= ml; }
+    let s = sid, f = fram;
+    if(ml > 1){ s /= ml; f /= ml; }      // skrått skal ikke gå fortere
+    // Kameraets retning innover i bildet er (sin kamYaw, cos kamYaw).
+    // «Høyre på skjermen» er den samme vektoren dreid 90°: (cos, −sin).
+    const sy = Math.sin(kamYaw), cy = Math.cos(kamYaw);
+    const mx = f * sy + s * cy;
+    const mz = f * cy - s * sy;
     spiller.position.x += mx * FART * dt;
     spiller.position.z += mz * FART * dt;
     spiller.rotation.y = Math.atan2(mx, mz);
@@ -1972,8 +2040,11 @@ function sloyfe(){
   if(uiAapen){ el('naerSkilt').style.display = 'none'; el('interakt').style.display = 'none'; }
   else if(naerBygg || naerNPC){ el('naerSkilt').style.display = 'block'; el('interakt').style.display = 'block'; }
 
-  // Kamera følger (se KAM_* og kamRetning lenger opp)
-  oppdaterKamera(dt, ml > 0.08 ? spiller.rotation.y : null);
+  // Kamera følger (se KAM_* og kamRetning lenger opp).
+  // Det følger bare når eleven går framover eller sidelengs. Rygger hun (S,
+  // eller spaken ned), står kameraet stille – ellers ville det snurre 180° rundt
+  // for å komme bak henne, og da ville S plutselig bety «framover» igjen.
+  oppdaterKamera(dt, (ml > 0.08 && fram > -0.25) ? spiller.rotation.y : null);
 
   // Skyer driver, mynten snurrer
   for(const s of skyer){
