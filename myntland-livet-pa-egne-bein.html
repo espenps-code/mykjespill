@@ -817,10 +817,13 @@ function ikonTag(navn, alt){
 // med bare navnet, og tegner det om igjen når PNG-en er nede. needsUpdate
 // forteller Three.js at teksturen har endret seg.
 const skiltListe = [];   // alle husskilt – snus mot kameraet hvert bilde
-// fast = true gir et skilt som IKKE snur seg. Det brukes på Jobbsenteret, der
-// veggen står rett bak skiltet: et skilt som snur seg der ville grave halve seg
-// selv inn i muren så snart du ser huset fra 20° skrått, og bli klippet i to.
-// Et fastmontert veggskilt kan ikke klippes, og ser dessuten riktigere ut.
+const BYGG_TOPP = {};    // hvor høyt hvert hus rager (måles når huset bygges)
+// Alle skilt snur seg nå mot kameraet. Tidligere var Jobbsenterets skilt
+// fastmontert på veggen, fordi et skilt som snudde seg gravde halve seg inn i
+// muren og ble klippet i to. Det problemet finnes ikke lenger: skiltene tegnes
+// oppå bygningene (depthTest:false) og tones i stedet bort med en egen
+// synlighetstest i oppdaterSkiltDybde(). «fast» er beholdt i signaturen for
+// bakoverkompatibilitet, men brukes ikke til noe.
 function lagSkilt(ikonNavn, tekst, bredde, fast){
   const c = document.createElement('canvas'); c.width = 512; c.height = 128;
   const x = c.getContext('2d');
@@ -877,21 +880,27 @@ function lagSkilt(ikonNavn, tekst, bredde, fast){
   }
   // Skiltet er en loddrett plate, ikke en Sprite. En Sprite legger seg helt
   // flatt mot kameraet, og når kameraet ser nedover tipper skiltet bakover og
-  // skjærer ned i taket – da blir det klippet i to (det var «tullet» over de
-  // tre husene lengst vekke). Denne plata står bein og snus bare om ståaksen,
-  // mot kameraet, i oppdaterKamera().
+  // skjærer ned i taket – da blir det klippet i to. Denne plata står bein og
+  // snus bare om ståaksen, mot kameraet, i oppdaterKamera().
   //
-  // depthTest: true = skiltet er et ekte objekt i rommet og blir skjult av alt
-  // som står foran det. depthWrite: false = skiltet skriver ikke selv til
-  // dybdebufferet, slik at de gjennomsiktige hjørnene ikke lager firkanthull.
+  // depthTest: FALSE = skiltet blir aldri klippet av takryggen, mønet, masta
+  // eller et tre som så vidt stikker foran. Det var dette som gjorde at halve
+  // skiltet forsvant. Prisen er at skiltet i utgangspunktet ville skinne
+  // gjennom hus som står i veien – derfor tones det i stedet mykt bort av
+  // oppdaterSkiltDybde(), som regner ut om et hus faktisk sperrer utsikten.
+  // renderOrder 10 = tegnes etter all annen geometri.
+  // depthWrite: false = skiltet skriver ikke til dybdebufferet, slik at de
+  // gjennomsiktige hjørnene ikke lager firkanthull.
   const br = bredde || 6;
   const plate = new THREE.Mesh(
     new THREE.PlaneGeometry(br, br/4),
     new THREE.MeshBasicMaterial({
-      map: tex, depthTest: true, depthWrite: false, transparent: true
+      map: tex, depthTest: false, depthWrite: false, transparent: true,
+      side: THREE.DoubleSide, opacity: 1
     })
   );
-  if(!fast) skiltListe.push(plate);
+  plate.renderOrder = 10;
+  skiltListe.push(plate);
   return plate;
 }
 
@@ -1440,8 +1449,12 @@ function lagBygning(b){
   skilt.position.set(b.x + Math.sin(yaw) * fram,
                      skiltY,
                      b.z + Math.cos(yaw) * fram);
-  // Fastmonterte veggskilt vender samme vei som fasaden, én gang for alle.
-  if(g.userData.skiltFast) skilt.rotation.y = yaw;
+  // Hvor høyt rager huset, og hvilken vei vender fasaden? Begge deler brukes
+  // av oppdaterSkiltDybde() til å avgjøre om skiltet skal tones bort fordi et
+  // hus står i veien. Box3 måler den ferdige husgruppa i verdenskoordinater,
+  // så vi slipper å vedlikeholde en høydetabell for hånd.
+  BYGG_TOPP[b.id] = new THREE.Box3().setFromObject(g).max.y;
+  skilt.userData.eier = { id: b.id, x: b.x, z: b.z, nx: Math.sin(yaw), nz: Math.cos(yaw) };
   scene.add(skilt);
 
   // Mast fra taket opp til underkanten av skiltet, slik at skiltet ser montert
@@ -1910,6 +1923,66 @@ function oppdaterKamera(dt, gaaRetning){
   //    (+ PI fordi plata si forside peker langs +Z, og skal peke mot kameraet.)
   const skiltVinkel = kamYaw + Math.PI;
   for(const s of skiltListe){ s.rotation.y = skiltVinkel; }
+
+  // 6) ...og tones bort hvis et hus faktisk står imellom.
+  oppdaterSkiltDybde(dt);
+}
+
+// Skiltene tegnes oppå alt (depthTest:false), så de kan ikke lenger bli klippet
+// av tak, master eller trær. Til gjengjeld må vi selv avgjøre når et skilt
+// SKAL være skjult – ellers ville navnet på huset på andre sida av byen skinne
+// tvers gjennom bygningene foran. Vi gjør to sjekker per skilt:
+//
+//   a) Eget hus. Gjelder bare hus som er høyere enn sitt eget skilt – i praksis
+//      Jobbsenteret. Står du bak tårnet, skal ikke skiltet på framsida vises.
+//      Vi måler hvor mye kameraet står «foran fasaden» og toner over en liten
+//      overgangssone, så det ikke blinker når du går rundt hjørnet.
+//   b) Andre hus. Vi følger synslinja fra kameraet til skiltet og sjekker om
+//      den går gjennom søyla til et annet hus. Fordi kameraet ser skrått
+//      nedover, ligger det laveste punktet av synslinja inni huset nærmest
+//      skiltet – er DET fortsatt over taket, ser vi over huset og skiltet står.
+//
+// Endringene glir mykt (fade), aldri av/på i ett bilde.
+const SKILT_R = 2.95;    // omtrentlig radius på grunnflata til et hus
+function oppdaterSkiltDybde(dt){
+  const cx = kamera.position.x, cy = kamera.position.y, cz = kamera.position.z;
+  for(const s of skiltListe){
+    const e = s.userData.eier;
+    const sx = s.position.x, sy = s.position.y, sz = s.position.z;
+    let maal = 1;
+
+    // a) Eget hus rager over skiltet (Jobbsenteret)
+    if(e && (BYGG_TOPP[e.id] || 0) > sy + 0.15){
+      const dx = cx - e.x, dz = cz - e.z;
+      const d = Math.hypot(dx, dz) || 1;
+      const side = (dx/d)*e.nx + (dz/d)*e.nz;      // 1 = rett foran fasaden
+      maal = Math.min(maal, Math.max(0, Math.min(1, (side + 0.12) / 0.40)));
+    }
+
+    // b) Et annet hus mellom kameraet og skiltet
+    const vx = sx - cx, vz = sz - cz;
+    const aa = vx*vx + vz*vz;
+    if(aa > 0.0001){
+      for(const b of BYGG){
+        if(e && b.id === e.id) continue;
+        const rx = cx - b.x, rz = cz - b.z;
+        const bq = rx*vx + rz*vz;
+        const cc = rx*rx + rz*rz - SKILT_R*SKILT_R;
+        const disk = bq*bq - aa*cc;
+        if(disk <= 0) continue;                    // synslinja bommer på huset
+        const rot = Math.sqrt(disk);
+        let t0 = (-bq - rot) / aa, t1 = (-bq + rot) / aa;
+        if(t1 <= 0 || t0 >= 1) continue;           // huset ligger ikke imellom
+        t1 = Math.min(t1, 1);
+        const yLav = cy + (sy - cy) * t1;          // laveste punkt inni huset
+        if(yLav < (BYGG_TOPP[b.id] || 6) - 0.10){ maal = 0; break; }
+      }
+    }
+
+    const naa = s.material.opacity;
+    s.material.opacity = naa + (maal - naa) * Math.min(1, 9 * dt);
+    s.visible = s.material.opacity > 0.02;
+  }
 }
 
 const FART = 9;
@@ -1940,10 +2013,12 @@ function sloyfe(){
     let s = sid, f = fram;
     if(ml > 1){ s /= ml; f /= ml; }      // skrått skal ikke gå fortere
     // Kameraets retning innover i bildet er (sin kamYaw, cos kamYaw).
-    // «Høyre på skjermen» er den samme vektoren dreid 90°: (cos, −sin).
+    // «Høyre på skjermen» er den vektoren krysset med opp-aksen, og det gir
+    // (−cos kamYaw, sin kamYaw) – IKKE (cos, −sin). Her sto det motsatt fortegn,
+    // og derfor gikk A/D (og styrespaken sidelengs) feil vei på skjermen.
     const sy = Math.sin(kamYaw), cy = Math.cos(kamYaw);
-    const mx = f * sy + s * cy;
-    const mz = f * cy - s * sy;
+    const mx = f * sy - s * cy;
+    const mz = f * cy + s * sy;
     spiller.position.x += mx * FART * dt;
     spiller.position.z += mz * FART * dt;
     spiller.rotation.y = Math.atan2(mx, mz);
