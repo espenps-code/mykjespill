@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Skyvepuslespill · Mykje spill</title>
+
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#4c1d95">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --natt-1:#2a1a5e;
+  --natt-2:#4c1d95;
+  --natt-3:#1b1147;
+  --teal:#2dd4bf;
+  --lilla:#a855f7;
+  --oransje:#fb923c;
+  --gul:#fbbf24;
+  --rosa:#f472b6;
+  --gronn:#34d399;
+  --gull:#fbbf24;
+  --kort:#ffffff;
+  --blekk:#241a52;
+  --krite:#fff7ed;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+
+body{
+  font-family:'Atkinson Hyperlegible',system-ui,sans-serif;
+  color:var(--krite);
+  background:
+    radial-gradient(900px 500px at 80% -5%, rgba(168,85,247,.55), transparent 60%),
+    radial-gradient(700px 500px at 10% 10%, rgba(45,212,191,.30), transparent 55%),
+    linear-gradient(170deg, var(--natt-2) 0%, var(--natt-1) 40%, var(--natt-3) 100%);
+  background-attachment:fixed;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-text-size-adjust:100%;
+}
+
+/* tre skjermer */
+#forside,#velger{display:none;min-height:100%;overflow-y:auto;}
+#spill{display:none;height:100%;flex-direction:column;}
+body.vis-forside #forside{display:block;}
+body.vis-velger #velger{display:block;}
+body.vis-spill{overflow:hidden;}
+body.vis-spill #spill{display:flex;}
+
+/* ===================== FELLES ===================== */
+.wrap{max-width:1000px;margin:0 auto;padding:24px 20px 60px;}
+
+.hjem{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;
+  color:#fff;text-decoration:none;cursor:pointer;
+  background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.25);
+  padding:7px 16px;border-radius:999px;touch-action:manipulation;
+}
+.hjem:active{transform:translateY(2px);}
+.hjem:focus-visible{outline:3px solid var(--gul);outline-offset:2px;}
+
+.topptekst{margin:24px 0 26px;}
+.topptekst h1{
+  font-family:'Fredoka',sans-serif;font-weight:700;
+  font-size:clamp(2.1rem,6.5vw,3.4rem);line-height:1;letter-spacing:-1px;color:#fff;
+  text-shadow:0 4px 0 rgba(0,0,0,.25), 0 0 30px rgba(168,85,247,.5);
+}
+.topptekst h1 .gul{color:var(--gul);}
+.topptekst p{margin-top:12px;font-size:clamp(1rem,2.4vw,1.15rem);color:#e9defc;max-width:52ch;}
+
+/* ===================== FORSIDE: SERIER ===================== */
+.serier{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;}
+
+.serie{
+  background:var(--kort);border-radius:22px;overflow:hidden;
+  border:3px solid var(--natt-3);box-shadow:0 10px 0 rgba(0,0,0,.28);
+  color:var(--blekk);text-align:left;
+  display:flex;flex-direction:column;
+  cursor:pointer;font:inherit;
+  transition:transform .15s ease, box-shadow .15s ease;
+  touch-action:manipulation;
+}
+.serie:hover,.serie:focus-visible{
+  transform:translateY(-8px) rotate(-1deg);
+  box-shadow:0 18px 0 rgba(0,0,0,.28);outline:none;
+}
+.serie:focus-visible{outline:4px solid var(--gul);outline-offset:3px;}
+
+.serie-bilde{position:relative;aspect-ratio:2400/1792;overflow:hidden;background:#e9e4f5;}
+.serie-bilde img{width:100%;height:100%;object-fit:cover;display:block;}
+.merke{
+  position:absolute;top:10px;left:10px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:.85rem;
+  color:#fff;padding:5px 12px;border-radius:999px;
+  border:2px solid var(--natt-3);
+}
+.merke.f-teal{background:var(--teal);color:var(--natt-3);}
+.merke.f-rosa{background:var(--rosa);}
+.merke.f-oransje{background:var(--oransje);color:var(--natt-3);}
+.merke.f-gronn{background:var(--gronn);color:var(--natt-3);}
+.merke.f-lilla{background:var(--lilla);}
+.merke.f-gull{background:var(--gull);color:var(--natt-3);}
+
+.serie-tekst{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1;}
+.serie-tekst h2{font-family:'Fredoka',sans-serif;font-size:1.4rem;line-height:1.1;}
+.serie-tekst p{font-size:.95rem;color:#4b4470;flex:1;}
+
+.stolpe{height:12px;background:#ece7f8;border-radius:999px;overflow:hidden;border:2px solid var(--natt-3);}
+.stolpe i{display:block;height:100%;background:var(--gronn);width:0;transition:width .4s ease;}
+.framgang{font-size:.87rem;font-weight:700;color:#4b4470;}
+
+/* ===================== VELGER: NIVÅ + BILDER ===================== */
+.nivavelger{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  margin:0 0 22px;
+}
+.nivavelger .etikett{font-weight:700;color:#e9defc;margin-right:4px;}
+.niva{
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;
+  color:var(--blekk);background:#fff;cursor:pointer;
+  border:3px solid var(--natt-3);border-radius:14px;
+  padding:9px 18px;box-shadow:0 5px 0 rgba(0,0,0,.28);
+  touch-action:manipulation;
+}
+.niva small{display:block;font-weight:400;font-size:.78rem;color:#6b6392;}
+.niva[aria-pressed="true"]{background:var(--gul);transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.28);}
+.niva:focus-visible{outline:4px solid var(--gul);outline-offset:3px;}
+
+.bilder{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;}
+.bildekort{
+  background:var(--kort);border-radius:18px;overflow:hidden;
+  border:3px solid var(--natt-3);box-shadow:0 8px 0 rgba(0,0,0,.28);
+  color:var(--blekk);cursor:pointer;font:inherit;text-align:left;
+  display:flex;flex-direction:column;
+  transition:transform .15s ease, box-shadow .15s ease;
+  touch-action:manipulation;
+}
+.bildekort:hover,.bildekort:focus-visible{
+  transform:translateY(-6px);box-shadow:0 14px 0 rgba(0,0,0,.28);outline:none;
+}
+.bildekort:focus-visible{outline:4px solid var(--gul);outline-offset:3px;}
+.bildekort .bk-bilde{position:relative;aspect-ratio:2400/1792;background:#e9e4f5;}
+.bildekort img{width:100%;height:100%;object-fit:cover;display:block;}
+.bildekort .bk-tekst{padding:10px 12px 12px;display:flex;align-items:center;gap:8px;}
+.bildekort h3{font-family:'Fredoka',sans-serif;font-size:1.05rem;line-height:1.15;flex:1;}
+.prikker{display:flex;gap:4px;flex-shrink:0;}
+.prikk{width:11px;height:11px;border-radius:50%;background:#ddd6ee;border:2px solid var(--natt-3);}
+.prikk.ok{background:var(--gronn);}
+.nr{
+  position:absolute;top:8px;left:8px;
+  background:var(--natt-3);color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;
+  font-size:.8rem;padding:3px 10px;border-radius:999px;
+}
+.ferdigmerke{
+  position:absolute;top:8px;right:8px;
+  background:var(--gronn);color:var(--natt-3);border:2px solid var(--natt-3);
+  font-size:.9rem;font-weight:700;padding:2px 8px;border-radius:999px;
+}
+
+/* ===================== SPILL ===================== */
+.spill-topp{
+  flex-shrink:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));
+  background:rgba(27,17,71,.55);border-bottom:2px solid rgba(255,255,255,.12);
+}
+.spill-tittel{font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.05rem;flex:1;min-width:120px;}
+.spill-tittel span{display:block;font-family:'Atkinson Hyperlegible',sans-serif;font-weight:400;font-size:.8rem;color:#c9bdf0;}
+.teller{
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:.95rem;
+  background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.2);
+  padding:5px 12px;border-radius:999px;white-space:nowrap;
+}
+.teller b{color:var(--gul);}
+
+.brett-omrade{
+  flex:1;display:grid;place-items:center;padding:12px;min-height:0;
+}
+.brett{
+  position:relative;
+  width:min(100%, calc((100vh - 190px) * 2400 / 1792), 880px);
+  aspect-ratio:2400/1792;
+  background:#150d38;
+  border:4px solid var(--natt-3);border-radius:16px;
+  box-shadow:0 10px 0 rgba(0,0,0,.35);
+  overflow:hidden;touch-action:manipulation;
+}
+.brett.rist{animation:rist .3s;}
+@keyframes rist{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+
+.brikke{
+  position:absolute;padding:0;margin:0;border:0;cursor:pointer;
+  background-repeat:no-repeat;background-color:#150d38;
+  transition:left .16s ease-out, top .16s ease-out;
+  outline-offset:-4px;
+  border-radius:5px;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.45), inset 0 0 0 3px rgba(0,0,0,.45);
+}
+.brikke:hover{box-shadow:inset 0 0 0 3px var(--gul), inset 0 0 0 4px rgba(0,0,0,.45);}
+.brikke::after{
+  content:attr(data-nr);
+  position:absolute;left:4px;top:4px;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:.85rem;
+  color:#fff;background:rgba(27,17,71,.75);
+  padding:1px 7px;border-radius:999px;
+  opacity:0;transition:opacity .2s;pointer-events:none;
+}
+.brett.med-tall .brikke::after{opacity:1;}
+.brikke:focus-visible{outline:4px solid var(--gul);}
+.brikke.siste{animation:tonInn .5s ease-out;}
+@keyframes tonInn{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
+
+.kikk{
+  position:absolute;inset:0;background-size:100% 100%;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+  z-index:5;
+}
+.brett.kikker .kikk{opacity:1;}
+.brett.kikker .brikke{opacity:.25;}
+
+.spill-bunn{
+  flex-shrink:0;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+  padding:10px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));
+}
+.knapp{
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;
+  color:var(--blekk);background:#fff;cursor:pointer;
+  border:3px solid var(--natt-3);border-radius:14px;
+  padding:9px 18px;box-shadow:0 5px 0 rgba(0,0,0,.28);
+  touch-action:manipulation;
+}
+.knapp:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.28);}
+.knapp[aria-pressed="true"]{background:var(--teal);}
+.knapp:focus-visible{outline:4px solid var(--gul);outline-offset:3px;}
+.knapp.gronn{background:var(--gronn);}
+.knapp.gul{background:var(--gul);}
+
+/* ===================== SEIER ===================== */
+.seier{
+  position:fixed;inset:0;z-index:20;display:none;
+  place-items:center;padding:20px;
+  background:rgba(21,13,56,.82);backdrop-filter:blur(3px);
+}
+body.seier-vist .seier{display:grid;}
+.seier-kort{
+  background:var(--kort);color:var(--blekk);
+  border:4px solid var(--natt-3);border-radius:24px;
+  box-shadow:0 14px 0 rgba(0,0,0,.35);
+  padding:26px 24px;max-width:420px;width:100%;text-align:center;
+  animation:opp .35s cubic-bezier(.2,.9,.3,1.4);
+}
+@keyframes opp{from{transform:translateY(30px) scale(.9);opacity:0;}to{transform:none;opacity:1;}}
+.seier-kort h2{font-family:'Fredoka',sans-serif;font-size:1.9rem;margin-bottom:6px;}
+.seier-kort .stjerner{font-size:2.2rem;letter-spacing:4px;margin:4px 0 10px;}
+.seier-kort p{color:#4b4470;margin-bottom:16px;}
+.seier-knapper{display:flex;flex-direction:column;gap:10px;}
+
+.skjult{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+@media (max-width:560px){
+  .brett{width:min(100%, calc((100vh - 210px) * 2400 / 1792));}
+  .spill-tittel{font-size:.95rem;}
+  .knapp{font-size:.92rem;padding:8px 14px;}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important;}
+}
+</style>
+</head>
+<body class="vis-forside">
+
+<!-- ===================== FORSIDE ===================== -->
+<div id="forside">
+  <div class="wrap">
+    <a class="hjem" href="index.html">← Alle spill</a>
+    <div class="topptekst">
+      <h1>Skyve<span class="gul">puslespill</span></h1>
+      <p>Én rute er tom. Skyv brikkene på plass til myldrebildet er helt igjen.
+         Velg en serie, et bilde og hvor vanskelig du vil ha det.</p>
+    </div>
+    <div class="serier" id="serier"></div>
+  </div>
+</div>
+
+<!-- ===================== BILDEVELGER ===================== -->
+<div id="velger">
+  <div class="wrap">
+    <button class="hjem" id="tilbakeForside" type="button">← Alle serier</button>
+    <div class="topptekst">
+      <h1 id="velgerTittel"></h1>
+      <p id="velgerTekst"></p>
+    </div>
+    <div class="nivavelger" id="nivavelger">
+      <span class="etikett">Vanskegrad:</span>
+      <button class="niva" type="button" data-niva="3" aria-pressed="false">Lett<small>3 × 3 = 9 brikker</small></button>
+      <button class="niva" type="button" data-niva="4" aria-pressed="false">Middels<small>4 × 4 = 16 brikker</small></button>
+      <button class="niva" type="button" data-niva="5" aria-pressed="false">Vanskelig<small>5 × 5 = 25 brikker</small></button>
+    </div>
+    <div class="bilder" id="bilder"></div>
+  </div>
+</div>
+
+<!-- ===================== SPILL ===================== -->
+<div id="spill">
+  <div class="spill-topp">
+    <button class="hjem" id="tilbakeVelger" type="button">← Tilbake</button>
+    <div class="spill-tittel" id="spillTittel">Scene<span>Serie</span></div>
+    <div class="teller">Trekk <b id="trekkTall">0</b></div>
+    <div class="teller">Tid <b id="tidTall">0:00</b></div>
+  </div>
+
+  <div class="brett-omrade">
+    <div class="brett" id="brett" role="group" aria-label="Puslebrett">
+      <div class="kikk" id="kikk" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div class="spill-bunn">
+    <button class="knapp" id="knappKikk" type="button" aria-pressed="false">👁️ Kikk på bildet</button>
+    <button class="knapp" id="knappTall" type="button" aria-pressed="false">🔢 Vis tall</button>
+    <button class="knapp gul" id="knappStokk" type="button">🔀 Stokk om</button>
+  </div>
+</div>
+
+<!-- ===================== SEIER ===================== -->
+<div class="seier" id="seier" role="dialog" aria-modal="true" aria-labelledby="seierTittel">
+  <div class="seier-kort">
+    <h2 id="seierTittel">Ferdig! 🎉</h2>
+    <div class="stjerner" id="seierStjerner">⭐⭐⭐</div>
+    <p id="seierTekst"></p>
+    <div class="seier-knapper">
+      <button class="knapp gronn" id="knappNeste" type="button">Neste bilde →</button>
+      <button class="knapp gul" id="knappVanskeligere" type="button">Prøv vanskeligere</button>
+      <button class="knapp" id="knappIgjen" type="button">Samme bilde om igjen</button>
+      <button class="knapp" id="knappVelger" type="button">Velg et annet bilde</button>
+    </div>
+  </div>
+</div>
+
+<div class="skjult" id="melding" role="status" aria-live="polite"></div>
+
+<script>
+/* ==========================================================
+   BILDESERIER — samme bilder som i Myldrejakt
+   ========================================================== */
+const SERIER = [
+{
+  id:"serie1", navn:"Ute i verden", farge:"f-teal",
+  beskrivelse:"Tegnede myldrebilder fra marked, sirkus, strand og romstasjon.",
+  omslag:"myldrebilder/omslag-serie1.webp", mappe:"myldrebilder/",
+  bilder:[
+    {fil:"01-marked.webp",     scene:"Markedet"},
+    {fil:"02-sirkus.webp",     scene:"Sirkuset"},
+    {fil:"03-dyrepark.webp",   scene:"Dyreparken"},
+    {fil:"04-strand.webp",     scene:"Stranda"},
+    {fil:"05-romstasjon.webp", scene:"Romstasjonen"},
+    {fil:"06-jul.webp",        scene:"Julemarkedet"},
+    {fil:"07-skog.webp",       scene:"Skogen"},
+    {fil:"08-undervann.webp",  scene:"Under vann"},
+    {fil:"09-byggeplass.webp", scene:"Byggeplassen"},
+    {fil:"10-bondegard.webp",  scene:"Bondegården"}
+  ]
+},
+{
+  id:"serie2", navn:"Eventyrland", farge:"f-rosa",
+  beskrivelse:"Myldrebilder klippet i farget papir – drageborg, trollskog og piratskip.",
+  omslag:"myldrebilder/omslag-serie2.webp", mappe:"myldrebilder/serie2/",
+  bilder:[
+    {fil:"01-drageborg.webp",       scene:"Drageborgen"},
+    {fil:"02-trollskog.webp",       scene:"Trollskogen"},
+    {fil:"03-heksekjokken.webp",    scene:"Heksekjøkkenet"},
+    {fil:"04-ridderturnering.webp", scene:"Ridderturneringen"},
+    {fil:"05-alvelandsby.webp",     scene:"Alvelandsbyen"},
+    {fil:"06-piratskip.webp",       scene:"Piratskipet"},
+    {fil:"07-kjempehage.webp",      scene:"Kjempens hage"},
+    {fil:"08-trylleverksted.webp",  scene:"Trylleverkstedet"},
+    {fil:"09-enhjorningdal.webp",   scene:"Enhjørningdalen"},
+    {fil:"10-skyby.webp",           scene:"Skybyen"}
+  ]
+},
+{
+  id:"serie3", navn:"Storbyen", farge:"f-oransje",
+  beskrivelse:"Ti tettpakkede bybilder – togstasjon, flyplass, havn og gatekjøkken.",
+  omslag:"myldrebilder/omslag-serie3.webp", mappe:"myldrebilder/serie3/",
+  bilder:[
+    {fil:"01-togstasjon.webp",    scene:"Togstasjonen"},
+    {fil:"02-flyplass.webp",      scene:"Flyplassen"},
+    {fil:"03-kjopesenter.webp",   scene:"Kjøpesenteret"},
+    {fil:"04-gagate.webp",        scene:"Gågata"},
+    {fil:"05-tbane.webp",         scene:"T-banen"},
+    {fil:"06-bytak.webp",         scene:"Bytakene"},
+    {fil:"07-havn.webp",          scene:"Havna"},
+    {fil:"08-trafikkmaskin.webp", scene:"Trafikkmaskinen"},
+    {fil:"09-park.webp",          scene:"Parken"},
+    {fil:"10-gatekjokken.webp",   scene:"Gatekjøkkenet"}
+  ]
+},
+{
+  id:"serie4", navn:"Rundt i verden", farge:"f-gronn",
+  beskrivelse:"Ti reiser ut i verden, tegnet med penn og akvarell.",
+  omslag:"myldrebilder/omslag-serie4.webp", mappe:"myldrebilder/serie4/",
+  bilder:[
+    {fil:"01-basar.webp",       scene:"Basaren i Marrakesh"},
+    {fil:"02-tokyo.webp",       scene:"Gata i Tokyo"},
+    {fil:"03-karneval.webp",    scene:"Karnevalet i Rio"},
+    {fil:"04-safari.webp",      scene:"Safarien i Kenya"},
+    {fil:"05-gronland.webp",    scene:"Bygda på Grønland"},
+    {fil:"06-flytemarked.webp", scene:"Flytemarkedet i Bangkok"},
+    {fil:"07-venezia.webp",     scene:"Kanalen i Venezia"},
+    {fil:"08-fjellmarked.webp", scene:"Fjellmarkedet i Andes"},
+    {fil:"09-hamn.webp",        scene:"Havna i Sydney"},
+    {fil:"10-utgraving.webp",   scene:"Utgravingen i Egypt"}
+  ]
+},
+{
+  id:"serie5", navn:"Gjennom tidene", farge:"f-lilla",
+  beskrivelse:"Ti reiser i tid – fra steinalderleiren til framtidsbyen.",
+  omslag:"myldrebilder/omslag-serie5.webp", mappe:"myldrebilder/serie5/",
+  bilder:[
+    {fil:"01-steinalder.webp",  scene:"Steinalderleiren"},
+    {fil:"02-egypt.webp",       scene:"Pyramidene"},
+    {fil:"03-roma.webp",        scene:"Forum Romanum"},
+    {fil:"04-vikingtid.webp",   scene:"Vikinghavna"},
+    {fil:"05-borg.webp",        scene:"Ridderborgen"},
+    {fil:"06-renessanse.webp",  scene:"Oppfinnerverkstedet"},
+    {fil:"07-villevesten.webp", scene:"Ville vesten"},
+    {fil:"08-dampby.webp",      scene:"Dampbyen"},
+    {fil:"09-femtitalet.webp",  scene:"Femtitallsgata"},
+    {fil:"10-framtid.webp",     scene:"Framtidsbyen"}
+  ]
+},
+{
+  id:"serie6", navn:"Tvers gjennom", farge:"f-gull",
+  beskrivelse:"Ti bilder skåret i to som et dukkehus – maurtua, ubåten og raketten.",
+  omslag:"myldrebilder/omslag-serie6.webp", mappe:"myldrebilder/serie6/",
+  bilder:[
+    {fil:"01-maurtua.webp",     scene:"Maurtua"},
+    {fil:"02-gruva.webp",       scene:"Gruva i fjellet"},
+    {fil:"03-treet.webp",       scene:"Det gamle treet"},
+    {fil:"04-ubaten.webp",      scene:"Ubåten"},
+    {fil:"05-lasteskipet.webp", scene:"Lasteskipet"},
+    {fil:"06-badelandet.webp",  scene:"Badelandet"},
+    {fil:"07-bygarden.webp",    scene:"Bygården"},
+    {fil:"08-museet.webp",      scene:"Museet"},
+    {fil:"09-flyet.webp",       scene:"Flyet"},
+    {fil:"10-raketten.webp",    scene:"Raketten"}
+  ]
+}
+];
+
+const NIVAA = {3:"Lett", 4:"Middels", 5:"Vanskelig"};
+const NIVAAER = [3,4,5];
+
+/* ==========================================================
+   FRAMGANG — lagres bare i nettleseren (localStorage)
+   ========================================================== */
+const NOKKEL = 'skyvepuslespill-framgang';
+const NIVA_NOKKEL = 'skyvepuslespill-niva';
+let framgang = {};
+try { framgang = JSON.parse(localStorage.getItem(NOKKEL)) || {}; } catch(e){ framgang = {}; }
+function lagre(){ try { localStorage.setItem(NOKKEL, JSON.stringify(framgang)); } catch(e){} }
+function nkl(serie, bilde, n){ return serie.id + '|' + bilde.fil + '|' + n; }
+function erLost(serie, bilde, n){ return !!framgang[nkl(serie, bilde, n)]; }
+function antallLost(serie){
+  let t = 0;
+  serie.bilder.forEach(b => NIVAAER.forEach(n => { if(erLost(serie, b, n)) t++; }));
+  return t;
+}
+
+let valgtNiva = 3;
+try { const v = parseInt(localStorage.getItem(NIVA_NOKKEL), 10); if(NIVAAER.includes(v)) valgtNiva = v; } catch(e){}
+
+/* ==========================================================
+   ELEMENTER
+   ========================================================== */
+const el = id => document.getElementById(id);
+const brettEl      = el('brett');
+const kikkEl       = el('kikk');
+const serierEl     = el('serier');
+const bilderEl     = el('bilder');
+const meldingEl    = el('melding');
+const knappKikk    = el('knappKikk');
+const knappTall    = el('knappTall');
+const knappStokk   = el('knappStokk');
+const knappVansk   = el('knappVanskeligere');
+
+/* ==========================================================
+   FORSIDE
+   ========================================================== */
+function tegnForside(){
+  serierEl.innerHTML = '';
+  SERIER.forEach(serie => {
+    const tot = serie.bilder.length * NIVAAER.length;
+    const lost = antallLost(serie);
+    const kort = document.createElement('button');
+    kort.type = 'button';
+    kort.className = 'serie';
+    kort.innerHTML =
+      '<div class="serie-bilde">' +
+        '<span class="merke ' + serie.farge + '">' + serie.bilder.length + ' bilder</span>' +
+        '<img src="' + serie.omslag + '" alt="" loading="lazy" decoding="async">' +
+      '</div>' +
+      '<div class="serie-tekst">' +
+        '<h2>' + serie.navn + '</h2>' +
+        '<p>' + serie.beskrivelse + '</p>' +
+        '<div class="stolpe"><i style="width:' + Math.round(lost / tot * 100) + '%"></i></div>' +
+        '<div class="framgang">' + lost + ' av ' + tot + ' puslespill løst</div>' +
+      '</div>';
+    kort.addEventListener('click', () => visVelger(serie));
+    serierEl.appendChild(kort);
+  });
+}
+
+function visForside(){
+  document.body.className = 'vis-forside';
+  tegnForside();
+  window.scrollTo(0,0);
+}
+
+/* ==========================================================
+   BILDEVELGER
+   ========================================================== */
+let aktivSerie = null;
+
+function visVelger(serie){
+  aktivSerie = serie;
+  document.body.className = 'vis-velger';
+  el('velgerTittel').textContent = serie.navn;
+  el('velgerTekst').textContent = serie.beskrivelse;
+  tegnNivaknapper();
+  tegnBilder();
+  window.scrollTo(0,0);
+}
+
+function tegnNivaknapper(){
+  el('nivavelger').querySelectorAll('.niva').forEach(b => {
+    const n = Number(b.dataset.niva);
+    b.setAttribute('aria-pressed', n === valgtNiva ? 'true' : 'false');
+    b.onclick = () => {
+      valgtNiva = n;
+      try { localStorage.setItem(NIVA_NOKKEL, String(n)); } catch(e){}
+      tegnNivaknapper();
+      tegnBilder();
+    };
+  });
+}
+
+function tegnBilder(){
+  bilderEl.innerHTML = '';
+  aktivSerie.bilder.forEach((bilde, i) => {
+    const kort = document.createElement('button');
+    kort.type = 'button';
+    kort.className = 'bildekort';
+    const prikker = NIVAAER.map(n =>
+      '<span class="prikk' + (erLost(aktivSerie, bilde, n) ? ' ok' : '') +
+      '" title="' + NIVAA[n] + '"></span>').join('');
+    const ferdig = erLost(aktivSerie, bilde, valgtNiva)
+      ? '<span class="ferdigmerke">✓</span>' : '';
+    kort.innerHTML =
+      '<div class="bk-bilde">' +
+        '<span class="nr">' + (i+1) + '</span>' + ferdig +
+        '<img src="' + aktivSerie.mappe + bilde.fil + '" alt="" loading="lazy" decoding="async">' +
+      '</div>' +
+      '<div class="bk-tekst"><h3>' + bilde.scene + '</h3><span class="prikker">' + prikker + '</span></div>';
+    kort.setAttribute('aria-label', bilde.scene + ', ' + NIVAA[valgtNiva].toLowerCase());
+    kort.addEventListener('click', () => startSpill(aktivSerie, i, valgtNiva));
+    bilderEl.appendChild(kort);
+  });
+}
+
+/* ==========================================================
+   SPILLET
+   ========================================================== */
+const S = {
+  serie:null, idx:0, n:3,
+  brett:[], tom:0, trekk:0,
+  start:0, tid:0, timer:null,
+  brikker:[], ferdig:false
+};
+
+function bildeUrl(){ return S.serie.mappe + S.serie.bilder[S.idx].fil; }
+
+function startSpill(serie, idx, n){
+  S.serie = serie; S.idx = idx; S.n = n;
+  S.trekk = 0; S.tid = 0; S.ferdig = false;
+  document.body.className = 'vis-spill';
+  const bilde = serie.bilder[idx];
+  el('spillTittel').innerHTML =
+    bilde.scene + '<span>' + serie.navn + ' · ' + NIVAA[n] + ' (' + n + '×' + n + ')</span>';
+  kikkEl.style.backgroundImage = 'url("' + bildeUrl() + '")';
+  brettEl.classList.remove('kikker');
+  knappKikk.setAttribute('aria-pressed','false');
+  nyttBrett();
+}
+
+function nyttBrett(){
+  const tot = S.n * S.n;
+  S.brett = [];
+  for(let i = 0; i < tot - 1; i++) S.brett.push(i);
+  S.brett.push(-1);
+  S.tom = tot - 1;
+  S.trekk = 0; S.tid = 0; S.ferdig = false;
+  stopTimer();
+  el('trekkTall').textContent = '0';
+  el('tidTall').textContent = '0:00';
+  document.body.classList.remove('seier-vist');
+  stokk();
+  byggBrikker();
+  plasser();
+}
+
+function naboer(c){
+  const n = S.n, r = Math.floor(c/n), k = c % n, ut = [];
+  if(r > 0)   ut.push(c - n);
+  if(r < n-1) ut.push(c + n);
+  if(k > 0)   ut.push(c - 1);
+  if(k < n-1) ut.push(c + 1);
+  return ut;
+}
+
+/* Stokker ved å gjøre mange lovlige trekk fra det ferdige brettet.
+   Da er brettet garantert mulig å løse. */
+function stokk(){
+  const tot = S.n * S.n;
+  let forrige = -1;
+  for(let i = 0; i < 60 * tot; i++){
+    const valg = naboer(S.tom).filter(c => c !== forrige);
+    const c = valg[Math.floor(Math.random() * valg.length)];
+    forrige = S.tom;
+    S.brett[S.tom] = S.brett[c];
+    S.brett[c] = -1;
+    S.tom = c;
+  }
+  if(erFerdig()) stokk();
+}
+
+function erFerdig(){
+  const tot = S.n * S.n;
+  for(let i = 0; i < tot - 1; i++) if(S.brett[i] !== i) return false;
+  return S.brett[tot-1] === -1;
+}
+
+function byggBrikker(){
+  brettEl.querySelectorAll('.brikke').forEach(e => e.remove());
+  brettEl.classList.remove('rist');
+  S.brikker = [];
+  const n = S.n, tot = n * n, url = bildeUrl();
+  for(let id = 0; id < tot - 1; id++){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'brikke';
+    b.style.width  = (100/n) + '%';
+    b.style.height = (100/n) + '%';
+    b.style.backgroundImage = 'url("' + url + '")';
+    b.style.backgroundSize  = (n*100) + '% ' + (n*100) + '%';
+    b.style.backgroundPosition =
+      ((id % n) * 100 / (n-1)) + '% ' + (Math.floor(id / n) * 100 / (n-1)) + '%';
+    b.dataset.nr = id + 1;
+    b.setAttribute('aria-label', 'Brikke ' + (id+1));
+    b.addEventListener('click', () => trykk(Number(b.dataset.celle)));
+    brettEl.appendChild(b);
+    S.brikker.push(b);
+  }
+}
+
+function plasser(){
+  const n = S.n;
+  for(let c = 0; c < n*n; c++){
+    const id = S.brett[c];
+    if(id < 0) continue;
+    const b = S.brikker[id];
+    b.style.left = (c % n) * (100/n) + '%';
+    b.style.top  = Math.floor(c / n) * (100/n) + '%';
+    b.dataset.celle = c;
+  }
+}
+
+function rist(){
+  brettEl.classList.remove('rist');
+  void brettEl.offsetWidth;
+  brettEl.classList.add('rist');
+}
+
+function trykk(c){
+  if(S.ferdig || !Number.isInteger(c) || c === S.tom) return;
+  const n = S.n;
+  const r = Math.floor(c/n), k = c % n;
+  const tr = Math.floor(S.tom/n), tk = S.tom % n;
+  if(r !== tr && k !== tk){ rist(); return; }
+
+  const steg = (r === tr) ? (c > S.tom ? 1 : -1) : (c > S.tom ? n : -n);
+  const antall = (r === tr) ? Math.abs(c - S.tom) : Math.abs(c - S.tom) / n;
+
+  let p = S.tom;
+  while(p !== c){
+    const neste = p + steg;
+    S.brett[p] = S.brett[neste];
+    S.brett[neste] = -1;
+    p = neste;
+  }
+  S.tom = c;
+  S.trekk += antall;
+  el('trekkTall').textContent = S.trekk;
+  if(!S.timer) startTimer();
+  plasser();
+  if(erFerdig()) vinn();
+}
+
+/* piltaster: skyver en brikke inn i den tomme ruta */
+function pil(retning){
+  const n = S.n, t = S.tom, r = Math.floor(t/n), k = t % n;
+  let c = -1;
+  if(retning === 'ArrowRight' && k > 0)   c = t - 1;
+  if(retning === 'ArrowLeft'  && k < n-1) c = t + 1;
+  if(retning === 'ArrowDown'  && r > 0)   c = t - n;
+  if(retning === 'ArrowUp'    && r < n-1) c = t + n;
+  if(c >= 0) trykk(c);
+}
+
+/* ---------- tid ---------- */
+function startTimer(){
+  S.start = Date.now() - S.tid * 1000;
+  S.timer = setInterval(() => {
+    S.tid = Math.floor((Date.now() - S.start) / 1000);
+    el('tidTall').textContent = formatTid(S.tid);
+  }, 500);
+}
+function stopTimer(){ if(S.timer){ clearInterval(S.timer); S.timer = null; } }
+function formatTid(s){
+  const m = Math.floor(s/60);
+  return m + ':' + String(s % 60).padStart(2,'0');
+}
+
+/* ---------- seier ---------- */
+const GRENSER = {3:[60,120], 4:[170,340], 5:[380,760]};
+
+function vinn(){
+  S.ferdig = true;
+  stopTimer();
+  const n = S.n, tot = n*n, id = tot - 1;
+
+  /* legg den siste brikken på plass */
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'brikke siste';
+  b.disabled = true;
+  b.style.width  = (100/n) + '%';
+  b.style.height = (100/n) + '%';
+  b.style.left = (n-1) * (100/n) + '%';
+  b.style.top  = (n-1) * (100/n) + '%';
+  b.style.backgroundImage = 'url("' + bildeUrl() + '")';
+  b.style.backgroundSize  = (n*100) + '% ' + (n*100) + '%';
+  b.style.backgroundPosition = '100% 100%';
+  b.dataset.nr = id + 1;
+  brettEl.appendChild(b);
+
+  const bilde = S.serie.bilder[S.idx];
+  const nokkel = nkl(S.serie, bilde, n);
+  const gammel = framgang[nokkel];
+  if(!gammel || S.trekk < gammel.trekk){
+    framgang[nokkel] = { trekk: S.trekk, tid: S.tid };
+  }
+  lagre();
+
+  const g = GRENSER[n];
+  const stjerner = S.trekk <= g[0] ? 3 : (S.trekk <= g[1] ? 2 : 1);
+  el('seierStjerner').textContent = '⭐'.repeat(stjerner) + '☆'.repeat(3 - stjerner);
+  el('seierTittel').textContent = bilde.scene + ' er ferdig! 🎉';
+  let tekst = S.trekk + ' trekk på ' + formatTid(S.tid) + '.';
+  if(gammel && S.trekk < gammel.trekk) tekst += ' Ny rekord — forrige var ' + gammel.trekk + ' trekk.';
+  else if(gammel) tekst += ' Rekorden din er ' + gammel.trekk + ' trekk.';
+  el('seierTekst').textContent = tekst;
+
+  knappVansk.style.display = (n < 5) ? '' : 'none';
+  if(n < 5) knappVansk.textContent = 'Prøv ' + (n+1) + '×' + (n+1) + ' (' + NIVAA[n+1].toLowerCase() + ')';
+
+  meldingEl.textContent = 'Puslespillet er løst på ' + S.trekk + ' trekk.';
+  setTimeout(() => {
+    document.body.classList.add('seier-vist');
+    el('knappNeste').focus();
+  }, 650);
+}
+
+/* ==========================================================
+   KNAPPER OG TASTER
+   ========================================================== */
+el('tilbakeForside').addEventListener('click', visForside);
+el('tilbakeVelger').addEventListener('click', () => { stopTimer(); visVelger(S.serie || SERIER[0]); });
+
+knappKikk.addEventListener('click', () => {
+  const pa = brettEl.classList.toggle('kikker');
+  knappKikk.setAttribute('aria-pressed', pa ? 'true' : 'false');
+});
+knappTall.addEventListener('click', () => {
+  const pa = brettEl.classList.toggle('med-tall');
+  knappTall.setAttribute('aria-pressed', pa ? 'true' : 'false');
+});
+knappStokk.addEventListener('click', () => {
+  if(S.trekk > 5 && !S.ferdig && !confirm('Stokke om og begynne på nytt?')) return;
+  nyttBrett();
+});
+
+el('knappIgjen').addEventListener('click', () => { nyttBrett(); });
+el('knappNeste').addEventListener('click', () => {
+  startSpill(S.serie, (S.idx + 1) % S.serie.bilder.length, S.n);
+});
+knappVansk.addEventListener('click', () => {
+  startSpill(S.serie, S.idx, Math.min(5, S.n + 1));
+});
+el('knappVelger').addEventListener('click', () => {
+  document.body.classList.remove('seier-vist');
+  visVelger(S.serie);
+});
+
+document.addEventListener('keydown', e => {
+  if(!document.body.classList.contains('vis-spill')) return;
+  if(document.body.classList.contains('seier-vist')) return;
+  if(e.key.startsWith('Arrow')){ e.preventDefault(); pil(e.key); }
+  if(e.key === 'Escape') visVelger(S.serie);
+});
+
+/* ==========================================================
+   START
+   ========================================================== */
+visForside();
+</script>
+</body>
+</html>
