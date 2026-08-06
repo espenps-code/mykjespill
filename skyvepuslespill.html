@@ -183,11 +183,32 @@ body.vis-spill #spill{display:flex;}
 .teller b{color:var(--gul);}
 
 .brett-omrade{
-  flex:1;display:grid;place-items:center;padding:12px;min-height:0;
+  flex:1;display:flex;align-items:center;justify-content:center;
+  gap:12px;padding:12px;min-height:0;
+  --sidefelt:clamp(96px, 16vw, 180px);
+}
+.brett-omrade.uten-fasit{--sidefelt:0px !important;}
+.brett-omrade.uten-fasit .fasit{display:none;}
+
+.fasit{
+  flex:0 0 auto;width:var(--sidefelt);
+  display:flex;flex-direction:column;gap:6px;align-items:center;
+}
+.fasit-bilde{
+  width:100%;aspect-ratio:2400/1792;
+  background-size:100% 100%;background-color:#150d38;
+  border:3px solid var(--natt-3);border-radius:10px;
+  box-shadow:0 5px 0 rgba(0,0,0,.3);
+  cursor:zoom-in;padding:0;
+}
+.fasit-bilde:focus-visible{outline:4px solid var(--gul);outline-offset:3px;}
+.fasit-tekst{
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:.78rem;
+  color:#c9bdf0;text-align:center;line-height:1.2;
 }
 .brett{
-  position:relative;
-  width:min(100%, calc((100vh - 190px) * 2400 / 1792), 880px);
+  position:relative;flex:0 0 auto;
+  width:min(calc(100vw - 36px - var(--sidefelt)), calc((100vh - 190px) * 2400 / 1792), 880px);
   aspect-ratio:2400/1792;
   background:#150d38;
   border:4px solid var(--natt-3);border-radius:16px;
@@ -267,7 +288,9 @@ body.seier-vist .seier{display:grid;}
 .skjult{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
 
 @media (max-width:560px){
-  .brett{width:min(100%, calc((100vh - 210px) * 2400 / 1792));}
+  .brett{width:min(calc(100vw - 36px - var(--sidefelt)), calc((100vh - 210px) * 2400 / 1792));}
+  .brett-omrade{gap:8px;padding:8px;--sidefelt:clamp(76px, 20vw, 120px);}
+  .fasit-tekst{font-size:.7rem;}
   .spill-tittel{font-size:.95rem;}
   .knapp{font-size:.92rem;padding:8px 14px;}
 }
@@ -319,6 +342,11 @@ body.seier-vist .seier{display:grid;}
   </div>
 
   <div class="brett-omrade">
+    <div class="fasit" id="fasit">
+      <button class="fasit-bilde" id="fasitBilde" type="button"
+              aria-label="Hele bildet – trykk for å se det stort over brettet"></button>
+      <div class="fasit-tekst">Slik skal<br>det bli</div>
+    </div>
     <div class="brett" id="brett" role="group" aria-label="Puslebrett">
       <div class="kikk" id="kikk" aria-hidden="true"></div>
     </div>
@@ -326,6 +354,7 @@ body.seier-vist .seier{display:grid;}
 
   <div class="spill-bunn">
     <button class="knapp" id="knappKikk" type="button" aria-pressed="false">👁️ Kikk på bildet</button>
+    <button class="knapp" id="knappFasit" type="button" aria-pressed="true">🖼️ Minibilde</button>
     <button class="knapp" id="knappTall" type="button" aria-pressed="false">🔢 Vis tall</button>
     <button class="knapp gul" id="knappStokk" type="button">🔀 Stokk om</button>
   </div>
@@ -597,6 +626,7 @@ function startSpill(serie, idx, n){
   el('spillTittel').innerHTML =
     bilde.scene + '<span>' + serie.navn + ' · ' + NIVAA[n] + ' (' + n + '×' + n + ')</span>';
   kikkEl.style.backgroundImage = 'url("' + bildeUrl() + '")';
+  el('fasitBilde').style.backgroundImage = 'url("' + bildeUrl() + '")';
   brettEl.classList.remove('kikker');
   knappKikk.setAttribute('aria-pressed','false');
   nyttBrett();
@@ -800,6 +830,20 @@ knappKikk.addEventListener('click', () => {
   const pa = brettEl.classList.toggle('kikker');
   knappKikk.setAttribute('aria-pressed', pa ? 'true' : 'false');
 });
+el('fasitBilde').addEventListener('click', () => knappKikk.click());
+
+/* Minibilde ved siden av brettet – på/av, huskes til neste gang */
+const knappFasit = el('knappFasit');
+const omradeEl = document.querySelector('.brett-omrade');
+function settFasit(pa){
+  omradeEl.classList.toggle('uten-fasit', !pa);
+  knappFasit.setAttribute('aria-pressed', pa ? 'true' : 'false');
+  try{ localStorage.setItem('skyvepuslespill-fasit', pa ? '1' : '0'); }catch(e){}
+}
+knappFasit.addEventListener('click', () => {
+  settFasit(omradeEl.classList.contains('uten-fasit'));
+});
+try{ settFasit(localStorage.getItem('skyvepuslespill-fasit') !== '0'); }catch(e){}
 knappTall.addEventListener('click', () => {
   const pa = brettEl.classList.toggle('med-tall');
   knappTall.setAttribute('aria-pressed', pa ? 'true' : 'false');
