@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Labyrinten · Mykje spill</title>
+
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#4c1d95">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --natt-1:#2a1a5e;
+  --natt-2:#4c1d95;
+  --natt-3:#1b1147;
+  --teal:#2dd4bf;
+  --lilla:#a855f7;
+  --oransje:#fb923c;
+  --gul:#fbbf24;
+  --rosa:#f472b6;
+  --gronn:#34d399;
+  --kort:#ffffff;
+  --blekk:#241a52;
+  --krite:#fff7ed;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Atkinson Hyperlegible',system-ui,sans-serif;
+  color:var(--krite);
+  background:
+    radial-gradient(900px 500px at 80% -5%, rgba(168,85,247,.55), transparent 60%),
+    radial-gradient(700px 500px at 10% 10%, rgba(45,212,191,.30), transparent 55%),
+    linear-gradient(170deg, var(--natt-2) 0%, var(--natt-1) 40%, var(--natt-3) 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+  overflow:hidden;
+  -webkit-user-select:none;user-select:none;
+  touch-action:none;
+}
+button{font-family:inherit;cursor:pointer;}
+
+/* ---------- stjerner ---------- */
+.stjerner{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.stjerne{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;opacity:.7;
+  box-shadow:0 0 6px 1px rgba(255,255,255,.6);animation:blink 3.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:.2;transform:scale(.7);}50%{opacity:.9;transform:scale(1);}}
+
+/* ---------- meny ---------- */
+#meny{position:relative;z-index:1;height:100%;overflow:auto;padding:24px 18px 48px;}
+.meny-inner{max-width:900px;margin:0 auto;}
+.topp{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+.tilbake{
+  display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#fff;
+  background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.22);
+  padding:8px 14px;border-radius:99px;font-weight:700;font-size:.95rem;
+}
+.tilbake:hover{background:rgba(255,255,255,.2);}
+h1{
+  font-family:'Fredoka',sans-serif;font-weight:700;font-size:clamp(2.4rem,7vw,4rem);
+  line-height:1;color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.25),0 0 30px rgba(168,85,247,.5);
+  margin:10px 0 6px;
+}
+h1 .gul{color:var(--gul);}
+.ingress{color:#e9defc;font-size:1.05rem;max-width:56ch;margin-bottom:22px;}
+
+.nivaa-faner{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.fane{
+  border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;
+  border-radius:16px;padding:12px 18px;font-weight:700;font-size:1rem;
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:150px;
+  transition:transform .15s, background .15s;
+}
+.fane small{font-weight:400;opacity:.8;font-size:.82rem;}
+.fane:hover{transform:translateY(-2px);}
+.fane.aktiv{background:#fff;color:var(--blekk);border-color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.25);}
+.fane .prikk{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+
+.labyrinter{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:26px;}
+.lab-knapp{
+  position:relative;border:0;border-radius:18px;padding:16px 12px 14px;color:var(--blekk);
+  background:#fff;box-shadow:0 6px 0 rgba(0,0,0,.18);text-align:left;
+  transition:transform .12s, box-shadow .12s;min-height:96px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.lab-knapp:hover{transform:translateY(-3px);box-shadow:0 9px 0 rgba(0,0,0,.18);}
+.lab-knapp:active{transform:translateY(2px);box-shadow:0 3px 0 rgba(0,0,0,.18);}
+.lab-knapp .nr{font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.6rem;line-height:1;}
+.lab-knapp .info{font-size:.85rem;opacity:.75;}
+.lab-knapp .hake{
+  position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;
+  background:var(--gronn);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:1rem;box-shadow:0 2px 0 rgba(0,0,0,.15);
+}
+.lab-knapp.lost{background:#f0fdf8;}
+
+.hjelp{
+  background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.18);border-radius:18px;
+  padding:16px 18px;font-size:.95rem;line-height:1.5;color:#efe6ff;max-width:64ch;
+}
+.hjelp b{color:#fff;}
+.hjelp kbd{
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px;
+  padding:1px 7px;font-family:inherit;font-weight:700;font-size:.85em;
+}
+
+/* ---------- spill ---------- */
+#spill{position:fixed;inset:0;z-index:2;display:none;background:#000;}
+#spill.aktiv{display:block;}
+#c3d{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;}
+
+.hud{
+  position:absolute;top:0;left:0;right:0;z-index:3;
+  padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
+  display:flex;align-items:center;gap:10px;pointer-events:none;
+}
+.hud > *{pointer-events:auto;}
+.hud-knapp{
+  border:2px solid rgba(255,255,255,.35);background:rgba(20,10,50,.65);color:#fff;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border-radius:99px;padding:8px 14px;font-weight:700;font-size:.95rem;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.hud-knapp:hover{background:rgba(40,20,90,.8);}
+.hud-midt{
+  flex:1;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;
+}
+.pille{
+  background:rgba(20,10,50,.65);border:2px solid rgba(255,255,255,.3);border-radius:99px;
+  padding:8px 14px;font-weight:700;font-size:.95rem;color:#fff;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.pille.nokkel{transition:background .3s,border-color .3s;}
+.pille.nokkel.har{background:rgba(251,191,36,.9);color:var(--blekk);border-color:#fff;}
+#tid{font-variant-numeric:tabular-nums;min-width:4.5ch;text-align:center;}
+
+.melding{
+  position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:4;
+  background:rgba(20,10,50,.8);border:2px solid rgba(255,255,255,.35);border-radius:20px;
+  padding:14px 22px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.3rem;
+  text-align:center;max-width:90vw;pointer-events:none;opacity:0;transition:opacity .35s;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.melding.vis{opacity:1;}
+
+/* touch-kontroller */
+.styring{
+  position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));z-index:3;
+  display:flex;justify-content:space-between;align-items:flex-end;padding:0 16px;pointer-events:none;
+}
+.pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,64px);gap:6px;pointer-events:auto;}
+.pad-knapp{
+  border:2px solid rgba(255,255,255,.4);background:rgba(20,10,50,.55);color:#fff;border-radius:16px;
+  font-size:1.6rem;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  -webkit-tap-highlight-color:transparent;touch-action:none;
+}
+.pad-knapp.trykt{background:rgba(251,191,36,.85);color:var(--blekk);border-color:#fff;}
+.pad-knapp.tom{visibility:hidden;}
+.snu{display:grid;grid-template-columns:repeat(2,72px);gap:8px;pointer-events:auto;}
+.snu .pad-knapp{height:72px;}
+@media (min-width:900px) and (hover:hover){
+  .styring{opacity:.55;}
+  .styring:hover{opacity:1;}
+}
+
+/* ferdig-overlay */
+#ferdig{
+  position:fixed;inset:0;z-index:5;display:none;align-items:center;justify-content:center;
+  background:rgba(20,10,50,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:20px;
+}
+#ferdig.vis{display:flex;}
+.ferdig-kort{
+  background:#fff;color:var(--blekk);border-radius:26px;padding:30px 28px;max-width:440px;width:100%;
+  text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:sprett .5s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes sprett{from{transform:scale(.6);opacity:0;}to{transform:scale(1);opacity:1;}}
+.ferdig-kort .emoji{font-size:3.4rem;line-height:1;}
+.ferdig-kort h2{font-family:'Fredoka',sans-serif;font-size:2rem;margin:10px 0 6px;}
+.ferdig-kort p{margin-bottom:6px;font-size:1.05rem;}
+.ferdig-kort .rekord{color:#b45309;font-weight:700;}
+.knapper{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px;}
+.knapp{
+  border:0;border-radius:99px;padding:12px 22px;font-weight:700;font-size:1rem;
+  background:var(--natt-2);color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.2);
+}
+.knapp.sekundaer{background:#ede9fe;color:var(--blekk);}
+.knapp:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.2);}
+
+#laster{
+  position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
+  background:#1b1147;color:#fff;font-family:'Fredoka',sans-serif;font-size:1.4rem;
+}
+#laster.skjult{display:none;}
+</style>
+</head>
+<body>
+
+<div class="stjerner" id="stjerner"></div>
+
+<!-- ===================== MENY ===================== -->
+<div id="meny">
+  <div class="meny-inner">
+    <div class="topp">
+      <a class="tilbake" href="index.html">← Alle spill</a>
+    </div>
+    <h1>Laby<span class="gul">rinten</span></h1>
+    <p class="ingress">Du står inne i en labyrint. Finn nøkkelen 🔑 – da åpner porten seg – og finn veien ut! 30 labyrinter fordelt på tre verdener.</p>
+
+    <div class="nivaa-faner" id="faner"></div>
+    <div class="labyrinter" id="labyrinter"></div>
+
+    <div class="hjelp">
+      <b>Slik spiller du:</b> På tastatur bruker du <kbd>↑</kbd> <kbd>↓</kbd> for å gå og <kbd>←</kbd> <kbd>→</kbd> for å snu deg (eller <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>).
+      På nettbrett bruker du knappene på skjermen, eller dra fingeren over bildet for å se deg rundt.
+      Tips: Hold én hånd på veggen hele tiden, så finner du alltid fram til slutt!
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SPILL ===================== -->
+<div id="spill">
+  <canvas id="c3d"></canvas>
+  <div id="laster">Bygger labyrinten …</div>
+
+  <div class="hud">
+    <button class="hud-knapp" id="avbryt">← Meny</button>
+    <div class="hud-midt">
+      <span class="pille" id="navn">Hagen 1</span>
+      <span class="pille" id="tid">0:00</span>
+      <span class="pille nokkel" id="nokkelStatus">🔑 Ikke funnet</span>
+    </div>
+    <button class="hud-knapp" id="lyd" title="Lyd av/på">🔊</button>
+  </div>
+
+  <div class="melding" id="melding"></div>
+
+  <div class="styring">
+    <div class="pad">
+      <div class="pad-knapp tom"></div>
+      <button class="pad-knapp" data-k="fram">▲</button>
+      <div class="pad-knapp tom"></div>
+      <button class="pad-knapp" data-k="venstreSide">⇠</button>
+      <button class="pad-knapp" data-k="bak">▼</button>
+      <button class="pad-knapp" data-k="hoyreSide">⇢</button>
+    </div>
+    <div class="snu">
+      <button class="pad-knapp" data-k="snuV">↶</button>
+      <button class="pad-knapp" data-k="snuH">↷</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== FERDIG ===================== -->
+<div id="ferdig">
+  <div class="ferdig-kort">
+    <div class="emoji">🎉</div>
+    <h2>Du fant veien ut!</h2>
+    <p id="ferdigTekst"></p>
+    <p class="rekord" id="ferdigRekord"></p>
+    <div class="knapper">
+      <button class="knapp" id="neste">Neste labyrint →</button>
+      <button class="knapp sekundaer" id="tilMeny">Til menyen</button>
+    </div>
+  </div>
+</div>
+
+<script src="labyrint/three.min.js"></script>
+<script>
+/* Reserve: finner ikke den lokale kopien (f.eks. fila åpnet alene uten labyrint/-mappa) → hent fra CDN */
+if(typeof THREE === 'undefined'){
+  document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+}
+</script>
+<script>
+/* =====================================================================
+   LABYRINTEN – førstepersons 3D-labyrint. Én fil + labyrint/-mappa.
+   Tre verdener × ti labyrinter. Labyrintene er seedet, så nummer 4 i
+   Slottet er alltid den samme labyrinten.
+   ===================================================================== */
+
+const NIVAAER = [
+  { id:0, navn:'Hagen',   under:'Lett · 7×7',        storrelse:7,  farge:'#34d399', tema:'hage'  },
+  { id:1, navn:'Slottet', under:'Middels · 11×11',   storrelse:11, farge:'#fb923c', tema:'slott' },
+  { id:2, navn:'Natten',  under:'Vanskelig · 15×15', storrelse:15, farge:'#a855f7', tema:'natt'  },
+];
+const ANTALL = 10;
+const CELLE = 4;        // bredde på en gang
+const TYKK  = 0.5;      // veggtykkelse
+const HOYDE = 3.2;      // vegghøyde
+const RADIUS = 0.38;    // spillerradius
+const FART  = 4.2;      // enheter per sekund
+const SNUFART = 2.2;    // radianer per sekund
+
+/* ---------- framgang ---------- */
+const NOKKEL_LS = 'labyrint-framgang';
+let framgang = {};
+try { framgang = JSON.parse(localStorage.getItem(NOKKEL_LS)) || {}; } catch(e){ framgang = {}; }
+function lagre(){ try { localStorage.setItem(NOKKEL_LS, JSON.stringify(framgang)); } catch(e){} }
+let lydPaa = true;
+try { lydPaa = localStorage.getItem('labyrint-lyd') !== '0'; } catch(e){}
+
+/* ---------- seedet tilfeldighet ---------- */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/* ---------- labyrintgenerator ----------
+   Vegger som bitmaske per celle: N=1 (z-), E=2 (x+), S=4 (z+), W=8 (x-). */
+const N=1,E=2,S=4,W=8;
+const DX = {1:0, 2:1, 4:0, 8:-1};
+const DZ = {1:-1, 2:0, 4:1, 8:0};
+const MOTSATT = {1:4, 2:8, 4:1, 8:2};
+
+function lagLabyrint(n, seed){
+  const rnd = mulberry32(seed);
+  const vegg = new Array(n*n).fill(15);
+  const sett = new Uint8Array(n*n);
+  const stakk = [];
+  // start i tilfeldig celle for variasjon i form
+  let cx = Math.floor(rnd()*n), cz = Math.floor(rnd()*n);
+  sett[cz*n+cx] = 1; stakk.push([cx,cz]);
+  while(stakk.length){
+    const [x,z] = stakk[stakk.length-1];
+    const naboer = [];
+    for(const d of [N,E,S,W]){
+      const nx = x+DX[d], nz = z+DZ[d];
+      if(nx<0||nz<0||nx>=n||nz>=n) continue;
+      if(!sett[nz*n+nx]) naboer.push([d,nx,nz]);
+    }
+    if(!naboer.length){ stakk.pop(); continue; }
+    // liten forkjærlighet for å fortsette rett fram gir lengre ganger
+    const [d,nx,nz] = naboer[Math.floor(rnd()*naboer.length)];
+    vegg[z*n+x] &= ~d;
+    vegg[nz*n+nx] &= ~MOTSATT[d];
+    sett[nz*n+nx] = 1;
+    stakk.push([nx,nz]);
+  }
+  return vegg;
+}
+
+function bfs(n, vegg, sx, sz){
+  const dist = new Int32Array(n*n).fill(-1);
+  const ko = [[sx,sz]]; dist[sz*n+sx] = 0;
+  while(ko.length){
+    const [x,z] = ko.shift();
+    for(const d of [N,E,S,W]){
+      if(vegg[z*n+x] & d) continue;
+      const nx = x+DX[d], nz = z+DZ[d];
+      if(dist[nz*n+nx] < 0){ dist[nz*n+nx] = dist[z*n+x]+1; ko.push([nx,nz]); }
+    }
+  }
+  return dist;
+}
+
+/* Bygger hele oppgaven: vegger, start, utgang og nøkkel. */
+function lagOppgave(niva, idx){
+  const n = NIVAAER[niva].storrelse;
+  const seed = 7919*(niva+1) + 104729*(idx+1) + 20260901;
+  const vegg = lagLabyrint(n, seed);
+  const rnd = mulberry32(seed ^ 0x5bd1e995);
+
+  // start: en tilfeldig celle på kanten
+  const kant = [];
+  for(let i=0;i<n;i++){ kant.push([i,0],[i,n-1],[0,i],[n-1,i]); }
+  const start = kant[Math.floor(rnd()*kant.length)];
+  const dS = bfs(n, vegg, start[0], start[1]);
+
+  // utgang: kantcellen lengst unna start
+  let best = -1, ut = null;
+  for(const [x,z] of kant){
+    if(x===start[0]&&z===start[1]) continue;
+    if(dS[z*n+x] > best){ best = dS[z*n+x]; ut = [x,z]; }
+  }
+  // hvilken yttervegg porten sitter i
+  let utRetning;
+  if(ut[1]===0) utRetning = N; else if(ut[1]===n-1) utRetning = S;
+  else if(ut[0]===0) utRetning = W; else utRetning = E;
+  const dU = bfs(n, vegg, ut[0], ut[1]);
+
+  // nøkkel: cellen som er lengst unna både start og utgang (helst en blindvei)
+  let bestN = -1, nokkel = null;
+  for(let z=0;z<n;z++) for(let x=0;x<n;x++){
+    if((x===start[0]&&z===start[1])||(x===ut[0]&&z===ut[1])) continue;
+    const v = vegg[z*n+x];
+    const blind = (v===7||v===11||v===13||v===14) ? 1.15 : 1;
+    const sc = Math.min(dS[z*n+x], dU[z*n+x]) * blind;
+    if(sc > bestN){ bestN = sc; nokkel = [x,z]; }
+  }
+  // startretning: se inn i den åpne gangen
+  let startRetning = N;
+  for(const d of [N,E,S,W]) if(!(vegg[start[1]*n+start[0]] & d)){ startRetning = d; break; }
+
+  return { n, vegg, start, ut, utRetning, nokkel, startRetning,
+           lengde: dS[nokkel[1]*n+nokkel[0]] + dU[nokkel[1]*n+nokkel[0]] };
+}
+
+/* ---------- lyd (små blipp, ingen filer) ---------- */
+let ac = null;
+function tone(f, t, type='sine', vol=0.15, start=0){
+  if(!lydPaa) return;
+  try{
+    if(!ac) ac = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, ac.currentTime+start);
+    g.gain.exponentialRampToValueAtTime(vol, ac.currentTime+start+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+start+t);
+    o.connect(g); g.connect(ac.destination);
+    o.start(ac.currentTime+start); o.stop(ac.currentTime+start+t+0.05);
+  }catch(e){}
+}
+function lydNokkel(){ tone(660,.18,'triangle',.18); tone(880,.18,'triangle',.18,.14); tone(1320,.3,'triangle',.18,.28); }
+function lydPort(){ tone(180,.6,'sawtooth',.08); tone(240,.6,'sawtooth',.08,.1); }
+function lydVinn(){ [523,659,784,1047].forEach((f,i)=>tone(f,.35,'triangle',.18,i*.13)); tone(1319,.7,'triangle',.18,.55); }
+function lydKlikk(){ tone(520,.06,'square',.05); }
+
+/* ---------- meny ---------- */
+let valgtNiva = 0;
+try { const v = parseInt(localStorage.getItem('labyrint-niva'),10); if(v>=0&&v<3) valgtNiva = v; } catch(e){}
+
+const fanerEl = document.getElementById('faner');
+const labEl = document.getElementById('labyrinter');
+
+function antallLost(niva){
+  let k=0; for(let i=0;i<ANTALL;i++) if(framgang[niva+'-'+i]) k++; return k;
+}
+function fmtTid(s){ s = Math.round(s); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+
+function tegnMeny(){
+  fanerEl.innerHTML = '';
+  NIVAAER.forEach(nv=>{
+    const b = document.createElement('button');
+    b.className = 'fane' + (nv.id===valgtNiva?' aktiv':'');
+    b.innerHTML = `<span><span class="prikk" style="background:${nv.farge}"></span>${nv.navn}</span><small>${nv.under} · ${antallLost(nv.id)}/${ANTALL} løst</small>`;
+    b.onclick = ()=>{ valgtNiva = nv.id; try{localStorage.setItem('labyrint-niva',String(nv.id));}catch(e){} tegnMeny(); };
+    fanerEl.appendChild(b);
+  });
+  labEl.innerHTML = '';
+  for(let i=0;i<ANTALL;i++){
+    const f = framgang[valgtNiva+'-'+i];
+    const b = document.createElement('button');
+    b.className = 'lab-knapp' + (f?' lost':'');
+    b.innerHTML = `<span class="nr">${i+1}</span><span class="info">${f ? 'Beste tid '+fmtTid(f.tid) : 'Ikke løst ennå'}</span>${f?'<span class="hake">✓</span>':''}`;
+    b.onclick = ()=>{ lydKlikk(); startSpill(valgtNiva, i); };
+    labEl.appendChild(b);
+  }
+}
+tegnMeny();
+
+/* stjerner i menyen */
+const himmel = document.getElementById('stjerner');
+for(let i=0;i<40;i++){
+  const s = document.createElement('div'); s.className='stjerne';
+  s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
+  s.style.animationDelay = Math.random()*4+'s'; s.style.transform = `scale(${0.5+Math.random()})`;
+  himmel.appendChild(s);
+}
+
+/* ---------- Three.js-oppsett ---------- */
+const canvas = document.getElementById('c3d');
+let renderer = null, scene = null, camera = null;
+let teksturer = {};
+const lasterEl = document.getElementById('laster');
+
+function hentTekstur(navn){
+  if(teksturer[navn]) return teksturer[navn];
+  const t = new THREE.TextureLoader().load('labyrint/'+navn+'.jpg');
+  t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping;   // speilet gjentakelse = ingen synlige skjøter
+  t.anisotropy = renderer ? renderer.capabilities.getMaxAnisotropy() : 4;
+  t.encoding = THREE.sRGBEncoding;
+  teksturer[navn] = t;
+  return t;
+}
+
+const TEMAER = {
+  hage:  { vegg:'hekk',     gulv:'gress',     himmel:0x8fd3ff, taake:[0xbfe6ff, 22, 70],
+           amb:0.9, sol:0.9, tak:false, veggFarge:0xffffff, gulvRep:1, stjerner:false, sol2:0xfff2cc },
+  slott: { vegg:'steinvegg',gulv:'steingulv', himmel:0x0b0713, taake:[0x0b0713, 4, 22],
+           amb:0.35, sol:0.0, tak:true, veggFarge:0xffffff, gulvRep:1, stjerner:false, lykt:true },
+  natt:  { vegg:'neonvegg', gulv:'neongulv',  himmel:0x06031a, taake:[0x06031a, 10, 46],
+           amb:0.55, sol:0.15, tak:false, veggFarge:0xffffff, gulvRep:1, stjerner:true, emissiv:true },
+};
+
+/* ---------- spilltilstand ---------- */
+let O = null;             // oppgaven
+let aktivNiva = 0, aktivIdx = 0;
+let spiller = { x:0, z:0, yaw:0 };
+let harNokkel = false, ferdigFlagg = false, portAapen = 0;
+let startTid = 0, forrige = 0, animId = null;
+let veggRekt = [];        // [x1,z1,x2,z2] for kollisjon
+let nokkelMesh = null, portMesh = null, portGruppe = null, lykt = null, hjelpeLys = null;
+let taster = { fram:0, bak:0, snuV:0, snuH:0, venstreSide:0, hoyreSide:0 };
+let dragYaw = 0;
+
+function cellTilVerden(x,z){ return [ (x+0.5)*CELLE, (z+0.5)*CELLE ]; }
+
+function byggScene(){
+  const tema = TEMAER[NIVAAER[aktivNiva].tema];
+  const n = O.n;
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(tema.himmel);
+  scene.fog = new THREE.Fog(tema.taake[0], tema.taake[1], tema.taake[2]);
+
+  camera = new THREE.PerspectiveCamera(72, canvas.clientWidth/canvas.clientHeight, 0.05, 120);
+
+  // lys
+  const amb = new THREE.HemisphereLight(0xffffff, 0x556677, tema.amb);
+  scene.add(amb);
+  if(tema.sol>0){
+    const sol = new THREE.DirectionalLight(tema.sol2||0xffffff, tema.sol);
+    sol.position.set(n*CELLE*0.3, 40, n*CELLE*0.7);
+    scene.add(sol);
+  }
+  lykt = null;
+  if(tema.lykt){
+    lykt = new THREE.PointLight(0xffc478, 1.4, 16, 1.6);
+    scene.add(lykt);
+  }
+
+  // materialer
+  const veggTex = hentTekstur(tema.vegg);
+  const gulvTex = hentTekstur(tema.gulv);
+  let veggMat, gulvMat;
+  if(tema.emissiv){
+    veggMat = new THREE.MeshStandardMaterial({ map:veggTex, emissiveMap:veggTex, emissive:new THREE.Color(0xffffff), emissiveIntensity:0.55, roughness:.6 });
+    gulvMat = new THREE.MeshStandardMaterial({ map:gulvTex, emissiveMap:gulvTex, emissive:new THREE.Color(0xffffff), emissiveIntensity:0.5, roughness:.7 });
+  } else {
+    veggMat = new THREE.MeshLambertMaterial({ map:veggTex, color:tema.veggFarge });
+    gulvMat = new THREE.MeshLambertMaterial({ map:gulvTex });
+  }
+
+  // gulv
+  const gulvGeo = new THREE.PlaneGeometry(n*CELLE+CELLE*2, n*CELLE+CELLE*2);
+  const gulv = new THREE.Mesh(gulvGeo, gulvMat);
+  gulv.rotation.x = -Math.PI/2;
+  gulv.position.set(n*CELLE/2, 0, n*CELLE/2);
+  // egne uv-er så teksturen dekker ~1 flis per celle
+  { const uv = gulvGeo.attributes.uv; const rep = (n+2)*tema.gulvRep*0.5;
+    for(let i=0;i<uv.count;i++) uv.setXY(i, uv.getX(i)*rep, uv.getY(i)*rep); uv.needsUpdate = true; }
+  scene.add(gulv);
+
+  if(tema.tak){
+    const tak = new THREE.Mesh(gulvGeo.clone(), new THREE.MeshLambertMaterial({ map:hentTekstur(tema.vegg), color:0x8a8a99 }));
+    tak.rotation.x = Math.PI/2;
+    tak.position.set(n*CELLE/2, HOYDE, n*CELLE/2);
+    scene.add(tak);
+  }
+
+  // vegger: to instanserte bokser (øst–vest og nord–sør)
+  veggRekt = [];
+  const segmenter = [];  // {x,z,vannrett}
+  for(let z=0;z<n;z++) for(let x=0;x<n;x++){
+    const v = O.vegg[z*n+x];
+    if(v & N) segmenter.push({ x:x*CELLE+CELLE/2, z:z*CELLE, vannrett:true });
+    if(v & W) segmenter.push({ x:x*CELLE, z:z*CELLE+CELLE/2, vannrett:false });
+    if(z===n-1 && (v & S)) segmenter.push({ x:x*CELLE+CELLE/2, z:(z+1)*CELLE, vannrett:true });
+    if(x===n-1 && (v & E)) segmenter.push({ x:(x+1)*CELLE, z:z*CELLE+CELLE/2, vannrett:false });
+  }
+  // fjern segmentet der porten står
+  const [ux,uz] = O.ut;
+  const portPos = { x:(ux+0.5)*CELLE, z:(uz+0.5)*CELLE };
+  if(O.utRetning===N) portPos.z = uz*CELLE;
+  if(O.utRetning===S) portPos.z = (uz+1)*CELLE;
+  if(O.utRetning===W) portPos.x = ux*CELLE;
+  if(O.utRetning===E) portPos.x = (ux+1)*CELLE;
+  const portVannrett = (O.utRetning===N||O.utRetning===S);
+  const segUtenPort = segmenter.filter(s => !(Math.abs(s.x-portPos.x)<0.01 && Math.abs(s.z-portPos.z)<0.01));
+
+  const L = CELLE + TYKK;
+  const boks = new THREE.BoxGeometry(L, HOYDE, TYKK);
+  { // strekk uv-ene på de lange sidene så teksturen ikke blir klemt
+    const uv = boks.attributes.uv; const f = L/HOYDE;
+    for(let i=16;i<24;i++) uv.setX(i, uv.getX(i)*f);
+    uv.needsUpdate = true;
+  }
+  const vann = segUtenPort.filter(s=>s.vannrett), lodd = segUtenPort.filter(s=>!s.vannrett);
+  const m = new THREE.Matrix4();
+  const instV = new THREE.InstancedMesh(boks, veggMat, Math.max(1,vann.length));
+  vann.forEach((s,i)=>{ m.makeTranslation(s.x, HOYDE/2, s.z); instV.setMatrixAt(i,m); });
+  const instL = new THREE.InstancedMesh(boks, veggMat, Math.max(1,lodd.length));
+  const rot = new THREE.Matrix4().makeRotationY(Math.PI/2);
+  lodd.forEach((s,i)=>{ m.makeTranslation(s.x, HOYDE/2, s.z).multiply(rot); instL.setMatrixAt(i,m); });
+  scene.add(instV, instL);
+
+  for(const s of segmenter){   // kollisjonsrektangler (porten er med til den åpnes)
+    if(s.vannrett) veggRekt.push([s.x-L/2, s.z-TYKK/2, s.x+L/2, s.z+TYKK/2]);
+    else veggRekt.push([s.x-TYKK/2, s.z-L/2, s.x+TYKK/2, s.z+L/2]);
+  }
+  // merk port-rektangelet så vi kan slippe det
+  const portRektIdx = segmenter.findIndex(s => Math.abs(s.x-portPos.x)<0.01 && Math.abs(s.z-portPos.z)<0.01);
+  veggRekt.portIdx = portRektIdx;
+
+  // porten
+  portGruppe = new THREE.Group();
+  portGruppe.position.set(portPos.x, 0, portPos.z);
+  if(!portVannrett) portGruppe.rotation.y = Math.PI/2;
+  const karmMat = new THREE.MeshStandardMaterial({ color:0x3f2a16, roughness:.85 });
+  const karmV = new THREE.Mesh(new THREE.BoxGeometry(0.45, HOYDE, TYKK+0.2), karmMat); karmV.position.set(-CELLE/2+0.22, HOYDE/2, 0);
+  const karmH = karmV.clone(); karmH.position.x = CELLE/2-0.22;
+  const karmT = new THREE.Mesh(new THREE.BoxGeometry(CELLE, 0.5, TYKK+0.2), karmMat); karmT.position.set(0, HOYDE-0.25, 0);
+  portGruppe.add(karmV, karmH, karmT);
+  portMesh = new THREE.Mesh(new THREE.BoxGeometry(CELLE-0.9, HOYDE-0.5, 0.25),
+    new THREE.MeshStandardMaterial({ color:0xa8743c, roughness:.7, metalness:.1 }));
+  portMesh.position.set(0, (HOYDE-0.5)/2, 0);
+  // dørplanker
+  for(let i=-1;i<=1;i++){
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.12, HOYDE-0.7, 0.3), new THREE.MeshStandardMaterial({ color:0x3b2412 }));
+    pl.position.set(i*(CELLE-0.9)/3, 0, 0); portMesh.add(pl);
+  }
+  const bolt = new THREE.Mesh(new THREE.BoxGeometry(CELLE-1.1, 0.16, 0.34), new THREE.MeshStandardMaterial({ color:0x333333, metalness:.7, roughness:.4 }));
+  bolt.position.set(0, 0.3, 0); portMesh.add(bolt);
+  // hengelås
+  const laas = new THREE.Group(); laas.name = 'laas';
+  const laasMat = new THREE.MeshStandardMaterial({ color:0xfbbf24, emissive:0x6b4300, emissiveIntensity:.4, metalness:.6, roughness:.35 });
+  const boyleMat = new THREE.MeshStandardMaterial({ color:0xdddddd, metalness:.8, roughness:.3 });
+  for(const side of [-1, 1]){
+    const kropp = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.42,0.16), laasMat);
+    const boyle = new THREE.Mesh(new THREE.TorusGeometry(0.16,0.045,8,16,Math.PI), boyleMat);
+    boyle.position.y = 0.2;
+    const hull = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.02,12), new THREE.MeshBasicMaterial({ color:0x222222 }));
+    hull.rotation.x = Math.PI/2; hull.position.set(0,-0.02,side*0.085);
+    const g = new THREE.Group(); g.add(kropp, boyle, hull); g.position.set(0.55, 0.28, side*0.2);
+    laas.add(g);
+  }
+  portMesh.add(laas);
+  portGruppe.add(portMesh);
+  // glødende «UT»-lys bak porten
+  const utLys = new THREE.Mesh(new THREE.PlaneGeometry(CELLE*2.5, HOYDE*2), new THREE.MeshBasicMaterial({ color:0xfff4c2, fog:false, side:THREE.DoubleSide }));
+  utLys.position.set(0, HOYDE/2, 0);
+  const utsiden = (O.utRetning===N||O.utRetning===W) ? -1 : 1;
+  utLys.position.z = utsiden * 2.2;
+  if(utsiden<0) utLys.rotation.y = Math.PI;
+  portGruppe.add(utLys);
+  hjelpeLys = new THREE.PointLight(0xffe9a8, 0, 10, 2);
+  hjelpeLys.position.set(0, 1.8, utsiden*0.9);
+  portGruppe.add(hjelpeLys);
+  scene.add(portGruppe);
+  scene.userData.utsiden = utsiden;
+
+  // nøkkelen
+  nokkelMesh = new THREE.Group();
+  const gull = new THREE.MeshStandardMaterial({ color:0xfbbf24, emissive:0x8a5a00, emissiveIntensity:.5, metalness:.7, roughness:.3 });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.22,0.07,10,24), gull);
+  const skaft = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.7,10), gull); skaft.position.y = -0.55;
+  const tann1 = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.09,0.09), gull); tann1.position.set(0.12,-0.85,0);
+  const tann2 = tann1.clone(); tann2.position.set(0.12,-0.7,0);
+  nokkelMesh.add(ring, skaft, tann1, tann2);
+  const nl = new THREE.PointLight(0xffd766, 1.2, 7, 2); nokkelMesh.add(nl);
+  const [kx,kz] = cellTilVerden(O.nokkel[0], O.nokkel[1]);
+  nokkelMesh.position.set(kx, 1.5, kz);
+  scene.add(nokkelMesh);
+
+  // stjerner på natthimmelen
+  if(tema.stjerner){
+    const g = new THREE.BufferGeometry(); const pts = [];
+    for(let i=0;i<500;i++){ const a=Math.random()*Math.PI*2, b=Math.random()*Math.PI*0.45+0.05, r=90;
+      pts.push(n*CELLE/2 + r*Math.cos(a)*Math.cos(b), r*Math.sin(b), n*CELLE/2 + r*Math.sin(a)*Math.cos(b)); }
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts,3));
+    scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color:0xffffff, size:0.9, fog:false })));
+  }
+
+  // fakler i slottet – små glødende klosser på annenhver vegg-krysning
+  if(tema.lykt){
+    const fakkelMat = new THREE.MeshBasicMaterial({ color:0xffb347 });
+    const fg = new THREE.BoxGeometry(0.16,0.28,0.16);
+    const rnd = mulberry32(aktivIdx*31+7);
+    for(const s of segUtenPort){
+      if(rnd() > 0.18) continue;
+      const f = new THREE.Mesh(fg, fakkelMat);
+      f.position.set(s.x + (s.vannrett?0:TYKK/2+0.1), 2.1, s.z + (s.vannrett?TYKK/2+0.1:0));
+      scene.add(f);
+      const fl = new THREE.PointLight(0xffa040, 0.7, 7, 2); fl.position.copy(f.position); fl.position.y += 0.3;
+      scene.add(fl);
+    }
+  }
+
+  // spilleren
+  const [sx,sz] = cellTilVerden(O.start[0], O.start[1]);
+  spiller.x = sx; spiller.z = sz;
+  spiller.yaw = { [N]:0, [S]:Math.PI, [E]:-Math.PI/2, [W]:Math.PI/2 }[O.startRetning];
+}
+
+/* ---------- kollisjon: sirkel mot rektangler ---------- */
+function flytt(nx, nz){
+  for(let pass=0; pass<2; pass++){
+    for(let i=0;i<veggRekt.length;i++){
+      if(i===veggRekt.portIdx && portAapen>=1) continue;
+      const r = veggRekt[i];
+      const cx = Math.max(r[0], Math.min(nx, r[2]));
+      const cz = Math.max(r[1], Math.min(nz, r[3]));
+      let dx = nx-cx, dz = nz-cz;
+      let d2 = dx*dx+dz*dz;
+      if(d2 < RADIUS*RADIUS){
+        if(d2 < 1e-9){ // midt inne i veggen – dytt ut kortest vei
+          const kand = [[r[0]-RADIUS-nx,0],[r[2]+RADIUS-nx,0],[0,r[1]-RADIUS-nz],[0,r[3]+RADIUS-nz]];
+          kand.sort((a,b)=>Math.hypot(a[0],a[1])-Math.hypot(b[0],b[1]));
+          nx += kand[0][0]; nz += kand[0][1];
+        } else {
+          const d = Math.sqrt(d2); const p = (RADIUS-d)/d;
+          nx += dx*p; nz += dz*p;
+        }
+      }
+    }
+  }
+  spiller.x = nx; spiller.z = nz;
+}
+
+/* ---------- spill-løkke ---------- */
+const meldingEl = document.getElementById('melding');
+let meldingTimer = null;
+function visMelding(tekst, ms=2600){
+  meldingEl.textContent = tekst; meldingEl.classList.add('vis');
+  clearTimeout(meldingTimer); meldingTimer = setTimeout(()=>meldingEl.classList.remove('vis'), ms);
+}
+
+function tikk(t){
+  animId = requestAnimationFrame(tikk);
+  const dt = Math.min(0.05, (t-forrige)/1000 || 0); forrige = t;
+  if(!scene) return;
+
+  if(!ferdigFlagg){
+    // snu
+    let snu = (taster.snuV - taster.snuH) * SNUFART * dt + dragYaw; dragYaw = 0;
+    spiller.yaw += snu;
+    // gå
+    const fram = taster.fram - taster.bak, side = taster.hoyreSide - taster.venstreSide;
+    if(fram || side){
+      const len = Math.hypot(fram, side) || 1;
+      const f = fram/len, s = side/len;
+      const dirX = -Math.sin(spiller.yaw), dirZ = -Math.cos(spiller.yaw);   // fram
+      const sX = Math.cos(spiller.yaw), sZ = -Math.sin(spiller.yaw);        // høyre
+      flytt(spiller.x + (dirX*f + sX*s)*FART*dt, spiller.z + (dirZ*f + sZ*s)*FART*dt);
+    }
+    // nøkkel
+    if(!harNokkel && nokkelMesh){
+      const d = Math.hypot(spiller.x-nokkelMesh.position.x, spiller.z-nokkelMesh.position.z);
+      if(d < 1.1) taNokkel();
+    }
+    // utgang: utenfor rutenettet ved porten
+    const n = O.n;
+    if(portAapen>=1 && (spiller.x < 0 || spiller.z < 0 || spiller.x > n*CELLE || spiller.z > n*CELLE)) vinn();
+    document.getElementById('tid').textContent = fmtTid((performance.now()-startTid)/1000);
+  }
+
+  // animasjoner
+  if(nokkelMesh && !harNokkel){
+    nokkelMesh.rotation.y += dt*1.6;
+    nokkelMesh.position.y = 1.5 + Math.sin(t/400)*0.12;
+  }
+  if(portAapen>0 && portAapen<1 && portMesh){
+    portAapen = Math.min(1, portAapen + dt*0.5);
+    portMesh.position.y = (HOYDE-0.5)/2 - portAapen*(HOYDE-0.2);   // porten synker ned i bakken
+    hjelpeLys.intensity = portAapen*1.6;
+  }
+
+  // kamera
+  const bob = (taster.fram||taster.bak||taster.hoyreSide||taster.venstreSide) && !ferdigFlagg ? Math.sin(t/140)*0.035 : 0;
+  camera.position.set(spiller.x, 1.6+bob, spiller.z);
+  camera.rotation.set(0, spiller.yaw, 0, 'YXZ');
+  if(lykt) lykt.position.set(spiller.x, 2.2, spiller.z);
+  renderer.render(scene, camera);
+}
+
+function taNokkel(){
+  harNokkel = true; lydNokkel();
+  scene.remove(nokkelMesh);
+  document.getElementById('nokkelStatus').textContent = '🔑 Funnet!';
+  document.getElementById('nokkelStatus').classList.add('har');
+  visMelding('🔑 Du fant nøkkelen! Porten er åpen – finn veien ut!', 3200);
+  portAapen = 0.0001; lydPort();
+  const laas = portMesh.getObjectByName('laas'); if(laas) portMesh.remove(laas);
+}
+
+function vinn(){
+  ferdigFlagg = true; lydVinn();
+  const tid = (performance.now()-startTid)/1000;
+  const nokkel = aktivNiva+'-'+aktivIdx;
+  const gammel = framgang[nokkel];
+  const rekord = !gammel || tid < gammel.tid;
+  if(rekord) framgang[nokkel] = { tid: Math.round(tid*10)/10 };
+  lagre();
+  document.getElementById('ferdigTekst').textContent = `${NIVAAER[aktivNiva].navn} ${aktivIdx+1} på ${fmtTid(tid)}.`;
+  document.getElementById('ferdigRekord').textContent = rekord ? (gammel ? '⭐ Ny rekord!' : '⭐ Første gang løst!') : `Beste tid: ${fmtTid(gammel.tid)}`;
+  document.getElementById('neste').style.display = (aktivIdx<ANTALL-1 || aktivNiva<2) ? '' : 'none';
+  setTimeout(()=>document.getElementById('ferdig').classList.add('vis'), 500);
+}
+
+/* ---------- start / stopp ---------- */
+function startSpill(niva, idx){
+  aktivNiva = niva; aktivIdx = idx;
+  O = lagOppgave(niva, idx);
+  harNokkel = false; ferdigFlagg = false; portAapen = 0;
+  for(const k in taster) taster[k] = 0;
+  document.getElementById('meny').style.display = 'none';
+  document.getElementById('spill').classList.add('aktiv');
+  document.getElementById('ferdig').classList.remove('vis');
+  document.getElementById('navn').textContent = `${NIVAAER[niva].navn} ${idx+1}`;
+  document.getElementById('nokkelStatus').textContent = '🔑 Ikke funnet';
+  document.getElementById('nokkelStatus').classList.remove('har');
+  document.getElementById('lyd').textContent = lydPaa ? '🔊' : '🔇';
+  lasterEl.classList.remove('skjult');
+
+  if(typeof THREE === 'undefined'){
+    lasterEl.textContent = 'Fant ikke 3D-motoren (labyrint/three.min.js). Sjekk at labyrint-mappa ligger ved siden av labyrint.html.';
+    return;
+  }
+  if(!renderer){
+    renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+  }
+  tilpass();
+  byggScene();
+  startTid = performance.now(); forrige = startTid;
+  if(animId) cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(tikk);
+  setTimeout(()=>{ lasterEl.classList.add('skjult'); visMelding('Finn nøkkelen 🔑 – så åpner porten seg!', 3000); }, 250);
+}
+
+function tilMeny(){
+  if(animId) cancelAnimationFrame(animId); animId = null;
+  scene = null;
+  document.getElementById('ferdig').classList.remove('vis');
+  document.getElementById('spill').classList.remove('aktiv');
+  document.getElementById('meny').style.display = '';
+  tegnMeny();
+}
+
+function tilpass(){
+  if(!renderer) return;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w, h, false);
+  if(camera){ camera.aspect = w/h; camera.updateProjectionMatrix(); }
+}
+window.addEventListener('resize', tilpass);
+
+document.getElementById('avbryt').onclick = ()=>{ lydKlikk(); tilMeny(); };
+document.getElementById('tilMeny').onclick = ()=>{ lydKlikk(); tilMeny(); };
+document.getElementById('neste').onclick = ()=>{
+  lydKlikk();
+  if(aktivIdx < ANTALL-1) startSpill(aktivNiva, aktivIdx+1);
+  else if(aktivNiva < 2) startSpill(aktivNiva+1, 0);
+};
+document.getElementById('lyd').onclick = (e)=>{
+  lydPaa = !lydPaa; e.currentTarget.textContent = lydPaa ? '🔊' : '🔇';
+  try{ localStorage.setItem('labyrint-lyd', lydPaa?'1':'0'); }catch(err){}
+  if(lydPaa) lydKlikk();
+};
+
+/* ---------- tastatur ---------- */
+const TASTEKART = {
+  ArrowUp:'fram', KeyW:'fram', ArrowDown:'bak', KeyS:'bak',
+  ArrowLeft:'snuV', KeyA:'snuV', ArrowRight:'snuH', KeyD:'snuH',
+  KeyQ:'venstreSide', KeyE:'hoyreSide',
+};
+window.addEventListener('keydown', e=>{
+  if(!scene) return;
+  const k = TASTEKART[e.code]; if(!k) return;
+  taster[k] = 1; e.preventDefault();
+});
+window.addEventListener('keyup', e=>{
+  const k = TASTEKART[e.code]; if(k) taster[k] = 0;
+});
+window.addEventListener('blur', ()=>{ for(const k in taster) taster[k]=0; });
+
+/* ---------- skjermknapper (hold inne) ---------- */
+document.querySelectorAll('.pad-knapp[data-k]').forEach(b=>{
+  const k = b.dataset.k;
+  const ned = e=>{ e.preventDefault(); taster[k]=1; b.classList.add('trykt'); try{ b.setPointerCapture(e.pointerId); }catch(err){} };
+  const opp = e=>{ taster[k]=0; b.classList.remove('trykt'); };
+  b.addEventListener('pointerdown', ned);
+  b.addEventListener('pointerup', opp);
+  b.addEventListener('pointercancel', opp);
+  b.addEventListener('lostpointercapture', opp);
+  b.addEventListener('contextmenu', e=>e.preventDefault());
+});
+
+/* ---------- dra for å se seg rundt ---------- */
+let drar = null;
+canvas.addEventListener('pointerdown', e=>{ drar = { id:e.pointerId, x:e.clientX }; try{ canvas.setPointerCapture(e.pointerId); }catch(err){} });
+canvas.addEventListener('pointermove', e=>{
+  if(!drar || e.pointerId!==drar.id) return;
+  dragYaw -= (e.clientX - drar.x) * 0.006;
+  drar.x = e.clientX;
+});
+const slipp = e=>{ if(drar && e.pointerId===drar.id) drar = null; };
+canvas.addEventListener('pointerup', slipp);
+canvas.addEventListener('pointercancel', slipp);
+
+/* eksponer litt for testing */
+window.__lab = { lagOppgave, startSpill, get O(){ return O; }, spiller, get harNokkel(){ return harNokkel; }, get ferdig(){ return ferdigFlagg; }, taster };
+</script>
+</body>
+</html>
