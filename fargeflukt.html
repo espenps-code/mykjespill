@@ -512,6 +512,18 @@ let moves = 0;
 let maxMoves = 0;
 let failed = false;
 let animating = false;
+let dragging = null;   // block id currently being dragged (only one at a time)
+
+/* Force every live block back onto whole grid cells. Guards against
+   blocks ever being left in a half-cell position. */
+function snapAllToGrid(exceptId){
+  if(!level) return;
+  for(const o of level.blocks){
+    if(o.removed || o.id===exceptId) continue;
+    const rx = Math.round(o.fx), ry = Math.round(o.fy);
+    if(o.fx!==rx || o.fy!==ry){ o.fx=rx; o.fy=ry; o.col=rx; o.row=ry; if(o.node) positionBlock(o); }
+  }
+}
 
 /* Estimate solution length in PLAYER moves (one axis-drag = 1 move,
    the exit drag included). Greedy piece order + per-piece BFS where
@@ -656,7 +668,7 @@ function startLevel(diffKey, levelNum){
   const cfg = DIFFS[diffKey];
   const opt = optimalMoves(level);
   maxMoves = Math.max(level.blocks.length + 2, Math.ceil(opt*cfg.moveFactor) + cfg.moveSlack);
-  moves = 0; animating = false; failed = false;
+  moves = 0; animating = false; failed = false; dragging = null;
   renderMoves();
   document.getElementById('game-lvl-label').textContent = DIFFS[diffKey].label + ' – Bane ' + levelNum;
   buildBoard();
@@ -696,8 +708,11 @@ function buildBoard(){
 
   wrap.innerHTML = '';
   // stop iOS pull-to-refresh / page scroll while touching the board
-  wrap.addEventListener('touchmove', (e)=>e.preventDefault(), {passive:false});
-  wrap.addEventListener('touchstart', (e)=>e.preventDefault(), {passive:false});
+  if(!wrap.dataset.touchLock){
+    wrap.dataset.touchLock = '1';
+    wrap.addEventListener('touchmove', (e)=>e.preventDefault(), {passive:false});
+    wrap.addEventListener('touchstart', (e)=>e.preventDefault(), {passive:false});
+  }
   svg = document.createElementNS(NS,'svg');
   svg.setAttribute('id','board-svg');
   svg.setAttribute('width', boardW);
@@ -1002,8 +1017,12 @@ function attachDrag(b){
   const g = b.node;
   g.addEventListener('pointerdown', (e)=>{
     if(animating || b.removed || failed) return;
+    if(dragging!==null) return;            // one finger/one block at a time
+    if(!e.isPrimary) return;
     e.preventDefault();
-    g.setPointerCapture(e.pointerId);
+    dragging = b.id;
+    snapAllToGrid(-1);                     // everyone (incl. this block) on whole cells
+    try{ g.setPointerCapture(e.pointerId); }catch(_){}
     g.style.cursor = 'grabbing';
     blockLayer.appendChild(g); // raise above siblings
 
@@ -1015,8 +1034,10 @@ function attachDrag(b){
     let axis = null;
     let done = false;
 
+    const pid = e.pointerId;
     const onMove = (ev)=>{
       if(done || b.removed) return;
+      if(ev.pointerId!==undefined && ev.pointerId!==pid) return;
       const dxPix = ev.clientX - startPX;
       const dyPix = ev.clientY - startPY;
       if(!axis){
@@ -1039,8 +1060,9 @@ function attachDrag(b){
         if(ry.exitPos && fy >= ry.max - 0.05){ done=true; cleanup(); slideOut(b,g,0, 1,1); return; }
       }
     };
-    const onUp = ()=>{
+    const onUp = (ev)=>{
       if(done) return;
+      if(ev && ev.pointerId!==undefined && ev.pointerId!==pid) return;
       done = true; cleanup();
       // snap to nearest grid cell within the allowed range
       if(axis==='x'){
@@ -1048,6 +1070,8 @@ function attachDrag(b){
       } else if(axis==='y'){
         b.fy = Math.max(ry.min, Math.min(ry.max, Math.round(b.fy)));
       }
+      b.fx = Math.round(b.fx); b.fy = Math.round(b.fy);
+      if(collides(b, b.fx, b.fy)){ b.fx = startFX; b.fy = startFY; } // never end overlapping
       if(b.fx!==startFX || b.fy!==startFY){
         bumpMove();
       }
@@ -1059,11 +1083,22 @@ function attachDrag(b){
       g.removeEventListener('pointermove', onMove);
       g.removeEventListener('pointerup', onUp);
       g.removeEventListener('pointercancel', onUp);
+      g.removeEventListener('lostpointercapture', onUp);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('blur', onUp);
       g.style.cursor = 'grab';
+      if(dragging===b.id) dragging = null;
     };
     g.addEventListener('pointermove', onMove);
     g.addEventListener('pointerup', onUp);
     g.addEventListener('pointercancel', onUp);
+    g.addEventListener('lostpointercapture', onUp);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    window.addEventListener('blur', onUp);
   });
 }
 
@@ -1177,7 +1212,7 @@ document.getElementById('btn-win-next').addEventListener('click', ()=>{
   if(currentLevelNum < LEVELS_PER_DIFF) startLevel(currentDiff, currentLevelNum+1);
 });
 window.addEventListener('resize', ()=>{
-  if(screens.game.classList.contains('active') && !animating){
+  if(screens.game.classList.contains('active') && !animating && dragging===null){
     // rebuild board at new size, preserving state
     for(const b of level.blocks){ b.col = Math.round(b.fx); b.row = Math.round(b.fy); }
     buildBoard(); updateBlocksLeft();
