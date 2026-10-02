@@ -208,6 +208,47 @@ body{
   padding:4px 10px;border-radius:999px;font-family:'Fredoka',sans-serif;
 }
 
+/* ---- kategorier ---- */
+.kategorier{display:flex;flex-wrap:wrap;gap:10px;width:100%;}
+.kat-knapp{
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;
+  display:inline-flex;align-items:center;gap:8px;
+  color:#fff;background:rgba(255,255,255,.12);
+  border:2px solid rgba(255,255,255,.25);border-radius:999px;
+  padding:8px 16px;cursor:pointer;
+  transition:transform .12s ease, background .12s ease;
+}
+.kat-knapp:hover{background:rgba(255,255,255,.22);transform:translateY(-2px);}
+.kat-knapp:focus-visible{outline:3px solid var(--gul);outline-offset:2px;}
+.kat-knapp .ant{
+  font-size:.8rem;background:rgba(0,0,0,.25);border-radius:999px;
+  padding:1px 8px;min-width:1.6em;text-align:center;
+}
+.kat-knapp[aria-pressed="true"]{
+  background:var(--gul);color:var(--blekk);border-color:var(--natt-3);
+  box-shadow:0 4px 0 rgba(0,0,0,.25);
+}
+.kat-knapp[aria-pressed="true"] .ant{background:rgba(36,26,82,.15);}
+
+.kat-tittel{
+  grid-column:1/-1;display:flex;align-items:center;gap:12px;
+  margin-top:14px;
+}
+.kat-tittel:first-child{margin-top:0;}
+.kat-tittel h2{
+  font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.6rem;color:#fff;
+  text-shadow:0 3px 0 rgba(0,0,0,.25);
+}
+.kat-tittel .ikon{font-size:1.8rem;}
+.kat-tittel .linje{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.18);}
+.kat-tittel p{color:#cbbdf0;font-size:.95rem;}
+
+.gruppert .kat-merke{display:none;}
+.kat-merke{
+  align-self:flex-start;font-size:.78rem;font-weight:700;
+  color:#4b4470;background:#f1f0f7;padding:3px 10px;border-radius:999px;
+}
+
 /* ---- tomt søk ---- */
 .tomt{
   grid-column:1/-1;text-align:center;padding:50px 20px;
@@ -223,6 +264,13 @@ footer b{color:var(--gul);}
   .hero{grid-template-columns:1fr;text-align:center;justify-items:center;}
   .maskot{order:-1;}
   .hero-tekst p{margin-inline:auto;}
+  .kategorier{
+    flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+    width:calc(100% + 40px);margin-inline:-20px;padding:2px 20px 8px;
+  }
+  .kategorier::-webkit-scrollbar{display:none;}
+  .kat-knapp{flex-shrink:0;}
+  .kat-tittel .linje{display:none;}
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -262,6 +310,7 @@ footer b{color:var(--gul);}
       </svg>
       <input type="search" id="sok" placeholder="Søk etter et spill …" aria-label="Søk etter spill">
     </label>
+    <nav class="kategorier" id="kategorier" aria-label="Velg kategori"></nav>
   </div>
 
   <main class="rutenett" id="rutenett"></main>
@@ -285,8 +334,18 @@ footer b{color:var(--gul);}
                     "Kommer snart" automatisk)
      lagaAv      – hvem som laget det (elev, gruppe …). Tom = vises ikke.
      farge       – fargen på kortet: teal, lilla, oransje, gul, rosa, gronn
+     kategori    – en av nøklene i KATEGORIER under (okonomi, hjernetrim,
+                   utforsk, strategi)
    Husk komma mellom hver blokk { ... }
    ======================================================================= */
+
+/* Kategoriene vises i denne rekkefølgen. Du kan legge til flere. */
+const KATEGORIER = [
+  { id:"okonomi",    navn:"Økonomi og drift",   emoji:"💰", tekst:"Driv butikk, gård eller ditt eget liv – og få pengene til å strekke til." },
+  { id:"hjernetrim", navn:"Hjernetrim",         emoji:"🧩", tekst:"Puslespill, ord og former – tren hjernen." },
+  { id:"utforsk",    navn:"Finn og utforsk",    emoji:"🔍", tekst:"Let etter skjulte ting og finn veien ut." },
+  { id:"strategi",   navn:"Fart og strategi",   emoji:"⚡", tekst:"Tenk raskt, planlegg lurt – alene eller mot en venn." }
+];
 
 const SPILL = [
   {
@@ -295,7 +354,8 @@ const SPILL = [
     emoji: "✈️",
     url: "flygeleder.html",
     lagaAv: "",
-    farge: "teal"
+    farge: "teal",
+    kategori: "strategi"
   },
   {
     tittel: "Livet på egne ben",
@@ -303,7 +363,8 @@ const SPILL = [
     emoji: "🔑",
     url: "myntland-livet-pa-egne-bein.html",
     lagaAv: "",
-    farge: "lilla"
+    farge: "lilla",
+    kategori: "okonomi"
   },
   {
     tittel: "Drivhuset",
@@ -311,7 +372,8 @@ const SPILL = [
     emoji: "🌱",
     url: "Drivhuset/drivhuset-voxel.html",
     lagaAv: "",
-    farge: "gronn"
+    farge: "gronn",
+    kategori: "okonomi"
   },
   {
     tittel: "Fargeflukt",
@@ -319,7 +381,8 @@ const SPILL = [
     emoji: "🎨",
     url: "fargeflukt.html",
     lagaAv: "",
-    farge: "gul"
+    farge: "gul",
+    kategori: "hjernetrim"
   },
   {
     tittel: "Formjakt",
@@ -327,7 +390,8 @@ const SPILL = [
     emoji: "🔷",
     url: "formjakt.html",
     lagaAv: "",
-    farge: "rosa"
+    farge: "rosa",
+    kategori: "hjernetrim"
   },
   {
     tittel: "Myldrejakt",
@@ -335,7 +399,8 @@ const SPILL = [
     emoji: "🔍",
     url: "myldrejakt.html",
     lagaAv: "",
-    farge: "lilla"
+    farge: "lilla",
+    kategori: "utforsk"
   },
   {
     tittel: "Skyvepuslespill",
@@ -343,7 +408,8 @@ const SPILL = [
     emoji: "🧩",
     url: "skyvepuslespill.html",
     lagaAv: "",
-    farge: "oransje"
+    farge: "oransje",
+    kategori: "hjernetrim"
   },
   {
     tittel: "Ordjakt",
@@ -351,7 +417,8 @@ const SPILL = [
     emoji: "🔤",
     url: "ordjakt.html",
     lagaAv: "",
-    farge: "teal"
+    farge: "teal",
+    kategori: "hjernetrim"
   },
   {
     tittel: "Murløpet",
@@ -359,7 +426,8 @@ const SPILL = [
     emoji: "🧱",
     url: "murlopet.html",
     lagaAv: "",
-    farge: "oransje"
+    farge: "oransje",
+    kategori: "strategi"
   },
   {
     tittel: "Åkerland",
@@ -367,7 +435,8 @@ const SPILL = [
     emoji: "🚜",
     url: "akerland.html",
     lagaAv: "",
-    farge: "gul"
+    farge: "gul",
+    kategori: "okonomi"
   },
   {
     tittel: "Labyrinten",
@@ -375,7 +444,8 @@ const SPILL = [
     emoji: "🗝️",
     url: "labyrint.html",
     lagaAv: "",
-    farge: "gronn"
+    farge: "gronn",
+    kategori: "utforsk"
   },
   {
     tittel: "Pizzabutikken",
@@ -383,7 +453,8 @@ const SPILL = [
     emoji: "🍕",
     url: "pizzabutikken.html",
     lagaAv: "",
-    farge: "rosa"
+    farge: "rosa",
+    kategori: "okonomi"
   }
 ];
 
@@ -405,32 +476,97 @@ function lagKort(spel, i){
     ? `<span class="laga-av">🛠️ ${spel.lagaAv}</span>` : '';
   const snartMerke = ferdig ? '' : `<span class="merkelapp-snart">Kommer snart</span>`;
   const knappTekst = ferdig ? 'Spill' : 'Snart klart';
+  const k = KATEGORIER.find(x => x.id === spel.kategori);
+  const katMerke = k ? `<span class="kat-merke">${k.emoji} ${k.navn}</span>` : '';
 
   el.innerHTML = `
     <div class="skjerm farge-${spel.farge}">${snartMerke}${spel.emoji}</div>
     <div class="kort-tekst">
       <h3>${spel.tittel}</h3>
       <p>${spel.beskrivelse}</p>
+      ${katMerke}
       ${lagaAv}
       <span class="spel-knapp">${knappTekst}</span>
     </div>`;
   return el;
 }
 
+let aktivKat = "alle";
+const katNav = document.getElementById('kategorier');
+const finnKat = id => KATEGORIER.find(k => k.id === id);
+
+function lagKnappar(){
+  const ferdige = SPILL;
+  const knappar = [{id:"alle", navn:"Alle", emoji:"🦉"}, ...KATEGORIER];
+  katNav.innerHTML = "";
+  knappar.forEach(k => {
+    const ant = k.id === "alle" ? ferdige.length : ferdige.filter(s => s.kategori === k.id).length;
+    if(k.id !== "alle" && ant === 0) return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'kat-knapp';
+    b.setAttribute('aria-pressed', k.id === aktivKat);
+    b.innerHTML = `<span aria-hidden="true">${k.emoji}</span>${k.navn}<span class="ant">${ant}</span>`;
+    b.addEventListener('click', () => {
+      aktivKat = k.id;
+      try{ history.replaceState(null, '', k.id === 'alle' ? location.pathname : '#' + k.id); }catch(e){}
+      lagKnappar();
+      tegn(sokFelt.value);
+    });
+    katNav.appendChild(b);
+  });
+}
+
+function katTittel(k){
+  const h = document.createElement('div');
+  h.className = 'kat-tittel';
+  h.innerHTML = `<span class="ikon" aria-hidden="true">${k.emoji}</span>
+    <div><h2>${k.navn}</h2><p>${k.tekst || ''}</p></div><span class="linje"></span>`;
+  return h;
+}
+
 function tegn(filter = ""){
   rutenett.innerHTML = "";
   const sok = filter.toLowerCase().trim();
-  const treff = SPILL.filter(s =>
-    s.tittel.toLowerCase().includes(sok) ||
-    s.beskrivelse.toLowerCase().includes(sok)
-  );
+  const treff = SPILL.filter(s => {
+    const k = finnKat(s.kategori);
+    const passarSok = !sok ||
+      s.tittel.toLowerCase().includes(sok) ||
+      s.beskrivelse.toLowerCase().includes(sok) ||
+      (k && k.navn.toLowerCase().includes(sok));
+    const passarKat = aktivKat === "alle" || s.kategori === aktivKat;
+    return passarSok && passarKat;
+  });
 
   if(treff.length === 0){
     rutenett.innerHTML = `<p class="tomt">Fant ingen spill som passet. Prøv et annet søk! 🦉</p>`;
     return;
   }
-  treff.forEach((s, i) => rutenett.appendChild(lagKort(s, i)));
+
+  let i = 0;
+  const gruppert = aktivKat === "alle" && !sok;
+  rutenett.classList.toggle('gruppert', gruppert);
+  if(gruppert){
+    // grupper etter kategori
+    KATEGORIER.forEach(k => {
+      const iKat = treff.filter(s => s.kategori === k.id);
+      if(!iKat.length) return;
+      rutenett.appendChild(katTittel(k));
+      iKat.forEach(s => rutenett.appendChild(lagKort(s, i++)));
+    });
+    const utan = treff.filter(s => !finnKat(s.kategori));
+    if(utan.length){
+      rutenett.appendChild(katTittel({emoji:"✨", navn:"Andre spill"}));
+      utan.forEach(s => rutenett.appendChild(lagKort(s, i++)));
+    }
+  } else {
+    treff.forEach(s => rutenett.appendChild(lagKort(s, i++)));
+  }
 }
+
+const fraLenke = location.hash.slice(1);
+if(finnKat(fraLenke)) aktivKat = fraLenke;
+lagKnappar();
 
 talFelt.textContent = SPILL.filter(s => s.url && s.url.trim() !== "").length;
 sokFelt.addEventListener('input', e => tegn(e.target.value));
