@@ -72,6 +72,18 @@ main{padding:0 16px 40px}
 .chk.ok{background:#d6f0dc;color:var(--greend);font-weight:700}
 .chk.bad{background:#fde2dc;color:var(--redd);font-weight:700}
 .pizzawrap{display:flex;justify-content:center;margin:4px 0}
+.staffbar{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:10px}
+.scard{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.94);border:2px solid var(--line);border-radius:14px;padding:6px 8px;min-width:0}
+.scard img{width:44px;height:50px;object-fit:contain;flex:none}
+.scard .sinfo{flex:1;min-width:0}
+.scard .sstat{font-size:13px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
+.scard.busy{border-color:var(--gold)}
+.scard.busy img{animation:bob .5s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-4px) rotate(-4deg)}}
+.scard.flash{animation:flash .7s}
+@keyframes flash{from{background:#c8ecd1;border-color:var(--green)}}
+.worker{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:var(--blue);margin-top:2px}
+.worker img{width:22px;height:24px;object-fit:contain}
 .kitchenrow{display:flex;gap:14px;align-items:center;justify-content:center}
 .kitchenrow .acts{display:flex;flex-direction:column;gap:8px}
 @media (min-width:921px){
@@ -360,7 +372,7 @@ function openDay(){
   S.phase='open';
   D={t:0,customers:[],oven:[],build:null,activeCust:null,nextSpawn:1.5,uid:0,money0:S.money,
      today:{revenue:0,tips:0,cogs:0,served:0,angry:0,pricey:0,empty:0,full:0,wrong:0,burnt:0},rec:{},warned:{}};
-  S.staff.forEach(s=>s.cd=rnd(0.5,2));
+  S.staff.forEach(s=>{s.task=null;s.idle=rnd(0.3,1.5);s.flashT=0;delete s.cd;});
   UI.paused=false;UI.tab='play';
   sfx('bell');dirty=true;renderAll();
 }
@@ -376,7 +388,8 @@ function activeCusts(){return D.customers.filter(c=>c.state!=='leaving');}
 function spawnCustomer(){
   if(activeCusts().length>=LEVELS[S.level].queue){D.today.full++;return;}
   const mp=maxPatience();
-  const c={id:++D.uid,name:pick(NAMES),e:pick(ANIMALS),state:'waiting',img:pick(CUSTS),pat:mp,max:mp,order:null,price:0,hasPizza:false,bubble:'',ratio:1};
+  const used=new Set(D.customers.map(x=>x.name));const free=NAMES.filter(n=>!used.has(n));
+  const c={id:++D.uid,name:pick(free.length?free:NAMES),e:pick(ANIMALS),state:'waiting',img:pick(CUSTS),pat:mp,max:mp,order:null,price:0,hasPizza:false,bubble:'',ratio:1};
   D.customers.push(c);sfx('pop');dirty=true;
 }
 function rec(id){return D.rec[id]||(D.rec[id]={sold:0,pricey:0});}
@@ -456,39 +469,82 @@ function deliver(c,p){
   }
   checkGoals();dirty=true;
 }
-function staffTick(dt){
-  for(const s of S.staff){
-    if(s.role==='innkjoper'||s.role==='marked')continue;
-    s.cd=(s.cd||0)-dt;if(s.cd>0)continue;
-    let did=false;
-    if(s.role==='kasserer'){
-      const c=D.customers.find(c=>c.state==='waiting');
-      if(c){takeOrder(c);did=true;}
-      s.cd=did?7-1.1*s.skill:0.4;
-    }else if(s.role==='kokk'){
-      if(D.oven.length<slots()){
-        const c=D.customers.find(c=>c.state==='ordered'&&!c.hasPizza&&c.id!==D.activeCust);
-        if(c){
-          const r=REC[c.order];
-          const miss=r.ings.find(k=>S.stock[k]<1);
-          if(miss){if(!D.warned[miss]){D.warned[miss]=1;toast(s.e+' '+s.name+': Vi er tomme for '+ING[miss].n.toLowerCase()+'!');}}
-          else{
-            let ings=[...r.ings];
-            ings.forEach(k=>{S.stock[k]--;D.today.cogs+=portionCost(k);});
-            if(Math.random()<0.18-0.035*s.skill){const i=1+Math.floor(Math.random()*(ings.length-1));ings.splice(i,1);}
-            D.oven.push({id:++D.uid,ings,rid:matchRecipe(ings),t:0,state:'baking',custId:c.id,by:s.name});
-            c.hasPizza=true;did=true;dirty=true;
-          }
-        }
-      }
-      s.cd=did?11-1.6*s.skill:0.5;
-    }else if(s.role==='servitor'){
-      const burnt=D.oven.find(p=>p.state==='burnt');
-      if(burnt){tossPizza(burnt.id);did=true;}
-      else{for(const p of D.oven){if(p.state==='done'&&findTarget(p)){servePizza(p.id);did=true;break;}}}
-      s.cd=did?6-0.9*s.skill:0.4;
+function busyOn(id){return S.staff.some(x=>x.task&&x.task.custId===id);}
+function workerFor(c){return S.staff.find(x=>x.task&&x.task.custId===c.id);}
+function startTask(s,type,dur,label,extra){s.task=Object.assign({type,t:0,dur:Math.max(0.6,dur),label},extra||{});dirty=true;}
+function findTask(s){
+  if(s.role==='kasserer'){
+    const c=D.customers.find(c=>c.state==='waiting'&&!busyOn(c.id));
+    if(c)startTask(s,'order',3.6-0.5*s.skill,'Tar bestillingen til '+c.name,{custId:c.id});
+  }else if(s.role==='kokk'){
+    const cooking=S.staff.filter(x=>x.task&&x.task.type==='cook').length;
+    if(D.oven.length+cooking>=slots())return;
+    const c=D.customers.find(c=>c.state==='ordered'&&!c.hasPizza&&c.id!==D.activeCust&&!busyOn(c.id));
+    if(!c)return;
+    const r=REC[c.order];
+    const miss=r.ings.find(k=>S.stock[k]<1);
+    if(miss){if(!D.warned[miss]){D.warned[miss]=1;toast(s.name+' (kokk): Vi er tomme for '+ING[miss].n.toLowerCase()+'!');}return;}
+    let ings=[...r.ings];
+    ings.forEach(k=>{S.stock[k]--;D.today.cogs+=portionCost(k);});
+    if(Math.random()<0.18-0.035*s.skill){const i=1+Math.floor(Math.random()*(ings.length-1));ings.splice(i,1);}
+    c.hasPizza=true;
+    startTask(s,'cook',10-1.5*s.skill,'Lager '+r.n+' til '+c.name,{custId:c.id,ings});
+  }else if(s.role==='servitor'){
+    const burnt=D.oven.find(p=>p.state==='burnt'&&!p.carry);
+    if(burnt){burnt.carry=s.id;startTask(s,'toss',1.2,'Kaster en brent pizza 🗑️',{pid:burnt.id});return;}
+    for(const p of D.oven){
+      if(p.state!=='done'||p.carry)continue;
+      const tgt=findTarget(p);if(!tgt)continue;
+      D.oven=D.oven.filter(x=>x!==p);tgt.hasPizza=true;
+      startTask(s,'serve',4-0.6*s.skill,'Kommer med '+(p.rid?REC[p.rid].n:'pizza')+' til '+tgt.name,{custId:tgt.id,pizza:p});
+      return;
     }
   }
+}
+function completeTask(s,t){
+  if(t.type==='order'){const c=D.customers.find(c=>c.id===t.custId);if(c&&c.state==='waiting')takeOrder(c);return true;}
+  if(t.type==='cook'){
+    if(D.oven.length>=slots()){if(t.label!=='Venter på ledig ovn …'){t.label='Venter på ledig ovn …';dirty=true;}return false;}
+    const c=D.customers.find(c=>c.id===t.custId&&c.state==='ordered');
+    D.oven.push({id:++D.uid,ings:t.ings,rid:matchRecipe(t.ings),t:0,state:'baking',custId:c?c.id:null,by:s.name});
+    return true;
+  }
+  if(t.type==='serve'){
+    const p=t.pizza;
+    let c=D.customers.find(c=>c.id===t.custId&&c.state==='ordered');
+    if(!c)c=D.customers.find(c=>c.state==='ordered'&&!c.hasPizza&&c.order===p.rid);
+    if(c)deliver(c,p);else toast(s.name+': Gjesten hadde gått – pizzaen ble kastet');
+    return true;
+  }
+  if(t.type==='toss'){tossPizza(t.pid);return true;}
+  return true;
+}
+function staffTick(dt){
+  for(const s of S.staff){
+    if(s.flashT>0){s.flashT-=dt;if(s.flashT<=0)dirty=true;}
+    if(s.role==='innkjoper'||s.role==='marked')continue;
+    if(s.task){
+      const t=s.task;t.t=Math.min(t.dur,t.t+dt);
+      if(t.t>=t.dur&&completeTask(s,t)){s.task=null;s.flashT=0.7;s.idle=0.25;dirty=true;}
+      continue;
+    }
+    s.idle=(s.idle||0)-dt;if(s.idle>0)continue;s.idle=0.3;
+    findTask(s);
+  }
+}
+function staffStatus(s){
+  if(s.role==='innkjoper')return S.restockNote?'Fylte opp lageret i morges ✔':'Fyller lageret hver morgen';
+  if(s.role==='marked')return 'Lokker flere gjester 📣';
+  if(s.task)return s.task.label;
+  if(s.role==='kokk'&&D&&D.oven.length>=slots())return 'Venter på ledig ovn …';
+  return 'Venter på oppgave …';
+}
+function staffBar(){
+  if(!S.staff.length)return '';
+  return '<div class="staffbar">'+S.staff.map(s=>{
+    const passive=s.role==='innkjoper'||s.role==='marked';
+    return `<div class="scard ${s.task?'busy':''} ${s.flashT>0?'flash':''}"><img src="${IMG}ansatt-${s.role}.webp" alt=""><div class="sinfo"><b>${esc(s.name)}</b> <span class="small">${ROLES[s.role].n}</span><div class="sstat">${esc(staffStatus(s))}</div>${passive?'':`<div class="pbar"><i id="sb${s.id}" style="width:${s.task?s.task.t/s.task.dur*100:0}%;background:var(--gold)"></i></div>`}</div></div>`;
+  }).join('')+'</div>';
 }
 function tick(dt){
   D.t+=dt;
@@ -703,15 +759,18 @@ function renderPrep(){
 function renderPlay(){
   if(S.phase==='prep')return renderPrep();
   if(S.phase==='report')return `<div class="prep"><h2>Dagen er over</h2><button class="go big" data-act="showreport">Se dagens regnskap</button></div>`;
-  let h='<div class="scene"><div class="play">';
+  let h='<div class="scene">'+staffBar()+'<div class="play">';
   // gjester
   h+=`<div class="col"><h3>🚪 Disken <span class="small">(${activeCusts().length}/${LEVELS[S.level].queue})</span></h3><div class="scroll" data-sk="cust">`;
   if(!D.customers.length)h+=`<div class="empty">${D.t<DAY_LEN?'Venter på gjester …':'Alle gjestene er gått. Dagen avsluttes!'}</div>`;
   for(const c of D.customers){
     const act=D.activeCust===c.id?'act':'';
     let inner;
-    if(c.state==='waiting')inner=`<span class="tag">Klikk for å ta bestilling</span>`;
-    else if(c.state==='ordered')inner=`<span class="ticket">${REC[c.order].n} · ${fmt(c.price)}</span><div class="small">${c.hasPizza?'🔥 Pizzaen er i ovnen':REC[c.order].ings.map(k=>ING[k].e).join(' ')}</div>`;
+    const wk=c.state!=='leaving'?workerFor(c):null;
+    const wkTxt=wk?{order:'tar bestillingen …',cook:'lager pizzaen',serve:'kommer med pizzaen!'}[wk.task.type]:'';
+    const wkHTML=wk?`<div class="worker"><img src="${IMG}ansatt-${wk.role}.webp" alt="">${esc(wk.name)} ${wkTxt}</div>`:'';
+    if(c.state==='waiting')inner=(wk?'':`<span class="tag">Klikk for å ta bestilling</span>`)+wkHTML;
+    else if(c.state==='ordered')inner=`<span class="ticket">${REC[c.order].n} · ${fmt(c.price)}</span>`+(wk?wkHTML:`<div class="small">${c.hasPizza?'🔥 Pizzaen er i ovnen':REC[c.order].ings.map(k=>ING[k].e).join(' ')}</div>`);
     else inner=`<span class="bubble">${c.bubble}</span>`;
     h+=`<div class="cust ${c.state} ${c.hasPizza?'done':''} ${act}" data-act="cust" data-id="${c.id}">${c.img?`<img class="cimg" src="${IMG}gjest-${c.img}.webp" alt="">`:`<div class="cemoji">${c.e}</div>`}<div class="cinfo"><b>${esc(c.name)}</b><br>${inner}${c.state!=='leaving'?`<div class="pbar"><i id="pb${c.id}"></i></div>`:''}</div></div>`;
   }
@@ -755,6 +814,7 @@ function updateBars(){
     const r=clamp(c.pat/c.max,0,1);el.style.width=(r*100)+'%';
     el.style.background=r>0.5?'var(--green)':r>0.25?'var(--gold)':'var(--red)';
   }
+  for(const s of S.staff){if(!s.task)continue;const el=document.getElementById('sb'+s.id);if(el)el.style.width=(s.task.t/s.task.dur*100)+'%';}
   const bt=bakeTime(),bg=burnGrace();
   for(const p of D.oven){
     const el=document.getElementById('ob'+p.id);if(!el)continue;
