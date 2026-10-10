@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Gjett hvem?</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gjett hvem?">
+<meta name="theme-color" content="#e2513b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="felles/mykje-flerspiller.css">
+<style>
+:root{
+  --font-d:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --bg:#f6f1e7; --panel:#fffdf8; --ink:#1f2a44; --muted:#5d6b85; --line:#ddd2bf;
+  --accent:#e2513b; --sel:#ffc531; --hot:#e2513b; --hot-hi:#ff7a63; --hot-dk:#8f2516;
+  --side0:#2b59c3; --side1:#e8731c;
+  --yes:#1f9d55; --no:#d23c3c; --cream:#fbf3df;
+}
+body{background-color:var(--bg);background-image:radial-gradient(color-mix(in srgb,var(--line) 70%,transparent) 1.5px,transparent 1.6px);background-size:22px 22px;background-attachment:fixed}
+.brand{font-size:19px;background:var(--hot);color:#fff;box-shadow:3px 3px 0 var(--ink)}
+.brand:hover{color:#fff}
+.hero h1{font-size:clamp(44px,13vw,80px);line-height:.95;color:var(--hot);text-shadow:3px 3px 0 var(--bg),6px 6px 0 var(--ink);rotate:-1.5deg;margin:6px 0 4px}
+.mode b{font-size:18px}
+.btn-primary{font-size:21px}
+.card h2{font-size:clamp(32px,9vw,46px)}
+
+/* Spillet får bredere plass enn menyen */
+body[data-screen="game"] .wrap{max-width:1180px}
+#scr-start,#scr-lobby{max-width:568px;margin-inline:auto}
+
+/* Vifte med portretter på forsida */
+.fan{display:flex;justify-content:center;padding:8px 0 2px;height:140px}
+.fan img{width:104px;height:124px;object-fit:cover;object-position:50% 20%;border:3px solid var(--ink);border-radius:12px;background:var(--cream);box-shadow:4px 4px 0 var(--ink);margin-inline:-10px}
+.fan img:nth-child(1){rotate:-10deg;translate:0 12px}
+.fan img:nth-child(2){rotate:-3deg;z-index:1}
+.fan img:nth-child(3){rotate:4deg;z-index:2;translate:0 -4px}
+.fan img:nth-child(4){rotate:11deg;translate:0 12px}
+
+/* Statuslinje over brettet */
+.status{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.mine{display:flex;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--ink);border-radius:14px;padding:6px 12px 6px 6px;box-shadow:0 3px 0 var(--ink);flex:1 1 220px;min-width:0}
+.mine .face{position:relative;width:62px;height:62px;flex:none;border-radius:10px;overflow:hidden;border:2px solid var(--ink);background:var(--cream)}
+.mine .face img{width:100%;height:100%;object-fit:cover;display:block}
+.mine .face .cover{position:absolute;inset:0;display:grid;place-items:center;background:repeating-linear-gradient(45deg,var(--hot) 0 8px,var(--hot-dk) 8px 16px);color:#fff;font-family:var(--font-d);font-size:28px;transition:opacity .15s}
+.mine.peek .face .cover{opacity:0}
+.mine .txt{display:flex;flex-direction:column;min-width:0;line-height:1.2}
+.mine .txt small{color:var(--muted);font-weight:700;font-size:13px}
+.mine .txt b{font-family:var(--font-d);font-size:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mine button.hold{margin-left:auto;white-space:nowrap;flex:none;font-size:13px;user-select:none;-webkit-user-select:none;touch-action:none}
+.counts{display:flex;gap:8px;flex:1 1 220px}
+.cnt{flex:1;background:var(--panel);border:2px solid var(--ink);border-radius:14px;padding:6px 10px;box-shadow:0 3px 0 var(--ink);display:flex;flex-direction:column;justify-content:center;line-height:1.15}
+.cnt small{font-size:12px;font-weight:700;color:var(--muted)}
+.cnt b{font-family:var(--font-d);font-size:24px}
+.cnt[data-side="0"]{border-left:8px solid var(--side0)}
+.cnt[data-side="1"]{border-left:8px solid var(--side1)}
+
+/* Brettet */
+.board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(5px,1.2vw,10px);padding:clamp(8px,1.6vw,14px);background:var(--board,var(--side0));border:3px solid var(--ink);border-radius:20px;box-shadow:0 7px 0 var(--ink);perspective:900px;transition:background-color .3s}
+.board[data-side="1"]{--board:var(--side1)}
+.board.noanim .pers .inner{transition:none!important}
+.pers{position:relative;border:0;padding:0;background:none;aspect-ratio:5/6;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pers .inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.3,1.3,.5,1)}
+.pers.down .inner{transform:rotateY(180deg)}
+.pers .front,.pers .back{position:absolute;inset:0;border-radius:10px;border:2px solid var(--ink);backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;display:flex;flex-direction:column;background:#fff}
+.pers .front img{display:block;width:100%;flex:1;min-height:0;object-fit:cover;object-position:50% 30%;background:var(--cream)}
+.pers .front span{font-family:var(--font-d);font-size:clamp(12px,1.9vw,17px);line-height:1;padding:4px 2px 5px;text-align:center;background:#fff;border-top:2px solid var(--ink)}
+.pers .back{transform:rotateY(180deg);background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--board,var(--side0)) 55%,#fff) 0 8px,color-mix(in srgb,var(--board,var(--side0)) 75%,#fff) 8px 16px);opacity:.75;justify-content:flex-end;align-items:center;border-color:color-mix(in srgb,var(--ink) 50%,transparent)}
+.pers .back span{font-family:var(--font-d);font-size:clamp(11px,1.6vw,15px);color:var(--ink);background:rgba(255,255,255,.75);border-radius:999px;padding:1px 8px;margin-bottom:6px;opacity:.8}
+.pers:not(:disabled):hover .front{box-shadow:inset 0 0 0 3px var(--sel)}
+.pers:disabled{cursor:default}
+.board.guessing .pers:not(.down) .front{animation:wob 1.6s ease-in-out infinite;box-shadow:inset 0 0 0 3px var(--sel)}
+.board.guessing .pers:nth-child(odd):not(.down) .front{animation-delay:-.8s}
+@keyframes wob{50%{transform:translateY(-3px) rotate(-1deg)}}
+.pers.pick .front{box-shadow:inset 0 0 0 5px var(--sel)!important;animation:none!important;transform:scale(1.04)}
+.pers.right .front{box-shadow:inset 0 0 0 5px var(--yes)!important}
+.pers.wrong .front{box-shadow:inset 0 0 0 5px var(--no)!important}
+
+/* Trekk-skjerm */
+.drawbox{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 16px;background:var(--board,var(--side0));border:3px solid var(--ink);border-radius:20px;box-shadow:0 7px 0 var(--ink);color:#fff;text-align:center}
+.drawbox[data-side="1"]{--board:var(--side1)}
+.drawbox h2{font-family:var(--font-d);font-size:clamp(24px,5vw,34px);margin:0;text-shadow:2px 2px 0 var(--ink)}
+.drawbox p{margin:0;font-weight:700;max-width:34ch}
+.deck{position:relative;width:150px;height:180px;border:0;padding:0;background:none}
+.deck i{position:absolute;inset:0;border-radius:14px;border:3px solid var(--ink);background:repeating-linear-gradient(45deg,var(--hot) 0 12px,var(--hot-dk) 12px 24px);box-shadow:3px 3px 0 var(--ink)}
+.deck i:nth-child(1){rotate:-8deg;translate:-10px 6px}
+.deck i:nth-child(2){rotate:5deg;translate:8px 2px}
+.deck i:nth-child(3){display:grid;place-items:center;font-family:var(--font-d);font-size:64px;color:#fff;transition:transform .15s}
+.deck:not(:disabled):hover i:nth-child(3){transform:translateY(-6px) rotate(-2deg)}
+.deck:disabled{opacity:.75;cursor:default}
+
+/* Panelet med spørsmål */
+.panel{display:flex;flex-direction:column;gap:12px}
+.box{background:var(--panel);border:2px solid var(--ink);border-radius:16px;padding:12px;box-shadow:0 4px 0 var(--ink)}
+.box h3{font-family:var(--font-d);font-size:19px;margin:0 0 8px}
+.qgroup{margin-top:8px}
+.qgroup:first-of-type{margin-top:0}
+.qgroup .eyebrow{font-size:12px}
+.qs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.q{border:2px solid var(--ink);border-radius:999px;background:#fff;padding:6px 11px;font-size:15px;font-weight:700;line-height:1.15;box-shadow:0 2px 0 var(--ink);transition:transform .08s}
+.q:hover:not(:disabled){background:color-mix(in srgb,var(--sel) 35%,#fff)}
+.q:active:not(:disabled){transform:translateY(2px);box-shadow:none}
+.q:disabled{cursor:default;box-shadow:none;opacity:.55}
+.q[data-ans="ja"]{opacity:1;background:color-mix(in srgb,var(--yes) 18%,#fff);border-color:var(--yes);color:#0f5a31}
+.q[data-ans="nei"]{opacity:1;background:color-mix(in srgb,var(--no) 14%,#fff);border-color:var(--no);color:#7b1d1d;text-decoration:line-through;text-decoration-thickness:2px}
+.q[data-ans]::before{content:attr(data-mark) " "}
+.answer{display:flex;flex-direction:column;gap:10px;align-items:stretch;text-align:center}
+.answer .qtext{font-size:17px;font-weight:700;margin:0}
+.answer .big{font-family:var(--font-d);font-size:46px;line-height:1;margin:0}
+.answer .big.ja{color:var(--yes)}
+.answer .big.nei{color:var(--no)}
+.answer .help{margin:0;color:var(--muted);font-size:14px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.acts .btn{flex:1 1 150px;font-size:17px;padding-block:11px}
+.btn-go{background:var(--sel)}
+.btn-guess{background:var(--hot);color:#fff}
+.oral p{margin:0 0 10px}
+.oral ol{margin:0 0 10px;padding-left:20px}
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:14px;max-height:220px;overflow:auto}
+.log li{display:flex;gap:8px;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:4px}
+.log li i{width:10px;height:10px;border-radius:50%;flex:none;translate:0 1px}
+.log li[data-side="0"] i{background:var(--side0)}
+.log li[data-side="1"] i{background:var(--side1)}
+.log li b.ja{color:var(--yes)}
+.log li b.nei{color:var(--no)}
+.log li span{flex:1}
+.empty{color:var(--muted);font-size:14px;margin:0}
+
+/* Avsløring av hemmelig person */
+.reveal{display:flex;flex-direction:column;align-items:center;gap:6px}
+.reveal img{width:min(220px,60vw);aspect-ratio:1;object-fit:cover;border:3px solid var(--ink);border-radius:16px;background:var(--cream);box-shadow:5px 5px 0 var(--ink);animation:pop .5s cubic-bezier(.2,1.5,.4,1)}
+.reveal b{font-family:var(--font-d);font-size:30px}
+@keyframes pop{from{transform:scale(.4) rotate(-12deg);opacity:0}}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.duo figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px}
+.duo img{width:100%;max-width:150px;aspect-ratio:1;object-fit:cover;border:3px solid var(--ink);border-radius:12px;background:var(--cream)}
+.duo figcaption{font-size:14px;line-height:1.2}
+.duo figcaption b{font-family:var(--font-d);font-size:19px;display:block}
+
+@media (max-width:620px){
+  .board{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .pers{aspect-ratio:4/5}
+}
+@media (orientation:landscape) and (min-width:900px){
+  #scr-game{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,360px);grid-template-areas:"bar bar" "status panel" "board panel" "msg panel" "again panel";grid-template-rows:auto auto auto auto 1fr;column-gap:22px;row-gap:12px;align-items:start}
+  .gbar{grid-area:bar}.status{grid-area:status}#boardWrap{grid-area:board}.msg{grid-area:msg}.again-row{grid-area:again}.panel{grid-area:panel}
+  .board{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .pers{aspect-ratio:5/6}
+}
+@media (prefers-reduced-motion:reduce){
+  .pers .inner{transition:none}
+  .board.guessing .pers .front{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main>
+    <section id="scr-start" class="stack">
+      <div class="hero">
+        <div class="fan" aria-hidden="true">
+          <img src="gjetthvem/ida.webp" alt=""><img src="gjetthvem/david.webp" alt=""><img src="gjetthvem/astrid.webp" alt=""><img src="gjetthvem/leo.webp" alt="">
+        </div>
+        <h1>Gjett hvem?</h1>
+        <p>Dere trekker hver deres hemmelige person. Still ja/nei-spørsmål, vipp ned dem som ikke passer – og gjett hvem motstanderen har før hen gjetter din!</p>
+      </div>
+    </section>
+
+    <section id="scr-game" hidden>
+      <div class="status" id="status"></div>
+      <div id="boardWrap"></div>
+      <div class="panel" id="panel"></div>
+    </section>
+  </main>
+</div>
+
+<script src="felles/mykje-flerspiller.js"></script>
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- Personene ----------
+   k: j = jente/dame, g = gutt/mann   a: barn | voksen | eldre
+   h: hårfarge (skjult = dekket av skaut, skallet = uten hår)   l: kort | langt
+   bri briller, hatt noe på hodet, skj skjegg, fre fregner, ore øredobber, g genserfarge
+   Bildene ligger i gjetthvem/<navn med små bokstaver>.webp                       */
+const P = [
+{n:'Ida',k:'j',a:'barn',h:'rødt',l:'langt',bri:0,hatt:0,skj:0,fre:1,ore:0,g:'grønn',strikk:1},
+{n:'Jonas',k:'g',a:'barn',h:'brunt',l:'kort',bri:1,hatt:1,skj:0,fre:0,ore:0,g:'blå'},
+{n:'Amir',k:'g',a:'barn',h:'svart',l:'kort',bri:0,hatt:0,skj:0,fre:0,ore:0,g:'gul'},
+{n:'Sofie',k:'j',a:'barn',h:'blondt',l:'langt',bri:0,hatt:0,skj:0,fre:0,ore:1,g:'rød',strikk:1},
+{n:'Leo',k:'g',a:'barn',h:'rødt',l:'kort',bri:0,hatt:1,skj:0,fre:1,ore:0,g:'blå'},
+{n:'Nora',k:'j',a:'barn',h:'svart',l:'langt',bri:1,hatt:0,skj:0,fre:0,ore:0,g:'gul'},
+{n:'Emil',k:'g',a:'barn',h:'blondt',l:'kort',bri:0,hatt:0,skj:0,fre:0,ore:0,g:'grønn'},
+{n:'Mia',k:'j',a:'barn',h:'brunt',l:'langt',bri:0,hatt:1,skj:0,fre:1,ore:0,g:'rød'},
+{n:'Kari',k:'j',a:'voksen',h:'blondt',l:'kort',bri:1,hatt:0,skj:0,fre:0,ore:1,g:'rød'},
+{n:'Ole',k:'g',a:'voksen',h:'brunt',l:'kort',bri:0,hatt:0,skj:1,fre:0,ore:0,g:'grønn'},
+{n:'Fatima',k:'j',a:'voksen',h:'skjult',l:'',bri:0,hatt:1,skj:0,fre:0,ore:0,g:'blå'},
+{n:'Henrik',k:'g',a:'voksen',h:'skallet',l:'',bri:1,hatt:0,skj:1,fre:0,ore:0,g:'gul'},
+{n:'Linnea',k:'j',a:'voksen',h:'rødt',l:'langt',bri:0,hatt:0,skj:0,fre:0,ore:1,g:'blå'},
+{n:'David',k:'g',a:'voksen',h:'svart',l:'kort',bri:0,hatt:1,skj:1,fre:0,ore:0,g:'rød'},
+{n:'Sara',k:'j',a:'voksen',h:'brunt',l:'langt',bri:0,hatt:0,skj:0,fre:1,ore:1,g:'grønn'},
+{n:'Thomas',k:'g',a:'voksen',h:'blondt',l:'kort',bri:1,hatt:0,skj:0,fre:0,ore:0,g:'blå'},
+{n:'Hanne',k:'j',a:'voksen',h:'svart',l:'kort',bri:1,hatt:0,skj:0,fre:0,ore:1,g:'gul'},
+{n:'Marius',k:'g',a:'voksen',h:'rødt',l:'kort',bri:0,hatt:1,skj:1,fre:1,ore:0,g:'grønn'},
+{n:'Astrid',k:'j',a:'eldre',h:'grått',l:'kort',bri:1,hatt:0,skj:0,fre:0,ore:1,g:'rød'},
+{n:'Knut',k:'g',a:'eldre',h:'grått',l:'kort',bri:0,hatt:1,skj:1,fre:0,ore:0,g:'blå'},
+{n:'Ingrid',k:'j',a:'eldre',h:'grått',l:'langt',bri:1,hatt:0,skj:0,fre:0,ore:0,g:'grønn',strikk:1},
+{n:'Arne',k:'g',a:'eldre',h:'grått',l:'kort',bri:0,hatt:0,skj:1,fre:0,ore:0,g:'gul'},
+{n:'Liv',k:'j',a:'eldre',h:'grått',l:'kort',bri:0,hatt:1,skj:0,fre:0,ore:1,g:'blå'},
+{n:'Per',k:'g',a:'eldre',h:'grått',l:'kort',bri:1,hatt:0,skj:0,fre:1,ore:0,g:'rød'}
+];
+const N = P.length;
+const img = i => 'gjetthvem/' + P[i].n.toLowerCase() + '.webp';
+
+/* ---------- Spørsmålene ---------- */
+const Q = [
+  {id:'jente',  grp:'Hvem er det?', t:'Er det en jente eller dame?', f:p => p.k === 'j'},
+  {id:'gutt',   grp:'Hvem er det?', t:'Er det en gutt eller mann?', f:p => p.k === 'g'},
+  {id:'barn',   grp:'Hvem er det?', t:'Er det et barn?', f:p => p.a === 'barn'},
+  {id:'voksen', grp:'Hvem er det?', t:'Er det en voksen (ikke besteforelder)?', f:p => p.a === 'voksen'},
+  {id:'eldre',  grp:'Hvem er det?', t:'Er det en besteforelder?', f:p => p.a === 'eldre'},
+  {id:'h-rødt',  grp:'Håret', t:'Har personen rødt hår?', f:p => p.h === 'rødt'},
+  {id:'h-blondt',grp:'Håret', t:'Har personen lyst hår?', f:p => p.h === 'blondt'},
+  {id:'h-brunt', grp:'Håret', t:'Har personen brunt hår?', f:p => p.h === 'brunt'},
+  {id:'h-svart', grp:'Håret', t:'Har personen svart hår?', f:p => p.h === 'svart'},
+  {id:'h-grått', grp:'Håret', t:'Har personen grått hår?', f:p => p.h === 'grått'},
+  {id:'langt',  grp:'Håret', t:'Har personen langt hår?', f:p => p.l === 'langt'},
+  {id:'kort',   grp:'Håret', t:'Har personen kort hår?', f:p => p.l === 'kort'},
+  {id:'strikk', grp:'Håret', t:'Har personen fletter, hestehale eller knute?', f:p => !!p.strikk},
+  {id:'skallet',grp:'Håret', t:'Er personen skallet?', f:p => p.h === 'skallet'},
+  {id:'hatt',   grp:'Ansikt og hode', t:'Har personen noe på hodet?', f:p => !!p.hatt},
+  {id:'briller',grp:'Ansikt og hode', t:'Har personen briller?', f:p => !!p.bri},
+  {id:'skjegg', grp:'Ansikt og hode', t:'Har personen skjegg?', f:p => !!p.skj},
+  {id:'fregner',grp:'Ansikt og hode', t:'Har personen fregner?', f:p => !!p.fre},
+  {id:'ore',    grp:'Ansikt og hode', t:'Har personen øredobber?', f:p => !!p.ore},
+  {id:'g-rød',  grp:'Genseren', t:'Har personen rød genser?', f:p => p.g === 'rød'},
+  {id:'g-blå',  grp:'Genseren', t:'Har personen blå genser?', f:p => p.g === 'blå'},
+  {id:'g-grønn',grp:'Genseren', t:'Har personen grønn genser?', f:p => p.g === 'grønn'},
+  {id:'g-gul',  grp:'Genseren', t:'Har personen gul genser?', f:p => p.g === 'gul'}
+];
+const QI = Object.fromEntries(Q.map(q => [q.id, q]));
+const GROUPS = [...new Set(Q.map(q => q.grp))];
+
+/* ---------- Regler ----------
+   Faser: draw (begge trekker hemmelig person) → ask (still spørsmål eller gjett)
+   → flip (svaret er kommet, vipp ned kort, trykk Ferdig) → ask for den andre.
+   Muntlig: spillet svarer ikke selv; man vipper og trykker Ferdig, og kan gjette når som helst i sin tur. */
+const isInt = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
+const rules = {
+  init(opts, starter) {
+    const oral = opts.spm === 'muntlig' && MykjeSpill.api.mode !== 'bot';
+    return {t: starter || 0, starter: starter || 0, oral, phase: 'draw', secret: [-1, -1],
+            down: [Array(N).fill(false), Array(N).fill(false)], log: [], last: null, winner: null, guess: null};
+  },
+  turn: s => s.t,
+  valid(s, m) {
+    if (!m || typeof m !== 'object' || s.winner != null) return false;
+    switch (m.t) {
+      case 'draw':  return s.phase === 'draw' && isInt(m.i, 0, N - 1) && s.secret[s.t] < 0;
+      case 'ask':   return !s.oral && s.phase === 'ask' && !!QI[m.q] && !s.log.some(e => e.by === s.t && e.q === m.q);
+      case 'flip':  return s.phase !== 'draw' && isInt(m.i, 0, N - 1);
+      case 'auto':  return !s.oral && s.phase === 'flip' && !!s.last;
+      case 'end':   return s.oral ? s.phase === 'ask' : s.phase === 'flip';
+      case 'guess': return s.phase === 'ask' && isInt(m.i, 0, N - 1);
+    }
+    return false;
+  },
+  apply(s, m) {
+    const n = Object.assign({}, s, {down: s.down.map(d => d.slice()), secret: s.secret.slice(), log: s.log.slice()});
+    const me = s.t, opp = 1 - me;
+    if (m.t === 'draw') {
+      n.secret[me] = m.i;
+      if (n.secret[opp] < 0) n.t = opp; else { n.t = s.starter; n.phase = 'ask'; }
+    } else if (m.t === 'ask') {
+      const ans = QI[m.q].f(P[s.secret[opp]]);
+      n.last = {q: m.q, ans}; n.phase = 'flip';
+      n.log.push({by: me, q: m.q, ans});
+    } else if (m.t === 'flip') {
+      n.down[me][m.i] = !n.down[me][m.i];
+    } else if (m.t === 'auto') {
+      const q = QI[s.last.q];
+      for (let i = 0; i < N; i++) if (q.f(P[i]) !== s.last.ans) n.down[me][i] = true;
+    } else if (m.t === 'end') {
+      if (s.oral) n.log.push({by: me, oral: true});
+      n.t = opp; n.phase = 'ask'; n.last = null;
+    } else if (m.t === 'guess') {
+      const ok = m.i === s.secret[opp];
+      n.guess = {by: me, i: m.i, ok};
+      n.winner = ok ? me : opp;
+      n.log.push({by: me, guess: m.i, ok});
+    }
+    return n;
+  },
+  result: s => s.winner == null ? null : {winner: s.winner, guess: s.guess}
+};
+
+/* ---------- Boten ---------- */
+function botCands(s, side) {
+  const known = s.log.filter(e => e.by === side && e.q);
+  const c = [];
+  for (let i = 0; i < N; i++) if (known.every(e => QI[e.q].f(P[i]) === e.ans)) c.push(i);
+  return c;
+}
+function bot(s, level) {
+  const side = s.t, rnd = a => a[Math.floor(Math.random() * a.length)];
+  if (s.phase === 'draw') return {t: 'draw', i: Math.floor(Math.random() * N)};
+  if (s.phase === 'flip') {
+    const q = QI[s.last.q];
+    const need = P.some((p, i) => !s.down[side][i] && q.f(p) !== s.last.ans);
+    return need ? {t: 'auto'} : {t: 'end'};
+  }
+  const cands = botCands(s, side);
+  if (cands.length === 1) return {t: 'guess', i: cands[0]};
+  if (level === 'lett' && cands.length <= 3 && Math.random() < .5) return {t: 'guess', i: rnd(cands)};
+  const asked = new Set(s.log.filter(e => e.by === side && e.q).map(e => e.q));
+  const opts = Q.filter(q => !asked.has(q.id)).map(q => {
+    const yes = cands.filter(i => q.f(P[i])).length;
+    return {q, score: Math.min(yes, cands.length - yes)};
+  }).filter(o => o.score > 0);
+  if (!opts.length) return {t: 'guess', i: rnd(cands)};
+  const best = Math.max(...opts.map(o => o.score));
+  let pool;
+  if (level === 'vanskelig') pool = opts.filter(o => o.score === best);
+  else if (level === 'middels') pool = opts.filter(o => o.score >= best * .5);
+  else pool = opts;
+  return {t: 'ask', q: rnd(pool).q.id};
+}
+
+/* ---------- Visning ---------- */
+let api = null, guessing = false, pick = -1, lastView = null, peek = false;
+
+function viewSide() { return api.mode === 'local' ? api.state.t : api.me; }
+function who(side) { return api.mode === 'local' ? api.sideName(side) : side === api.me ? 'Du' : api.sideName(side); }
+function whose(side) { return api.mode === 'local' ? api.sideName(side) + ' sin' : side === api.me ? 'Din' : api.sideName(side) + ' sin'; }
+function oppLabel(side) { return api.mode === 'bot' ? 'Boten' : api.mode === 'local' ? api.sideName(side) : side === api.me ? 'Du' : api.sideName(side); }
+function left(s, side) { return s.down[side].filter(d => !d).length; }
+
+function mount(a) {
+  api = a; guessing = false; pick = -1; lastView = null; peek = false;
+  const bw = $('#boardWrap'); bw.innerHTML = '';
+  const board = document.createElement('div'); board.className = 'board'; board.id = 'board';
+  for (let i = 0; i < N; i++) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pers'; b.dataset.i = i;
+    b.innerHTML = `<span class="inner"><span class="front"><img src="${img(i)}" alt="" draggable="false"><span>${esc(P[i].n)}</span></span><span class="back"><span>${esc(P[i].n)}</span></span></span>`;
+    b.addEventListener('click', () => tap(i));
+    board.append(b);
+  }
+  const draw = document.createElement('div'); draw.className = 'drawbox'; draw.id = 'drawbox';
+  bw.append(board, draw);
+}
+
+function tap(i) {
+  const s = api.state; if (!s) return;
+  if (!api.canAct()) { api.play(null); return; }
+  if (s.phase === 'draw') return;
+  if (guessing) { pick = i; api.sfx('click'); paint(); return; }
+  if (s.phase === 'ask' && !s.oral && !s.down[s.t][i] && !s.log.some(e => e.by === s.t)) {
+    api.msg('Tips: Still et spørsmål først, så vet du hvem du kan vippe ned.');
+  }
+  api.play({t: 'flip', i});
+}
+
+function render(s) {
+  if (!api.canAct() || s.phase !== 'ask') { guessing = false; pick = -1; }
+  paint();
+}
+
+function paint() {
+  const s = api.state; if (!s) return;
+  const v = viewSide(), can = api.canAct(), myTurn = can && (api.mode === 'local' || s.t === api.me);
+  const board = $('#board'), draw = $('#drawbox');
+  const drawing = s.phase === 'draw' && s.winner == null;
+  board.hidden = drawing; draw.hidden = !drawing;
+
+  // Status: min hemmelige person + antall igjen
+  const st = $('#status'), sec = s.secret[v], hidden = api.mode === 'local';
+  st.innerHTML = '';
+  const mine = document.createElement('div'); mine.className = 'mine' + (!hidden || peek || s.winner != null ? ' peek' : '');
+  mine.innerHTML = `<span class="face">${sec >= 0 ? `<img src="${img(sec)}" alt="">` : ''}<span class="cover">?</span></span>
+    <span class="txt"><small>${esc(whose(v))} hemmelige person</small><b>${sec < 0 ? 'Ikke trukket ennå' : (!hidden || peek || s.winner != null) ? esc(P[sec].n) : '• • •'}</b></span>`;
+  if (hidden && sec >= 0 && s.winner == null) {
+    const h = document.createElement('button'); h.type = 'button'; h.className = 'tbtn hold'; h.textContent = 'Hold for å se';
+    const on = e => { e.preventDefault(); peek = true; mine.classList.add('peek'); mine.querySelector('b').textContent = P[sec].n; };
+    const off = () => { peek = false; mine.classList.remove('peek'); mine.querySelector('b').textContent = '• • •'; };
+    h.addEventListener('pointerdown', on); h.addEventListener('pointerup', off); h.addEventListener('pointerleave', off); h.addEventListener('pointercancel', off);
+    h.addEventListener('contextmenu', e => e.preventDefault());
+    mine.append(h);
+  }
+  st.append(mine);
+  const cn = document.createElement('div'); cn.className = 'counts';
+  [v, 1 - v].forEach(side => {
+    const c = document.createElement('div'); c.className = 'cnt'; c.dataset.side = side;
+    c.innerHTML = `<small>${side === v && api.mode !== 'local' ? 'Du har igjen' : esc(oppLabel(side)) + ' har igjen'}</small><b>${s.phase === 'draw' ? N : left(s, side)}</b>`;
+    cn.append(c);
+  });
+  st.append(cn);
+
+  // Trekkeskjerm
+  if (drawing) {
+    const t = s.t; draw.dataset.side = t;
+    const mineToDraw = api.mode === 'local' || t === api.me;
+    if (mineToDraw) {
+      const other = api.mode === 'local' ? api.sideName(1 - t) : null;
+      draw.innerHTML = `<h2>${api.mode === 'local' ? esc(api.sideName(t)) + ': trekk' : 'Trekk'} din hemmelige person</h2>
+        <p>${other ? esc(other) + ' – se bort mens kortet trekkes!' : 'Trykk på bunken. Ikke vis kortet til noen!'}</p>
+        <button class="deck" id="deck" type="button" aria-label="Trekk et kort"><i></i><i></i><i>?</i></button>`;
+      const d = draw.querySelector('#deck'); d.disabled = !can;
+      d.onclick = () => api.play({t: 'draw', i: Math.floor(Math.random() * N)});
+    } else {
+      draw.innerHTML = `<h2>${esc(api.sideName(t))} trekker …</h2><p>Du har trukket din person. Venter på motstanderen.</p>
+        <button class="deck" type="button" disabled><i></i><i></i><i>?</i></button>`;
+    }
+  }
+
+  // Brettet
+  board.dataset.side = v;
+  if (lastView !== v) { board.classList.add('noanim'); requestAnimationFrame(() => requestAnimationFrame(() => board.classList.remove('noanim'))); }
+  lastView = v;
+  board.classList.toggle('guessing', guessing);
+  [...board.children].forEach((b, i) => {
+    const dn = s.down[v][i];
+    b.classList.toggle('down', dn);
+    b.classList.toggle('pick', guessing && pick === i);
+    b.classList.toggle('right', !!s.guess && s.guess.i === i && s.guess.by === v && s.guess.ok);
+    b.classList.toggle('wrong', !!s.guess && s.guess.i === i && s.guess.by === v && !s.guess.ok);
+    b.disabled = !myTurn || s.winner != null || (guessing && dn);
+    b.setAttribute('aria-label', P[i].n + (dn ? ' (vippet ned)' : ''));
+  });
+
+  paintPanel(s, v, myTurn);
+}
+
+function paintPanel(s, v, myTurn) {
+  const pn = $('#panel'); pn.innerHTML = '';
+  if (s.phase === 'draw' && s.winner == null) {
+    pn.append(howBox(s));
+    return;
+  }
+  const box = document.createElement('div'); box.className = 'box';
+  if (s.winner != null) {
+    box.innerHTML = '<h3>Runden er ferdig</h3><p class="empty">Se hvem som var hvem i kortet som dukket opp.</p>';
+  } else if (!myTurn) {
+    box.innerHTML = `<h3>${esc(api.sideName(s.t))} sin tur</h3><p class="empty">${api.mode === 'bot' ? 'Boten tenker på et lurt spørsmål …' : 'Venter på motstanderen …'}</p>`;
+  } else if (guessing) {
+    const ok = pick >= 0;
+    box.innerHTML = `<h3>Hvem tror du det er?</h3>
+      <p class="empty">${ok ? `Du vil gjette på <b>${esc(P[pick].n)}</b>. Gjetter du feil, taper du runden!` : 'Trykk på personen du tror motstanderen har.'}</p>`;
+    const acts = document.createElement('div'); acts.className = 'acts'; acts.style.marginTop = '10px';
+    const g = btn(ok ? `Ja, gjett på ${P[pick].n}!` : 'Velg en person', 'btn btn-guess', () => { const i = pick; guessing = false; pick = -1; api.play({t: 'guess', i}); });
+    g.disabled = !ok;
+    acts.append(g, btn('Avbryt', 'btn', () => { guessing = false; pick = -1; paint(); }));
+    box.append(acts);
+  } else if (s.oral) {
+    box.className += ' oral';
+    box.innerHTML = `<h3>Din tur – spør høyt!</h3><ol><li>Still ett ja/nei-spørsmål til motstanderen.</li><li>Trykk på personene som ikke passer for å vippe dem ned.</li><li>Trykk «Ferdig».</li></ol>`;
+    const acts = document.createElement('div'); acts.className = 'acts';
+    acts.append(btn('Ferdig – neste spiller', 'btn btn-go', () => api.play({t: 'end'})),
+                btn('Jeg vil gjette!', 'btn btn-guess', () => { guessing = true; pick = -1; api.msg(''); paint(); }));
+    box.append(acts);
+  } else if (s.phase === 'flip' && s.last) {
+    const q = QI[s.last.q], a = s.last.ans;
+    const need = P.some((p, i) => !s.down[s.t][i] && q.f(p) !== a);
+    box.innerHTML = `<div class="answer"><p class="qtext">${esc(q.t)}</p><p class="big ${a ? 'ja' : 'nei'}">${a ? 'JA!' : 'NEI!'}</p>
+      <p class="help">${need ? (a ? 'Vipp ned alle som <b>ikke</b> passer.' : 'Vipp ned alle som passer – for det er ingen av dem.') : 'Alt er vippet riktig. Gi turen videre!'}</p></div>`;
+    const acts = document.createElement('div'); acts.className = 'acts'; acts.style.marginTop = '10px';
+    if (need) acts.append(btn('Vipp for meg', 'btn', () => api.play({t: 'auto'})));
+    acts.append(btn('Ferdig – neste spiller', 'btn btn-go', () => api.play({t: 'end'})));
+    box.append(acts);
+  } else {
+    box.innerHTML = `<h3>Still et spørsmål</h3>`;
+    const askedBy = new Map(s.log.filter(e => e.by === s.t && e.q).map(e => [e.q, e.ans]));
+    GROUPS.forEach(gname => {
+      const g = document.createElement('div'); g.className = 'qgroup';
+      g.innerHTML = `<span class="eyebrow">${esc(gname)}</span>`;
+      const qs = document.createElement('div'); qs.className = 'qs';
+      Q.filter(q => q.grp === gname).forEach(q => {
+        const b = btn(q.t, 'q', () => api.play({t: 'ask', q: q.id}));
+        if (askedBy.has(q.id)) { const a = askedBy.get(q.id); b.disabled = true; b.dataset.ans = a ? 'ja' : 'nei'; b.dataset.mark = a ? '✓' : '✗'; }
+        qs.append(b);
+      });
+      g.append(qs); box.append(g);
+    });
+    const acts = document.createElement('div'); acts.className = 'acts'; acts.style.marginTop = '12px';
+    acts.append(btn('Jeg vil heller gjette!', 'btn btn-guess', () => { guessing = true; pick = -1; api.msg(''); paint(); }));
+    box.append(acts);
+  }
+  pn.append(box);
+  if (!s.oral) pn.append(logBox(s));
+}
+
+function btn(t, cls, fn) { const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = t; b.onclick = () => { api.sfx('click'); fn(); }; return b; }
+
+function logBox(s) {
+  const box = document.createElement('div'); box.className = 'box';
+  box.innerHTML = '<h3>Spørsmål så langt</h3>';
+  const items = s.log.filter(e => e.q).slice().reverse();
+  if (!items.length) { box.insertAdjacentHTML('beforeend', '<p class="empty">Ingen spørsmål ennå.</p>'); return box; }
+  const ul = document.createElement('ul'); ul.className = 'log';
+  items.forEach(e => {
+    const li = document.createElement('li'); li.dataset.side = e.by;
+    li.innerHTML = `<i></i><span><b>${esc(who(e.by))}:</b> ${esc(QI[e.q].t)}</span><b class="${e.ans ? 'ja' : 'nei'}">${e.ans ? 'Ja' : 'Nei'}</b>`;
+    ul.append(li);
+  });
+  box.append(ul); return box;
+}
+
+function howBox(s) {
+  const box = document.createElement('div'); box.className = 'box';
+  box.innerHTML = `<h3>Slik spiller dere</h3><ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+    <li>Begge trekker en hemmelig person.</li>
+    <li>${s.oral ? 'Spør hverandre høyt med ja/nei-spørsmål.' : 'Velg et ja/nei-spørsmål. Spillet svarer for motstanderen.'}</li>
+    <li>Vipp ned dem som ikke passer.</li>
+    <li>Når du tror du vet det: gjett i stedet for å spørre. Feil gjett = tap!</li></ol>
+    <p class="empty" style="margin-top:8px">Lurt triks: Spør om noe som omtrent halvparten har.</p>`;
+  return box;
+}
+
+/* Overlegg som viser den hemmelige personen rett etter trekket */
+function showSecret(i, title) {
+  return new Promise(res => {
+    const ov = document.createElement('div'); ov.className = 'overlay';
+    ov.innerHTML = `<div class="card" role="dialog" aria-label="${esc(title)}"><h2 style="font-size:28px">${esc(title)}</h2>
+      <div class="reveal"><img src="${img(i)}" alt=""><b>${esc(P[i].n)}</b></div>
+      <p>Husk personen – og ikke si det til noen!</p></div>`;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-primary'; b.textContent = 'Jeg husker det!';
+    b.onclick = () => { api.sfx('click'); ov.remove(); res(); };
+    ov.firstElementChild.append(b);
+    document.body.append(ov);
+    setTimeout(() => b.focus(), 50);
+  });
+}
+
+async function animate(prev, next, m, by, a) {
+  const mine = a.mode === 'local' || by === a.me;
+  if (m.t === 'draw') {
+    a.sfx('pop');
+    if (mine && !a.instant) await showSecret(m.i, a.mode === 'local' ? `${a.sideName(by)}: din person` : 'Din hemmelige person');
+    else a.msg(`${a.sideName(by)} har trukket sin hemmelige person.`);
+    return;
+  }
+  if (m.t === 'ask') {
+    const q = QI[m.q], ans = next.last.ans;
+    a.sfx(ans ? 'score' : 'drop');
+    if (!mine) a.msg(`${who(by)} spør: «${q.t}» – Svaret er ${ans ? 'JA' : 'NEI'}.`);
+    else a.msg('');
+    await a.wait(a.reduced ? 50 : 350);
+    return;
+  }
+  if (m.t === 'flip' || m.t === 'auto') {
+    if (mine) a.sfx('click');
+    if (m.t === 'auto' && mine) await a.wait(a.reduced ? 0 : 300);
+    return;
+  }
+  if (m.t === 'end') {
+    if (a.mode === 'local') { a.msg(`Gi skjermen til ${a.sideName(1 - by)}!`); await a.wait(a.reduced ? 0 : 500); }
+    else if (by !== a.me && next.oral) a.msg('Din tur! Spør høyt.');
+    return;
+  }
+  if (m.t === 'guess') {
+    a.msg(`${who(by)} gjetter på ${P[m.i].n} …`);
+    await a.wait(a.reduced ? 100 : 1100);
+    a.msg(next.guess.ok ? `Riktig! Det var ${P[m.i].n}!` : `Feil! Det var ikke ${P[m.i].n}.`, !next.guess.ok);
+  }
+}
+
+MykjeSpill.start({
+  id: 'gjetthvem',
+  brand: 'GJETT HVEM?',
+  sides: [{name: 'Blå'}, {name: 'Oransje'}],
+  startText: 'Start spillet',
+  options: [
+    {key: 'spm', label: 'Spørsmålene', modes: ['local', 'host'], value: 'liste', items: [
+      {v: 'liste', t: 'Fra lista', s: 'Velg spørsmål – spillet svarer'},
+      {v: 'muntlig', t: 'Muntlig', s: 'Spør hverandre høyt'}]},
+    {key: 'level', label: 'Boten', modes: ['bot'], value: 'middels', items: [
+      {v: 'lett', t: 'Lett', s: 'Spør litt hulter til bulter'},
+      {v: 'middels', t: 'Middels', s: 'Stort sett lure spørsmål'},
+      {v: 'vanskelig', t: 'Vanskelig', s: 'Deler alltid i to. Klarer du å slå den?'}]}
+  ],
+  ...rules,
+  bot: (s, level) => bot(s, level),
+  botDelay: 900,
+  mount, render, animate,
+  endDelay: 900,
+  endText(res, a) {
+    const g = res.guess, s = a.state;
+    return g.ok ? `${who(g.by)} gjettet riktig: det var ${P[g.i].n}!` : `${who(g.by)} gjettet ${P[g.i].n}, men det var ${P[s.secret[1 - g.by]].n}.`;
+  },
+  endExtra(res, a) {
+    const s = a.state, d = document.createElement('div'); d.className = 'duo';
+    [0, 1].forEach(side => {
+      const f = document.createElement('figure');
+      f.innerHTML = `<img src="${img(s.secret[side])}" alt=""><figcaption>${esc(whose(side))} person<b>${esc(P[s.secret[side]].n)}</b></figcaption>`;
+      d.append(f);
+    });
+    return d;
+  }
+});
+})();
+</script>
+</body>
+</html>
