@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Prikk og strek</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Prikk og strek">
+<meta name="theme-color" content="#fbf8ef">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="felles/mykje-flerspiller.css">
+<style>
+:root{
+  --font-d:"Patrick Hand","Comic Sans MS","Chalkboard SE",cursive;
+  --bg:#fbf8ef; --panel:#fffdf7; --ink:#1d2b5c; --muted:#5f6a8c; --line:#cdd6ea;
+  --accent:#1f4fd1; --sel:#ffd84a; --hot:#e0353b; --hot-hi:#ff6d6a; --hot-dk:#9d1f24;
+  --side0:#1f4fd1; --side1:#e0353b;
+  --grid:#b9cdee; --margin:#f2a5a5;
+}
+body{background-color:var(--bg);
+  background-image:linear-gradient(90deg,transparent 0 46px,var(--margin) 46px 48px,transparent 48px),
+    linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:100% 100%,24px 24px,24px 24px;background-attachment:fixed}
+@media (max-width:640px){body{background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}}
+.brand{font-size:22px}
+.hero h1{letter-spacing:.01em;text-shadow:none;color:var(--ink);rotate:-2deg}
+.hero h1 .b{color:var(--side0)} .hero h1 .r{color:var(--side1)}
+.hero h1 u{text-decoration:none;background:linear-gradient(transparent 62%,color-mix(in srgb,var(--sel) 80%,transparent) 62% 90%,transparent 90%)}
+.mode b{font-size:24px}
+.pill{font-size:21px}
+.sc b{font-size:22px}
+.card h2{font-size:clamp(44px,13vw,62px)}
+
+/* Lite eksempel i hero */
+.demo{width:150px;height:auto;margin-top:2px}
+.demo .dl{stroke:var(--ink);stroke-width:5;stroke-linecap:round;stroke-dasharray:60;stroke-dashoffset:60;animation:draw 4s ease-in-out infinite}
+.demo .dl:nth-of-type(2){animation-delay:.4s}.demo .dl:nth-of-type(3){animation-delay:.8s}.demo .dl:nth-of-type(4){animation-delay:1.2s;stroke:var(--side0)}
+.demo .df{fill:color-mix(in srgb,var(--side0) 22%,transparent);opacity:0;animation:fillin 4s ease-in-out infinite}
+@keyframes draw{0%{stroke-dashoffset:60}12%,85%{stroke-dashoffset:0}100%{stroke-dashoffset:0;opacity:0}}
+@keyframes fillin{0%,38%{opacity:0}45%,85%{opacity:1}100%{opacity:0}}
+
+/* Brettet */
+.paper{position:relative;width:min(100%,calc(100dvh - 230px));margin:0 auto;background:var(--panel);border:2px solid var(--ink);border-radius:6px 18px 8px 14px;box-shadow:6px 7px 0 color-mix(in srgb,var(--ink) 20%,transparent);padding:2%}
+.paper::before{content:"";position:absolute;top:-14px;left:50%;width:110px;height:28px;translate:-50% 0;rotate:-3deg;background:color-mix(in srgb,var(--sel) 60%,transparent);border-left:2px dashed rgba(0,0,0,.08);border-right:2px dashed rgba(0,0,0,.08)}
+svg.dots{display:block;width:100%;height:auto;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.box{opacity:0;transition:opacity .25s}
+.box.own{opacity:1}
+.box.s0 rect{fill:color-mix(in srgb,var(--side0) 16%,transparent)}
+.box.s1 rect{fill:color-mix(in srgb,var(--side1) 16%,transparent)}
+.box .mk{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.box.s0 .mk{stroke:var(--side0)} .box.s1 .mk{stroke:var(--side1)}
+.box.fresh .mk{animation:mk .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes mk{from{transform:scale(.2);opacity:0}}
+.box .mk{transform-box:fill-box;transform-origin:center}
+.ln{stroke:transparent;stroke-width:9;stroke-linecap:round;transition:stroke .15s}
+.ln.s0{stroke:var(--side0)} .ln.s1{stroke:var(--side1)}
+.ln.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:pen .32s ease-out forwards}
+@keyframes pen{to{stroke-dashoffset:0}}
+.ln.last{stroke-width:13}
+.hit{fill:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hit:focus{outline:none}
+.hover{stroke:color-mix(in srgb,var(--ink) 35%,transparent);stroke-width:9;stroke-linecap:round;stroke-dasharray:2 16;pointer-events:none;opacity:0}
+.hover.on{opacity:1}
+.hover.on.s0{stroke:color-mix(in srgb,var(--side0) 55%,transparent)}
+.hover.on.s1{stroke:color-mix(in srgb,var(--side1) 55%,transparent)}
+.dot{fill:var(--ink)}
+svg.locked .hit{cursor:not-allowed}
+.help{margin:0;text-align:center;color:var(--muted);font-size:14px;order:5}
+.tally{display:flex;justify-content:center;align-items:center;gap:8px;font-family:var(--font-d);font-size:19px;line-height:1;white-space:nowrap;margin-bottom:6px}
+.tally span{display:inline-flex;align-items:center;gap:6px;padding:5px 10px 4px;border-radius:10px;border:2px dashed var(--line);background:var(--panel)}
+.tally span[data-side="0"]{color:var(--side0)} .tally span[data-side="1"]{color:var(--side1)}
+.tally span.turn{border-style:solid;border-color:currentColor}
+.tally b{font-size:24px}
+.tally .left{color:var(--muted);border:0;background:none;padding-inline:2px;font-size:17px}
+@media (prefers-reduced-motion:reduce){.demo .dl{stroke-dashoffset:0!important}.demo .df{opacity:1!important}}
+@media (orientation:landscape) and (min-width:900px) and (min-height:560px){
+  #scr-game{display:grid;grid-template-columns:auto minmax(260px,320px);grid-template-areas:"paper bar" "paper tally" "paper msg" "paper again" "paper help" "paper .";grid-template-rows:auto auto auto auto auto 1fr;column-gap:36px;align-items:start}
+  .paper{grid-area:paper;width:min(calc(100vw - 480px),calc(100dvh - 140px))}
+  .gbar{grid-area:bar;flex-direction:column;align-items:flex-start}
+  .msg{grid-area:msg}.tally{grid-area:tally;justify-content:flex-start;flex-wrap:wrap}.again-row{grid-area:again}.help{grid-area:help;text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main>
+    <section id="scr-start" class="stack">
+      <div class="hero">
+        <span class="kicker"><i></i>Penn og papir – på skjerm</span>
+        <h1><span class="b">Prikk</span> og <u><span class="r">strek</span></u></h1>
+        <p>Tegn én strek mellom to prikker. Lukker du en rute, blir den din – og du får tegne en gang til. Flest ruter vinner!</p>
+        <svg class="demo" viewBox="0 0 150 70" aria-hidden="true">
+          <rect class="df" x="20" y="10" width="50" height="50"/>
+          <line class="dl" x1="20" y1="10" x2="70" y2="10"/>
+          <line class="dl" x1="20" y1="10" x2="20" y2="60"/>
+          <line class="dl" x1="70" y1="10" x2="70" y2="60"/>
+          <line class="dl" x1="20" y1="60" x2="70" y2="60"/>
+          <g fill="#1d2b5c"><circle cx="20" cy="10" r="5"/><circle cx="70" cy="10" r="5"/><circle cx="120" cy="10" r="5"/><circle cx="20" cy="60" r="5"/><circle cx="70" cy="60" r="5"/><circle cx="120" cy="60" r="5"/></g>
+        </svg>
+      </div>
+    </section>
+
+    <section id="scr-game" hidden>
+      <div class="tally" id="tally" aria-live="polite"></div>
+      <div class="paper"><svg class="dots" id="svg" role="group" aria-label="Brett med prikker"></svg></div>
+      <p class="help">Trykk mellom to prikker for å tegne en strek.</p>
+    </section>
+  </main>
+</div>
+
+<script src="felles/mykje-flerspiller.js"></script>
+<script>
+(() => {
+const SP = 100, M = 34;   // avstand mellom prikker og marg (svg-enheter)
+const $ = s => document.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.append(e); return e; };
+
+/* ---------- Geometri ----------
+   R × C ruter. Vannrette streker: h(r,c), r = 0..R, c = 0..C-1  -> id r*C + c
+   Loddrette streker:  v(r,c), r = 0..R-1, c = 0..C  -> id HN + r*(C+1) + c      */
+const geoCache = {};
+function geo(R, C) {
+  const k = R + 'x' + C; if (geoCache[k]) return geoCache[k];
+  const HN = (R + 1) * C, VN = R * (C + 1), L = HN + VN;
+  const h = (r, c) => r * C + c, v = (r, c) => HN + r * (C + 1) + c;
+  const boxLines = [], lineBoxes = Array.from({length: L}, () => []), ends = [];
+  for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+    const b = r * C + c, ls = [h(r, c), h(r + 1, c), v(r, c), v(r, c + 1)];
+    boxLines.push(ls); ls.forEach(l => lineBoxes[l].push(b));
+  }
+  for (let r = 0; r <= R; r++) for (let c = 0; c < C; c++) ends[h(r, c)] = [r, c, r, c + 1];
+  for (let r = 0; r < R; r++) for (let c = 0; c <= C; c++) ends[v(r, c)] = [r, c, r + 1, c];
+  return (geoCache[k] = {R, C, HN, L, boxLines, lineBoxes, ends});
+}
+const sidesOf = (s, g, b) => g.boxLines[b].reduce((n, l) => n + (s.lines[l] >= 0 ? 1 : 0), 0);
+
+/* ---------- Regler ---------- */
+const rules = {
+  init(opts, starter) {
+    const n = +opts.size || 4, g = geo(n, n);
+    return {R: n, C: n, lines: Array(g.L).fill(-1), boxes: Array(n * n).fill(-1), t: starter || 0, sc: [0, 0], left: n * n, got: []};
+  },
+  turn: s => s.t,
+  valid(s, l) { return Number.isInteger(l) && l >= 0 && l < s.lines.length && s.lines[l] < 0 && s.left > 0; },
+  apply(s, l) {
+    const g = geo(s.R, s.C);
+    const lines = s.lines.slice(), boxes = s.boxes.slice(), sc = s.sc.slice();
+    lines[l] = s.t;
+    const got = [];
+    for (const b of g.lineBoxes[l]) if (boxes[b] < 0 && g.boxLines[b].every(x => lines[x] >= 0)) { boxes[b] = s.t; sc[s.t]++; got.push(b); }
+    return {R: s.R, C: s.C, lines, boxes, sc, left: s.left - got.length, got, t: got.length ? s.t : 1 - s.t, lastLine: l};
+  },
+  result(s) { if (s.left > 0) return null; return {winner: s.sc[0] === s.sc[1] ? null : s.sc[0] > s.sc[1] ? 0 : 1, sc: s.sc}; }
+};
+
+/* ---------- Boten ---------- */
+function analyse(s) {
+  const g = geo(s.R, s.C), free = [], capture = [], safe = [];
+  for (let l = 0; l < g.L; l++) {
+    if (s.lines[l] >= 0) continue;
+    free.push(l);
+    const bs = g.lineBoxes[l].filter(b => s.boxes[b] < 0).map(b => sidesOf(s, g, b));
+    if (bs.some(n => n === 3)) capture.push(l);
+    else if (!bs.some(n => n === 2)) safe.push(l);
+  }
+  return {g, free, capture, safe};
+}
+// Hvor mange ruter kan den som er i trekket ta på rad (grådig)?
+function greedyGain(s) {
+  let st = s, n = 0, who = s.t;
+  for (let i = 0; i < 400; i++) {
+    const a = analyse(st); if (!a.capture.length) break;
+    st = rules.apply(st, a.capture[0]);
+    if (st.t !== who) break;
+    n += st.got.length;
+  }
+  return n;
+}
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+function minSacrifice(s, free) {
+  let best = [], bestN = Infinity;
+  for (const l of free) {
+    const n = greedyGain(rules.apply(s, l));
+    if (n < bestN) { bestN = n; best = [l]; } else if (n === bestN) best.push(l);
+  }
+  return pick(best);
+}
+// Dobbeltrikset: la de to siste rutene i en kjede ligge igjen, slik at motstanderen må åpne neste kjede for oss.
+function doubleDeal(s, a) {
+  const g = a.g;
+  if (a.capture.length !== 1) return null;
+  const l = a.capture[0];
+  const A = g.lineBoxes[l].find(b => s.boxes[b] < 0 && sidesOf(s, g, b) === 3);
+  const B = g.lineBoxes[l].find(b => b !== A && s.boxes[b] < 0);
+  if (A === undefined || B === undefined || sidesOf(s, g, B) !== 2) return null;
+  const far = g.boxLines[B].find(x => x !== l && s.lines[x] < 0);
+  if (far === undefined) return null;
+  const N = g.lineBoxes[far].find(b => b !== B);
+  if (N !== undefined && s.boxes[N] < 0 && sidesOf(s, g, N) === 2) return null;    // kjeden fortsetter
+  // Hvordan ser brettet ut når A og B er tatt?
+  let t = rules.apply(s, l); t = rules.apply(t, far);
+  if (t.left <= 0) return null;
+  const rest = analyse(t);
+  if (rest.safe.length || rest.capture.length) return null;
+  if (t.left < 4) return null;
+  return far;
+}
+function bot(s, level) {
+  const a = analyse(s);
+  if (level === 'lett') {
+    if (a.capture.length && Math.random() < .6) return pick(a.capture);
+    if (a.safe.length && Math.random() < .5) return pick(a.safe);
+    return pick(a.free);
+  }
+  if (level === 'vanskelig' && a.capture.length && !a.safe.length) {
+    const d = doubleDeal(s, a); if (d != null) return d;
+  }
+  if (a.capture.length) return a.capture[0];
+  if (a.safe.length) return pick(a.safe);
+  return level === 'vanskelig' ? minSacrifice(s, a.free) : (Math.random() < .6 ? minSacrifice(s, a.free) : pick(a.free));
+}
+
+/* ---------- Visning ---------- */
+let api = null, svg = null, G = null, hoverLine = -1;
+const P = (r, c) => [M + c * SP, M + r * SP];
+function mount(a) {
+  api = a;
+  const s = a.state; G = geo(s.R, s.C);
+  svg = $('#svg'); svg.innerHTML = '';
+  const W = M * 2 + s.C * SP, H = M * 2 + s.R * SP;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const gb = mk('g', {}, svg), gl = mk('g', {}, svg), gh = mk('g', {}, svg), gd = mk('g', {}, svg), gx = mk('g', {}, svg);
+  for (let b = 0; b < s.R * s.C; b++) {
+    const r = Math.floor(b / s.C), c = b % s.C, [x, y] = P(r, c);
+    const g = mk('g', {class: 'box', 'data-b': b}, gb);
+    mk('rect', {x: x + 4, y: y + 4, width: SP - 8, height: SP - 8, rx: 6}, g);
+    const cx = x + SP / 2, cy = y + SP / 2, k = SP * .2;
+    mk('path', {class: 'mk mk0', d: `M${cx - k} ${cy - k} L${cx + k} ${cy + k} M${cx + k} ${cy - k} L${cx - k} ${cy + k}`}, g);
+    mk('circle', {class: 'mk mk1', cx, cy, r: k * 1.05}, g);
+  }
+  for (let l = 0; l < G.L; l++) {
+    const [r1, c1, r2, c2] = G.ends[l], [x1, y1] = P(r1, c1), [x2, y2] = P(r2, c2);
+    mk('line', {class: 'ln', 'data-l': l, x1, y1, x2, y2, style: `--len:${SP}`}, gl);
+    mk('line', {class: 'hover', 'data-l': l, x1: x1 + (x2 - x1) * .12, y1: y1 + (y2 - y1) * .12, x2: x2 - (x2 - x1) * .12, y2: y2 - (y2 - y1) * .12}, gh);
+    // Treffområde: en rombe mellom de to prikkene og midten av rutene ved siden av
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, horiz = y1 === y2;
+    const pts = horiz ? [[x1, y1], [mx, my - SP / 2], [x2, y2], [mx, my + SP / 2]] : [[x1, y1], [mx + SP / 2, my], [x2, y2], [mx - SP / 2, my]];
+    const hit = mk('polygon', {class: 'hit', 'data-l': l, points: pts.map(p => p.join(',')).join(' '), tabindex: -1}, gx);
+    hit.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { hoverLine = l; paintHover(); } });
+    hit.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { hoverLine = -1; paintHover(); } });
+    hit.addEventListener('click', () => { hoverLine = -1; api.play(l); });
+  }
+  for (let r = 0; r <= s.R; r++) for (let c = 0; c <= s.C; c++) { const [x, y] = P(r, c); mk('circle', {class: 'dot', cx: x, cy: y, r: 7}, gd); }
+  svg.setAttribute('aria-label', `Brett med ${s.R} ganger ${s.C} ruter`);
+}
+function paintHover() {
+  const s = api.state; if (!s) return;
+  svg.querySelectorAll('.hover').forEach(h => {
+    const l = +h.dataset.l, on = l === hoverLine && s.lines[l] < 0 && api.canAct();
+    h.setAttribute('class', 'hover' + (on ? ' on s' + s.t : ''));
+  });
+}
+function render(s) {
+  svg.querySelectorAll('.ln').forEach(e => {
+    const l = +e.dataset.l, v = s.lines[l];
+    let cls = 'ln' + (v >= 0 ? ' s' + v : '') + (l === s.lastLine && s.left > 0 ? ' last' : '');
+    if (e.dataset.draw) cls += ' draw';
+    e.setAttribute('class', cls);
+  });
+  svg.querySelectorAll('.box').forEach(e => {
+    const b = +e.dataset.b, v = s.boxes[b];
+    e.setAttribute('class', 'box' + (v >= 0 ? ' own s' + v : '') + (e.dataset.fresh ? ' fresh' : ''));
+    e.querySelector('.mk0').style.display = v === 0 ? '' : 'none';
+    e.querySelector('.mk1').style.display = v === 1 ? '' : 'none';
+  });
+  svg.classList.toggle('locked', !api.canAct());
+  paintHover();
+  const word = n => n === 1 ? 'rute' : 'ruter';
+  $('#tally').innerHTML = [0, 1].map(i => `<span data-side="${i}" class="${s.left && s.t === i ? 'turn' : ''}">${api.sideName(i)}: <b>${s.sc[i]}</b> ${word(s.sc[i])}</span>`).join('')
+    + (s.left ? `<span class="left">${s.left} igjen</span>` : '');
+}
+async function animate(prev, next, l, by, a) {
+  const e = svg.querySelector(`.ln[data-l="${l}"]`);
+  e.dataset.draw = '1';
+  e.setAttribute('class', `ln s${by} draw`);
+  a.sfx('pop');
+  await a.wait(a.reduced ? 0 : 300);
+  delete e.dataset.draw;
+  if (next.got.length) {
+    next.got.forEach(b => { svg.querySelector(`.box[data-b="${b}"]`).dataset.fresh = '1'; });
+    a.sfx('score');
+    if (next.left > 0) {
+      const who = a.mode === 'local' ? a.sideName(by) : by === a.me ? 'Du' : a.sideName(by);
+      a.msg(next.got.length > 1 ? `${who} lukket to ruter – og får tegne igjen!` : `${who} lukket en rute – og får tegne igjen!`);
+    }
+    setTimeout(() => next.got.forEach(b => { const x = svg.querySelector(`.box[data-b="${b}"]`); if (x) delete x.dataset.fresh; }), 500);
+  } else a.msg('');
+}
+
+MykjeSpill.start({
+  id: 'prikkogstrek',
+  brand: 'PRIKK & STREK',
+  sides: [{name: 'Blå'}, {name: 'Rød'}],
+  options: [
+    {key: 'size', label: 'Brett', value: 4, items: [
+      {v: 3, t: '3 × 3', s: 'Kort runde'},
+      {v: 4, t: '4 × 4', s: 'Passe lang'},
+      {v: 5, t: '5 × 5', s: 'Lang runde'},
+      {v: 6, t: '6 × 6', s: 'Skikkelig lang'}]},
+    {key: 'level', label: 'Boten', modes: ['bot'], value: 'middels', items: [
+      {v: 'lett', t: 'Lett', s: 'Gir bort ruter'},
+      {v: 'middels', t: 'Middels', s: 'Tar alle ruter den kan'},
+      {v: 'vanskelig', t: 'Vanskelig', s: 'Kan lure deg i sluttspillet'}]}
+  ],
+  ...rules,
+  bot: (s, level) => bot(s, level),
+  botDelay: 500,
+  mount, render, animate,
+  endText(res, a) {
+    if (res.winner == null) return `Helt likt: ${res.sc[0]} ruter hver.`;
+    const w = res.sc[res.winner], l = res.sc[1 - res.winner];
+    return `${w} mot ${l} ruter.`;
+  }
+});
+})();
+</script>
+</body>
+</html>

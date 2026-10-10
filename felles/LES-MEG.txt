@@ -1,0 +1,39 @@
+FELLES MOTOR FOR SPILL FOR TO
+=============================
+
+Disse filene brukes av:
+  firepaarad.html, prikkogstrek.html og fyrstikkspillet.html
+
+  mykje-flerspiller.js   - startskjerm, bot / to på én skjerm / mot en venn,
+                           romkode + QR, turvisning, poeng, omkamp
+  mykje-flerspiller.css  - felles utseende (hvert spill setter egne farger)
+
+Mappa «felles» må ligge ved siden av spillfilene når de lastes opp.
+
+
+SLÅ PÅ «MOT EN VENN» I FIREBASE
+-------------------------------
+Spillene bruker samme Firebase-database som Slagskip (mykje-spill), men
+hvert spill har sin egen sti. Databasereglene tillater i dag bare
+«slagskip», så de tre nye må legges til:
+
+  Firebase-konsollen -> Realtime Database -> Regler (Rules)
+
+Kopier blokka som står for "slagskip" tre ganger og gi dem navnene
+firepaarad, prikkogstrek og fyrstikkspillet. Hvis slagskip-regelen er
+enkel, ser det omtrent slik ut:
+
+  "firepaarad":      { "$kode": { ".read": true, ".write": true } },
+  "prikkogstrek":    { "$kode": { ".read": true, ".write": true } },
+  "fyrstikkspillet": { "$kode": { ".read": true, ".write": true } },
+
+Trykk «Publiser». Til det er gjort, virker «Mot boten» og «To på én
+skjerm» som normalt, og «Mot en venn» gir en melding om at det ikke er
+slått på ennå.
+
+
+LAGE ET NYTT SPILL FOR TO
+-------------------------
+Se toppen av mykje-flerspiller.js. Et spill trenger bare reglene sine
+(init, turn, valid, apply, result, bot) og tegning av brettet
+(mount, render, animate). Fyrstikkspillet.html er det korteste eksempelet.

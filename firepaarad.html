@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Fire på rad</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fire på rad">
+<meta name="theme-color" content="#2457d6">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="felles/mykje-flerspiller.css">
+<style>
+:root{
+  --font-d:"Fredoka","Arial Rounded MT Bold","Arial Black",sans-serif;
+  --bg:#eaf2ff; --panel:#ffffff; --ink:#14215a; --muted:#56628f; --line:#c3d0f0;
+  --accent:#2457d6; --sel:#ffc93c; --hot:#e63946; --hot-hi:#ff6f6b; --hot-dk:#9b1d27;
+  --side0:#e63946; --side1:#ffc93c;
+  --plate:#2457d6; --plate-hi:#4d7cf0; --plate-dk:#173a99; --hole:#dbe6ff;
+}
+body{background-color:var(--bg);background-image:radial-gradient(circle at 1px 1px,color-mix(in srgb,var(--accent) 22%,transparent) 1.5px,transparent 2px);background-size:26px 26px;background-attachment:fixed}
+.brand{font-weight:700}
+.hero h1{font-weight:700;letter-spacing:-.01em}
+.hero h1 .r{color:var(--side0)} .hero h1 .y{color:#e3a400}
+.mode b,.pill,.sc b,.btn-primary,.code,.card h2,.endscore b,.sec-head h2{font-weight:700}
+
+/* Pynt i hero: fire brikker */
+.four{display:flex;gap:8px;margin-top:4px}
+.four i{width:30px;height:30px;border-radius:50%;background:var(--side0);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 0 0 2.5px var(--ink);animation:hop 2.4s ease-in-out infinite}
+.four i:nth-child(even){background:var(--side1)}
+.four i:nth-child(2){animation-delay:.12s}.four i:nth-child(3){animation-delay:.24s}.four i:nth-child(4){animation-delay:.36s}
+@keyframes hop{0%,60%,100%{translate:0 0}30%{translate:0 -10px}}
+
+/* Brettet */
+.stage{--bw:min(100%,calc((100dvh - 250px) * 7 / 6.9));width:var(--bw);margin:0 auto;display:flex;flex-direction:column;gap:6px}
+.aim{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));padding-inline:3.2%;height:calc(var(--bw) / 7 * .78)}
+.aim span{display:grid;place-items:center}
+.aim .ghost{width:76%;aspect-ratio:1;border-radius:50%;opacity:0;transition:opacity .12s,transform .12s;transform:translateY(6px);box-shadow:inset 0 -5px 0 rgba(0,0,0,.18),0 0 0 2.5px var(--ink)}
+.aim .ghost.on{opacity:.9;transform:none}
+.aim .ghost.s0{background:var(--side0)}.aim .ghost.s1{background:var(--side1)}
+
+.board{position:relative;width:100%;aspect-ratio:7/6.1;padding:3.2%;border-radius:22px;
+  background:radial-gradient(120% 90% at 30% 0%,var(--plate-hi),var(--plate) 55%,var(--plate-dk));
+  box-shadow:0 0 0 3px var(--ink),0 10px 0 3px var(--plate-dk),0 10px 0 6px var(--ink),0 22px 30px rgba(20,33,90,.25)}
+.cols{position:absolute;inset:3.2%;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));z-index:3}
+.col{border:0;background:transparent;padding:0;border-radius:14px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.col:hover:not(:disabled),.col:focus-visible{background:rgba(255,255,255,.12)}
+.col:focus-visible{outline:3px solid var(--sel);outline-offset:-3px}
+.col:disabled{cursor:default}
+.grid{position:relative;width:100%;height:100%;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr));overflow:hidden;border-radius:12px}
+.cell{position:relative;display:grid;place-items:center}
+.cell::before{content:"";position:absolute;width:80%;aspect-ratio:1;border-radius:50%;background:var(--hole);box-shadow:inset 0 5px 0 rgba(20,33,90,.28),0 0 0 2px var(--plate-dk)}
+.disc{position:relative;z-index:1;width:80%;aspect-ratio:1;border-radius:50%;box-shadow:inset 0 -6px 0 rgba(0,0,0,.2),inset 0 0 0 5px rgba(255,255,255,.18),0 0 0 2px var(--plate-dk)}
+.disc::after{content:"";position:absolute;inset:24%;border-radius:50%;border:3px solid rgba(255,255,255,.28)}
+.disc.s0{background:radial-gradient(circle at 35% 30%,#ff7a7f,var(--side0) 60%,#b52733)}
+.disc.s1{background:radial-gradient(circle at 35% 30%,#fff0a3,var(--side1) 60%,#e3a400)}
+.disc.fall{animation:fall var(--t,.4s) cubic-bezier(.45,0,1,1) both}
+.disc.land{animation:land .28s ease-out}
+@keyframes fall{from{transform:translateY(calc(var(--d) * -125%))}to{transform:none}}
+@keyframes land{0%{transform:translateY(0)}35%{transform:translateY(-12%) scaleY(1.04)}70%{transform:translateY(0) scaleY(.94)}100%{transform:none}}
+.disc.last::before{content:"";position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;background:rgba(20,33,90,.55)}
+.board.over .disc:not(.win){filter:saturate(.35) brightness(1.05);opacity:.7}
+.disc.win{animation:winpulse .9s ease-in-out infinite alternate;z-index:2;box-shadow:inset 0 -6px 0 rgba(0,0,0,.2),0 0 0 4px #fff,0 0 0 7px var(--ink)}
+@keyframes winpulse{to{transform:scale(1.08)}}
+.board.locked .col{cursor:not-allowed}
+
+.help{margin:0;text-align:center;color:var(--muted);font-size:14px;order:5}
+@media (orientation:landscape) and (min-width:900px) and (min-height:560px){
+  #scr-game{display:grid;grid-template-columns:auto minmax(260px,320px);grid-template-areas:"stage bar" "stage msg" "stage again" "stage help" "stage .";grid-template-rows:auto auto auto auto 1fr;column-gap:36px;align-items:start}
+  .stage{grid-area:stage;--bw:min(calc(100vw - 480px),calc((100dvh - 150px) * 7 / 6.9))}
+  .gbar{grid-area:bar;flex-direction:column;align-items:flex-start}
+  .msg{grid-area:msg}.again-row{grid-area:again}.help{grid-area:help;text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main>
+    <section id="scr-start" class="stack">
+      <div class="hero">
+        <span class="kicker"><i></i>Klassiker for to</span>
+        <h1><span class="r">Fire</span> på <span class="y">rad</span></h1>
+        <p>Slipp brikkene ned i brettet. Den første som får fire på rad – bortover, nedover eller på skrå – vinner.</p>
+        <div class="four" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      </div>
+    </section>
+
+    <section id="scr-game" hidden>
+      <div class="stage">
+        <div class="aim" id="aim" aria-hidden="true"></div>
+        <div class="board" id="board">
+          <div class="grid" id="grid"></div>
+          <div class="cols" id="cols"></div>
+        </div>
+      </div>
+      <p class="help">Trykk på en kolonne for å slippe brikken. Med tastatur: piltaster og Enter.</p>
+    </section>
+  </main>
+</div>
+
+<script src="felles/mykje-flerspiller.js"></script>
+<script>
+(() => {
+const W = 7, H = 6;
+const DIRS = [[0, 1], [1, 0], [1, 1], [1, -1]];
+const $ = s => document.querySelector(s);
+
+/* ---------- Regler ---------- */
+function lowest(b, c) { for (let r = H - 1; r >= 0; r--) if (b[r * W + c] < 0) return r; return -1; }
+function lineAt(b, r, c) {
+  const p = b[r * W + c];
+  for (const [dr, dc] of DIRS) {
+    const cells = [[r, c]];
+    for (const s of [1, -1]) {
+      let rr = r + dr * s, cc = c + dc * s;
+      while (rr >= 0 && rr < H && cc >= 0 && cc < W && b[rr * W + cc] === p) { cells.push([rr, cc]); rr += dr * s; cc += dc * s; }
+    }
+    if (cells.length >= 4) return {cells, dir: dr === 0 ? 'bortover' : dc === 0 ? 'nedover' : 'på skrå'};
+  }
+  return null;
+}
+const rules = {
+  init: (opts, starter) => ({b: Array(W * H).fill(-1), t: starter, n: 0, win: null}),
+  turn: s => s.t,
+  valid: (s, c) => Number.isInteger(c) && c >= 0 && c < W && !s.win && s.n < W * H && s.b[c] < 0,
+  apply(s, c) {
+    const b = s.b.slice(), r = lowest(b, c);
+    b[r * W + c] = s.t;
+    const line = lineAt(b, r, c);
+    return {b, t: 1 - s.t, n: s.n + 1, win: line ? {w: s.t, cells: line.cells, dir: line.dir} : null, lastCell: [r, c]};
+  },
+  result: s => s.win ? {winner: s.win.w, dir: s.win.dir} : s.n >= W * H ? {winner: null} : null
+};
+
+/* ---------- Boten ---------- */
+const ORDER = [3, 2, 4, 1, 5, 0, 6];
+function winsWith(b, c, p) { const r = lowest(b, c); if (r < 0) return false; b[r * W + c] = p; const w = !!lineAt(b, r, c); b[r * W + c] = -1; return w; }
+function scoreBoard(b, p) {
+  let sc = 0; const o = 1 - p;
+  for (let r = 0; r < H; r++) { if (b[r * W + 3] === p) sc += 3; else if (b[r * W + 3] === o) sc -= 3; }
+  for (const [dr, dc] of DIRS) for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+    const er = r + dr * 3, ec = c + dc * 3;
+    if (er < 0 || er >= H || ec < 0 || ec >= W) continue;
+    let mine = 0, theirs = 0;
+    for (let k = 0; k < 4; k++) { const v = b[(r + dr * k) * W + c + dc * k]; if (v === p) mine++; else if (v === o) theirs++; }
+    if (mine && theirs) continue;
+    if (mine === 3) sc += 6; else if (mine === 2) sc += 2;
+    if (theirs === 3) sc -= 7; else if (theirs === 2) sc -= 2;
+  }
+  return sc;
+}
+let nodes = 0, deadline = 0, timeUp = false;
+function negamax(b, p, depth, alpha, beta, filled) {
+  nodes++;
+  if (filled === W * H) return 0;
+  for (const c of ORDER) if (b[c] < 0 && winsWith(b, c, p)) return 100000 + depth;
+  if (!timeUp && (nodes & 1023) === 0 && performance.now() > deadline) timeUp = true;
+  if (depth === 0 || timeUp) return scoreBoard(b, p);
+  let best = -Infinity;
+  for (const c of ORDER) {
+    const r = lowest(b, c); if (r < 0) continue;
+    b[r * W + c] = p;
+    const v = -negamax(b, 1 - p, depth - 1, -beta, -alpha, filled + 1);
+    b[r * W + c] = -1;
+    if (v > best) best = v;
+    if (v > alpha) alpha = v;
+    if (alpha >= beta) break;
+  }
+  return best;
+}
+function searchBest(b, p, maxDepth, ms, filled) {
+  deadline = performance.now() + ms; timeUp = false;
+  let bestCol = ORDER.find(c => b[c] < 0);
+  for (let d = 1; d <= maxDepth; d++) {
+    let best = -Infinity, col = bestCol; nodes = 0;
+    for (const c of ORDER) {
+      const r = lowest(b, c); if (r < 0) continue;
+      b[r * W + c] = p;
+      const v = -negamax(b, 1 - p, d - 1, -Infinity, Infinity, filled + 1);
+      b[r * W + c] = -1;
+      if (v > best) { best = v; col = c; }
+    }
+    if (timeUp && d > 1) break;
+    bestCol = col;
+    if (best > 50000) break;
+  }
+  return bestCol;
+}
+function bot(s, level, p) {
+  const b = s.b.slice(), o = 1 - p;
+  const open = ORDER.filter(c => b[c] < 0);
+  const win = open.find(c => winsWith(b, c, p));
+  if (win !== undefined && (level !== 'lett' || Math.random() < .7)) return win;
+  const block = open.find(c => winsWith(b, c, o));
+  if (level === 'lett') {
+    if (block !== undefined && Math.random() < .45) return block;
+    const w = open.map(c => 4 - Math.abs(3 - c) + Math.random() * 4);
+    return open[w.indexOf(Math.max(...w))];
+  }
+  if (block !== undefined) return block;
+  // Ikke legg en brikke rett under motstanderens vinnerplass
+  const safe = open.filter(c => { const r = lowest(b, c); b[r * W + c] = p; const bad = r > 0 && winsWith(b, c, o); b[r * W + c] = -1; return !bad; });
+  const cand = safe.length ? safe : open;
+  if (level === 'middels') {
+    if (Math.random() < .25) return cand[Math.floor(Math.random() * cand.length)];
+    deadline = Infinity; timeUp = false;
+    const sb = cand.map(c => { const r = lowest(b, c); b[r * W + c] = p; const v = -negamax(b, o, 3, -Infinity, Infinity, s.n + 1) + Math.random() * 3; b[r * W + c] = -1; return v; });
+    return cand[sb.indexOf(Math.max(...sb))];
+  }
+  const best = searchBest(b, p, 10, 700, s.n);
+  return cand.includes(best) || !safe.length ? best : cand[0];
+}
+
+/* ---------- Visning ---------- */
+let sel = 3, api = null, hovering = false;
+function mount(a) {
+  api = a;
+  const grid = $('#grid'), cols = $('#cols'), aim = $('#aim');
+  grid.innerHTML = ''; cols.innerHTML = ''; aim.innerHTML = '';
+  $('#board').classList.remove('over');
+  for (let i = 0; i < W * H; i++) { const d = document.createElement('div'); d.className = 'cell'; grid.append(d); }
+  for (let c = 0; c < W; c++) {
+    const g = document.createElement('span'); g.innerHTML = '<i class="ghost"></i>'; aim.append(g);
+    const b = document.createElement('button');
+    b.className = 'col'; b.type = 'button'; b.dataset.c = c;
+    b.setAttribute('aria-label', `Slipp brikken i kolonne ${c + 1}`);
+    b.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { sel = c; hovering = true; ghost(); } });
+    b.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { hovering = false; ghost(); } });
+    b.addEventListener('focus', () => { sel = c; hovering = true; ghost(); });
+    b.addEventListener('blur', () => { hovering = false; ghost(); });
+    b.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') hovering = false; });
+    b.addEventListener('click', () => { sel = c; api.play(c); });
+    b.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        const n = (c + (e.key === 'ArrowLeft' ? W - 1 : 1)) % W;
+        cols.children[n].focus();
+      }
+    });
+    cols.append(b);
+  }
+}
+function ghost() {
+  const s = api.state; if (!s) return;
+  const show = hovering && api.canAct();
+  [...document.querySelectorAll('.ghost')].forEach((g, i) => {
+    g.className = 'ghost' + (show && i === sel && s.b[i] < 0 ? ' on s' + s.t : '');
+  });
+}
+function render(s) {
+  const cells = $('#grid').children;
+  for (let i = 0; i < W * H; i++) {
+    const v = s.b[i], cell = cells[i];
+    let d = cell.firstElementChild;
+    if (v < 0) { if (d) d.remove(); continue; }
+    if (!d) { d = document.createElement('i'); cell.append(d); }
+    const isLast = s.lastCell && s.lastCell[0] * W + s.lastCell[1] === i;
+    const isWin = s.win && s.win.cells.some(([r, c]) => r * W + c === i);
+    d.className = `disc s${v}` + (isLast && !s.win ? ' last' : '') + (isWin ? ' win' : '') + (d.dataset.anim ? ' ' + d.dataset.anim : '');
+  }
+  const can = api.canAct();
+  $('#board').classList.toggle('over', !!s.win);
+  $('#board').classList.toggle('locked', !can);
+  [...$('#cols').children].forEach((b, c) => b.disabled = !!s.win || s.n >= W * H || s.b[c] >= 0);
+  ghost();
+}
+async function animate(prev, next, c, by, a) {
+  const [r] = next.lastCell;
+  const cell = $('#grid').children[r * W + c];
+  const d = document.createElement('i');
+  d.className = `disc s${by} fall`; d.dataset.anim = 'fall';
+  const t = a.reduced ? 0 : .22 + r * .055;
+  d.style.setProperty('--d', r + 1); d.style.setProperty('--t', t + 's');
+  cell.append(d);
+  ghost();
+  await a.wait(t * 1000);
+  a.sfx('drop');
+  d.dataset.anim = 'land'; d.className = `disc s${by} land`;
+  await a.wait(a.reduced ? 0 : 140);
+  delete d.dataset.anim;
+}
+
+MykjeSpill.start({
+  id: 'firepaarad',
+  brand: 'FIRE PÅ RAD',
+  sides: [{name: 'Rød'}, {name: 'Gul'}],
+  options: [
+    {key: 'level', label: 'Boten', modes: ['bot'], value: 'middels', items: [
+      {v: 'lett', t: 'Lett', s: 'Glemmer å stoppe deg'},
+      {v: 'middels', t: 'Middels', s: 'Stopper deg og tenker litt'},
+      {v: 'vanskelig', t: 'Vanskelig', s: 'Tenker mange trekk fram'}]}
+  ],
+  ...rules,
+  bot: (s, level, p) => bot(s, level, p),
+  mount, render, animate,
+  endDelay: 1200,
+  endText(res, a) {
+    if (res.winner == null) return 'Brettet ble fullt uten at noen fikk fire på rad.';
+    return `Fire på rad ${res.dir}!`;
+  }
+});
+})();
+</script>
+</body>
+</html>

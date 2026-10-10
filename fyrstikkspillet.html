@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Fyrstikkspillet</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fyrstikkspillet">
+<meta name="theme-color" content="#c8102e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Alfa+Slab+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="felles/mykje-flerspiller.css">
+<style>
+:root{
+  --font-d:"Alfa Slab One","Rockwell","Georgia",serif;
+  --bg:#f5ecdc; --panel:#fffaf0; --ink:#2b1a12; --muted:#7a5f4c; --line:#e1cfb3;
+  --accent:#c8102e; --sel:#f4b400; --hot:#c8102e; --hot-hi:#ff4a5c; --hot-dk:#7d0718;
+  --side0:#2b59c3; --side1:#e8731c;
+  --wood:#e9c48a; --wood-dk:#c99a55; --head:#c8102e; --head-dk:#8a0a1f;
+  --felt:#2f5d46; --felt-hi:#3d7a5c; --felt-dk:#1f3f2f;
+}
+body{background-color:var(--bg);background-image:repeating-linear-gradient(45deg,transparent 0 22px,color-mix(in srgb,var(--line) 45%,transparent) 22px 24px);background-attachment:fixed}
+.brand{font-size:17px;letter-spacing:.06em;background:var(--hot);color:#fff;box-shadow:3px 3px 0 var(--ink)}
+.brand:hover{color:#fff}
+.hero h1{font-size:clamp(40px,12.5vw,78px);color:var(--hot);text-shadow:3px 3px 0 var(--bg),6px 6px 0 var(--ink);rotate:-1deg;letter-spacing:.01em}
+.mode b{font-size:19px}
+.pill{font-size:17px}
+.sc b{font-size:17px}
+.btn-primary{font-size:21px}
+.card h2{font-size:clamp(34px,10vw,48px)}
+
+/* Fyrstikkeske-etikett i hero */
+.label{align-self:flex-start;display:flex;align-items:center;gap:12px;background:var(--hot);color:#fff;border:3px solid var(--ink);border-radius:8px;padding:8px 14px;box-shadow:4px 4px 0 var(--ink);rotate:1deg}
+.label .mini{display:flex;gap:5px}
+.label .mini i{width:7px;height:38px;border-radius:3px;background:linear-gradient(90deg,var(--wood),var(--wood-dk));position:relative}
+.label .mini i::before{content:"";position:absolute;left:-3px;right:-3px;top:-5px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a8a,#e8343f 55%,#7d0718);box-shadow:0 0 0 1.5px var(--ink)}
+.label span{font-family:var(--font-d);font-size:14px;letter-spacing:.12em;line-height:1.15}
+
+/* Bordet */
+.table{position:relative;border-radius:22px;padding:26px 14px 22px;background:radial-gradient(120% 80% at 50% 0%,var(--felt-hi),var(--felt) 60%,var(--felt-dk));border:3px solid var(--ink);box-shadow:inset 0 0 0 6px rgba(0,0,0,.12),0 8px 0 var(--ink);min-height:240px;display:flex;flex-direction:column;justify-content:center;gap:18px}
+.pile{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 9px;padding:6px 4px;border-radius:14px;transition:background-color .2s}
+.rows .pile{flex-wrap:nowrap;position:relative}
+.rows .pile::before{content:attr(data-name);position:absolute;left:4px;top:50%;translate:0 -50%;font-family:var(--font-d);font-size:12px;letter-spacing:.08em;color:rgba(255,255,255,.45)}
+.pile.focus{background:rgba(255,255,255,.08)}
+.stick{position:relative;width:clamp(12px,3.4vw,17px);height:clamp(70px,19vw,100px);border:0;padding:0;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .16s cubic-bezier(.3,1.5,.5,1),filter .16s}
+.stick::before{content:"";position:absolute;left:18%;right:18%;top:12%;bottom:0;border-radius:3px;background:linear-gradient(90deg,#f6dca9,var(--wood) 45%,var(--wood-dk));box-shadow:2px 3px 0 rgba(0,0,0,.25)}
+.stick::after{content:"";position:absolute;left:0;right:0;top:0;height:20%;border-radius:50% 50% 45% 45%;background:radial-gradient(circle at 35% 30%,#ff6b6b,var(--head) 55%,var(--head-dk));box-shadow:1px 2px 0 rgba(0,0,0,.25)}
+.stick:hover:not(:disabled){transform:translateY(-4px)}
+.stick.sel{transform:translateY(-14px) rotate(-4deg);filter:drop-shadow(0 0 6px var(--sel)) drop-shadow(0 0 2px var(--sel))}
+.stick.gone{animation:flyoff .55s cubic-bezier(.4,0,.8,.6) forwards;pointer-events:none}
+@keyframes flyoff{0%{transform:translateY(-14px)}35%{transform:translateY(-34px) rotate(25deg)}100%{transform:translate(var(--fx,60px),-160px) rotate(var(--fr,200deg));opacity:0}}
+.stick:disabled{cursor:not-allowed}
+.stick:focus-visible{outline:3px solid var(--sel);outline-offset:3px;border-radius:4px}
+.empty-note{color:rgba(255,255,255,.75);text-align:center;font-weight:700;margin:0}
+.count{position:absolute;top:-16px;left:50%;translate:-50% 0;background:var(--panel);border:2px solid var(--ink);border-radius:999px;padding:3px 14px 2px;font-family:var(--font-d);font-size:15px;white-space:nowrap;box-shadow:0 3px 0 var(--ink)}
+
+.take{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.take .btn{min-width:88px;font-family:var(--font-d);font-weight:400;font-size:18px}
+.take .go{background:var(--sel);border-color:var(--ink)}
+.rule{margin:0;text-align:center;color:var(--muted);font-size:14px;order:5}
+
+/* Hint i sluttkortet */
+details.hint{text-align:left;border:2px dashed var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
+details.hint summary{cursor:pointer;font-weight:700}
+details.hint ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+details.hint li details summary{font-weight:400;color:var(--accent)}
+details.hint p{color:var(--ink);margin:4px 0 0}
+@media (orientation:landscape) and (min-width:900px) and (min-height:560px){
+  #scr-game{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,320px);grid-template-areas:"table bar" "table msg" "table take" "table again" "table rule" "table .";grid-template-rows:auto auto auto auto auto 1fr;column-gap:36px;align-items:start}
+  .table{grid-area:table;min-height:min(520px,calc(100dvh - 160px))}
+  .stick{width:22px;height:clamp(100px,16dvh,140px)}
+  .pile{gap:14px 14px}
+  .gbar{grid-area:bar;flex-direction:column;align-items:flex-start}
+  .msg{grid-area:msg}.take{grid-area:take;justify-content:flex-start}.again-row{grid-area:again}.rule{grid-area:rule;text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main>
+    <section id="scr-start" class="stack">
+      <div class="hero">
+        <div class="label" aria-hidden="true"><div class="mini"><i></i><i></i><i></i></div><span>SIKKERHETS-<br>FYRSTIKKER</span></div>
+        <h1>Fyrstikk&shy;spillet</h1>
+        <p>Dere bytter på å ta fyrstikker fra bordet. Den som må ta den aller siste, taper. Finnes det et lurt system?</p>
+      </div>
+    </section>
+
+    <section id="scr-game" hidden>
+      <div class="table" id="table"></div>
+      <div class="take" id="take"></div>
+      <p class="rule" id="rule"></p>
+    </section>
+  </main>
+</div>
+
+<script src="felles/mykje-flerspiller.js"></script>
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const ROWNAMES = ['RAD 1', 'RAD 2', 'RAD 3', 'RAD 4'];
+
+/* ---------- Regler ---------- */
+function setup(variant) {
+  if (variant === 'rader') return {piles: [1, 3, 5, 7], max: 99};
+  if (variant === 'en21') return {piles: [21], max: 3};
+  return {piles: [15], max: 3};
+}
+const rules = {
+  init(opts, starter) {
+    const v = setup(opts.variant);
+    return {piles: v.piles.slice(), start: v.piles.slice(), max: v.max, misere: opts.rule !== 'vinner', t: starter || 0, lastBy: -1, last: null};
+  },
+  turn: s => s.t,
+  valid(s, m) {
+    if (!m || typeof m !== 'object') return false;
+    const p = m.p, k = m.k;
+    return Number.isInteger(p) && Number.isInteger(k) && p >= 0 && p < s.piles.length && k >= 1 && k <= s.max && k <= s.piles[p] && s.piles.some(x => x > 0);
+  },
+  apply(s, m) {
+    const piles = s.piles.slice(); piles[m.p] -= m.k;
+    return Object.assign({}, s, {piles, t: 1 - s.t, lastBy: s.t, last: {p: m.p, k: m.k}});
+  },
+  result(s) {
+    if (s.piles.some(x => x > 0)) return null;
+    return {winner: s.misere ? 1 - s.lastBy : s.lastBy, lastBy: s.lastBy};
+  }
+};
+
+/* ---------- Boten: regner ut alle stillinger (små tall, går raskt) ---------- */
+const memo = new Map();
+function winning(piles, max, misere) {
+  const total = piles.reduce((a, b) => a + b, 0);
+  if (total === 0) return misere;            // forrige spiller tok den siste
+  const key = piles.slice().sort((a, b) => a - b).join(',') + '|' + max + '|' + misere;
+  if (memo.has(key)) return memo.get(key);
+  let res = false;
+  outer: for (let p = 0; p < piles.length; p++) for (let k = 1; k <= Math.min(max, piles[p]); k++) {
+    piles[p] -= k; const w = winning(piles, max, misere); piles[p] += k;
+    if (!w) { res = true; break outer; }
+  }
+  memo.set(key, res);
+  return res;
+}
+function allMoves(s) { const m = []; s.piles.forEach((n, p) => { for (let k = 1; k <= Math.min(s.max, n); k++) m.push({p, k}); }); return m; }
+function goodMoves(s) {
+  return allMoves(s).filter(m => { const pl = s.piles.slice(); pl[m.p] -= m.k; return !winning(pl, s.max, s.misere); });
+}
+function bot(s, level) {
+  const moves = allMoves(s), good = goodMoves(s);
+  const rnd = a => a[Math.floor(Math.random() * a.length)];
+  const smart = level === 'vanskelig' ? 1 : level === 'middels' ? .6 : .2;
+  if (good.length && Math.random() < smart) return rnd(good);
+  // Ikke ta den siste med vilje hvis det er tap
+  const ok = moves.filter(m => !(s.misere && s.piles.reduce((a, b) => a + b, 0) === m.k && moves.length > 1));
+  if (level === 'vanskelig') { const small = ok.filter(m => m.k === 1); return rnd(small.length ? small : ok); }
+  return rnd(ok.length ? ok : moves);
+}
+
+/* ---------- Visning ---------- */
+let api = null, sel = null;   // sel = {p, k}
+function mount(a) {
+  api = a; sel = null;
+  const s = a.state, tb = $('#table');
+  tb.innerHTML = ''; tb.classList.toggle('rows', s.piles.length > 1);
+  const cnt = document.createElement('div'); cnt.className = 'count'; cnt.id = 'count'; tb.append(cnt);
+  s.start.forEach((n, p) => {
+    const pile = document.createElement('div'); pile.className = 'pile'; pile.dataset.p = p;
+    if (s.piles.length > 1) pile.dataset.name = ROWNAMES[p];
+    for (let i = 0; i < n; i++) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'stick';
+      b.dataset.p = p; b.dataset.i = i;
+      b.addEventListener('click', () => tapStick(p, i));
+      pile.append(b);
+    }
+    tb.append(pile);
+  });
+  const many = s.piles.length > 1;
+  $('#rule').textContent = (many ? 'Ta så mange du vil fra én rad. ' : `Ta 1, 2 eller ${s.max} fyrstikker. `) +
+    (s.misere ? 'Den som tar den siste, taper.' : 'Den som tar den siste, vinner.');
+}
+// Synlige fyrstikker i en haug er de første «piles[p]» knappene som ikke er tatt
+function liveSticks(p) { return [...document.querySelectorAll(`.stick[data-p="${p}"]:not(.gone):not([hidden])`)]; }
+function tapStick(p, i) {
+  const s = api.state; if (!s) return;
+  if (!api.canAct()) { api.play(null); return; }
+  const live = liveSticks(p), pos = live.findIndex(b => +b.dataset.i === i);
+  if (pos < 0) return;
+  let k = live.length - pos;               // fra denne og ut til enden av raden
+  if (k > s.max) { api.msg(`Du kan ta maks ${s.max} om gangen.`); k = s.max; }
+  else api.msg('');
+  if (sel && sel.p === p && sel.k === k) sel = null; else sel = {p, k};
+  api.sfx('click');
+  paint();
+}
+function paint() {
+  const s = api.state; if (!s) return;
+  const can = api.canAct();
+  document.querySelectorAll('.pile').forEach(pile => {
+    const p = +pile.dataset.p, live = liveSticks(p);
+    live.forEach((b, idx) => { b.classList.toggle('sel', !!sel && sel.p === p && idx >= live.length - sel.k); b.disabled = !can; });
+    pile.classList.toggle('focus', !!sel && sel.p === p);
+  });
+  const total = s.piles.reduce((a, b) => a + b, 0);
+  $('#count').textContent = total === 1 ? '1 fyrstikk igjen' : `${total} fyrstikker igjen`;
+  const take = $('#take'); take.innerHTML = '';
+  if (s.piles.length === 1) {
+    for (let k = 1; k <= s.max; k++) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (sel && sel.k === k ? ' go' : '');
+      b.textContent = `Ta ${k}`; b.disabled = !can || k > s.piles[0];
+      b.onclick = () => { sel = null; api.play({p: 0, k}); };
+      take.append(b);
+    }
+  } else {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn go';
+    b.textContent = sel ? `Ta ${sel.k} fra ${ROWNAMES[sel.p].toLowerCase()}` : 'Trykk på fyrstikkene du vil ta';
+    b.disabled = !can || !sel;
+    b.onclick = () => { if (sel) { const m = sel; sel = null; api.play(m); } };
+    take.append(b);
+  }
+}
+function render(s) {
+  // Sørg for at riktig antall fyrstikker vises (viktig etter gjenoppkobling)
+  s.piles.forEach((n, p) => {
+    const all = [...document.querySelectorAll(`.stick[data-p="${p}"]`)];
+    all.forEach((b, i) => { b.hidden = i >= n; if (i < n) b.classList.remove('gone', 'sel'); });
+  });
+  if (!api.canAct()) sel = null;
+  paint();
+}
+async function animate(prev, next, m, by, a) {
+  sel = null;
+  const live = liveSticks(m.p), take = live.slice(live.length - m.k);
+  take.forEach((b, i) => {
+    b.style.setProperty('--fx', (by === 0 ? -1 : 1) * (40 + Math.random() * 80) + 'px');
+    b.style.setProperty('--fr', (by === 0 ? -1 : 1) * (120 + Math.random() * 160) + 'deg');
+    b.classList.add('sel');
+    setTimeout(() => { b.classList.add('gone'); }, a.reduced ? 0 : 120 + i * 90);
+  });
+  a.sfx('pop');
+  await a.wait(a.reduced ? 50 : 650 + m.k * 90);
+  take.forEach(b => { b.hidden = true; });
+  const left = next.piles.reduce((x, y) => x + y, 0);
+  const who = a.mode === 'local' ? a.sideName(by) : by === a.me ? 'Du' : a.sideName(by);
+  const what = m.k === 1 ? '1 fyrstikk' : `${m.k} fyrstikker`;
+  const from = next.piles.length > 1 ? ` fra ${ROWNAMES[m.p].toLowerCase()}` : '';
+  if (left > 0) a.msg(`${who} tok ${what}${from}.`);
+  else a.msg(`${who} tok den siste!`);
+}
+
+/* ---------- Hint etter runden ---------- */
+function hintBox(s) {
+  const d = document.createElement('details'); d.className = 'hint';
+  let steps;
+  if (s.start.length === 1) {
+    const m = s.max + 1;
+    steps = s.misere ? [
+      'Tenk baklengs. Hvis det er din tur og det bare ligger 1 fyrstikk igjen, har du tapt. Hvor mange vil du da at motstanderen skal stå igjen med?',
+      `Står motstanderen med 1, taper hen. Hva om hen står med ${1 + m}? Uansett hva hen tar (1–${s.max}), kan du sørge for at det blir 1 igjen.`,
+      `Etterlat alltid 1, ${1 + m}, ${1 + 2 * m}, ${1 + 3 * m} … fyrstikker – altså tall som gir 1 i rest når du deler på ${m}. Tar motstanderen x, tar du ${m} − x.`
+    ] : [
+      'Tenk baklengs. Hvilke tall kan du ta alt fra med én gang?',
+      `Står motstanderen med ${m}, kan hen ikke ta alt – og uansett hva hen tar, kan du ta resten.`,
+      `Etterlat alltid ${m}, ${2 * m}, ${3 * m} … fyrstikker – altså tall i ${m}-gangen. Tar motstanderen x, tar du ${m} − x.`
+    ];
+  } else {
+    steps = [
+      'Prøv å skrive hver rad som en sum av 4, 2 og 1. For eksempel er 7 = 4 + 2 + 1 og 5 = 4 + 1.',
+      'Tell hvor mange ganger 4, 2 og 1 er med til sammen. Prøv å etterlate et brett der hvert av tallene er med et partall ganger.',
+      s.misere ? 'Følg partall-regelen helt til alle rader har 0 eller 1 fyrstikk. Da snur du: sørg for at motstanderen står igjen med et oddetall rader med én fyrstikk.'
+               : 'Følg partall-regelen hele veien. Da er det alltid du som tar den siste. (Dette kalles Nim, og strategien bygger på totallssystemet.)'
+    ];
+  }
+  d.innerHTML = '<summary>Finnes det et lurt system?</summary><ol>' +
+    steps.map((t, i) => `<li><details><summary>${i === steps.length - 1 ? 'Vis løsningen' : 'Hint ' + (i + 1)}</summary><p>${t}</p></details></li>`).join('') + '</ol>';
+  return d;
+}
+
+MykjeSpill.start({
+  id: 'fyrstikkspillet',
+  brand: 'FYRSTIKKSPILLET',
+  sides: [{name: 'Blå'}, {name: 'Oransje'}],
+  startText: 'Legg ut fyrstikkene',
+  options: [
+    {key: 'variant', label: 'Bordet', value: 'en15', items: [
+      {v: 'en15', t: '15 i én haug', s: 'Ta 1, 2 eller 3'},
+      {v: 'en21', t: '21 i én haug', s: 'Ta 1, 2 eller 3'},
+      {v: 'rader', t: '1-3-5-7', s: 'Fire rader. Ta så mange du vil fra én rad'}]},
+    {key: 'rule', label: 'Den siste fyrstikka', value: 'taper', items: [
+      {v: 'taper', t: 'Taper', s: 'Den som tar den siste, taper'},
+      {v: 'vinner', t: 'Vinner', s: 'Den som tar den siste, vinner'}]},
+    {key: 'level', label: 'Boten', modes: ['bot'], value: 'middels', items: [
+      {v: 'lett', t: 'Lett', s: 'Tar stort sett tilfeldig'},
+      {v: 'middels', t: 'Middels', s: 'Kjenner systemet – litt'},
+      {v: 'vanskelig', t: 'Vanskelig', s: 'Kan systemet. Klarer du å slå den?'}]}
+  ],
+  ...rules,
+  bot: (s, level) => bot(s, level),
+  botDelay: 700,
+  mount, render, animate,
+  endDelay: 700,
+  endText(res, a) {
+    const s = a.state;
+    const who = a.mode === 'local' ? a.sideName(res.lastBy) : res.lastBy === a.me ? 'Du' : a.sideName(res.lastBy);
+    return s.misere ? `${who} måtte ta den siste fyrstikka.` : `${who} tok den siste fyrstikka.`;
+  },
+  endExtra: (res, a) => hintBox(a.state)
+});
+})();
+</script>
+</body>
+</html>
