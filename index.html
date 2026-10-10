@@ -244,6 +244,11 @@ body{
 .kat-tittel p{color:#cbbdf0;font-size:.95rem;}
 
 .gruppert .kat-merke{display:none;}
+.gruppert .kat-merke.for-to{display:inline-block;}
+.merker{display:flex;flex-wrap:wrap;gap:6px;}
+.merker:empty{display:none;}
+.kat-merke.for-to{color:#0f766e;background:#ccfbf1;}
+.kat-knapp.to-knapp{border-color:rgba(45,212,191,.7);}
 .kat-merke{
   align-self:flex-start;font-size:.78rem;font-weight:700;
   color:#4b4470;background:#f1f0f7;padding:3px 10px;border-radius:999px;
@@ -344,9 +349,12 @@ const KATEGORIER = [
   { id:"okonomi",    navn:"Økonomi og drift",   emoji:"💰", tekst:"Driv butikk, gård eller ditt eget liv – og få pengene til å strekke til." },
   { id:"hjernetrim", navn:"Hjernetrim",         emoji:"🧩", tekst:"Puslespill, ord og former – tren hjernen." },
   { id:"utforsk",    navn:"Finn og utforsk",    emoji:"🔍", tekst:"Let etter skjulte ting og finn veien ut." },
-  { id:"strategi",   navn:"Fart og strategi",   emoji:"⚡", tekst:"Tenk raskt, planlegg lurt." },
-  { id:"flerspiller", navn:"Spill for to",       emoji:"👥", tekst:"Utfordre en venn – på samme skjerm eller på hver sin." }
+  { id:"strategi",   navn:"Fart og strategi",   emoji:"⚡", tekst:"Tenk raskt, planlegg lurt – alene eller mot en venn." }
 ];
+
+/* Ekstra filter i menyen: spill med  forTo: true  vises under «Spill for to»
+   i tillegg til sin vanlige kategori. */
+const FOR_TO = { id:"fortwo", navn:"Spill for to", emoji:"👥" };
 
 const SPILL = [
   {
@@ -428,7 +436,8 @@ const SPILL = [
     url: "murlopet.html",
     lagaAv: "",
     farge: "oransje",
-    kategori: "flerspiller"
+    kategori: "strategi",
+    forTo: true
   },
   {
     tittel: "Åkerland",
@@ -464,7 +473,8 @@ const SPILL = [
     url: "slagskip.html",
     lagaAv: "",
     farge: "teal",
-    kategori: "flerspiller"
+    kategori: "strategi",
+    forTo: true
   },
   {
     tittel: "Fire på rad",
@@ -473,7 +483,8 @@ const SPILL = [
     url: "firepaarad.html",
     lagaAv: "",
     farge: "lilla",
-    kategori: "flerspiller"
+    kategori: "strategi",
+    forTo: true
   },
   {
     tittel: "Prikk og strek",
@@ -482,7 +493,8 @@ const SPILL = [
     url: "prikkogstrek.html",
     lagaAv: "",
     farge: "gul",
-    kategori: "flerspiller"
+    kategori: "strategi",
+    forTo: true
   },
   {
     tittel: "Fyrstikkspillet",
@@ -491,7 +503,8 @@ const SPILL = [
     url: "fyrstikkspillet.html",
     lagaAv: "",
     farge: "oransje",
-    kategori: "flerspiller"
+    kategori: "hjernetrim",
+    forTo: true
   }
 ];
 
@@ -514,14 +527,15 @@ function lagKort(spel, i){
   const snartMerke = ferdig ? '' : `<span class="merkelapp-snart">Kommer snart</span>`;
   const knappTekst = ferdig ? 'Spill' : 'Snart klart';
   const k = KATEGORIER.find(x => x.id === spel.kategori);
-  const katMerke = k ? `<span class="kat-merke">${k.emoji} ${k.navn}</span>` : '';
+  const katMerke = (k ? `<span class="kat-merke">${k.emoji} ${k.navn}</span>` : '')
+    + (spel.forTo ? `<span class="kat-merke for-to">👥 For to</span>` : '');
 
   el.innerHTML = `
     <div class="skjerm farge-${spel.farge}">${snartMerke}${spel.emoji}</div>
     <div class="kort-tekst">
       <h3>${spel.tittel}</h3>
       <p>${spel.beskrivelse}</p>
-      ${katMerke}
+      <div class="merker">${katMerke}</div>
       ${lagaAv}
       <span class="spel-knapp">${knappTekst}</span>
     </div>`;
@@ -529,19 +543,20 @@ function lagKort(spel, i){
 }
 
 let aktivKat = "alle";
+const passarKat = (s, id) => id === "alle" || (id === FOR_TO.id ? !!s.forTo : s.kategori === id);
 const katNav = document.getElementById('kategorier');
 const finnKat = id => KATEGORIER.find(k => k.id === id);
 
 function lagKnappar(){
   const ferdige = SPILL;
-  const knappar = [{id:"alle", navn:"Alle", emoji:"🦉"}, ...KATEGORIER];
+  const knappar = [{id:"alle", navn:"Alle", emoji:"🦉"}, FOR_TO, ...KATEGORIER];
   katNav.innerHTML = "";
   knappar.forEach(k => {
-    const ant = k.id === "alle" ? ferdige.length : ferdige.filter(s => s.kategori === k.id).length;
+    const ant = k.id === "alle" ? ferdige.length : ferdige.filter(s => passarKat(s, k.id)).length;
     if(k.id !== "alle" && ant === 0) return;
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'kat-knapp';
+    b.className = 'kat-knapp' + (k.id === FOR_TO.id ? ' to-knapp' : '');
     b.setAttribute('aria-pressed', k.id === aktivKat);
     b.innerHTML = `<span aria-hidden="true">${k.emoji}</span>${k.navn}<span class="ant">${ant}</span>`;
     b.addEventListener('click', () => {
@@ -570,9 +585,9 @@ function tegn(filter = ""){
     const passarSok = !sok ||
       s.tittel.toLowerCase().includes(sok) ||
       s.beskrivelse.toLowerCase().includes(sok) ||
-      (k && k.navn.toLowerCase().includes(sok));
-    const passarKat = aktivKat === "alle" || s.kategori === aktivKat;
-    return passarSok && passarKat;
+      (k && k.navn.toLowerCase().includes(sok)) ||
+      (s.forTo && /\bto\b|for to|venn|flerspiller|to spillere/.test(sok));
+    return passarSok && passarKat(s, aktivKat);
   });
 
   if(treff.length === 0){
@@ -602,7 +617,7 @@ function tegn(filter = ""){
 }
 
 const fraLenke = location.hash.slice(1);
-if(finnKat(fraLenke)) aktivKat = fraLenke;
+if(finnKat(fraLenke) || fraLenke === FOR_TO.id) aktivKat = fraLenke;
 lagKnappar();
 
 talFelt.textContent = SPILL.filter(s => s.url && s.url.trim() !== "").length;
