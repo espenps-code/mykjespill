@@ -352,9 +352,9 @@ const KATEGORIER = [
   { id:"strategi",   navn:"Fart og strategi",   emoji:"⚡", tekst:"Tenk raskt, planlegg lurt – alene eller mot en venn." }
 ];
 
-/* Ekstra filter i menyen: spill med  forTo: true  vises under «Spill for to»
+/* Ekstra filter i menyen: spill med  forTo: true  vises under «1–2 spillere»
    i tillegg til sin vanlige kategori. */
-const FOR_TO = { id:"fortwo", navn:"Spill for to", emoji:"👥" };
+const FOR_TO = { id:"fortwo", navn:"1–2 spillere", emoji:"👥" };
 
 const SPILL = [
   {
@@ -431,7 +431,7 @@ const SPILL = [
   },
   {
     tittel: "Murløpet",
-    beskrivelse: "To spillere kappes over brettet – flytt kula eller bygg en mur i veien!",
+    beskrivelse: "Kappløp over brettet mot boten eller en venn – flytt kula eller bygg en mur i veien!",
     emoji: "🧱",
     url: "murlopet.html",
     lagaAv: "",
@@ -538,7 +538,7 @@ function lagKort(spel, i){
   const knappTekst = ferdig ? 'Spill' : 'Snart klart';
   const k = KATEGORIER.find(x => x.id === spel.kategori);
   const katMerke = (k ? `<span class="kat-merke">${k.emoji} ${k.navn}</span>` : '')
-    + (spel.forTo ? `<span class="kat-merke for-to">👥 For to</span>` : '');
+    + (spel.forTo ? `<span class="kat-merke for-to">👥 1–2 spillere</span>` : '');
 
   el.innerHTML = `
     <div class="skjerm farge-${spel.farge}">${snartMerke}${spel.emoji}</div>
@@ -596,7 +596,7 @@ function tegn(filter = ""){
       s.tittel.toLowerCase().includes(sok) ||
       s.beskrivelse.toLowerCase().includes(sok) ||
       (k && k.navn.toLowerCase().includes(sok)) ||
-      (s.forTo && /\bto\b|for to|venn|flerspiller|to spillere/.test(sok));
+      (s.forTo && /\bto\b|for to|venn|flerspiller|to spillere|1-2|1–2|alene/.test(sok));
     return passarSok && passarKat(s, aktivKat);
   });
 
