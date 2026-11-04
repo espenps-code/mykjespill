@@ -1,0 +1,1594 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Straffespark – Mykje Spill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --natt:#060b20; --panel:#101a3e; --panel2:#17245a; --kant:rgba(255,255,255,.12);
+  --lys:#f1f5f9; --dempet:#a5b4cf;
+  --lime:#a3e635; --limeL:#d9f99d; --limeM:#3f6212;
+  --gull:#fbbf24; --gullL:#fde68a; --gullM:#92400e;
+  --bla:#3b82f6; --blaL:#93c5fd; --blaM:#1e3a8a;
+  --rod:#f43f5e; --lilla:#a855f7;
+  --mork:#0f172a; --gronn:#84cc16;
+  --tekst:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --tittel:'Lilita One','Arial Black','Trebuchet MS',sans-serif;
+  --sprett:cubic-bezier(.2,1.5,.4,1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--natt);font-family:var(--tekst);color:var(--lys);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+canvas#bane{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block}
+canvas#konfetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:3px}
+h1,h2,h3{font-family:var(--tittel);font-weight:400;margin:0;letter-spacing:.5px}
+svg.i{width:1em;height:1em;vertical-align:-.12em;flex:none}
+
+/* ---------- skjermer ---------- */
+.skjerm{position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;z-index:10;
+  padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));
+  background:radial-gradient(120% 90% at 50% 0%,rgba(30,58,138,.55),rgba(4,8,24,.88) 70%);
+  -webkit-backdrop-filter:blur(6px) saturate(1.2);backdrop-filter:blur(6px) saturate(1.2)}
+.skjerm.vis{display:flex;animation:tone .3s ease-out}
+@keyframes tone{from{opacity:0}to{opacity:1}}
+.kort{position:relative;width:100%;max-width:1040px;margin:auto 0;padding:24px;border-radius:30px;
+  background:linear-gradient(170deg,var(--panel2) 0%,var(--panel) 45%,#0b1330 100%);
+  border:2px solid var(--kant);
+  box-shadow:0 0 0 6px rgba(255,255,255,.03),0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18)}
+.kort::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:repeating-linear-gradient(115deg,rgba(255,255,255,.025) 0 2px,transparent 2px 14px)}
+.skjerm.vis .kort{animation:kortInn .5s var(--sprett) both}
+@keyframes kortInn{from{transform:translateY(40px) scale(.94);opacity:0}to{transform:none;opacity:1}}
+.inn{animation:dukkOpp .45s var(--sprett) both;animation-delay:calc(var(--i,0)*55ms + 120ms)}
+@keyframes dukkOpp{from{transform:translateY(18px) scale(.9);opacity:0}to{transform:none;opacity:1}}
+
+/* poeng-pille */
+.poeng{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:5px 16px 5px 6px;white-space:nowrap;
+  font-family:var(--tittel);font-size:22px;color:#fff;background:linear-gradient(180deg,#3b2a05,#1f1603);
+  border:2px solid var(--gull);box-shadow:0 0 18px rgba(251,191,36,.35),inset 0 1px 0 rgba(255,255,255,.2)}
+.poeng .mynt{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#7c2d12;font-size:18px;
+  background:radial-gradient(circle at 35% 30%,#fff7c2,#fbbf24 55%,#b45309);box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+.poeng.dunk{animation:dunk .5s var(--sprett)}
+@keyframes dunk{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
+
+.ikon{width:50px;height:50px;border-radius:16px;font-size:24px;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(180deg,#2a3a73,#18234d);border:2px solid var(--kant);box-shadow:0 4px 0 #0a1130;transition:transform .1s}
+.ikon:hover{transform:translateY(-2px)}
+.ikon:active{transform:translateY(3px);box-shadow:0 1px 0 #0a1130}
+
+/* ---------- knapper ---------- */
+.knapp{position:relative;overflow:hidden;isolation:isolate;font-family:var(--tittel);font-size:22px;letter-spacing:.5px;
+  border-radius:18px;padding:14px 20px;min-height:58px;color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(180deg,#60a5fa,#2563eb);text-shadow:0 2px 0 rgba(0,0,0,.25);
+  box-shadow:0 6px 0 var(--blaM),0 12px 24px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.4);
+  transition:transform .1s,box-shadow .1s,filter .15s}
+.knapp::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;z-index:-1;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);transition:left .5s}
+.knapp:hover{filter:brightness(1.08);transform:translateY(-2px)}
+.knapp:hover::after{left:130%}
+.knapp:active{transform:translateY(5px);box-shadow:0 1px 0 var(--blaM),0 4px 10px rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.3)}
+.knapp.gronn{background:linear-gradient(180deg,#d9f99d,#84cc16 55%,#65a30d);color:#1a2e05;text-shadow:0 1px 0 rgba(255,255,255,.4);
+  box-shadow:0 6px 0 var(--limeM),0 12px 24px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.6)}
+.knapp.gronn:active{box-shadow:0 1px 0 var(--limeM)}
+.knapp.gul{background:linear-gradient(180deg,#fde68a,#fbbf24 55%,#f59e0b);color:#451a03;text-shadow:0 1px 0 rgba(255,255,255,.4);
+  box-shadow:0 6px 0 var(--gullM),0 12px 24px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.6)}
+.knapp.gul:active{box-shadow:0 1px 0 var(--gullM)}
+.knapp.gra{background:linear-gradient(180deg,#334372,#1e2a52);color:#fff;border:2px solid var(--kant);
+  box-shadow:0 6px 0 #0a1130,0 12px 24px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.15)}
+.knapp.gra:active{box-shadow:0 1px 0 #0a1130}
+.knapp.rod{background:linear-gradient(180deg,#fb7185,#e11d48);box-shadow:0 6px 0 #881337,0 12px 24px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.4)}
+.knapp:disabled{filter:grayscale(.6) brightness(.75);pointer-events:none}
+.knapp.glans::after{animation:glans 2.8s ease-in-out infinite}
+@keyframes glans{0%,55%{left:-60%}85%,100%{left:130%}}
+
+/* ---------- meny ---------- */
+.topprad{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;position:relative;z-index:1}
+.merke{font-family:var(--tittel);font-size:15px;letter-spacing:2px;color:var(--dempet);text-transform:uppercase}
+.meny{display:grid;grid-template-columns:minmax(240px,340px) 1fr;gap:26px;align-items:center;position:relative;z-index:1}
+.meny .forhand{display:flex;flex-direction:column;align-items:center;gap:0}
+.tittel1{font-size:clamp(50px,7.5vw,86px);line-height:.82;color:#fff;text-align:center;transform:rotate(-4deg);margin:6px 0 4px;
+  -webkit-text-stroke:2px #0b1a4a;filter:drop-shadow(0 6px 0 #0b1a4a) drop-shadow(0 0 26px rgba(163,230,53,.35));
+  animation:svev 3.5s ease-in-out infinite}
+.tittel1 span{display:block;font-size:1.12em;background:linear-gradient(180deg,#fef08a 10%,#a3e635 60%,#4d7c0f);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes svev{0%,100%{transform:rotate(-4deg) translateY(0)}50%{transform:rotate(-3deg) translateY(-6px)}}
+.scene{position:relative;width:100%;display:grid;place-items:center;margin-top:-6px}
+.scene::before{content:"";position:absolute;left:50%;top:-10%;width:90%;height:110%;transform:translateX(-50%);pointer-events:none;
+  background:conic-gradient(from 160deg at 50% 0%,transparent 0deg,rgba(255,255,220,.16) 18deg,rgba(255,255,220,.05) 30deg,transparent 40deg);
+  filter:blur(4px)}
+.scene::after{content:"";position:absolute;bottom:4%;left:50%;width:78%;height:18%;transform:translateX(-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(163,230,53,.55),rgba(34,197,94,.18) 45%,transparent 70%)}
+#menySpiller{position:relative;z-index:1;width:260px;height:300px;max-width:100%}
+.steg{display:flex;align-items:center;gap:10px;font-size:22px;margin:4px 0 12px;color:#fff}
+.steg i{font-style:normal;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:18px;
+  background:var(--lime);color:#1a2e05;transform:rotate(-6deg);box-shadow:0 3px 0 var(--limeM)}
+.keepere{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.keeperkort{--k:#4ade80;position:relative;border-radius:20px;padding:0 0 12px;text-align:center;overflow:hidden;
+  background:linear-gradient(180deg,#1d2b5e,#121b40);border:3px solid rgba(255,255,255,.1);
+  box-shadow:0 6px 0 #0a1130;transition:transform .18s var(--sprett),border-color .2s,box-shadow .2s}
+.keeperkort:hover{transform:translateY(-4px)}
+.keeperkort .kk-topp{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;
+  background:color-mix(in srgb,var(--k) 22%,transparent);font-family:var(--tittel);font-size:15px;color:var(--k);letter-spacing:.5px}
+.keeperkort .kk-x{background:var(--k);color:#0b1330;border-radius:8px;padding:1px 7px}
+.keeperkort canvas{width:96px;height:96px;display:block;margin:4px auto 0;
+  background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--k) 35%,transparent),transparent 65%)}
+.keeperkort b{display:block;font-family:var(--tittel);font-weight:400;font-size:20px;color:#fff;margin-top:2px}
+.keeperkort .kk-stjerner{display:block;font-size:17px;letter-spacing:3px;color:var(--gull)}
+.keeperkort .kk-stjerner em{font-style:normal;color:rgba(255,255,255,.2)}
+.keeperkort.valgt{border-color:var(--k);transform:translateY(-6px);
+  box-shadow:0 6px 0 #0a1130,0 0 0 4px color-mix(in srgb,var(--k) 25%,transparent),0 0 34px color-mix(in srgb,var(--k) 55%,transparent)}
+.keeperkort.valgt::after{content:"VALGT";position:absolute;top:40px;right:6px;transform:rotate(8deg);
+  font-family:var(--tittel);font-size:13px;letter-spacing:1px;background:var(--k);color:#0b1330;padding:2px 9px;border-radius:7px;
+  box-shadow:0 3px 10px rgba(0,0,0,.4);animation:dunk .4s var(--sprett)}
+.spillknapp{width:100%;margin-top:20px;font-size:clamp(24px,3.4vw,32px);min-height:76px;border-radius:22px}
+.spillknapp .ball{display:inline-grid;place-items:center;animation:rull 2.4s linear infinite}
+@keyframes rull{to{transform:rotate(360deg)}}
+.fliser{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.flis{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:19px;min-height:92px;padding:10px 8px}
+.flis .stor{font-size:32px;line-height:1;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25))}
+.statrad{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:18px}
+.statchip{display:flex;align-items:baseline;gap:6px;padding:6px 14px;border-radius:12px;background:rgba(255,255,255,.06);
+  border:1px solid var(--kant);font-size:15px;color:var(--dempet)}
+.statchip b{font-family:var(--tittel);font-weight:400;font-size:22px;color:#fff}
+.stat{margin-top:16px;color:var(--dempet);font-size:16px;text-align:center}
+
+/* ---------- butikk ---------- */
+.hode{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;position:relative;z-index:1}
+.hode h2{font-size:clamp(30px,4.5vw,42px);flex:1;color:#fff;text-shadow:0 4px 0 #0b1a4a}
+.faner{display:inline-flex;gap:6px;margin-bottom:18px;padding:6px;border-radius:18px;background:rgba(0,0,0,.3);border:1px solid var(--kant);position:relative;z-index:1}
+.faner button{font-family:var(--tittel);font-size:20px;padding:10px 20px;border-radius:13px;background:transparent;color:var(--dempet);transition:background .2s,color .2s}
+.faner button.aktiv{background:linear-gradient(180deg,#fde68a,#fbbf24);color:#451a03;box-shadow:0 4px 0 var(--gullM)}
+.vareliste{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:16px;position:relative;z-index:1}
+.vare{--r:#94a3b8;position:relative;border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:8px;overflow:hidden;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--r) 18%,#16214a),#111a3d 60%);
+  border:3px solid color-mix(in srgb,var(--r) 55%,transparent);box-shadow:0 6px 0 #0a1130;transition:transform .18s var(--sprett)}
+.vare:hover{transform:translateY(-4px) rotate(-.5deg)}
+.vare.r-legend{box-shadow:0 6px 0 #0a1130,0 0 28px color-mix(in srgb,var(--r) 45%,transparent)}
+.vare.r-legend::before{content:"";position:absolute;inset:-50%;pointer-events:none;
+  background:conic-gradient(from 0deg,transparent 0 80%,rgba(255,230,150,.22) 88%,transparent 96%);animation:snurr 6s linear infinite}
+@keyframes snurr{to{transform:rotate(360deg)}}
+.vare > *{position:relative}
+.vare .sjelden{align-self:flex-start;font-family:var(--tittel);font-size:13px;letter-spacing:1px;text-transform:uppercase;
+  padding:2px 9px;border-radius:7px;background:var(--r);color:#0b1330}
+.vare .eid{position:absolute;top:12px;right:12px;font-size:13px;font-weight:700;color:var(--limeL);background:rgba(0,0,0,.35);padding:2px 8px;border-radius:7px}
+.vare canvas{width:100%;height:110px;display:block;border-radius:14px;
+  background:radial-gradient(ellipse at 50% 70%,color-mix(in srgb,var(--r) 30%,transparent),transparent 70%)}
+.vare h3{font-size:22px;color:#fff}
+.vare p{margin:0;font-size:15px;color:var(--dempet);min-height:38px}
+.stolper{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;font-size:14px;align-items:center;color:#cbd5e1}
+.stolpe{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
+.stolpe i{height:9px;border-radius:3px;background:rgba(255,255,255,.12)}
+.stolpe i.p{background:linear-gradient(90deg,var(--lime),#facc15);box-shadow:0 0 6px rgba(163,230,53,.5)}
+.vare .knapp{font-size:18px;padding:10px;min-height:50px;margin-top:auto}
+.vare.valgt{border-color:var(--lime)}
+.vare.valgt .knapp{background:rgba(163,230,53,.15);color:var(--limeL);box-shadow:inset 0 0 0 2px var(--lime);filter:none;text-shadow:none}
+
+/* ---------- drakt ---------- */
+.drakt{display:grid;grid-template-columns:minmax(220px,330px) 1fr;gap:24px;position:relative;z-index:1}
+.drakt .forhand{display:flex;flex-direction:column;align-items:center;gap:10px;position:sticky;top:0;align-self:start}
+#draktSpiller{width:300px;height:380px;max-width:100%;border-radius:24px;border:2px solid var(--kant);
+  background:radial-gradient(ellipse 60% 14% at 50% 94%,rgba(163,230,53,.55),transparent 80%),
+             conic-gradient(from 165deg at 50% -5%,transparent,rgba(255,255,220,.14) 15deg,transparent 30deg),
+             linear-gradient(180deg,#1b2a63,#0c1435)}
+.valg{background:rgba(0,0,0,.18);border:1px solid var(--kant);border-radius:22px;padding:16px}
+.valg h3{font-size:19px;margin:16px 0 8px;color:var(--limeL)}
+.valg h3:first-child{margin-top:0}
+.rutenett{display:flex;flex-wrap:wrap;gap:9px}
+.farge{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 3px 0 rgba(0,0,0,.35);transition:transform .15s var(--sprett)}
+.farge:hover{transform:scale(1.1)}
+.farge.valgt{transform:scale(1.12);box-shadow:0 0 0 3px var(--panel),0 0 0 6px var(--lime),0 0 16px var(--lime)}
+.monsterknapp{background:linear-gradient(180deg,#22316a,#18234d);border-radius:16px;padding:5px 5px 7px;border:3px solid transparent;font-size:13px;color:#cbd5e1;box-shadow:0 4px 0 #0a1130}
+.monsterknapp canvas{width:58px;height:58px;display:block}
+.monsterknapp.valgt{border-color:var(--lime);color:#fff;box-shadow:0 4px 0 #0a1130,0 0 14px rgba(163,230,53,.45)}
+.tekstknapp{background:linear-gradient(180deg,#22316a,#18234d);border-radius:12px;padding:10px 16px;font-size:16px;border:3px solid transparent;color:#e2e8f0;box-shadow:0 4px 0 #0a1130}
+.tekstknapp.valgt{border-color:var(--lime);font-weight:700;color:#fff}
+.nummer{display:flex;align-items:center;gap:12px}
+.nummer b{font-family:var(--tittel);font-weight:400;font-size:40px;min-width:64px;text-align:center;color:#fff;text-shadow:0 3px 0 #0b1a4a}
+.nummer button{width:50px;height:50px;border-radius:14px;font-size:28px;font-weight:700;color:#fff;background:linear-gradient(180deg,#2a3a73,#18234d);border:2px solid var(--kant);box-shadow:0 4px 0 #0a1130}
+.nummer button:active{transform:translateY(3px);box-shadow:0 1px 0 #0a1130}
+#navnFelt{font-family:var(--tittel);font-size:24px;padding:10px 14px;border:3px solid rgba(255,255,255,.18);border-radius:14px;width:100%;max-width:280px;
+  text-transform:uppercase;-webkit-user-select:text;user-select:text;background:#0b1330;color:#fff}
+#navnFelt::placeholder{color:#64748b}
+#navnFelt:focus{border-color:var(--lime);outline:none;box-shadow:0 0 0 4px rgba(163,230,53,.25)}
+.liten{font-size:14px;color:var(--dempet);margin:8px 0 0}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;left:0;right:0;top:0;display:none;align-items:flex-start;justify-content:space-between;gap:10px;z-index:5;
+  padding:max(10px,env(safe-area-inset-top)) 12px 0;pointer-events:none}
+#hud.vis{display:flex;animation:hudInn .4s var(--sprett)}
+@keyframes hudInn{from{transform:translateY(-30px);opacity:0}to{transform:none;opacity:1}}
+#hud > *{pointer-events:auto}
+#tavle{display:grid;grid-template-columns:auto auto auto;align-items:stretch;border-radius:14px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(17,26,62,.95),rgba(8,13,36,.95));border:2px solid rgba(255,255,255,.18);
+  box-shadow:0 8px 24px rgba(0,0,0,.45);font-family:var(--tittel)}
+#tavle .lag{display:grid;place-items:center;padding:4px 12px;font-size:16px;letter-spacing:1px;color:#0b1330}
+#tavle .lag.du{background:var(--lime)}
+#tavle .lag.dem{background:#cbd5e1}
+#tavle .prikker{padding:6px 12px;align-items:center}
+#tavle .tall{display:grid;place-items:center;min-width:44px;font-size:26px;color:#fff;background:rgba(0,0,0,.35)}
+#tavle > :nth-child(-n+3){border-bottom:1px solid rgba(255,255,255,.1)}
+.prikker{display:flex;gap:6px}
+.prikk{width:17px;height:17px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.3)}
+.prikk.mal{background:var(--lime);border-color:var(--limeL);box-shadow:0 0 8px var(--lime);animation:dunk .4s var(--sprett)}
+.prikk.bom{background:var(--rod);border-color:#fecdd3;animation:dunk .4s var(--sprett)}
+#treningsskilt{border-radius:14px;padding:10px 16px;font-family:var(--tittel);font-size:20px;color:#fff;
+  background:linear-gradient(180deg,rgba(17,26,62,.95),rgba(8,13,36,.95));border:2px solid rgba(255,255,255,.18);box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#hudHoyre{display:flex;gap:8px;align-items:center}
+
+#banner{position:fixed;left:50%;top:22%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;display:none;width:92%;z-index:6}
+#banner.vis{display:block;animation:pop .5s var(--sprett)}
+#banner .straaler{position:absolute;left:50%;top:40%;width:150vmin;height:150vmin;margin:-75vmin 0 0 -75vmin;z-index:-1;display:none;
+  background:repeating-conic-gradient(rgba(253,224,71,.28) 0 8deg,transparent 8deg 22deg);
+  -webkit-mask:radial-gradient(circle,#000 8%,transparent 55%);mask:radial-gradient(circle,#000 8%,transparent 55%);
+  animation:snurr 9s linear infinite}
+#banner.mal .straaler{display:block}
+#banner .stor{font-family:var(--tittel);font-size:clamp(50px,11vw,120px);color:#fff;-webkit-text-stroke:5px #0b1330;paint-order:stroke fill;padding-top:.12em;
+  text-shadow:0 7px 0 #0b1330,0 0 40px rgba(0,0,0,.45);line-height:1;transform:rotate(-4deg)}
+#banner.mal .stor{color:#fde047;text-shadow:0 7px 0 #0b1330,0 0 50px rgba(253,224,71,.7);animation:puls .9s ease-in-out infinite}
+#banner.bom .stor{color:#f1f5f9}
+#banner.redd .stor{color:#fda4af}
+#banner .under{display:inline-block;margin-top:14px;background:rgba(8,13,36,.92);border:2px solid rgba(255,255,255,.2);color:#fff;
+  font-size:20px;font-weight:700;padding:9px 18px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#banner.mal .under{border-color:var(--gull);color:var(--gullL)}
+@keyframes pop{from{transform:translate(-50%,-50%) scale(.2) rotate(-12deg);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+@keyframes puls{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(-2deg) scale(1.06)}}
+
+#melding{position:fixed;left:50%;top:max(100px,15%);transform:translateX(-50%);z-index:6;font-family:var(--tittel);
+  font-size:24px;padding:12px 24px;border-radius:18px;display:none;pointer-events:none;white-space:nowrap;color:#fff;
+  background:linear-gradient(180deg,rgba(23,36,90,.97),rgba(10,17,48,.97));border:2px solid var(--blaL);box-shadow:0 12px 30px rgba(0,0,0,.45),0 0 24px rgba(59,130,246,.35)}
+#melding.vis{display:block;animation:inn .35s var(--sprett)}
+@keyframes inn{from{opacity:0;transform:translate(-50%,-14px) scale(.9)}to{opacity:1;transform:translate(-50%,0)}}
+
+#hint{position:fixed;pointer-events:none;display:none;text-align:center;transform:translateX(-50%);z-index:4}
+#hint.vis{display:block}
+#hint .finger{font-size:46px;display:inline-block;animation:sveip 1.6s ease-in-out infinite;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))}
+#hint .boble{background:var(--lime);color:#1a2e05;font-weight:700;font-size:17px;padding:9px 16px;border-radius:14px;white-space:nowrap;
+  box-shadow:0 5px 0 var(--limeM),0 10px 24px rgba(0,0,0,.4)}
+@keyframes sveip{0%{transform:translateY(40px);opacity:0}15%{opacity:1}70%{transform:translateY(-110px);opacity:1}100%{transform:translateY(-130px);opacity:0}}
+
+.flyt{position:fixed;font-family:var(--tittel);font-size:32px;color:#fde047;-webkit-text-stroke:2px #0b1330;pointer-events:none;z-index:7;
+  animation:flyt 1.3s ease-out forwards;transform:translateX(-50%)}
+@keyframes flyt{from{opacity:1;margin-top:0}to{opacity:0;margin-top:-90px}}
+
+/* ---------- resultat og dialog ---------- */
+#resultat{z-index:20}
+#resultat .kort,#dialog .kort{max-width:520px;text-align:center}
+#resultat .pokal{font-size:84px;line-height:1;display:inline-block;filter:drop-shadow(0 8px 0 rgba(0,0,0,.3));animation:pokal .8s var(--sprett) .2s both}
+@keyframes pokal{from{transform:scale(0) rotate(-30deg)}to{transform:none}}
+#resultat h2{font-size:clamp(40px,8vw,58px);color:#fff;text-shadow:0 5px 0 #0b1a4a;position:relative}
+#resultat .score{display:flex;justify-content:center;align-items:center;gap:14px;margin:14px 0 10px;position:relative}
+#resultat .score .side{display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--tittel);font-size:15px;letter-spacing:1px;color:var(--dempet)}
+#resultat .score .side b{font-weight:400;font-size:64px;line-height:1;color:#fff;min-width:84px;padding:6px 10px;border-radius:18px;background:rgba(0,0,0,.35);border:2px solid var(--kant)}
+#resultat .score .side.du b{border-color:var(--lime);box-shadow:0 0 20px rgba(163,230,53,.3)}
+#resultat .score .strek{font-family:var(--tittel);font-size:40px;color:var(--dempet);padding-top:18px}
+#resultat p{font-size:19px;margin:6px 0;color:#e2e8f0;position:relative}
+#resultat .tjent{display:inline-flex;align-items:center;gap:10px;margin:10px 0 2px;font-family:var(--tittel);font-size:30px;color:var(--gullL);position:relative}
+#resultat .tjent .mynt{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:22px;color:#7c2d12;
+  background:radial-gradient(circle at 35% 30%,#fff7c2,#fbbf24 55%,#b45309)}
+#resultat .liten{position:relative}
+#resultat .knapperad,#dialog .knapperad{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px;position:relative}
+#dialog{z-index:30}
+#dialog h2{font-size:34px;margin-bottom:8px;position:relative}
+#dialog p{font-size:18px;color:#cbd5e1;margin:0;position:relative}
+
+@media (max-width:760px){
+  .meny,.drakt{grid-template-columns:1fr}
+  #menySpiller{width:200px;height:230px}
+  .drakt .forhand{position:static}
+  #draktSpiller{width:240px;height:300px}
+  .keepere{gap:8px}
+  .keeperkort b{font-size:16px}
+  .keeperkort .kk-topp{flex-direction:column;gap:3px;font-size:12px;padding:5px 4px}
+  .keeperkort.valgt::after{top:58px;right:4px;font-size:11px}
+  .flis{min-height:80px;font-size:17px}
+  #tavle .lag{font-size:13px;padding:3px 8px}
+  #tavle .tall{font-size:21px;min-width:36px}
+  #tavle .prikker{padding:5px 8px}
+  .prikk{width:12px;height:12px;gap:4px}
+  .kort{padding:18px;border-radius:24px}
+}
+@media (max-height:500px){ #banner{top:34%} }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<canvas id="bane"></canvas>
+
+<!-- MENY -->
+<div id="meny" class="skjerm vis">
+  <div class="kort">
+    <div class="topprad">
+      <div class="poeng"><span class="mynt">★</span><b class="poengtall">0</b></div>
+      <span class="merke">Mykje Spill</span>
+      <button class="ikon lydknapp" aria-label="Lyd av/på"></button>
+    </div>
+    <div class="meny">
+      <div class="forhand">
+        <h1 class="tittel1">STRAFFE<span>SPARK</span></h1>
+        <div class="scene"><canvas id="menySpiller" width="520" height="600"></canvas></div>
+      </div>
+      <div>
+        <h2 class="steg"><i>1</i> Velg målvakt</h2>
+        <div class="keepere" id="keeperValg"></div>
+        <button class="knapp gronn glans spillknapp" id="startKamp"><span class="ball">⚽</span> SPILL KAMP!</button>
+        <div class="fliser">
+          <button class="knapp flis" id="startTrening"><span class="stor">🎯</span>Trening</button>
+          <button class="knapp gul flis" id="tilButikk"><span class="stor">👟</span>Butikk</button>
+          <button class="knapp gul flis" id="tilDrakt"><span class="stor">👕</span>Lag drakt</button>
+        </div>
+        <div class="statrad" id="menyStat"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BUTIKK -->
+<div id="butikk" class="skjerm">
+  <div class="kort">
+    <div class="hode">
+      <button class="knapp gra tilbake">← Tilbake</button>
+      <h2>Butikk</h2>
+      <div class="poeng"><span class="mynt">★</span><b class="poengtall">0</b></div>
+    </div>
+    <div class="faner">
+      <button data-fane="sko" class="aktiv">👟 Fotballsko</button>
+      <button data-fane="baller">⚽ Baller</button>
+    </div>
+    <div class="vareliste" id="vareliste"></div>
+  </div>
+</div>
+
+<!-- DRAKT -->
+<div id="drakt" class="skjerm">
+  <div class="kort">
+    <div class="hode">
+      <button class="knapp gra tilbake">← Ferdig</button>
+      <h2>Lag din drakt</h2>
+      <button class="knapp gul" id="tilfeldig">🎲 Tilfeldig</button>
+    </div>
+    <div class="drakt">
+      <div class="forhand"><canvas id="draktSpiller" width="600" height="760"></canvas></div>
+      <div class="valg" id="draktValg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTAT -->
+<div id="resultat" class="skjerm">
+  <div class="kort">
+    <div class="pokal" id="resPokal">🏆</div>
+    <h2 id="resTittel">Du vant!</h2>
+    <div class="score">
+      <div class="side du">DU<b id="resDu">0</b></div>
+      <div class="strek">–</div>
+      <div class="side">DEM<b id="resDem">0</b></div>
+    </div>
+    <p id="resTekst"></p>
+    <div class="tjent"><span class="mynt">★</span>+<span id="resTall">0</span></div>
+    <p class="liten" id="resPoeng"></p>
+    <div class="knapperad">
+      <button class="knapp gronn glans" id="resIgjen">↻ Spill igjen</button>
+      <button class="knapp gra" id="resMeny">Meny</button>
+    </div>
+  </div>
+</div>
+
+<!-- DIALOG -->
+<div id="dialog" class="skjerm" role="dialog" aria-modal="true" aria-labelledby="dialogTittel">
+  <div class="kort">
+    <h2 id="dialogTittel">Avslutte kampen?</h2>
+    <p>Poengene du har tjent, beholder du.</p>
+    <div class="knapperad">
+      <button class="knapp gronn" id="dialogNei">Spill videre</button>
+      <button class="knapp rod" id="dialogJa">Avslutt</button>
+    </div>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <button class="ikon" id="hudUt" aria-label="Til menyen"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div id="tavle">
+    <span class="lag du">DU</span><span class="prikker" id="prikkDu"></span><span class="tall" id="tallDu">0</span>
+    <span class="lag dem">DEM</span><span class="prikker" id="prikkDem"></span><span class="tall" id="tallDem">0</span>
+  </div>
+  <div id="treningsskilt">🎯 Trening</div>
+  <div id="hudHoyre">
+    <div class="poeng"><span class="mynt">★</span><b class="poengtall">0</b></div>
+    <button class="ikon lydknapp" aria-label="Lyd av/på"></button>
+  </div>
+</div>
+<div id="banner"><div class="straaler"></div><div class="stor"></div><div class="under"></div></div>
+<div id="melding"></div>
+<div id="hint"><div class="finger">👆</div><div class="boble">Dra fra ballen mot målet – og slipp!</div></div>
+<canvas id="konfetti"></canvas>
+
+<script>
+'use strict';
+/* =====================================================================
+   STRAFFESPARK – Mykje Spill
+   Alt lagres bare i nettleseren (localStorage). Ingen konto, ingen sporing.
+   ===================================================================== */
+
+const LAGRE = 'mykje-straffespark-v1';
+
+const KEEPERE = [
+  {id:'lett', navn:'Kari Klype', niva:'Lett', gange:1, vk:3.4, delay:0.17, sigma:0.8, guess:0.25, korr:0.0,  motst:0.62,
+   drakt:'#22c55e', drakt2:'#14532d', shorts:'#14532d', sokk:'#22c55e', hanske:'#fde047', hud:'#f5d0b0', har:'#f59e0b'},
+  {id:'middels', navn:'Muren Mo', niva:'Middels', gange:2, vk:4.3, delay:0.11, sigma:0.6, guess:0.2, korr:0.25, motst:0.72,
+   drakt:'#f97316', drakt2:'#7c2d12', shorts:'#1f2937', sokk:'#f97316', hanske:'#ffffff', hud:'#c68a5e', har:'#111111'},
+  {id:'vanskelig', navn:'Edderkoppen', niva:'Vanskelig', gange:3, vk:4.9, delay:0.09, sigma:0.45, guess:0.12, korr:0.5, motst:0.8,
+   drakt:'#111827', drakt2:'#a855f7', shorts:'#111827', sokk:'#a855f7', hanske:'#a855f7', hud:'#8d5a3b', har:'#111111'},
+];
+
+const SKO = [
+  {id:'gym',   navn:'Gymskoene',     pris:0,   kraft:1, skru:1, pres:1, farge:'#f1f5f9', aksent:'#94a3b8', saale:'#475569', dekor:'striper', tekst:'Helt vanlige sko. Alle må begynne et sted!'},
+  {id:'gronn', navn:'Grønnspretten', pris:60,  kraft:2, skru:2, pres:2, farge:'#22c55e', aksent:'#fef08a', saale:'#14532d', dekor:'striper', tekst:'Litt bedre på alt.'},
+  {id:'kanon', navn:'Kanonen',       pris:150, kraft:4, skru:1, pres:2, farge:'#ef4444', aksent:'#fde047', saale:'#1f2937', dekor:'flamme',  tekst:'Skyter knallhardt – keeperen rekker mindre.'},
+  {id:'skru',  navn:'Skrumesteren',  pris:150, kraft:2, skru:4, pres:2, farge:'#8b5cf6', aksent:'#f0abfc', saale:'#1e1b4b', dekor:'spiral',  tekst:'Bøy fingeren – ballen svinger masse.'},
+  {id:'snik',  navn:'Snikskytteren', pris:150, kraft:2, skru:2, pres:4, farge:'#0ea5e9', aksent:'#ffffff', saale:'#0c4a6e', dekor:'sikte',   tekst:'Ballen havner nesten nøyaktig der du sikter.'},
+  {id:'lyn',   navn:'Lynstøvelen',   pris:350, kraft:4, skru:4, pres:3, farge:'#facc15', aksent:'#1d4ed8', saale:'#111827', dekor:'lyn',     tekst:'Rask, hard og skrudd.'},
+  {id:'gull',  navn:'Gullstøvelen',  pris:700, kraft:5, skru:5, pres:5, farge:'#fbbf24', aksent:'#fff7ed', saale:'#78350f', dekor:'stjerne', gull:true, tekst:'Den beste skoen som finnes!'},
+];
+
+const BALLER = [
+  {id:'klassisk', navn:'Klassisk',      pris:0},
+  {id:'neon',     navn:'Neon',          pris:40},
+  {id:'retro',    navn:'Retro skinn',   pris:50},
+  {id:'vannmelon',navn:'Vannmelon',     pris:70},
+  {id:'stjerne',  navn:'Stjernehimmel', pris:90},
+  {id:'jorda',    navn:'Jordkloden',    pris:120},
+  {id:'regnbue',  navn:'Regnbue',       pris:150},
+  {id:'gull',     navn:'Gullball',      pris:300},
+];
+
+const FARGER = ['#dc2626','#f97316','#facc15','#a3e635','#22c55e','#15803d','#06b6d4','#2563eb','#1e3a8a','#7c3aed','#db2777','#7c2d12','#ffffff','#9ca3af','#111827'];
+const HUD = ['#f5d0b0','#e8b48a','#c68a5e','#8d5a3b','#5c3a24'];
+const HARFARGER = ['#f5d06b','#b45309','#3b2a1a','#111111','#9ca3af','#ec4899','#3b82f6'];
+const MONSTER = [['ensfarget','Ensfarget'],['striper','Striper'],['tverr','Tverr'],['halv','Halvdelt'],['diagonal','Diagonal'],['ruter','Ruter'],['skulder','Skuldre']];
+const HARSTIL = [['kort','Kort'],['langt','Langt'],['hestehale','Hestehale'],['krøller','Krøller']];
+
+const STANDARD = {
+  poeng:0, sko:['gym'], valgtSko:'gym', baller:['klassisk'], valgtBall:'klassisk', keeper:'lett', lyd:true,
+  drakt:{monster:'striper', farge:'#dc2626', farge2:'#ffffff', shorts:'#111827', sokker:'#dc2626', nummer:10, navn:'', hud:'#e8b48a', har:'#3b2a1a', harstil:'kort'},
+  stat:{mal:0, skudd:0, kamper:0, seire:0}
+};
+let S = lastInn();
+function lastInn(){
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(LAGRE)); } catch(e) {}
+  const s = JSON.parse(JSON.stringify(STANDARD));
+  if (d && typeof d === 'object') {
+    Object.assign(s, d);
+    s.drakt = Object.assign({}, STANDARD.drakt, d.drakt || {});
+    s.stat = Object.assign({}, STANDARD.stat, d.stat || {});
+  }
+  return s;
+}
+function lagre(){ try { localStorage.setItem(LAGRE, JSON.stringify(S)); } catch(e) {} }
+
+/* ---------- hjelpere ---------- */
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const lerp = (a,b,t) => a+(b-a)*t;
+const mot = (v,mal,steg) => v<mal ? Math.min(mal,v+steg) : Math.max(mal,v-steg);
+function rnorm(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function segDist(px,py,ax,ay,bx,by){ const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy; let t=l?((px-ax)*dx+(py-ay)*dy)/l:0; t=clamp(t,0,1); return Math.hypot(px-(ax+dx*t),py-(ay+dy*t)); }
+function lys(hex){ const n=parseInt(hex.slice(1),16); const r=(n>>16)&255,g=(n>>8)&255,b=n&255; return (0.299*r+0.587*g+0.114*b)/255; }
+function skoStat(){ return SKO.find(s=>s.id===S.valgtSko) || SKO[0]; }
+function keeperStat(){ return KEEPERE.find(k=>k.id===S.keeper) || KEEPERE[0]; }
+
+/* =====================================================================
+   LYD (lages i nettleseren – ingen lydfiler)
+   ===================================================================== */
+let AC = null, stoyBuf = null;
+function lyd(){
+  if (!S.lyd) return null;
+  if (!AC) { try { AC = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) { return null; } }
+  if (AC.state === 'suspended') AC.resume();
+  if (!stoyBuf) { stoyBuf = AC.createBuffer(1, AC.sampleRate*2, AC.sampleRate); const d=stoyBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; }
+  return AC;
+}
+function stoy(ac, filterType, freq, q, gainTopp, inn, varighet, slutt){
+  const kilde = ac.createBufferSource(); kilde.buffer = stoyBuf; kilde.loop = true;
+  const fl = ac.createBiquadFilter(); fl.type = filterType; fl.frequency.value = freq; fl.Q.value = q;
+  const g = ac.createGain(); const t = ac.currentTime;
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(gainTopp, t+inn); g.gain.exponentialRampToValueAtTime(0.0001, t+varighet);
+  if (slutt) fl.frequency.exponentialRampToValueAtTime(slutt, t+varighet);
+  kilde.connect(fl).connect(g).connect(ac.destination); kilde.start(t); kilde.stop(t+varighet+0.05);
+}
+function tone(ac, type, f1, f2, gainTopp, varighet, start=0){
+  const o = ac.createOscillator(), g = ac.createGain(); const t = ac.currentTime+start;
+  o.type = type; o.frequency.setValueAtTime(f1, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t+varighet);
+  g.gain.setValueAtTime(gainTopp, t); g.gain.exponentialRampToValueAtTime(0.0001, t+varighet);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t+varighet+0.02);
+}
+const LYD = {
+  spark(){ const a=lyd(); if(!a) return; tone(a,'sine',170,45,0.9,0.16); stoy(a,'bandpass',1800,1,0.35,0.002,0.06); },
+  jubel(){ const a=lyd(); if(!a) return; stoy(a,'bandpass',1100,0.6,0.32,0.25,2.4); stoy(a,'bandpass',2600,0.8,0.12,0.3,2.0); },
+  aah(){ const a=lyd(); if(!a) return; stoy(a,'lowpass',700,0.8,0.22,0.15,1.3,220); },
+  stolpe(){ const a=lyd(); if(!a) return; tone(a,'triangle',620,null,0.35,0.7); tone(a,'sine',1250,null,0.18,0.5); },
+  nett(){ const a=lyd(); if(!a) return; stoy(a,'highpass',3000,0.5,0.18,0.01,0.35); },
+  redning(){ const a=lyd(); if(!a) return; tone(a,'sine',140,70,0.5,0.12); stoy(a,'lowpass',900,0.7,0.25,0.005,0.2); },
+  pling(){ const a=lyd(); if(!a) return; tone(a,'sine',880,null,0.25,0.18); tone(a,'sine',1320,null,0.22,0.3,0.09); },
+  floyte(){ const a=lyd(); if(!a) return;
+    const o=a.createOscillator(), lfo=a.createOscillator(), lg=a.createGain(), g=a.createGain(); const t=a.currentTime;
+    o.frequency.value=2700; lfo.frequency.value=28; lg.gain.value=90; lfo.connect(lg).connect(o.frequency);
+    g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.16,t+0.02); g.gain.setValueAtTime(0.16,t+0.3); g.gain.exponentialRampToValueAtTime(0.0001,t+0.45);
+    o.connect(g).connect(a.destination); o.start(t); lfo.start(t); o.stop(t+0.5); lfo.stop(t+0.5); },
+  klikk(){ const a=lyd(); if(!a) return; tone(a,'sine',600,300,0.12,0.06); },
+};
+
+/* =====================================================================
+   SPILLMOTOR – ren matematikk (kan også simuleres uten skjerm)
+   Koordinater i meter: x sideveis, y høyde, z mot målet.
+   Ballen ligger på straffemerket (z=0), mållinja er z=11.
+   ===================================================================== */
+const MAL = {b:3.66, h:2.44, z:11};
+const BR = 0.11;          // ballradius
+const KZ = 10.85;         // der keeperen står
+
+function nyKeeper(){ return {hx:0, hy:0.95, th:0, tx:0, ty:1, start:99, dykk:false, korr:0, korrT:99, korrGjort:false, vk:5}; }
+
+function ballPos(sh, s){
+  return {
+    x: sh.xt*s + 4*sh.B*s*(1-s),
+    y: BR + (sh.h-BR)*s + 4*sh.loft*s*(1-s),
+    z: MAL.z*s
+  };
+}
+function ballFart(sh, s){
+  return {
+    x: (sh.xt + 4*sh.B*(1-2*s))/sh.T,
+    y: ((sh.h-BR) + 4*sh.loft*(1-2*s))/sh.T,
+    z: MAL.z/sh.T
+  };
+}
+
+// inp: {xt, p, B} fra fingeren. sko gir kraft/skru/presisjon.
+function lagSkudd(inp, sko){
+  const p = inp.p;
+  const sig = (0.42 - sko.pres*0.07) * (0.6 + 0.6*p);
+  const xt = inp.xt + rnorm()*sig;
+  const h = Math.max(BR, hoydeFraKraft(p) + rnorm()*sig*0.6);
+  const v = 15 + Math.min(p,1.1)*9 + sko.kraft*1.3;
+  return { xt, h, B:inp.B, loft:0.15+0.35*p, T:MAL.z/v, p, t:0, s:0, fri:false, sjekket:false, ferdig:false,
+           b:{x:0,y:BR,z:0}, vel:null, rot:0, spinn:(10+20*p)*(inp.B>=0?1:-1), cb:null, res:null, k:null };
+}
+function hoydeFraKraft(p){ return 0.12 + p*2.65; }
+
+function planleggKeeper(k, sh, kp){
+  let tx, ty;
+  if (Math.random() < kp.guess) {
+    tx = [-2.9, 0, 2.9][Math.floor(Math.random()*3)];
+    ty = 0.4 + Math.random()*1.5;
+  } else {
+    tx = sh.xt + 2.2*sh.B + rnorm()*kp.sigma;   // skru lurer keeperen
+    ty = sh.h + rnorm()*0.5;
+  }
+  k.tx = clamp(tx,-4.2,4.2); k.ty = clamp(ty,0.1,2.5);
+  k.start = kp.delay; k.korr = kp.korr; k.korrT = kp.delay + 0.14; k.korrGjort = false; k.vk = kp.vk; k.dykk = false;
+}
+
+function oppdaterKeeper(k, dt, t){
+  if (t < k.start) return;
+  k.dykk = true;
+  let thD, hyD, hxD;
+  if (Math.abs(k.tx) < 0.55) {
+    thD = 0; hyD = clamp(k.ty-1.25, 0.95, 1.45); hxD = k.tx;
+  } else {
+    const side = Math.sign(k.tx);
+    const a = lerp(1.35, 0.45, clamp((k.ty-0.2)/2.1, 0, 1));
+    thD = side*a;
+    hyD = Math.max(0.32, 0.95 - 0.55*Math.sin(a));
+    const handY = hyD + 1.25*Math.cos(a);
+    if (handY < k.ty) hyD += Math.min(0.55, k.ty-handY);
+    hxD = k.tx - side*1.25*Math.sin(a);
+  }
+  hxD = clamp(hxD, -2.5, 2.5);
+  k.hx = mot(k.hx, hxD, k.vk*dt);
+  k.th = mot(k.th, thD, 5.5*dt);
+  k.hy = mot(k.hy, hyD, 4*dt);
+}
+
+function keeperTreff(k, bx, by){
+  const ux = Math.sin(k.th), uy = Math.cos(k.th);
+  const fx = k.hx-0.95*ux, fy = k.hy-0.95*uy, hx = k.hx+1.25*ux, hy = k.hy+1.25*uy;
+  if (segDist(bx,by,fx,fy,hx,hy) < 0.3+BR) return true;
+  if (!k.dykk) {
+    const sy = k.hy+0.85;
+    if (segDist(bx,by,k.hx-0.75,sy,k.hx+0.75,sy) < 0.14+BR) return true;
+  }
+  return false;
+}
+
+function oppdaterSkudd(sh, dt){
+  sh.t += dt;
+  sh.rot += sh.spinn*dt;
+  const k = sh.k;
+  if (!sh.fri) {
+    if (k.korr > 0 && !k.korrGjort && sh.t >= k.korrT) {
+      k.korrGjort = true;
+      const s = clamp(sh.t/sh.T,0,1), b = ballPos(sh,s), v = ballFart(sh,s);
+      const ex = b.x + v.x*sh.T*(1-s), ey = b.y + v.y*sh.T*(1-s);
+      k.tx = lerp(k.tx, ex, k.korr); k.ty = lerp(k.ty, ey, k.korr);
+    }
+    oppdaterKeeper(k, dt, sh.t);
+    const s = sh.t/sh.T, sk = KZ/MAL.z;
+    if (!sh.sjekket && s >= sk) {
+      sh.sjekket = true;
+      const b = ballPos(sh, sk);
+      if (Math.abs(b.x) < MAL.b+0.2 && b.y < MAL.h+0.2 && keeperTreff(k, b.x, b.y)) {
+        sh.b = b; startFri(sh, {x: Math.sign(b.x-k.hx||1)*(2+Math.random()*3), y: 2+Math.random()*2.5, z: -6-Math.random()*3});
+        avgjor(sh, {type:'redning'}); return;
+      }
+    }
+    if (s >= 1) {
+      const b = ballPos(sh,1); sh.b = b;
+      const ax = Math.abs(b.x), v = ballFart(sh,1);
+      let r;
+      if (Math.abs(ax-MAL.b) <= 0.17 && b.y <= MAL.h+0.06) { r = {type:'stolpe'}; startFri(sh,{x:-Math.sign(b.x)*3, y:1.5, z:-7}); }
+      else if (Math.abs(b.y-MAL.h) <= 0.17 && ax <= MAL.b) { r = {type:'tverrligger'}; startFri(sh,{x:v.x*0.4, y:b.y>MAL.h?4:-3, z:-6}); }
+      else if (b.y > MAL.h+0.17) { r = {type: ax > MAL.b+0.6 ? 'utenfor' : 'over'}; startFri(sh, v); }
+      else if (ax > MAL.b+0.17) { r = {type:'utenfor'}; startFri(sh, v); }
+      else {
+        r = {type:'mal', kryss: ax>2.55 && b.y>1.45, skru: Math.abs(sh.B)>0.5, x:b.x, y:b.y};
+        startFri(sh, {x:v.x*0.5, y:v.y*0.5, z:v.z*0.6});
+      }
+      avgjor(sh, r); return;
+    }
+    sh.s = s; sh.b = ballPos(sh, s);
+  } else {
+    oppdaterKeeper(k, dt, sh.t);
+    const b = sh.b, v = sh.vel;
+    v.y -= 9.8*dt; v.x *= (1-0.4*dt); v.z *= (1-0.4*dt);
+    b.x += v.x*dt; b.y += v.y*dt; b.z += v.z*dt;
+    if (b.y < BR) { b.y = BR; if (v.y < 0) v.y = -v.y*0.5; v.x *= 0.8; v.z *= 0.8; if (Math.abs(v.y)<0.6) v.y=0; }
+    if (sh.res && sh.res.type === 'mal') {
+      if (b.z > 12.4) { b.z = 12.4; v.z = -Math.abs(v.z)*0.12; v.x *= 0.3; }
+      if (b.z > 11 && Math.abs(b.x) > MAL.b-0.15) { b.x = Math.sign(b.x)*(MAL.b-0.15); v.x *= -0.2; }
+      const tak = lerp(MAL.h, 1.6, clamp((b.z-11)/1.6,0,1)) - BR;
+      if (b.z > 11 && b.y > tak) { b.y = tak; v.y = -Math.abs(v.y)*0.2; }
+    }
+  }
+}
+function startFri(sh, vel){ sh.fri = true; sh.vel = {x:vel.x, y:vel.y, z:vel.z}; }
+function avgjor(sh, r){ if (sh.res) return; sh.res = r; if (sh.cb) sh.cb(r); }
+
+// For testing/finjustering: simuler mange skudd uten skjerm
+window.__sim = function(n, keeperId, skoId, strategi){
+  const kp = KEEPERE.find(k=>k.id===keeperId), sk = SKO.find(s=>s.id===skoId);
+  const telling = {};
+  for (let i=0;i<n;i++){
+    const sh = lagSkudd(strategi(), sk); sh.k = nyKeeper(); sh.k.hx = (Math.random()-0.5)*0.5;
+    planleggKeeper(sh.k, sh, kp);
+    while (!sh.res && sh.t < 3) oppdaterSkudd(sh, 1/60);
+    const t = sh.res ? sh.res.type : 'ingen'; telling[t] = (telling[t]||0)+1;
+  }
+  return telling;
+};
+
+/* =====================================================================
+   SKJERM OG PERSPEKTIV
+   ===================================================================== */
+const cv = $('bane'), ctx = cv.getContext('2d');
+let W=0, H=0, DPR=1, f=1000, cx=0, cy=0;
+const CAMZ = -7, CAMY = 2.6;
+const geo = {};
+const lag = {};
+
+function P(x,y,z){ const d = z-CAMZ, k = f/d; return {x: cx + x*k, y: cy + (CAMY-y)*k, k}; }
+
+function storrelse(){
+  W = window.innerWidth; H = window.innerHeight; DPR = Math.min(window.devicePixelRatio||1, 2);
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+  f = Math.min(2.2*W, 1.6*H);
+  cx = W/2;
+  cy = H*0.86 - CAMY*f/7;
+  geo.ball = P(0,BR,0);
+  geo.malBunn = P(0,0,MAL.z).y;
+  geo.dragD = clamp(Math.min(W,H)*0.42, 170, 420);
+  const ks = f/(-1.15-CAMZ);
+  geo.startX = Math.max(-1.25, -(cx - 0.34*ks)/ks);
+  byggBakgrunn();
+  plasserHint();
+}
+
+function lagLag(){
+  const c = document.createElement('canvas'); c.width = Math.round(W*DPR); c.height = Math.round(H*DPR);
+  const x = c.getContext('2d'); x.setTransform(DPR,0,0,DPR,0,0); return [c,x];
+}
+
+function byggBakgrunn(){
+  const bt = P(0,0.9,14.5).y, bb = P(0,0,14.5).y;
+  const topp = bt - H*0.62;
+  // himmel og tribune
+  const [h,hc] = lagLag();
+  let g = hc.createLinearGradient(0,0,0,bt); g.addColorStop(0,'#071029'); g.addColorStop(1,'#1d3366');
+  hc.fillStyle = g; hc.fillRect(0,0,W,bt+1);
+  hc.fillStyle = '#ffffff';
+  for (let i=0;i<40;i++){ hc.globalAlpha = 0.3+Math.random()*0.5; hc.fillRect(Math.random()*W, Math.random()*Math.max(0,topp), 1.5, 1.5); }
+  hc.globalAlpha = 1;
+  g = hc.createLinearGradient(0,topp,0,bt); g.addColorStop(0,'#141c2b'); g.addColorStop(1,'#26324a');
+  hc.fillStyle = g; hc.fillRect(0, topp, W, bt-topp+1);
+  hc.fillStyle = '#0b1120'; hc.fillRect(0, topp-14, W, 16);
+  for (const lx of [W*0.07, W*0.93, W*0.3, W*0.7]) {
+    const rg = hc.createRadialGradient(lx, topp-6, 2, lx, topp-6, f*0.22);
+    rg.addColorStop(0,'rgba(255,255,230,.55)'); rg.addColorStop(1,'rgba(255,255,230,0)');
+    hc.fillStyle = rg; hc.fillRect(lx-f*0.22, topp-f*0.22, f*0.44, f*0.44);
+    hc.fillStyle = '#fffbe6'; hc.fillRect(lx-14, topp-12, 28, 7);
+  }
+  lag.himmel = h;
+  // publikum
+  const [p,pc] = lagLag();
+  const d = S.drakt, palett = [d.farge, d.farge2, d.farge, '#e5e7eb','#f59e0b','#3b82f6','#ef4444','#a3e635','#f472b6','#94a3b8','#1f2937'];
+  let y = bt - 2, rad = 0;
+  while (y > topp + 6) {
+    const frac = clamp((bt-y)/(bt-topp),0,1);
+    const r = Math.max(2, f/230 * lerp(1, 0.5, frac));
+    for (let x = -r + (rad%2)*r*1.15; x < W + r; x += r*2.3) {
+      const jx = x + (Math.random()-0.5)*r*0.6, jy = y + (Math.random()-0.5)*r*0.5;
+      pc.fillStyle = palett[Math.floor(Math.random()*palett.length)];
+      pc.beginPath(); pc.ellipse(jx, jy+r*1.1, r*1.05, r*0.9, 0, Math.PI, 0); pc.fill();
+      pc.fillStyle = HUD[Math.floor(Math.random()*HUD.length)];
+      pc.beginPath(); pc.arc(jx, jy, r*0.62, 0, 7); pc.fill();
+    }
+    y -= r*2.4; rad++;
+  }
+  lag.publikum = p;
+  // bakke, reklameskilt og linjer
+  const [b,bc] = lagLag();
+  const striper = ['#1f9d4a','#23ad54'];
+  let i = 0;
+  for (let z = 14.5; z > CAMZ+0.4; z -= 2.2, i++) {
+    const y1 = P(0,0,z).y, y2 = P(0,0,Math.max(z-2.2, CAMZ+0.4)).y;
+    bc.fillStyle = striper[i%2]; bc.fillRect(0, y1, W, Math.min(H, y2)-y1+1);
+    if (y2 > H) break;
+  }
+  g = bc.createLinearGradient(0,bb,0,H); g.addColorStop(0,'rgba(0,30,10,.35)'); g.addColorStop(0.5,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.18)');
+  bc.fillStyle = g; bc.fillRect(0,bb,W,H-bb);
+  // reklame
+  bc.fillStyle = '#0f172a'; bc.fillRect(0, bt, W, bb-bt);
+  const pf = ['#2563eb','#dc2626','#16a34a','#f59e0b','#7c3aed'], tekster = ['MYKJE SPILL','STRAFFESPARK','MYKJE SPILL','⚽ GOOOL!'];
+  for (let n=0, x=-35; x<35; x+=7.5, n++) {
+    const a = P(x+0.15,0,14.5), e = P(x+7.35,0,14.5);
+    bc.fillStyle = pf[n%pf.length]; bc.fillRect(a.x, bt+1, e.x-a.x, bb-bt-2);
+    bc.fillStyle = '#fff'; bc.font = `${Math.round((bb-bt)*0.55)}px ${getComputedStyle(document.body).getPropertyValue('--tittel')}`;
+    bc.textAlign = 'center'; bc.textBaseline = 'middle';
+    bc.fillText(tekster[n%tekster.length], (a.x+e.x)/2, (bt+bb)/2+1, (e.x-a.x)*0.9);
+  }
+  // linjer
+  bc.fillStyle = 'rgba(255,255,255,.92)';
+  const L = (x1,z1,x2,z2) => linje(bc,x1,z1,x2,z2);
+  L(-30,MAL.z,30,MAL.z);
+  L(-9.16,MAL.z-5.5,9.16,MAL.z-5.5); L(-9.16,MAL.z-5.5,-9.16,MAL.z); L(9.16,MAL.z-5.5,9.16,MAL.z);
+  L(-20.16,MAL.z-16.5,20.16,MAL.z-16.5); L(-20.16,MAL.z-16.5,-20.16,MAL.z); L(20.16,MAL.z-16.5,20.16,MAL.z);
+  const sp = P(0,0,0); bc.beginPath(); bc.ellipse(sp.x, sp.y, 0.16*sp.k, 0.16*sp.k*0.3, 0, 0, 7); bc.fill();
+  lag.bakke = b;
+}
+function linje(c,x1,z1,x2,z2){
+  const w = 0.07, dx = x2-x1, dz = z2-z1, l = Math.hypot(dx,dz), nx = -dz/l*w, nz = dx/l*w;
+  const pts = [P(x1+nx,0,z1+nz),P(x2+nx,0,z2+nz),P(x2-nx,0,z2-nz),P(x1-nx,0,z1-nz)];
+  c.beginPath(); c.moveTo(pts[0].x,pts[0].y); for (const q of pts) c.lineTo(q.x,q.y); c.closePath(); c.fill();
+}
+
+/* ---------- nett og mål ---------- */
+const nett = {amp:0, x:0, y:1, t:0};
+function nettPunkt(x,y,z){
+  if (nett.amp > 0.001 && z > 11.05) {
+    const d2 = (x-nett.x)**2 + (y-nett.y)**2;
+    z += nett.amp*Math.exp(-d2/0.6)*Math.cos(nett.t*14)*((z-11)/1.6);
+  }
+  return P(x,y,z);
+}
+function nettLinje(a,b,n=6){
+  ctx.beginPath();
+  for (let i=0;i<=n;i++){ const t=i/n; const q = nettPunkt(lerp(a[0],b[0],t), lerp(a[1],b[1],t), lerp(a[2],b[2],t)); i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y); }
+  ctx.stroke();
+}
+function tegnNett(){
+  const B = MAL.b, HH = MAL.h, ZB = 12.6, HB = 1.6;
+  ctx.strokeStyle = 'rgba(235,240,250,.42)'; ctx.lineWidth = Math.max(0.7, f/1600);
+  for (let x=-B; x<=B+0.01; x+=0.36) { nettLinje([x,0,ZB],[x,HB,ZB]); nettLinje([x,HH,11],[x,HB,ZB]); }
+  for (let y=0; y<=HB+0.01; y+=0.3) nettLinje([-B,y,ZB],[B,y,ZB],10);
+  for (let t=0.2; t<1; t+=0.2) nettLinje([-B,lerp(HH,HB,t),lerp(11,ZB,t)],[B,lerp(HH,HB,t),lerp(11,ZB,t)],10);
+  for (const sx of [-B,B]) {
+    for (let z=11; z<=ZB+0.01; z+=0.4) nettLinje([sx,0,z],[sx,lerp(HH,HB,(z-11)/1.6),z],4);
+    for (let y=0; y<HH; y+=0.3) { const zt = y<=HB ? ZB : lerp(11,ZB,(HH-y)/(HH-HB)); nettLinje([sx,y,11],[sx,y,zt],3); }
+  }
+  // bakramme
+  ctx.strokeStyle = 'rgba(200,210,225,.8)'; ctx.lineWidth = Math.max(1.5, f/700);
+  nettLinje([-B,0,ZB],[-B,HB,ZB],1); nettLinje([B,0,ZB],[B,HB,ZB],1); nettLinje([-B,HB,ZB],[B,HB,ZB],1);
+}
+function tegnStolper(){
+  const B = MAL.b, HH = MAL.h, w = 0.06;
+  const s = P(0,0,MAL.z).k;
+  ctx.fillStyle = '#ffffff'; ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 1;
+  for (const sx of [-B-w, B+w]) {
+    const a = P(sx-w,HH+w,MAL.z), b = P(sx+w,0,MAL.z);
+    ctx.fillRect(a.x, a.y, b.x-a.x, b.y-a.y); ctx.strokeRect(a.x, a.y, b.x-a.x, b.y-a.y);
+  }
+  const a = P(-B-2*w,HH+2*w,MAL.z), b = P(B+2*w,HH,MAL.z);
+  ctx.fillRect(a.x, a.y, b.x-a.x, b.y-a.y); ctx.strokeRect(a.x, a.y, b.x-a.x, b.y-a.y);
+  ctx.fillStyle = 'rgba(0,0,0,.18)';
+  for (const sx of [-B-w, B+w]) { const q = P(sx,0,MAL.z); ctx.beginPath(); ctx.ellipse(q.x+s*0.08, q.y, s*0.12, s*0.035, 0, 0, 7); ctx.fill(); }
+}
+
+/* =====================================================================
+   TEGNING AV BALL, SKO, DRAKT, SPILLER OG KEEPER
+   ===================================================================== */
+function femkant(c,x,y,r,rot){ c.beginPath(); for(let i=0;i<5;i++){ const a=rot+i*Math.PI*2/5-Math.PI/2; i?c.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r):c.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r);} c.closePath(); }
+function stjerne(c,x,y,r,rot){ c.beginPath(); for(let i=0;i<10;i++){ const a=rot+i*Math.PI/5-Math.PI/2, rr=i%2?r*0.45:r; i?c.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr):c.moveTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr);} c.closePath(); }
+
+function tegnBall(c, x, y, r, id, rot=0){
+  if (r < 0.5) return;
+  c.save(); c.translate(x,y);
+  c.beginPath(); c.arc(0,0,r,0,7); c.save(); c.clip();
+  c.rotate(rot);
+  const ring = (farge, fyll) => { c.fillStyle = fyll; femkant(c,0,0,r*0.36,0); c.fill(); for(let i=0;i<5;i++){ const a=i*Math.PI*2/5-Math.PI/2+Math.PI/5; femkant(c,Math.cos(a)*r*0.92,Math.sin(a)*r*0.92,r*0.33,a+Math.PI/2); c.fill(); }
+    c.strokeStyle = farge; c.lineWidth = Math.max(0.6,r*0.05); for(let i=0;i<5;i++){ const a=i*Math.PI*2/5-Math.PI/2; c.beginPath(); c.moveTo(Math.cos(a)*r*0.36,Math.sin(a)*r*0.36); c.lineTo(Math.cos(a)*r*0.75,Math.sin(a)*r*0.75); c.stroke(); } };
+  switch(id){
+    case 'neon': c.fillStyle='#bef264'; c.fillRect(-r,-r,2*r,2*r); ring('#86198f','#db2777'); break;
+    case 'retro': {
+      c.fillStyle='#a0522d'; c.fillRect(-r,-r,2*r,2*r);
+      c.strokeStyle='#5c2e12'; c.lineWidth=Math.max(0.6,r*0.06);
+      for (const o of [-0.45,0,0.45]) { c.beginPath(); c.ellipse(o*r*1.6,0,r*0.5,r*1.1,0,0,7); c.stroke(); }
+      c.fillStyle='#f5e6c8'; c.fillRect(-r*0.12,-r*0.75,r*0.24,r*0.6);
+      c.strokeStyle='#5c2e12'; c.lineWidth=Math.max(0.5,r*0.04); for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(-r*0.16,-r*0.68+i*r*0.15); c.lineTo(r*0.16,-r*0.62+i*r*0.15); c.stroke(); }
+      break; }
+    case 'vannmelon': {
+      c.fillStyle='#4ade80'; c.fillRect(-r,-r,2*r,2*r);
+      c.fillStyle='#166534';
+      for (let i=-3;i<=3;i++){ c.beginPath(); const x0=i*r*0.55; c.moveTo(x0,-r); for(let j=0;j<=8;j++){ c.lineTo(x0+(j%2?r*0.12:-r*0.12), -r+j*r/4);} c.lineTo(x0+r*0.16,r); c.lineTo(x0+r*0.16,-r); c.fill(); }
+      break; }
+    case 'stjerne': {
+      const g=c.createRadialGradient(0,0,r*0.1,0,0,r); g.addColorStop(0,'#3b82f6'); g.addColorStop(1,'#1e1b4b'); c.fillStyle=g; c.fillRect(-r,-r,2*r,2*r);
+      c.fillStyle='#fde047'; stjerne(c,0,0,r*0.4,0); c.fill();
+      c.fillStyle='#ffffff'; for(let i=0;i<6;i++){ const a=i*Math.PI/3; stjerne(c,Math.cos(a)*r*0.78,Math.sin(a)*r*0.78,r*0.18,a); c.fill(); }
+      break; }
+    case 'jorda': {
+      c.fillStyle='#2563eb'; c.fillRect(-r,-r,2*r,2*r);
+      c.fillStyle='#22c55e';
+      const blobs=[[-0.35,-0.3,0.35,0.25],[0.35,0.1,0.3,0.4],[-0.2,0.45,0.25,0.18],[0.55,-0.55,0.2,0.15],[-0.7,0.1,0.15,0.3]];
+      for (const [bx,by,rx,ry] of blobs){ c.beginPath(); c.ellipse(bx*r,by*r,rx*r,ry*r,bx,0,7); c.fill(); }
+      c.fillStyle='rgba(255,255,255,.85)'; c.beginPath(); c.ellipse(0,-r*0.95,r*0.5,r*0.15,0,0,7); c.fill();
+      break; }
+    case 'regnbue': {
+      const fr=['#ef4444','#f97316','#facc15','#22c55e','#3b82f6','#8b5cf6'];
+      for(let i=0;i<6;i++){ c.fillStyle=fr[i]; c.beginPath(); c.moveTo(0,0); c.arc(0,0,r*1.1,i*Math.PI/3,(i+1)*Math.PI/3); c.fill(); }
+      c.fillStyle='#fff'; c.beginPath(); c.arc(0,0,r*0.22,0,7); c.fill();
+      break; }
+    case 'gull': {
+      const g=c.createRadialGradient(-r*0.3,-r*0.3,r*0.1,0,0,r); g.addColorStop(0,'#fff7c2'); g.addColorStop(0.5,'#fbbf24'); g.addColorStop(1,'#b45309');
+      c.fillStyle=g; c.fillRect(-r,-r,2*r,2*r);
+      c.strokeStyle='rgba(120,53,15,.6)'; c.lineWidth=Math.max(0.6,r*0.05);
+      femkant(c,0,0,r*0.36,0); c.stroke(); for(let i=0;i<5;i++){ const a=i*Math.PI*2/5-Math.PI/2+Math.PI/5; femkant(c,Math.cos(a)*r*0.92,Math.sin(a)*r*0.92,r*0.33,a+Math.PI/2); c.stroke(); }
+      break; }
+    default: c.fillStyle='#ffffff'; c.fillRect(-r,-r,2*r,2*r); ring('#111827','#111827');
+  }
+  c.restore();
+  // skygge og glans
+  const g = c.createRadialGradient(-r*0.35,-r*0.4,r*0.05,0,0,r*1.05);
+  g.addColorStop(0,'rgba(255,255,255,.55)'); g.addColorStop(0.35,'rgba(255,255,255,0)'); g.addColorStop(0.8,'rgba(0,0,0,.12)'); g.addColorStop(1,'rgba(0,0,0,.4)');
+  c.fillStyle = g; c.beginPath(); c.arc(0,0,r,0,7); c.fill();
+  c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = Math.max(0.6, r*0.04); c.stroke();
+  c.restore();
+}
+
+function tegnSko(c, x, y, w, sk){
+  const h = w*0.5;
+  c.save(); c.translate(x,y);
+  const form = () => { c.beginPath(); c.moveTo(w*0.06,h*0.8); c.lineTo(w*0.06,h*0.22); c.quadraticCurveTo(w*0.08,h*0.04,w*0.24,h*0.08); c.lineTo(w*0.38,h*0.15);
+    c.quadraticCurveTo(w*0.5,h*0.32,w*0.7,h*0.4); c.quadraticCurveTo(w*0.98,h*0.48,w*0.96,h*0.74); c.lineTo(w*0.96,h*0.8); c.closePath(); };
+  // knotter
+  c.fillStyle = sk.saale;
+  for (const sx of [0.14,0.26,0.55,0.7,0.85]) { c.beginPath(); c.moveTo(w*(sx-0.04),h*0.88); c.lineTo(w*(sx+0.04),h*0.88); c.lineTo(w*(sx+0.025),h*1.0); c.lineTo(w*(sx-0.025),h*1.0); c.fill(); }
+  c.fillRect(w*0.05,h*0.78,w*0.92,h*0.11);
+  form();
+  if (sk.gull) { const g=c.createLinearGradient(0,0,w,h); g.addColorStop(0,'#fff3b0'); g.addColorStop(0.5,'#fbbf24'); g.addColorStop(1,'#b45309'); c.fillStyle=g; } else c.fillStyle = sk.farge;
+  c.fill();
+  c.save(); form(); c.clip();
+  c.fillStyle = sk.aksent; c.strokeStyle = sk.aksent; c.lineWidth = w*0.035;
+  switch(sk.dekor){
+    case 'striper': for (const o of [0.38,0.48]) { c.beginPath(); c.moveTo(w*o,h*0.78); c.lineTo(w*(o+0.12),h*0.25); c.lineTo(w*(o+0.17),h*0.25); c.lineTo(w*(o+0.05),h*0.78); c.fill(); } break;
+    case 'flamme': c.beginPath(); c.moveTo(w*0.96,h*0.75); c.quadraticCurveTo(w*0.7,h*0.7,w*0.5,h*0.35); c.quadraticCurveTo(w*0.6,h*0.6,w*0.66,h*0.45); c.quadraticCurveTo(w*0.7,h*0.65,w*0.8,h*0.5); c.quadraticCurveTo(w*0.82,h*0.68,w*0.96,h*0.6); c.fill(); break;
+    case 'spiral': c.beginPath(); c.moveTo(w*0.12,h*0.7); c.bezierCurveTo(w*0.3,h*0.2,w*0.5,h*0.9,w*0.7,h*0.5); c.bezierCurveTo(w*0.8,h*0.3,w*0.9,h*0.6,w*0.95,h*0.55); c.stroke(); break;
+    case 'sikte': c.beginPath(); c.arc(w*0.3,h*0.5,h*0.2,0,7); c.stroke(); c.beginPath(); c.moveTo(w*0.3,h*0.22); c.lineTo(w*0.3,h*0.78); c.moveTo(w*0.18,h*0.5); c.lineTo(w*0.42,h*0.5); c.lineWidth=w*0.02; c.stroke(); break;
+    case 'lyn': c.beginPath(); c.moveTo(w*0.2,h*0.25); c.lineTo(w*0.45,h*0.45); c.lineTo(w*0.4,h*0.5); c.lineTo(w*0.75,h*0.7); c.lineTo(w*0.5,h*0.55); c.lineTo(w*0.55,h*0.5); c.closePath(); c.fill(); break;
+    case 'stjerne': c.fillStyle='#fff'; stjerne(c,w*0.3,h*0.5,h*0.22,0); c.fill(); stjerne(c,w*0.62,h*0.6,h*0.12,0.3); c.fill(); break;
+  }
+  c.restore();
+  // lisser
+  c.strokeStyle = sk.id==='gym' ? '#64748b' : '#ffffff'; c.lineWidth = w*0.015;
+  for (let i=0;i<4;i++){ const lx=w*(0.4+i*0.07), ly=h*(0.18+i*0.06); c.beginPath(); c.moveTo(lx-w*0.03,ly-h*0.03); c.lineTo(lx+w*0.03,ly+h*0.05); c.stroke(); }
+  form(); c.strokeStyle = 'rgba(0,0,0,.55)'; c.lineWidth = Math.max(1,w*0.015); c.stroke();
+  c.restore();
+}
+
+function fyllMonster(c, d, x, y, w, h){
+  const f1 = d.farge, f2 = d.farge2;
+  c.fillStyle = f1; c.fillRect(x,y,w,h);
+  c.fillStyle = f2;
+  switch(d.monster){
+    case 'striper': for (let sx=x+w/9; sx<x+w; sx+=w*2/9) c.fillRect(sx, y, w/9, h); break;
+    case 'tverr': for (let sy=y+h/7; sy<y+h; sy+=h*2/7) c.fillRect(x, sy, w, h/7); break;
+    case 'halv': c.fillRect(x+w/2, y, w/2, h); break;
+    case 'diagonal': c.beginPath(); c.moveTo(x,y+h*0.05); c.lineTo(x+w,y+h*0.55); c.lineTo(x+w,y+h*0.78); c.lineTo(x,y+h*0.28); c.fill(); break;
+    case 'ruter': { const q=w/6; for (let i=0;i*q<w;i++) for (let j=0;j*q<h;j++) if ((i+j)%2) c.fillRect(x+i*q,y+j*q,q,q); break; }
+    case 'skulder': c.fillRect(x,y,w,h*0.24); break;
+  }
+}
+
+function tegnTroye(c, x, y, w, d){ // liten trøye-ikon (forfra)
+  const h = w;
+  c.save(); c.translate(x,y);
+  const form = () => { c.beginPath(); c.moveTo(w*0.32,h*0.08); c.quadraticCurveTo(w*0.5,h*0.2,w*0.68,h*0.08); c.lineTo(w*0.95,h*0.22); c.lineTo(w*0.86,h*0.42); c.lineTo(w*0.76,h*0.37);
+    c.lineTo(w*0.76,h*0.95); c.lineTo(w*0.24,h*0.95); c.lineTo(w*0.24,h*0.37); c.lineTo(w*0.14,h*0.42); c.lineTo(w*0.05,h*0.22); c.closePath(); };
+  form(); c.save(); c.clip(); fyllMonster(c,d,0,h*0.08,w,h*0.9); c.restore();
+  form(); c.strokeStyle='rgba(0,0,0,.5)'; c.lineWidth=Math.max(1,w*0.03); c.stroke();
+  c.restore();
+}
+
+function tegnHar(c, m, d, bak){
+  c.fillStyle = d.har;
+  const hy = -1.42;
+  if (d.harstil === 'krøller') {
+    for (let i=0;i<9;i++){ const a=Math.PI+i*Math.PI/8; c.beginPath(); c.arc(m(Math.cos(a)*0.12), m(hy+Math.sin(a)*0.12), m(0.06), 0, 7); c.fill(); }
+    c.beginPath(); c.arc(0, m(hy), m(0.13), 0, 7); c.fill();
+    if (bak) { for (let i=0;i<5;i++){ c.beginPath(); c.arc(m(-0.1+i*0.05), m(hy+0.08), m(0.05),0,7); c.fill(); } }
+    return;
+  }
+  c.beginPath(); c.arc(0, m(hy), m(0.122), Math.PI*0.95, Math.PI*2.05); c.fill();
+  if (bak) { c.beginPath(); c.ellipse(0, m(hy+0.02), m(0.12), m(0.1), 0, 0, Math.PI); c.fill(); }
+  if (d.harstil === 'langt') { c.beginPath(); c.moveTo(m(-0.125),m(hy)); c.lineTo(m(-0.14),m(hy+0.22)); c.quadraticCurveTo(0,m(hy+0.27),m(0.14),m(hy+0.22)); c.lineTo(m(0.125),m(hy)); c.fill(); }
+  if (d.harstil === 'hestehale') { c.beginPath(); c.ellipse(0, m(hy+0.16), m(0.05), m(0.13), 0.1, 0, 7); c.fill(); c.fillStyle='#ef4444'; c.fillRect(m(-0.03),m(hy+0.06),m(0.06),m(0.03)); }
+}
+
+// Spilleren sett bakfra. fx,fy = midt mellom føttene på skjermen, s = piksler per meter.
+function tegnSpiller(c, fx, fy, s, d, sk, pose){
+  const m = v => v*s;
+  c.save(); c.translate(fx, fy); c.lineCap = 'round'; c.lineJoin = 'round';
+  let svL = 0, svR = 0, arm = 0, fotOpp = 0, fotX = 0, lene = 0;
+  if (pose.lop != null) { svL = Math.sin(pose.lop)*0.1; svR = -svL; arm = Math.sin(pose.lop)*0.12; }
+  if (pose.spark != null) { const q = clamp(pose.spark,0,1); fotOpp = 0.42*Math.sin(Math.PI*Math.min(q*1.3,1)); fotX = 0.04+0.1*q; lene = -0.06*Math.sin(Math.PI*q); arm = 0.12*Math.sin(Math.PI*q); }
+  c.rotate(lene);
+  // skygge
+  c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, m(0.3), m(0.06), 0, 0, 7); c.fill();
+  // bein
+  const bein = (side, sv, opp, ex) => {
+    const hx = side*0.09, fx2 = side*0.1 + ex, fy2 = -opp + sv*0.4;
+    c.strokeStyle = d.hud; c.lineWidth = m(0.1); c.beginPath(); c.moveTo(m(hx), m(-0.7)); c.lineTo(m(fx2), m(fy2-0.05)); c.stroke();
+    c.strokeStyle = d.sokker; c.lineWidth = m(0.11); c.beginPath(); c.moveTo(m(lerp(hx,fx2,0.55)), m(lerp(-0.7,fy2,0.55))); c.lineTo(m(fx2), m(fy2-0.06)); c.stroke();
+    c.fillStyle = sk.saale; c.beginPath(); c.ellipse(m(fx2), m(fy2-0.02), m(0.075), m(0.045), 0, 0, 7); c.fill();
+    c.fillStyle = sk.farge; c.beginPath(); c.ellipse(m(fx2), m(fy2-0.05), m(0.07), m(0.05), 0, 0, 7); c.fill();
+  };
+  bein(-1, svL, 0, 0);
+  bein(1, svR, fotOpp, fotX);
+  // armer
+  c.strokeStyle = d.hud; c.lineWidth = m(0.075);
+  c.beginPath(); c.moveTo(m(-0.22), m(-1.18)); c.lineTo(m(-0.29), m(-0.88 + arm)); c.stroke();
+  c.beginPath(); c.moveTo(m(0.22), m(-1.18)); c.lineTo(m(0.29), m(-0.88 - arm)); c.stroke();
+  // shorts
+  c.fillStyle = d.shorts; c.beginPath(); c.moveTo(m(-0.18),m(-0.88)); c.lineTo(m(0.18),m(-0.88)); c.lineTo(m(0.2),m(-0.64)); c.lineTo(m(0.02),m(-0.64)); c.lineTo(0,m(-0.7)); c.lineTo(m(-0.02),m(-0.64)); c.lineTo(m(-0.2),m(-0.64)); c.closePath(); c.fill();
+  // trøye
+  const torso = () => { c.beginPath(); c.moveTo(m(-0.2),m(-1.3)); c.lineTo(m(0.2),m(-1.3)); c.lineTo(m(0.27),m(-1.12)); c.lineTo(m(0.2),m(-1.08)); c.lineTo(m(0.17),m(-0.84)); c.lineTo(m(-0.17),m(-0.84)); c.lineTo(m(-0.2),m(-1.08)); c.lineTo(m(-0.27),m(-1.12)); c.closePath(); };
+  torso(); c.save(); c.clip(); fyllMonster(c, d, m(-0.28), m(-1.31), m(0.56), m(0.48));
+  if (d.monster === 'skulder') { c.fillStyle = d.farge2; c.fillRect(m(-0.28),m(-1.31),m(0.1),m(0.25)); c.fillRect(m(0.18),m(-1.31),m(0.1),m(0.25)); }
+  c.restore();
+  torso(); c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = Math.max(1,m(0.008)); c.stroke();
+  // nummer og navn
+  const tekstF = lys(d.farge) > 0.6 ? '#111827' : '#ffffff', kant = tekstF === '#ffffff' ? '#111827' : '#ffffff';
+  const font = getComputedStyle(document.body).getPropertyValue('--tittel');
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+  c.font = `${m(0.2)}px ${font}`; c.lineWidth = m(0.025); c.strokeStyle = kant; c.fillStyle = tekstF;
+  c.strokeText(String(d.nummer), 0, m(-0.99)); c.fillText(String(d.nummer), 0, m(-0.99));
+  if (d.navn) { c.font = `${m(0.065)}px ${font}`; c.lineWidth = m(0.014); c.strokeText(d.navn.toUpperCase(), 0, m(-1.2), m(0.34)); c.fillText(d.navn.toUpperCase(), 0, m(-1.2), m(0.34)); }
+  // hals og hode
+  c.fillStyle = d.hud; c.fillRect(m(-0.045), m(-1.36), m(0.09), m(0.08));
+  c.beginPath(); c.arc(0, m(-1.42), m(0.115), 0, 7); c.fill();
+  c.beginPath(); c.arc(m(-0.115), m(-1.42), m(0.03), 0, 7); c.arc(m(0.115), m(-1.42), m(0.03), 0, 7); c.fill();
+  tegnHar(c, m, d, true);
+  c.restore();
+}
+
+// Keeper sett forfra. sx,sy = hofta på skjermen.
+function tegnKeeper(c, sx, sy, s, th, armerOpp, kp, vink=0){
+  const m = v => v*s;
+  c.save(); c.translate(sx, sy); c.rotate(th); c.lineCap = 'round'; c.lineJoin = 'round';
+  // bein
+  c.strokeStyle = kp.hud; c.lineWidth = m(0.11);
+  c.beginPath(); c.moveTo(m(-0.09),0); c.lineTo(m(-0.14),m(0.9)); c.moveTo(m(0.09),0); c.lineTo(m(0.14),m(0.9)); c.stroke();
+  c.strokeStyle = kp.sokk; c.lineWidth = m(0.12);
+  c.beginPath(); c.moveTo(m(-0.12),m(0.5)); c.lineTo(m(-0.14),m(0.88)); c.moveTo(m(0.12),m(0.5)); c.lineTo(m(0.14),m(0.88)); c.stroke();
+  c.fillStyle = '#111827'; c.beginPath(); c.ellipse(m(-0.15),m(0.93),m(0.08),m(0.045),0,0,7); c.ellipse(m(0.15),m(0.93),m(0.08),m(0.045),0,0,7); c.fill();
+  c.fillStyle = kp.shorts; c.fillRect(m(-0.2), m(-0.05), m(0.4), m(0.26));
+  // armer
+  const hL = armerOpp ? [-0.16,-1.25] : [-0.74,-0.86+vink], hR = armerOpp ? [0.16,-1.25] : [0.74,-0.86-vink];
+  c.strokeStyle = kp.drakt; c.lineWidth = m(0.11);
+  c.beginPath(); c.moveTo(m(-0.17),m(-0.55)); c.lineTo(m(hL[0]),m(hL[1])); c.moveTo(m(0.17),m(-0.55)); c.lineTo(m(hR[0]),m(hR[1])); c.stroke();
+  // kropp
+  c.fillStyle = kp.drakt; c.beginPath(); c.roundRect ? c.roundRect(m(-0.21),m(-0.66),m(0.42),m(0.64),m(0.08)) : c.rect(m(-0.21),m(-0.66),m(0.42),m(0.64)); c.fill();
+  c.fillStyle = kp.drakt2; c.fillRect(m(-0.21),m(-0.46),m(0.42),m(0.08));
+  c.fillStyle = '#fff'; c.font = `${m(0.18)}px ${getComputedStyle(document.body).getPropertyValue('--tittel')}`; c.textAlign='center'; c.textBaseline='middle';
+  c.fillText('1', 0, m(-0.22));
+  // hansker
+  c.fillStyle = kp.hanske; c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = Math.max(1, m(0.015));
+  for (const hh of [hL,hR]) { c.beginPath(); c.arc(m(hh[0]),m(hh[1]),m(0.1),0,7); c.fill(); c.stroke(); }
+  // hode
+  c.fillStyle = kp.hud; c.fillRect(m(-0.05),m(-0.74),m(0.1),m(0.1));
+  c.beginPath(); c.arc(0, m(-0.84), m(0.13), 0, 7); c.fill();
+  c.fillStyle = kp.har; c.beginPath(); c.arc(0, m(-0.86), m(0.135), Math.PI*1.02, Math.PI*1.98); c.fill();
+  c.fillStyle = '#111827'; c.beginPath(); c.arc(m(-0.045),m(-0.84),m(0.016),0,7); c.arc(m(0.045),m(-0.84),m(0.016),0,7); c.fill();
+  c.strokeStyle = '#7f1d1d'; c.lineWidth = Math.max(1,m(0.014)); c.beginPath(); c.arc(0,m(-0.8),m(0.045),0.2,Math.PI-0.2); c.stroke();
+  c.restore();
+}
+
+/* =====================================================================
+   SPILLTILSTAND
+   ===================================================================== */
+let skjerm = 'meny';         // meny | spill | butikk | drakt | resultat
+let fase = 'sikt';           // sikt | tilop | flukt | etter | motst | slutt
+let modus = 'kamp';          // kamp | trening
+let kp = keeperStat();
+let K = nyKeeper();
+let sh = null, sikte = null, drag = null;
+const spiller = {x:-1.2, z:-1.15, lop:null, spark:null, tl:0};
+let kamp = {du:[], dem:[], tjent:0};
+let tid = 0, publikumHopp = 0;
+
+/* ---------- effekter: konfetti og risting ---------- */
+const ROLIG = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const kv = $('konfetti'), kctx = kv.getContext('2d');
+const biter = [];
+let rist = 0;
+function ristSkjerm(a){ if (!ROLIG) rist = Math.max(rist, a); }
+function konfetti(x, y, n=120, spredning=1){
+  if (ROLIG) n = Math.round(n/4);
+  const farger = ['#a3e635','#fde047','#fbbf24','#ffffff','#38bdf8','#f472b6','#c084fc', S.drakt.farge];
+  for (let i=0;i<n;i++){
+    const a = -Math.PI/2 + (Math.random()-0.5)*Math.PI*1.3*spredning, v = 380 + Math.random()*620;
+    biter.push({x, y, vx:Math.cos(a)*v, vy:Math.sin(a)*v, r:Math.random()*6, vr:(Math.random()-0.5)*14,
+      w:6+Math.random()*7, h:4+Math.random()*6, c:farger[i%farger.length], liv:2.2+Math.random()*1.4, rund:Math.random()<0.25});
+  }
+}
+function oppdaterEffekter(dt){
+  rist = Math.max(0, rist - dt*28);
+  if (kv.width !== cv.width || kv.height !== cv.height) { kv.width = cv.width; kv.height = cv.height; }
+  kctx.setTransform(DPR,0,0,DPR,0,0); kctx.clearRect(0,0,W,H);
+  for (let i=biter.length-1;i>=0;i--){
+    const b = biter[i];
+    b.liv -= dt; if (b.liv <= 0 || b.y > H+40) { biter.splice(i,1); continue; }
+    b.vy += 900*dt; b.vx *= (1-1.6*dt); b.vy *= (1-1.2*dt); b.x += b.vx*dt; b.y += b.vy*dt; b.r += b.vr*dt;
+    kctx.save(); kctx.globalAlpha = Math.min(1, b.liv); kctx.translate(b.x, b.y); kctx.rotate(b.r);
+    kctx.fillStyle = b.c;
+    if (b.rund) { kctx.beginPath(); kctx.arc(0,0,b.w*0.4,0,7); kctx.fill(); }
+    else kctx.fillRect(-b.w/2, -b.h/2*Math.abs(Math.cos(b.r*1.7)), b.w, b.h*Math.abs(Math.cos(b.r*1.7))+0.5);
+    kctx.restore();
+  }
+}
+function tellOpp(el, til, ms=900){
+  if (ROLIG || til <= 0) { el.textContent = til; return; }
+  const t0 = performance.now();
+  const steg = n => { const q = Math.min(1,(n-t0)/ms); el.textContent = Math.round(til*(1-Math.pow(1-q,3))); if (q<1) requestAnimationFrame(steg); };
+  requestAnimationFrame(steg);
+}
+const timere = [];
+function planlegg(sek, fn){ timere.push({t:tid+sek, fn}); }
+
+function nyttSkudd(){
+  sh = null; sikte = null; drag = null;
+  K = nyKeeper();
+  spiller.x = geo.startX; spiller.z = -1.15; spiller.lop = null; spiller.spark = null; spiller.tl = 0;
+  fase = 'sikt';
+  skjulBanner();
+  plasserHint();
+}
+
+function startSpill(m){
+  modus = m; kp = keeperStat(); kamp = {du:[], dem:[], tjent:0};
+  timere.length = 0;
+  visSkjerm('spill');
+  $('tavle').style.display = modus==='kamp' ? 'grid' : 'none';
+  $('treningsskilt').style.display = modus==='kamp' ? 'none' : 'block';
+  oppdaterTavle();
+  nyttSkudd();
+  LYD.floyte();
+}
+
+function beregnSikte(pts){
+  const a = pts[0], b = pts[pts.length-1];
+  const dx = b.x-a.x, dy = b.y-a.y, L = Math.hypot(dx,dy);
+  if (L < 25 || dy > -15) return null;
+  const X = geo.ball.x + dx/(-dy)*(geo.ball.y-geo.malBunn);
+  const k11 = f/(MAL.z-CAMZ);
+  const xt = clamp((X-cx)/k11, -9, 9);
+  const p = clamp(L/geo.dragD, 0, 1.15);
+  let best = 0;
+  for (const q of pts) {
+    const t = ((q.x-a.x)*dx+(q.y-a.y)*dy)/(L*L);
+    const lx = q.x-(a.x+dx*t), ly = q.y-(a.y+dy*t);
+    const d = Math.hypot(lx,ly)*(lx>=0?1:-1);
+    if (Math.abs(d) > Math.abs(best)) best = d;
+  }
+  let bu = best/L;
+  bu = Math.abs(bu) < 0.05 ? 0 : Math.sign(bu)*(Math.abs(bu)-0.05);
+  bu = clamp(bu/0.28, -1, 1);
+  const sk = skoStat();
+  return {xt, p, B: bu*(0.35+sk.skru*0.22)};
+}
+
+/* ---------- finger ---------- */
+cv.addEventListener('pointerdown', e => {
+  lyd();
+  if (skjerm !== 'spill' || fase !== 'sikt') return;
+  if (e.clientY < geo.malBunn + 10) return;
+  drag = {id:e.pointerId, pts:[{x:e.clientX, y:e.clientY}]};
+  try { cv.setPointerCapture(e.pointerId); } catch(_) {}
+  $('hint').classList.remove('vis');
+});
+cv.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const q = drag.pts[drag.pts.length-1];
+  if (Math.hypot(e.clientX-q.x, e.clientY-q.y) > 3) drag.pts.push({x:e.clientX, y:e.clientY});
+  sikte = beregnSikte(drag.pts);
+});
+function slipp(e){
+  if (!drag || e.pointerId !== drag.id) return;
+  drag.pts.push({x:e.clientX, y:e.clientY});
+  const s = beregnSikte(drag.pts);
+  drag = null;
+  if (s && fase === 'sikt') { sikte = s; fase = 'tilop'; spiller.tl = 0; }
+  else { sikte = null; plasserHint(); }
+}
+cv.addEventListener('pointerup', slipp);
+cv.addEventListener('pointercancel', e => { drag = null; sikte = null; });
+
+function skyt(){
+  sh = lagSkudd(sikte, skoStat());
+  sh.k = K;
+  planleggKeeper(K, sh, kp);
+  sh.cb = vedResultat;
+  fase = 'flukt';
+  spiller.spark = 0;
+  LYD.spark();
+}
+
+function vedResultat(r){
+  fase = 'etter';
+  const mal = r.type === 'mal';
+  S.stat.skudd++;
+  if (mal) {
+    S.stat.mal++;
+    let p = 10*kp.gange; const ekstra = [];
+    if (r.kryss) { p += 5*kp.gange; ekstra.push('I krysset!'); }
+    if (r.skru) { p += 3*kp.gange; ekstra.push('Skrudd inn!'); }
+    giPoeng(p, false);
+    banner('MÅÅÅL!', (ekstra.length ? ekstra.join(' · ')+'  ' : '') + '+' + p + ' ⭐', 'mal');
+    nett.amp = 0.45; nett.x = r.x; nett.y = r.y; nett.t = 0; publikumHopp = 1;
+    { const q = P(r.x, r.y, MAL.z); konfetti(q.x, q.y, r.kryss ? 180 : 120); ristSkjerm(r.kryss ? 12 : 8); }
+    LYD.nett(); LYD.jubel(); setTimeout(()=>LYD.pling(), 250);
+  } else {
+    const T = {
+      redning: ['REDNING!', `${kp.navn} tok den! Prøv et hjørne eller hardere skudd.`],
+      stolpe: ['I STOLPEN!', 'Så nære! Litt mer innenfor neste gang.'],
+      tverrligger: ['I TVERRLIGGEREN!', 'Så nære! Litt mindre kraft neste gang.'],
+      over: ['OVER!', 'For hardt – kortere drag gir lavere skudd.'],
+      utenfor: ['UTENFOR!', 'Sikt litt mer innenfor stolpene.'],
+    }[r.type] || ['BOM!', ''];
+    banner(T[0], T[1], r.type === 'redning' ? 'bom redd' : 'bom');
+    if (r.type === 'stolpe' || r.type === 'tverrligger') { LYD.stolpe(); ristSkjerm(10); }
+    else if (r.type === 'redning') { LYD.redning(); ristSkjerm(5); setTimeout(()=>LYD.aah(), 120); }
+    else LYD.aah();
+  }
+  lagre();
+  if (modus === 'kamp') {
+    kamp.du.push(mal); oppdaterTavle();
+    planlegg(1.7, () => { if (sjekkSlutt()) return; motstanderSkyter(); });
+  } else {
+    planlegg(1.6, nyttSkudd);
+  }
+}
+
+function motstanderSkyter(){
+  fase = 'motst'; skjulBanner();
+  melding('Motstanderen skyter …');
+  planlegg(1.1, () => {
+    const scoret = Math.random() < kp.motst;
+    kamp.dem.push(scoret); oppdaterTavle();
+    melding(scoret ? 'Motstanderen scoret 😬' : 'Motstanderen bommet! 🎉');
+    if (scoret) LYD.aah(); else LYD.jubel();
+    planlegg(1.4, () => { skjulMelding(); if (sjekkSlutt()) return; nyttSkudd(); });
+  });
+}
+
+function stilling(){
+  const a = kamp.du.filter(Boolean).length, b = kamp.dem.filter(Boolean).length;
+  const na = kamp.du.length, nb = kamp.dem.length;
+  if (na <= 5 && nb <= 5) {
+    if (a > b + (5-nb)) return 'seier';
+    if (b > a + (5-na)) return 'tap';
+    if (na === 5 && nb === 5 && a !== b) return a > b ? 'seier' : 'tap';
+    return null;
+  }
+  if (na === nb && a !== b) return a > b ? 'seier' : 'tap';
+  return null;
+}
+function sjekkSlutt(){
+  const r = stilling(); if (!r) return false;
+  fase = 'slutt';
+  const a = kamp.du.filter(Boolean).length, b = kamp.dem.filter(Boolean).length;
+  S.stat.kamper++;
+  let bonus = 0;
+  if (r === 'seier') { S.stat.seire++; bonus = 30*kp.gange; giPoeng(bonus, false); }
+  lagre();
+  planlegg(0.6, () => {
+    skjulBanner(); skjulMelding();
+    $('resTittel').textContent = r === 'seier' ? 'DU VANT!' : 'Tap denne gangen';
+    $('resTittel').style.color = r === 'seier' ? 'var(--gullL)' : '#fff';
+    $('resPokal').textContent = r === 'seier' ? '🏆' : '💪';
+    $('resDu').textContent = a; $('resDem').textContent = b;
+    $('resTekst').textContent = r === 'seier'
+      ? `Du slo laget til ${kp.navn}!` + (kamp.du.length > 5 ? ' Avgjort på sudden death!' : '')
+      : (kamp.du.length > 5 ? 'Det ble avgjort på sudden death. Kjempejobba!' : 'Prøv igjen – sikt mot hjørnene!');
+    $('resPoeng').textContent = bonus ? `Inkludert ${bonus} ⭐ i seiersbonus` : 'stjerner tjent denne kampen';
+    visSkjerm('resultat');
+    tellOpp($('resTall'), kamp.tjent, 1100);
+    if (r === 'seier') { LYD.jubel(); setTimeout(() => { konfetti(W*0.3, H*0.75, 110); konfetti(W*0.7, H*0.75, 110); }, 250); }
+    LYD.floyte();
+  });
+  return true;
+}
+
+function giPoeng(p, flyt=true){
+  S.poeng += p; kamp.tjent += p; oppdaterPoeng();
+  if (flyt) {
+    const el = document.createElement('div'); el.className = 'flyt'; el.textContent = '+' + p + ' ⭐';
+    const q = P(0, MAL.h, MAL.z); el.style.left = q.x + 'px'; el.style.top = (q.y - 40) + 'px';
+    document.body.appendChild(el); setTimeout(()=>el.remove(), 1400);
+  }
+}
+
+/* =====================================================================
+   OPPDATERING OG TEGNING PER BILDE
+   ===================================================================== */
+function oppdater(dt){
+  tid += dt;
+  for (let i=timere.length-1;i>=0;i--) if (tid >= timere[i].t) { const t = timere.splice(i,1)[0]; t.fn(); }
+  nett.t += dt; nett.amp *= Math.pow(0.12, dt);
+  publikumHopp = Math.max(0, publikumHopp - dt*0.45);
+  if (fase === 'sikt' || fase === 'tilop' || skjerm !== 'spill') {
+    K.hx = 0.3*Math.sin(tid*1.7); K.hy = 0.95 + 0.03*Math.abs(Math.sin(tid*3.4)); K.th = 0; K.dykk = false;
+  }
+  if (skjerm !== 'spill') return;
+  if (fase === 'tilop') {
+    spiller.tl += dt;
+    const q = clamp(spiller.tl/0.5, 0, 1);
+    spiller.x = lerp(geo.startX, -0.34, q); spiller.z = lerp(-1.15, -0.3, q);
+    spiller.lop = spiller.tl*16;
+    if (q >= 1) { spiller.lop = null; skyt(); }
+  }
+  if (sh) {
+    if (spiller.spark != null) spiller.spark = Math.min(1, spiller.spark + dt*2.6);
+    let rest = dt; while (rest > 0) { const st = Math.min(rest, 1/120); oppdaterSkudd(sh, st); rest -= st; }
+  }
+}
+
+function tegn(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  if (rist > 0) {
+    ctx.fillStyle = '#060b20'; ctx.fillRect(0,0,W,H);
+    const z = 1 + rist*0.004;
+    ctx.translate(W/2 + (Math.random()-0.5)*rist, H/2 + (Math.random()-0.5)*rist); ctx.scale(z,z); ctx.translate(-W/2,-H/2);
+  }
+  ctx.drawImage(lag.himmel, 0, 0, W, H);
+  const hopp = publikumHopp > 0 ? Math.abs(Math.sin(tid*14))*6*publikumHopp : 0;
+  ctx.drawImage(lag.publikum, 0, -hopp, W, H);
+  ctx.drawImage(lag.bakke, 0, 0, W, H);
+  tegnNett();
+
+  const ting = [];
+  const b = sh ? sh.b : {x:0, y:BR, z:0};
+  const ballId = S.valgtBall, rot = sh ? sh.rot : 0;
+  ting.push({d: b.z - CAMZ, fn: () => {
+    if (b.z > 14.4) return;
+    const sk = P(b.x, 0, b.z), q = P(b.x, b.y, b.z);
+    ctx.fillStyle = `rgba(0,0,0,${clamp(0.35-b.y*0.06,0.08,0.35)})`;
+    ctx.beginPath(); ctx.ellipse(sk.x, sk.y, BR*sk.k*1.15, BR*sk.k*0.35, 0, 0, 7); ctx.fill();
+    tegnBall(ctx, q.x, q.y, BR*q.k, ballId, rot);
+  }});
+  ting.push({d: KZ - CAMZ, fn: () => {
+    const fot = P(K.hx, 0, KZ);
+    ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(fot.x, fot.y, fot.k*0.5, fot.k*0.1, 0, 0, 7); ctx.fill();
+    const q = P(K.hx, K.hy, KZ);
+    tegnKeeper(ctx, q.x, q.y, q.k, K.th, K.dykk, kp, K.dykk ? 0 : Math.sin(tid*4)*0.08);
+  }});
+  ting.push({d: MAL.z - CAMZ, fn: tegnStolper});
+  ting.push({d: spiller.z - CAMZ, fn: () => {
+    const q = P(spiller.x, 0, spiller.z);
+    tegnSpiller(ctx, q.x, q.y, q.k, S.drakt, skoStat(), {lop: spiller.lop, spark: spiller.spark});
+  }});
+  ting.sort((a,b) => b.d - a.d);
+  for (const t of ting) t.fn();
+
+  if (skjerm === 'spill' && (fase === 'sikt' || fase === 'tilop') && sikte) tegnSikte();
+  if (skjerm === 'spill' && drag) tegnSpor();
+}
+
+function tegnSpor(){
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); drag.pts.forEach((q,i) => i ? ctx.lineTo(q.x,q.y) : ctx.moveTo(q.x,q.y)); ctx.stroke();
+}
+
+function tegnSikte(){
+  const s0 = {xt:sikte.xt, h:hoydeFraKraft(sikte.p), B:sikte.B, loft:0.15+0.35*sikte.p};
+  const inne = Math.abs(s0.xt) < MAL.b-0.05 && s0.h < MAL.h-0.05;
+  const farge = inne ? '#4ade80' : '#f87171';
+  for (let i=1;i<=22;i++){
+    const s = i/22, q = ballPos(s0, s), p = P(q.x, q.y, q.z);
+    ctx.fillStyle = farge; ctx.globalAlpha = 0.9 - s*0.4;
+    ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(2, 0.05*p.k), 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  const e = P(s0.xt, s0.h, MAL.z), r = Math.max(10, 0.28*e.k);
+  ctx.strokeStyle = farge; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(e.x, e.y, r, 0, 7); ctx.moveTo(e.x-r*1.5, e.y); ctx.lineTo(e.x-r*0.5, e.y); ctx.moveTo(e.x+r*0.5, e.y); ctx.lineTo(e.x+r*1.5, e.y);
+  ctx.moveTo(e.x, e.y-r*1.5); ctx.lineTo(e.x, e.y-r*0.5); ctx.moveTo(e.x, e.y+r*0.5); ctx.lineTo(e.x, e.y+r*1.5); ctx.stroke();
+  // kraftmåler
+  const bx = Math.min(geo.ball.x + Math.max(90, BR*geo.ball.k*5), W - 44), bh = clamp(geo.ball.y - geo.malBunn - 60, 90, 220), bw = 26, by = geo.ball.y - bh + 10;
+  const over = (MAL.h - 0.05 - 0.12)/2.65 / 1.15;
+  ctx.fillStyle = 'rgba(15,23,42,.8)'; rundRekt(bx-4, by-30, bw+8, bh+36, 10); ctx.fill();
+  ctx.fillStyle = '#334155'; ctx.fillRect(bx, by, bw, bh);
+  const andel = sikte.p/1.15;
+  const g = ctx.createLinearGradient(0, by+bh, 0, by);
+  g.addColorStop(0,'#fde047'); g.addColorStop(over*0.55,'#4ade80'); g.addColorStop(over,'#22c55e'); g.addColorStop(over+0.001,'#ef4444'); g.addColorStop(1,'#b91c1c');
+  ctx.fillStyle = g; ctx.fillRect(bx, by+bh*(1-andel), bw, bh*andel);
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx-4, by+bh*(1-over)); ctx.lineTo(bx+bw+4, by+bh*(1-over)); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = `bold 13px ${getComputedStyle(document.body).getPropertyValue('--tekst')}`; ctx.textAlign = 'center';
+  ctx.fillText('KRAFT', bx+bw/2, by-12);
+  if (Math.abs(sikte.B) > 0.05) {
+    ctx.font = `bold 16px ${getComputedStyle(document.body).getPropertyValue('--tekst')}`;
+    const tx = geo.ball.x - Math.max(60, BR*geo.ball.k*4) - 10;
+    ctx.fillStyle = 'rgba(15,23,42,.8)'; rundRekt(tx-46, geo.ball.y-60, 92, 30, 10); ctx.fill();
+    ctx.fillStyle = '#f0abfc'; ctx.fillText((sikte.B > 0 ? 'Skru ↷' : '↶ Skru'), tx, geo.ball.y-40);
+  }
+}
+function rundRekt(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+let sistTid = performance.now();
+function loop(n){
+  const dt = Math.min(0.05, (n - sistTid)/1000); sistTid = n;
+  oppdater(dt); tegn(); oppdaterEffekter(dt);
+  requestAnimationFrame(loop);
+}
+
+/* =====================================================================
+   GRENSESNITT
+   ===================================================================== */
+function visSkjerm(navn){
+  skjerm = navn;
+  for (const id of ['meny','butikk','drakt','resultat']) $(id).classList.toggle('vis', id === navn);
+  $('hud').classList.toggle('vis', navn === 'spill');
+  $('dialog').classList.remove('vis');
+  if (navn !== 'spill') { if (navn !== 'resultat') timere.length = 0; $('hint').classList.remove('vis'); skjulBanner(); skjulMelding(); }
+  if (navn === 'meny') byggMeny();
+  if (navn === 'butikk') { butikkAnimert = false; byggButikk(); }
+  if (navn === 'drakt') byggDrakt();
+  oppdaterPoeng();
+}
+let visPoeng = null;
+function oppdaterPoeng(){
+  const opp = visPoeng !== null && S.poeng > visPoeng; visPoeng = S.poeng;
+  document.querySelectorAll('.poengtall').forEach(e => {
+    e.textContent = S.poeng;
+    if (opp) { const p = e.closest('.poeng'); p.classList.remove('dunk'); void p.offsetWidth; p.classList.add('dunk'); }
+  });
+}
+const IKON_LYD = '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const IKON_STILLE = '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+function oppdaterLydknapper(){ document.querySelectorAll('.lydknapp').forEach(b => { b.innerHTML = S.lyd ? IKON_LYD : IKON_STILLE; b.setAttribute('aria-pressed', S.lyd ? 'false' : 'true'); }); }
+function banner(stor, under, klasse){
+  const b = $('banner'); b.className = ''; void b.offsetWidth; b.className = 'vis ' + klasse;
+  b.querySelector('.stor').textContent = stor;
+  const u = b.querySelector('.under'); u.textContent = under; u.style.display = under ? 'inline-block' : 'none';
+}
+function skjulBanner(){ $('banner').className = ''; }
+function melding(t){ const m = $('melding'); m.textContent = t; m.classList.remove('vis'); void m.offsetWidth; m.classList.add('vis'); }
+function skjulMelding(){ $('melding').classList.remove('vis'); }
+function plasserHint(){
+  const h = $('hint');
+  const vis = skjerm === 'spill' && fase === 'sikt' && S.stat.skudd < 3;
+  h.classList.toggle('vis', vis);
+  if (vis) { h.style.left = geo.ball.x + 'px'; h.style.top = (geo.ball.y - 30) + 'px'; }
+}
+function oppdaterTavle(){
+  const rad = (arr, el) => {
+    const n = Math.max(5, arr.length), fra = Math.max(0, n-7);
+    const spans = el.children;
+    let html = '';
+    for (let i=fra;i<n;i++) html += `<span class="prikk ${i<arr.length ? (arr[i]?'mal':'bom') : ''}"></span>`;
+    if (spans.length === n-fra && fra === 0) {
+      // bare oppdater klasser, så bare den nye prikken animeres
+      for (let i=0;i<n;i++){ const k = 'prikk ' + (i<arr.length ? (arr[i]?'mal':'bom') : ''); if (spans[i].className.trim() !== k.trim()) spans[i].className = k; }
+    } else el.innerHTML = html;
+  };
+  rad(kamp.du, $('prikkDu')); rad(kamp.dem, $('prikkDem'));
+  $('tallDu').textContent = kamp.du.filter(Boolean).length;
+  $('tallDem').textContent = kamp.dem.filter(Boolean).length;
+}
+
+/* ---------- meny ---------- */
+function byggMeny(){
+  const box = $('keeperValg'); box.innerHTML = '';
+  const KFARGE = {lett:'#4ade80', middels:'#fb923c', vanskelig:'#c084fc'};
+  KEEPERE.forEach((k, i) => {
+    const b = document.createElement('button'); b.className = 'keeperkort' + (S.keeper === k.id ? ' valgt' : '') + (byggMeny.forste ? '' : ' inn');
+    b.style.setProperty('--k', KFARGE[k.id] || '#4ade80'); b.style.setProperty('--i', i);
+    b.setAttribute('aria-pressed', S.keeper === k.id ? 'true' : 'false');
+    b.setAttribute('aria-label', `${k.navn}, ${k.niva}, gir ${k.gange} ganger stjerner`);
+    b.innerHTML = `<span class="kk-topp"><span>${k.niva.toUpperCase()}</span><span class="kk-x">×${k.gange} ★</span></span>` +
+      `<canvas width="180" height="180"></canvas><b>${k.navn}</b>` +
+      `<span class="kk-stjerner" aria-hidden="true">${'★'.repeat(k.gange)}<em>${'★'.repeat(3-k.gange)}</em></span>`;
+    const c = b.querySelector('canvas').getContext('2d');
+    tegnKeeper(c, 90, 108, 72, 0, false, k, 0);
+    b.onclick = () => { S.keeper = k.id; kp = k; lagre(); LYD.klikk(); byggMeny.forste = true; byggMeny(); byggMeny.forste = false; };
+    box.appendChild(b);
+  });
+  tegnMenySpiller();
+  const st = S.stat, ms = $('menyStat');
+  if (st.skudd) {
+    const pst = Math.round(100*st.mal/st.skudd);
+    ms.innerHTML = `<span class="statchip"><b>${st.mal}</b> mål</span><span class="statchip"><b>${pst}%</b> treff</span><span class="statchip"><b>${st.seire}</b> av ${st.kamper} kamper vunnet</span>`;
+  } else ms.innerHTML = '<p class="stat">Scor mål og tjen ★ – kjøp nye sko og baller i butikken!</p>';
+}
+function tegnMenySpiller(){
+  const c = $('menySpiller').getContext('2d'); c.clearRect(0,0,520,600);
+  const g = c.createRadialGradient(260,560,20,260,560,260); g.addColorStop(0,'#86efac'); g.addColorStop(1,'rgba(134,239,172,0)');
+  c.fillStyle = g; c.fillRect(0,300,520,300);
+  tegnSpiller(c, 220, 560, 330, S.drakt, skoStat(), {lop:null, spark:null});
+  c.fillStyle='rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(380,566,36,10,0,0,7); c.fill();
+  tegnBall(c, 380, 532, 36, S.valgtBall, 0.3);
+}
+
+/* ---------- butikk ---------- */
+let fane = 'sko';
+document.querySelectorAll('.faner button').forEach(b => b.onclick = () => {
+  fane = b.dataset.fane; document.querySelectorAll('.faner button').forEach(x => x.classList.toggle('aktiv', x === b)); LYD.klikk(); butikkAnimert = false; byggButikk();
+});
+function pips(n){ let s = '<span class="stolpe" aria-label="' + n + ' av 5">'; for (let i=0;i<5;i++) s += `<i class="${i<n?'p':''}"></i>`; return s + '</span>'; }
+function sjeldenhet(pris){
+  if (pris >= 300) return {navn:'Legendarisk', farge:'#fbbf24', kl:'r-legend'};
+  if (pris >= 120) return {navn:'Episk', farge:'#c084fc', kl:''};
+  if (pris > 0)    return {navn:'Sjelden', farge:'#38bdf8', kl:''};
+  return {navn:'Vanlig', farge:'#94a3b8', kl:''};
+}
+let butikkAnimert = false;
+function byggButikk(){
+  const liste = $('vareliste'); liste.innerHTML = '';
+  const varer = fane === 'sko' ? SKO : BALLER;
+  varer.forEach((v, idx) => {
+    const eier = (fane === 'sko' ? S.sko : S.baller).includes(v.id);
+    const valgt = fane === 'sko' ? S.valgtSko === v.id : S.valgtBall === v.id;
+    const sj = sjeldenhet(v.pris);
+    const el = document.createElement('div'); el.className = 'vare ' + sj.kl + (valgt ? ' valgt' : '') + (butikkAnimert ? '' : ' inn');
+    el.style.setProperty('--r', sj.farge); el.style.setProperty('--i', idx);
+    el.innerHTML = `<span class="sjelden">${sj.navn}</span>` + (eier ? '<span class="eid">✓ Din</span>' : '') +
+      `<canvas width="440" height="220"></canvas><h3>${v.navn}</h3>` +
+      (fane === 'sko' ? `<p>${v.tekst}</p><div class="stolper"><span>Kraft</span>${pips(v.kraft)}<span>Skru</span>${pips(v.skru)}<span>Presisjon</span>${pips(v.pres)}</div>` : '') +
+      `<button class="knapp ${valgt ? 'gra' : eier ? '' : 'gronn'}"></button>`;
+    const c = el.querySelector('canvas').getContext('2d');
+    if (fane === 'sko') tegnSko(c, 70, 20, 300, v);
+    else { c.fillStyle='rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(220,200,70,14,0,0,7); c.fill(); tegnBall(c, 220, 110, 86, v.id, 0.3); }
+    const k = el.querySelector('button');
+    if (valgt) { k.textContent = 'Valgt ✓'; k.disabled = true; }
+    else if (eier) { k.textContent = 'Bruk'; k.onclick = () => { velg(v.id); }; }
+    else {
+      k.textContent = `Kjøp · ${v.pris} ⭐`;
+      if (S.poeng < v.pris) { k.disabled = true; k.classList.replace('gronn','gra'); k.textContent = `🔒 ${v.pris} ⭐ · mangler ${v.pris - S.poeng}`; }
+      k.onclick = () => {
+        if (!k.dataset.sikker) { k.dataset.sikker = '1'; k.textContent = 'Trykk igjen for å kjøpe!'; k.classList.replace('gronn','gul'); setTimeout(() => { if (k.isConnected) byggButikk(); }, 2500); return; }
+        if (S.poeng < v.pris) return;
+        S.poeng -= v.pris; (fane === 'sko' ? S.sko : S.baller).push(v.id); LYD.pling();
+        const rr = el.getBoundingClientRect(); konfetti(rr.left + rr.width/2, rr.top + rr.height*0.4, 90);
+        velg(v.id);
+      };
+    }
+    liste.appendChild(el);
+  });
+  butikkAnimert = true;
+  function velg(id){ if (fane === 'sko') S.valgtSko = id; else S.valgtBall = id; lagre(); LYD.klikk(); oppdaterPoeng(); byggButikk(); }
+}
+
+/* ---------- drakt ---------- */
+function byggDrakt(){
+  const d = S.drakt, box = $('draktValg'); box.innerHTML = '';
+  const seksjon = (tittel) => { const h = document.createElement('h3'); h.textContent = tittel; box.appendChild(h); const r = document.createElement('div'); r.className = 'rutenett'; box.appendChild(r); return r; };
+  const endre = (felt, verdi) => { d[felt] = verdi; lagre(); LYD.klikk(); byggDrakt(); byggBakgrunn(); };
+
+  let r = seksjon('Mønster');
+  for (const [id, navn] of MONSTER) {
+    const b = document.createElement('button'); b.className = 'monsterknapp' + (d.monster === id ? ' valgt' : '');
+    b.innerHTML = `<canvas width="116" height="116"></canvas>${navn}`;
+    tegnTroye(b.querySelector('canvas').getContext('2d'), 6, 6, 104, Object.assign({}, d, {monster:id}));
+    b.onclick = () => endre('monster', id); r.appendChild(b);
+  }
+  const fargerad = (tittel, felt, liste) => {
+    const r = seksjon(tittel);
+    for (const fc of liste) { const b = document.createElement('button'); b.className = 'farge' + (d[felt] === fc ? ' valgt' : ''); b.style.background = fc; b.setAttribute('aria-label', tittel + ' ' + fc); b.onclick = () => endre(felt, fc); r.appendChild(b); }
+  };
+  fargerad('Draktfarge', 'farge', FARGER);
+  if (d.monster !== 'ensfarget') fargerad('Mønsterfarge', 'farge2', FARGER);
+  fargerad('Shorts', 'shorts', FARGER);
+  fargerad('Strømper', 'sokker', FARGER);
+
+  r = seksjon('Nummer på ryggen');
+  r.innerHTML = `<div class="nummer"><button id="nMinus">−</button><b>${d.nummer}</b><button id="nPluss">+</button></div>`;
+  $('nMinus').onclick = () => endre('nummer', d.nummer <= 1 ? 99 : d.nummer-1);
+  $('nPluss').onclick = () => endre('nummer', d.nummer >= 99 ? 1 : d.nummer+1);
+
+  r = seksjon('Navn på ryggen');
+  const inp = document.createElement('input'); inp.id = 'navnFelt'; inp.maxLength = 10; inp.value = d.navn; inp.placeholder = 'Kallenavn';
+  inp.setAttribute('autocomplete','off'); inp.setAttribute('autocorrect','off'); inp.setAttribute('spellcheck','false');
+  inp.oninput = () => { d.navn = inp.value.replace(/[^A-Za-zÆØÅæøåÄÖÜäöüÉé .\-]/g,'').slice(0,10); if (inp.value !== d.navn) inp.value = d.navn; lagre(); tegnDraktSpiller(); };
+  r.appendChild(inp);
+  const lite = document.createElement('p'); lite.className = 'liten'; lite.textContent = 'Tips: bruk et kallenavn. Navnet lagres bare på denne enheten.'; box.appendChild(lite);
+
+  r = seksjon('Hudfarge');
+  for (const fc of HUD) { const b = document.createElement('button'); b.className = 'farge' + (d.hud === fc ? ' valgt' : ''); b.style.background = fc; b.onclick = () => endre('hud', fc); r.appendChild(b); }
+  r = seksjon('Hår');
+  for (const [id, navn] of HARSTIL) { const b = document.createElement('button'); b.className = 'tekstknapp' + (d.harstil === id ? ' valgt' : ''); b.textContent = navn; b.onclick = () => endre('harstil', id); r.appendChild(b); }
+  r = seksjon('Hårfarge');
+  for (const fc of HARFARGER) { const b = document.createElement('button'); b.className = 'farge' + (d.har === fc ? ' valgt' : ''); b.style.background = fc; b.onclick = () => endre('har', fc); r.appendChild(b); }
+
+  tegnDraktSpiller();
+}
+function tegnDraktSpiller(){
+  const c = $('draktSpiller').getContext('2d'); c.clearRect(0,0,600,760);
+  tegnSpiller(c, 300, 730, 440, S.drakt, skoStat(), {lop:null, spark:null});
+}
+$('tilfeldig').onclick = () => {
+  const v = a => a[Math.floor(Math.random()*a.length)];
+  const d = S.drakt;
+  d.monster = v(MONSTER)[0]; d.farge = v(FARGER); do { d.farge2 = v(FARGER); } while (d.farge2 === d.farge);
+  d.shorts = v(FARGER); d.sokker = Math.random() < 0.5 ? d.farge : v(FARGER); d.nummer = 1 + Math.floor(Math.random()*99);
+  lagre(); LYD.pling(); byggDrakt(); byggBakgrunn();
+};
+
+/* ---------- knapper ---------- */
+$('startKamp').onclick = () => { lyd(); startSpill('kamp'); };
+$('startTrening').onclick = () => { lyd(); startSpill('trening'); };
+$('tilButikk').onclick = () => { LYD.klikk(); visSkjerm('butikk'); };
+$('tilDrakt').onclick = () => { LYD.klikk(); visSkjerm('drakt'); };
+document.querySelectorAll('.tilbake').forEach(b => b.onclick = () => { LYD.klikk(); visSkjerm('meny'); });
+document.querySelectorAll('.lydknapp').forEach(b => b.onclick = () => { S.lyd = !S.lyd; lagre(); oppdaterLydknapper(); if (S.lyd) LYD.klikk(); });
+$('hudUt').onclick = () => {
+  LYD.klikk();
+  if (modus === 'kamp' && fase !== 'slutt' && (kamp.du.length || kamp.dem.length)) {
+    $('dialog').classList.add('vis'); $('dialogNei').focus(); return;
+  }
+  timere.length = 0; sh = null; visSkjerm('meny');
+};
+$('dialogNei').onclick = () => { LYD.klikk(); $('dialog').classList.remove('vis'); };
+$('dialogJa').onclick = () => { LYD.klikk(); $('dialog').classList.remove('vis'); timere.length = 0; sh = null; visSkjerm('meny'); };
+$('resIgjen').onclick = () => startSpill('kamp');
+$('resMeny').onclick = () => { sh = null; visSkjerm('meny'); };
+
+window.addEventListener('resize', storrelse);
+window.addEventListener('orientationchange', () => setTimeout(storrelse, 200));
+document.addEventListener('gesturestart', e => e.preventDefault());
+
+storrelse();
+oppdaterLydknapper();
+visSkjerm('meny');
+requestAnimationFrame(loop);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { byggBakgrunn(); if (skjerm === 'meny') byggMeny(); });
+</script>
+</body>
+</html>
