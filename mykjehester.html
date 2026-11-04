@@ -1,0 +1,2164 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Mykje Hester</title>
+<meta name="theme-color" content="#8b5530">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   MYKJE HESTER – stilen «Rosett & Lær»
+   Inspirert av stallen: lærreim med sting, premierosetter, hestesko,
+   høy og rød låve. Alle klassenavn er de samme som før.
+   ===================================================================== */
+:root{
+  /* farger */
+  --paper:#fffaf0; --cream:#fff3dc; --cream-2:#fbe9c6; --ink:#33261b; --muted:#7d6a57; --line:#efdcb8;
+  --leather:#8b5530; --leather-d:#5e3518; --leather-l:#b07443; --stitch:#f6dca6;
+  --barn:#d2452f; --barn-d:#9b2e1d;
+  --hay:#f5bf3a; --hay-d:#c48a0d;
+  --meadow:#4fa548; --meadow-d:#2f7a2c;
+  --sky:#3d9be0; --sky-d:#2470ad;
+  --night:#2d3466; --night-d:#1b1f45;
+  --rose:#e2588a;
+  /* gamle navn – brukes fortsatt i koden */
+  --green:var(--meadow); --green-d:var(--meadow-d); --red:var(--barn); --gold:var(--hay); --blue:var(--sky); --wood:var(--leather);
+  --good:var(--meadow); --warn:var(--hay); --bad:var(--barn);
+  --r:20px; --shadow:0 14px 34px rgba(60,32,10,.28), 0 3px 8px rgba(60,32,10,.18);
+  --font:'Atkinson Hyperlegible',system-ui,sans-serif; --head:'Fredoka','Atkinson Hyperlegible',system-ui,sans-serif;
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  /* hestesko-mønster til bakgrunner */
+  --shoe:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 56 56'%3E%3Cpath d='M18 40 C10 30 12 14 28 14 C44 14 46 30 38 40' fill='none' stroke='%23e8cf9f' stroke-width='3' stroke-linecap='round' opacity='.28'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#bfe3f2;font-family:var(--font);color:var(--ink);user-select:none;-webkit-user-select:none}
+#world{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.hidden{display:none !important}
+button{font-family:inherit;color:inherit;cursor:pointer}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;top:0;left:0;right:0;padding:calc(10px + env(safe-area-inset-top)) 12px 0;pointer-events:none;display:flex;flex-direction:column;gap:7px;align-items:flex-start;z-index:5}
+#hud > *{pointer-events:auto}
+.hud-farm{font-family:var(--head);font-weight:700;font-size:19px;color:var(--stitch);display:flex;gap:10px;align-items:center;
+  background:linear-gradient(180deg,var(--leather-l),var(--leather) 55%,var(--leather-d));padding:6px 16px 7px;border-radius:14px;
+  box-shadow:0 4px 0 var(--leather-d),0 6px 14px rgba(0,0,0,.25);outline:2px dashed rgba(246,220,166,.6);outline-offset:-6px;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.hud-farm::before{content:'';width:22px;height:22px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 19 C2 13 3 4 12 4 C21 4 22 13 18 19' fill='none' stroke='%23f6dca6' stroke-width='3.4' stroke-linecap='round'/%3E%3Ccircle cx='5.6' cy='12' r='1' fill='%235e3518'/%3E%3Ccircle cx='18.4' cy='12' r='1' fill='%235e3518'/%3E%3Ccircle cx='8' cy='6.6' r='1' fill='%235e3518'/%3E%3Ccircle cx='16' cy='6.6' r='1' fill='%235e3518'/%3E%3C/svg%3E") center/contain no-repeat}
+#hudStars{display:flex;gap:3px}
+.ros{width:17px;height:17px;border-radius:50%;position:relative;display:inline-block;
+  background:radial-gradient(circle,#fff6d6 0 28%,var(--hay) 30% 52%,#fff2c4 54% 60%,var(--hay-d) 62%);
+  box-shadow:0 1px 2px rgba(0,0,0,.35)}
+.ros.half{background:radial-gradient(circle,#fff6d6 0 28%,var(--hay) 30% 52%,#fff2c4 54% 60%,var(--hay-d) 62%);filter:saturate(.45) brightness(1.05)}
+.ros.off{background:radial-gradient(circle,rgba(255,255,255,.25) 0 28%,rgba(255,255,255,.12) 30% 60%,rgba(255,255,255,.3) 62%);box-shadow:inset 0 0 0 1.5px rgba(246,220,166,.5)}
+.hud-row{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--paper);border-radius:999px;padding:6px 13px;font-weight:700;font-size:15px;box-shadow:0 3px 0 #e2c99c,0 5px 12px rgba(0,0,0,.14);border:0;white-space:nowrap;position:relative;transition:transform .2s var(--spring)}
+.pill.money{background:linear-gradient(180deg,#fff7d6,#ffe9a3);color:#5a3c06;box-shadow:0 3px 0 var(--hay-d),0 5px 12px rgba(0,0,0,.14)}
+.pill.money::before{content:'';display:inline-block;width:16px;height:16px;margin-right:6px;vertical-align:-3px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b8,var(--hay) 45%,var(--hay-d));box-shadow:inset 0 0 0 1.5px #a8740a}
+.pill.money.neg{background:linear-gradient(180deg,#ffe6df,#ffc9bb);color:var(--barn-d);box-shadow:0 3px 0 var(--barn-d),0 5px 12px rgba(0,0,0,.14)}
+.pill.bump{animation:bump .45s var(--spring)}
+@keyframes bump{40%{transform:scale(1.14)}}
+.btn-pill{min-width:58px;background:var(--sky);color:#fff;box-shadow:0 3px 0 var(--sky-d),0 5px 12px rgba(0,0,0,.14)}
+.btn-pill:active{transform:translateY(2px)}
+.goal-chip{border:0;background:linear-gradient(180deg,#fff,#fff3cf);border-radius:14px;padding:8px 14px 8px 12px;font-weight:700;font-size:14px;max-width:min(92vw,440px);text-align:left;
+  box-shadow:0 3px 0 var(--hay-d),0 6px 14px rgba(0,0,0,.16);border-left:6px solid var(--hay);animation:nudge 6s ease-in-out infinite}
+@keyframes nudge{0%,88%,100%{transform:none}91%{transform:rotate(-1.5deg)}94%{transform:rotate(1.5deg)}97%{transform:rotate(-.8deg)}}
+.float-num{position:fixed;z-index:60;font-family:var(--head);font-weight:700;font-size:20px;pointer-events:none;animation:floatUp 1.3s ease-out forwards;text-shadow:0 2px 0 #fff,0 0 6px #fff}
+.float-num.inn{color:var(--meadow-d)} .float-num.ut{color:var(--barn)}
+@keyframes floatUp{0%{opacity:0;transform:translateY(6px) scale(.7)}15%{opacity:1;transform:translateY(0) scale(1.1)}100%{opacity:0;transform:translateY(-46px) scale(1)}}
+
+/* Dagsbane: en hest som traver fra kl. 06 til 22 */
+#dayTrack{width:min(330px,calc(100vw - 24px));height:30px;position:relative;background:linear-gradient(90deg,#ffe7a8,#bfe6ff 30%,#bfe6ff 70%,#ffc19c 88%,#5f6aa8);
+  border-radius:999px;box-shadow:0 3px 0 #e2c99c,0 5px 12px rgba(0,0,0,.14),inset 0 0 0 3px #fff;overflow:visible}
+#dayTrack::before,#dayTrack::after{position:absolute;top:50%;transform:translateY(-50%);font-size:15px}
+#dayTrack::before{content:'☀️';left:7px} #dayTrack::after{content:'🌙';right:7px}
+#dayTrack .fence{position:absolute;left:34px;right:34px;bottom:6px;height:3px;border-radius:2px;background:repeating-linear-gradient(90deg,rgba(139,85,48,.55) 0 8px,transparent 8px 13px)}
+#dayHorse{position:absolute;bottom:2px;left:34px;font-size:22px;line-height:1;transform:translateX(-50%) scaleX(-1);transition:left .6s linear}
+#dayHorse.run{animation:trot .38s ease-in-out infinite}
+@keyframes trot{50%{bottom:6px}}
+#dayTrack.late{animation:latePulse 1.2s ease-in-out infinite}
+@keyframes latePulse{50%{box-shadow:0 3px 0 #e2c99c,0 0 0 5px rgba(210,69,47,.35),inset 0 0 0 3px #fff}}
+
+/* ---------- Dokk: lærreim med medaljonger ---------- */
+#dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));display:flex;gap:4px;padding:8px 10px;border-radius:26px;max-width:calc(100vw - 16px);overflow-x:auto;z-index:5;
+  background:linear-gradient(180deg,var(--leather-l),var(--leather) 50%,var(--leather-d));box-shadow:0 5px 0 #3f220e,var(--shadow);outline:2px dashed rgba(246,220,166,.55);outline-offset:-5px}
+#dock button{border:0;background:transparent;border-radius:16px;padding:2px 4px 3px;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:64px;color:var(--stitch);text-shadow:0 1px 0 rgba(0,0,0,.35)}
+#dock button span{font-size:23px;line-height:1;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#fffdf6,var(--cream-2));
+  box-shadow:0 3px 0 #c9a46b,inset 0 0 0 3px #fff,inset 0 0 0 5px var(--hay);transition:transform .25s var(--spring);text-shadow:none}
+#dock button:hover span{transform:translateY(-4px) rotate(-6deg)}
+#dock button:active span{transform:translateY(2px) scale(.92)}
+#dock em{font-style:normal}
+#dock button.night span{background:radial-gradient(circle at 50% 35%,#4c58a8,var(--night));box-shadow:0 3px 0 var(--night-d),inset 0 0 0 3px #7f8ad6,inset 0 0 0 5px var(--hay)}
+#dock button.night.ready span{animation:glow 1.4s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 3px 0 var(--night-d),inset 0 0 0 3px #7f8ad6,inset 0 0 0 5px var(--hay),0 0 0 6px rgba(245,191,58,.55)}}
+
+/* ---------- Panel: lærramme med sting ---------- */
+#veil{position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,rgba(60,32,10,.18),rgba(40,22,8,.5));z-index:20;animation:fade .2s ease-out;backdrop-filter:blur(2px)}
+@keyframes fade{from{opacity:0}}
+#panel{position:fixed;z-index:21;left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,calc(100vw - 20px));max-height:calc(100dvh - 30px);overflow:auto;
+  background:var(--paper) var(--shoe);border-radius:28px;box-shadow:var(--shadow),0 0 0 7px var(--leather),0 0 0 9px var(--leather-d);
+  padding:22px 22px 26px;-webkit-overflow-scrolling:touch;outline:2px dashed var(--stitch);outline-offset:-2px;scrollbar-width:thin;scrollbar-color:var(--leather-l) transparent}
+#panel.anim{animation:pop .42s var(--spring)}
+@keyframes pop{from{transform:translate(-50%,-38%) scale(.86);opacity:0}}
+#panel.anim #panelBody > *{animation:rise .4s var(--spring) both}
+#panel.anim #panelBody > *:nth-child(2){animation-delay:.04s}#panel.anim #panelBody > *:nth-child(3){animation-delay:.08s}
+#panel.anim #panelBody > *:nth-child(4){animation-delay:.12s}#panel.anim #panelBody > *:nth-child(5){animation-delay:.16s}
+#panel.anim #panelBody > *:nth-child(6){animation-delay:.2s}#panel.anim #panelBody > *:nth-child(n+7){animation-delay:.24s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+#panelClose{position:sticky;top:0;float:right;margin:-10px -10px 0 0;border:0;background:var(--barn);color:#fff;border-radius:50%;width:44px;height:44px;font-size:19px;font-weight:700;z-index:2;
+  box-shadow:0 4px 0 var(--barn-d),0 6px 12px rgba(0,0,0,.2);transition:transform .25s var(--spring)}
+#panelClose:hover{transform:rotate(90deg) scale(1.06)}
+#panelClose:active{transform:scale(.9)}
+/* overskrift på premiebånd */
+#panel h2{font-family:var(--head);margin:0 0 8px;font-size:25px;line-height:1.15;display:inline-block;position:relative;color:#fff;
+  background:linear-gradient(180deg,#e25a43,var(--barn) 60%,#b83a26);padding:7px 26px 8px 18px;border-radius:10px 4px 4px 10px;
+  clip-path:polygon(0 0,100% 0,calc(100% - 14px) 50%,100% 100%,0 100%);text-shadow:0 2px 0 rgba(0,0,0,.2);box-shadow:inset 0 -4px 0 rgba(0,0,0,.12)}
+#panel h2.center{display:block;margin-left:auto;margin-right:auto;width:fit-content;clip-path:polygon(14px 50%,0 0,100% 0,calc(100% - 14px) 50%,100% 100%,0 100%);padding:7px 30px 8px}
+#panel h3{font-family:var(--head);margin:20px 0 10px;font-size:18px;display:flex;align-items:center;gap:8px;color:var(--leather-d)}
+#panel h3::after{content:'';flex:1;height:4px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--line) 0 10px,transparent 10px 15px)}
+.sub{color:var(--muted);margin:0 0 10px}
+.btn{border:0;border-radius:16px;padding:11px 18px;font-weight:700;font-size:16px;color:#fff;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,#6cc062,var(--meadow) 55%,#43923d);box-shadow:0 4px 0 var(--meadow-d),0 6px 12px rgba(0,0,0,.14);
+  transition:transform .2s var(--spring),box-shadow .2s;text-shadow:0 1px 0 rgba(0,0,0,.18)}
+.btn::after{content:'';position:absolute;left:10%;right:10%;top:3px;height:38%;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0));pointer-events:none}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(3px) scale(.98);box-shadow:0 1px 0 var(--meadow-d)}
+.btn.ghost{background:linear-gradient(180deg,#fffaf0,var(--cream-2));color:var(--ink);box-shadow:0 4px 0 #d7b880,0 6px 12px rgba(0,0,0,.1);text-shadow:none}
+.btn.gold{background:linear-gradient(180deg,#ffd76a,var(--hay) 55%,#e9a91f);box-shadow:0 4px 0 var(--hay-d),0 6px 12px rgba(0,0,0,.14);color:#3d2805;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+.btn.red{background:linear-gradient(180deg,#e86a52,var(--barn) 55%,#bb3a26);box-shadow:0 4px 0 var(--barn-d),0 6px 12px rgba(0,0,0,.14)}
+.btn.blue{background:linear-gradient(180deg,#68b6ee,var(--sky) 55%,#2f88cc);box-shadow:0 4px 0 var(--sky-d),0 6px 12px rgba(0,0,0,.14)}
+.btn.big{font-size:19px;padding:14px 26px;border-radius:18px}
+.btn.big:not([disabled]){animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.035)}}
+.btn.big:active{animation:none}
+.btn[disabled]{opacity:.45;animation:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.card{background:var(--cream);border:2px solid var(--line);border-radius:18px;padding:13px;box-shadow:0 3px 0 var(--line)}
+.chip{display:inline-flex;gap:4px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;font-weight:700}
+.chip.bad{background:#ffe3dc;border-color:#f5b4a4;color:#8f2f1c;animation:wobble 2.2s ease-in-out infinite}
+.chip.good{background:#e3f5dc;border-color:#b5e0a8;color:#25561f}.chip.warn{background:#fff1c7;border-color:#f3d78a;color:#7a5306}
+@keyframes wobble{0%,80%,100%{transform:none}85%{transform:rotate(-3deg)}90%{transform:rotate(3deg)}95%{transform:rotate(-2deg)}}
+
+/* handlingsknapper */
+.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:9px}
+.act{border:2px solid var(--line);background:#fff;border-radius:16px;padding:9px 9px;text-align:left;display:flex;gap:9px;align-items:center;font-weight:700;font-size:14px;line-height:1.15;
+  box-shadow:0 4px 0 var(--line);transition:transform .2s var(--spring),box-shadow .2s,border-color .2s}
+.act:hover{transform:translateY(-3px);border-color:var(--hay);box-shadow:0 7px 0 #f3d78a}
+.act:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.act .i{font-size:22px;width:42px;height:42px;flex:none;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 50% 35%,#fffdf6,var(--cream-2));box-shadow:inset 0 0 0 2px var(--hay);transition:transform .3s var(--spring)}
+.act:hover .i{transform:rotate(-12deg) scale(1.1)}
+.act small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.act.dim{opacity:.45;filter:grayscale(.5);box-shadow:0 2px 0 var(--line)}
+.act.dim:hover{transform:none;border-color:var(--line)}
+.act.pressed{animation:press .4s var(--spring)}
+@keyframes press{30%{transform:scale(.93)}70%{transform:scale(1.04)}}
+
+/* statusbarer */
+.bars{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px 16px}
+.bar{display:grid;grid-template-columns:26px 62px 1fr 32px;align-items:center;gap:6px;font-size:14px;font-weight:700}
+.bar > span:first-child{font-size:18px}
+.bar .track{height:16px;border-radius:10px;background:#f1e3c8;overflow:hidden;box-shadow:inset 0 2px 3px rgba(80,50,20,.18);border:2px solid #fff}
+.bar .fill{height:100%;border-radius:8px;position:relative;transition:width .5s var(--spring);
+  background-image:repeating-linear-gradient(-45deg,rgba(255,255,255,.28) 0 6px,transparent 6px 12px) !important;background-size:17px 17px;animation:stripes 1.2s linear infinite}
+.bar .fill::after{content:'';position:absolute;left:4px;right:4px;top:2px;height:4px;border-radius:3px;background:rgba(255,255,255,.4)}
+@keyframes stripes{to{background-position:17px 0}}
+.bar .val{font-size:12px;color:var(--muted);text-align:right}
+.bar.low .track{animation:wobble 1.8s ease-in-out infinite}
+
+/* hestehode */
+.hhead{display:flex;gap:16px;align-items:center}
+.hhead img{width:116px;height:116px;border-radius:50%;background:radial-gradient(circle,#fff,#f6e3bd);object-fit:cover;flex:none;
+  box-shadow:0 0 0 5px #fff,0 0 0 9px var(--hay),0 6px 14px rgba(0,0,0,.18);animation:float 4s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-4px) rotate(-1.5deg)}}
+.hhead .nm{font-family:var(--head);font-size:28px;font-weight:700;display:flex;gap:6px;align-items:center;color:var(--leather-d)}
+.rename{border:0;background:var(--cream-2);border-radius:10px;font-size:14px;padding:3px 9px;box-shadow:0 2px 0 #d7b880}
+
+/* liste med hester */
+.hlist{display:grid;gap:9px}
+.hrow{display:flex;gap:12px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:18px;padding:8px 12px 8px 8px;text-align:left;width:100%;
+  box-shadow:0 4px 0 var(--line);transition:transform .2s var(--spring),border-color .2s}
+.hrow:hover{transform:translateX(4px);border-color:var(--hay)}
+.hrow:active{transform:scale(.98)}
+.hrow img{width:60px;height:60px;border-radius:50%;object-fit:cover;background:radial-gradient(circle,#fff,#f6e3bd);box-shadow:0 0 0 3px var(--hay)}
+.hrow .t{flex:1}
+.hrow b{font-family:var(--head);font-size:18px;color:var(--leather-d)}
+.hrow .mini{display:flex;gap:7px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.hrow > span:last-child{animation:float 3s ease-in-out infinite}
+
+/* bibliotek: samlekort med farge etter hestetype */
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
+.libc{--tc:var(--leather);border:0;background:#fff;border-radius:18px;padding:26px 7px 9px;text-align:center;font-weight:700;font-size:14px;position:relative;
+  box-shadow:0 0 0 3px var(--tc),0 6px 0 3px var(--tc),0 10px 16px rgba(0,0,0,.15);transition:transform .3s var(--spring);margin-bottom:6px;overflow:hidden}
+.libc:hover{transform:translateY(-5px) rotate(-1.5deg)}
+.libc:active{transform:scale(.96)}
+.libc::before{content:attr(data-type);position:absolute;top:0;left:0;right:0;height:21px;line-height:21px;background:var(--tc);color:#fff;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-family:var(--head)}
+.libc img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:radial-gradient(circle,#fff,#f6e3bd)}
+.libc > div:first-of-type{font-family:var(--head);font-size:15px;color:var(--ink);overflow-wrap:anywhere;hyphens:auto}
+.libc .own{position:absolute;top:27px;right:9px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:10px;padding:0;color:#fff;
+  background:radial-gradient(circle,var(--rose) 0 54%,#fff 56% 62%,var(--rose) 64%);box-shadow:0 2px 4px rgba(0,0,0,.3);transform:rotate(-12deg)}
+.libc.t-ponni{--tc:#e2588a}.libc.t-kald{--tc:#8b5530}.libc.t-varm{--tc:#3d9be0}.libc.t-full{--tc:#9a5bd0}.libc.t-mini{--tc:#f08a24}.libc.t-vill{--tc:#4fa548}
+.stat{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;font-size:14px;margin:5px 0;font-weight:700}
+.dots{display:flex;gap:4px}.dots i{width:16px;height:16px;border-radius:50%;background:#f1e3c8;box-shadow:inset 0 1px 2px rgba(0,0,0,.15)}
+.dots i.on{background:radial-gradient(circle at 35% 35%,#ffe9a0,var(--hay) 55%,var(--hay-d));box-shadow:0 1px 2px rgba(0,0,0,.2)}
+#panel.anim .dots i.on{animation:popIn .4s var(--spring) both}
+.dots i.on:nth-child(2){animation-delay:.03s}.dots i.on:nth-child(3){animation-delay:.06s}.dots i.on:nth-child(4){animation-delay:.09s}.dots i.on:nth-child(5){animation-delay:.12s}
+.dots i.on:nth-child(6){animation-delay:.15s}.dots i.on:nth-child(7){animation-delay:.18s}.dots i.on:nth-child(8){animation-delay:.21s}.dots i.on:nth-child(9){animation-delay:.24s}.dots i.on:nth-child(10){animation-delay:.27s}
+@keyframes popIn{from{transform:scale(0)}}
+.tabs{display:flex;gap:6px;margin:8px 0 14px;border-bottom:4px solid var(--leather);padding-left:6px}
+.tabs button{border:0;border-radius:14px 14px 0 0;padding:9px 16px 7px;font-weight:700;background:var(--cream-2);color:var(--muted);font-family:var(--head);font-size:15px;transition:transform .2s var(--spring)}
+.tabs button:hover{transform:translateY(-2px)}
+.tabs button.on{background:var(--leather);color:var(--stitch)}
+.fact{background:#fff;border:2px solid var(--line);border-left:6px solid var(--hay);border-radius:14px;padding:9px 13px;margin:7px 0;box-shadow:0 3px 0 var(--line)}
+
+/* mål */
+.goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.goal{border:2px solid var(--line);border-radius:16px;padding:11px;background:#fff;font-size:14px;font-weight:700;position:relative;min-height:88px;box-shadow:0 4px 0 var(--line)}
+.goal small{display:block;color:var(--muted);font-weight:400;margin-top:6px}
+.goal.done{background:#eaf7e4;border-color:#b5e0a8;box-shadow:0 4px 0 #b5e0a8;padding-right:40px}
+.goal.done::after{content:'✔';font-family:var(--head);font-size:12px;color:#fff;position:absolute;top:-8px;right:-6px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle,var(--sky) 0 50%,#fff 52% 58%,var(--sky) 60%);box-shadow:0 2px 4px rgba(0,0,0,.25);transform:rotate(12deg)}
+.goal.next{border-color:var(--hay);background:#fffbea;animation:goalGlow 1.8s ease-in-out infinite}
+@keyframes goalGlow{50%{box-shadow:0 4px 0 #f3d78a,0 0 0 6px rgba(245,191,58,.35)}}
+.goal.far{opacity:.5;filter:grayscale(.4)}
+.progress{height:18px;border-radius:10px;background:#f1e3c8;overflow:hidden;margin:6px 0 14px;border:2px solid #fff;box-shadow:inset 0 2px 3px rgba(80,50,20,.18)}
+.progress i{display:block;height:100%;border-radius:8px;background:var(--meadow) repeating-linear-gradient(-45deg,rgba(255,255,255,.28) 0 6px,transparent 6px 12px);background-size:17px 17px;animation:stripes 1.2s linear infinite;transition:width .6s var(--spring)}
+
+/* regnskap */
+.ledger{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;background:#fff;border-radius:14px;overflow:hidden;border:2px solid var(--line)}
+.ledger td{padding:7px 10px;border-bottom:1px dashed var(--line)}
+.ledger tr:nth-child(even) td{background:#fffaf0}
+.ledger td:last-child{text-align:right;font-weight:700;white-space:nowrap}
+.ledger tr:last-child td{border-bottom:0;background:var(--cream)}
+.inn{color:var(--meadow-d)}.ut{color:var(--barn)}
+.sum{font-size:18px;font-family:var(--head)}
+
+/* tips og toasts */
+#toasts{position:fixed;z-index:40;left:50%;transform:translateX(-50%);bottom:calc(108px + env(safe-area-inset-bottom));display:flex;flex-direction:column-reverse;gap:8px;width:min(480px,calc(100vw - 20px));pointer-events:none}
+.toast{background:var(--paper);border-radius:18px;padding:11px 15px 11px 54px;box-shadow:var(--shadow);font-weight:700;font-size:15px;animation:tin .5s var(--spring);pointer-events:auto;position:relative;border:3px solid var(--meadow);min-height:52px;display:flex;flex-direction:column;justify-content:center}
+.toast::before{content:'✔';position:absolute;left:10px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--meadow);color:#fff;font-size:16px}
+.toast.bad{border-color:var(--barn)}.toast.bad::before{content:'!';background:var(--barn);font-family:var(--head);font-size:20px}
+.toast.info{border-color:var(--sky)}.toast.info::before{content:'i';background:var(--sky);font-family:var(--head);font-size:19px}
+.toast.gold{border-color:var(--hay)}.toast.gold::before{content:'★';background:var(--hay);color:#5a3c06}
+@keyframes tin{from{opacity:0;transform:translateY(24px) scale(.85)}}
+.tip{border-color:var(--hay);font-weight:400;background:#fffbea var(--shoe)}
+.tip::before{content:'💡';background:#fff;box-shadow:inset 0 0 0 2px var(--hay);top:14px;transform:none}
+.tip b{display:block;font-family:var(--head);font-size:17px;margin-bottom:3px;color:var(--leather-d)}
+
+/* konfetti */
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+.confetti i{position:absolute;top:-30px;font-style:normal;font-size:22px;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),110vh) rotate(var(--rot))}}
+
+/* minispill */
+#mini{position:fixed;inset:0;z-index:30;background:radial-gradient(circle at 50% 40%,rgba(60,32,10,.3),rgba(40,22,8,.62));display:flex;align-items:center;justify-content:center;animation:fade .2s}
+.mini-card{background:var(--paper) var(--shoe);border-radius:28px;padding:18px;width:min(520px,calc(100vw - 24px));text-align:center;box-shadow:var(--shadow),0 0 0 7px var(--leather),0 0 0 9px var(--leather-d);outline:2px dashed var(--stitch);outline-offset:-2px;animation:pop2 .42s var(--spring)}
+@keyframes pop2{from{transform:scale(.85);opacity:0}}
+.mini-card h2{font-family:var(--head);margin:0;color:var(--leather-d)}
+#miniStage{position:relative;width:100%;aspect-ratio:1;max-height:56vh;margin:8px auto;border-radius:22px;overflow:hidden;background:radial-gradient(circle,#fff,#f6e3bd);touch-action:none;box-shadow:inset 0 0 0 4px #fff,0 0 0 3px var(--line)}
+#miniStage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+#miniStage canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+.mini-bar{height:18px;background:#f1e3c8;border-radius:10px;overflow:hidden;margin:8px 0 12px;border:2px solid #fff;box-shadow:inset 0 2px 3px rgba(80,50,20,.18)}
+.mini-bar i{display:block;height:100%;width:0;border-radius:8px;background:var(--meadow) repeating-linear-gradient(-45deg,rgba(255,255,255,.28) 0 6px,transparent 6px 12px);background-size:17px 17px;animation:stripes 1.2s linear infinite;transition:width .2s}
+.hooves{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:absolute;inset:0;padding:18px;background:var(--cream) var(--shoe)}
+.hoof{border:3px solid var(--line);border-radius:50% 50% 22px 22px;background:#fff;font-size:15px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:0 5px 0 var(--line);transition:transform .2s var(--spring)}
+.hoof:active{transform:scale(.92) rotate(-3deg)}
+.hoof .st{font-size:28px;letter-spacing:4px;min-height:36px}
+.hoof.ok{background:#eaf7e4;border-color:#b5e0a8;box-shadow:0 5px 0 #b5e0a8;animation:press .4s var(--spring)}
+
+/* start */
+#start{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;overflow:auto}
+.start-bg{position:fixed;inset:-4%;background:#cfe9f5 url('mykjehester/tittel.webp') center/cover;animation:kenburns 30s ease-in-out infinite alternate}
+@keyframes kenburns{to{transform:scale(1.08) translate(-1.5%,1%)}}
+.start-gallop{position:fixed;bottom:4vh;left:0;font-size:46px;animation:gallop 11s linear infinite;z-index:1;filter:drop-shadow(0 4px 2px rgba(0,0,0,.25))}
+.start-gallop span{display:inline-block;transform:scaleX(-1);animation:hop .32s ease-in-out infinite}
+@keyframes gallop{from{transform:translateX(-80px)}to{transform:translateX(calc(100vw + 80px))}}
+@keyframes hop{50%{transform:scaleX(-1) translateY(-10px) rotate(6deg)}}
+.start-card{position:relative;z-index:2;background:var(--paper) var(--shoe);border-radius:30px;padding:26px 24px;width:min(620px,calc(100vw - 30px));text-align:center;margin:24px 0;
+  box-shadow:var(--shadow),0 0 0 8px var(--leather),0 0 0 10px var(--leather-d);outline:2px dashed var(--stitch);outline-offset:-2px;animation:pop2 .6s var(--spring)}
+.logo{font-family:var(--head);font-size:50px;font-weight:700;margin:0;color:var(--leather);line-height:1;display:inline-flex;align-items:center;gap:12px;text-shadow:0 3px 0 #f1d9a8}
+.logo span{color:var(--barn)}
+.logo::before{content:'';width:54px;height:54px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 19 C2 13 3 4 12 4 C21 4 22 13 18 19' fill='none' stroke='%23f5bf3a' stroke-width='3.6' stroke-linecap='round'/%3E%3Cpath d='M6 19 C2 13 3 4 12 4 C21 4 22 13 18 19' fill='none' stroke='%23c48a0d' stroke-width='1' stroke-linecap='round' transform='translate(0 .9)' opacity='.6'/%3E%3Ccircle cx='5.6' cy='12' r='.9' fill='%235e3518'/%3E%3Ccircle cx='18.4' cy='12' r='.9' fill='%235e3518'/%3E%3Ccircle cx='8' cy='6.6' r='.9' fill='%235e3518'/%3E%3Ccircle cx='16' cy='6.6' r='.9' fill='%235e3518'/%3E%3C/svg%3E") center/contain no-repeat;animation:swing 3s ease-in-out infinite;transform-origin:50% 10%}
+@keyframes swing{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+.start-card input{font:inherit;font-size:17px;padding:11px 14px;border-radius:14px;border:3px solid var(--line);width:100%;background:#fff;transition:border-color .2s}
+.start-card input:focus{outline:none;border-color:var(--hay)}
+.pickh{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.pickh button{border:3px solid var(--line);border-radius:18px;background:#fff;padding:6px;font-weight:700;font-size:13px;box-shadow:0 4px 0 var(--line);transition:transform .25s var(--spring);position:relative}
+.pickh button:hover{transform:translateY(-4px)}
+.pickh button img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:radial-gradient(circle,#fff,#f6e3bd)}
+.pickh button.on{border-color:var(--meadow);background:#eaf7e4;box-shadow:0 4px 0 var(--meadow-d);animation:press .45s var(--spring)}
+.pickh button.on::after{content:'✔';position:absolute;top:-9px;right:-9px;width:28px;height:28px;border-radius:50%;background:var(--meadow);color:#fff;display:grid;place-items:center;box-shadow:0 2px 0 var(--meadow-d)}
+.small{font-size:13px;color:var(--muted)}
+
+.res-big{font-size:76px;text-align:center;margin:6px 0;animation:medal 1s var(--spring)}
+@keyframes medal{0%{transform:scale(0) rotate(-180deg)}100%{transform:none}}
+.center{text-align:center}
+.svgchart{width:100%;height:160px;background:#fff;border-radius:14px;border:2px solid var(--line)}
+@media (max-width:520px){
+  #dock{gap:0;padding:6px 4px;border-radius:20px}
+  #dock{width:calc(100vw - 12px);justify-content:space-between}
+  #dock button{min-width:0;flex:1 1 0;padding:2px 0;font-size:9px;letter-spacing:-.3px;overflow:hidden;line-height:1.05}
+  #dock button span{font-size:19px;width:36px;height:36px}
+  #dock button{font-size:8.5px;letter-spacing:-.2px}
+  #dock .night em{font-size:0}#dock .night em::after{content:'Sov';font-size:9px}
+  .goal-chip{font-size:12.5px;padding:6px 10px}
+  .hhead img{width:84px;height:84px}
+  .pill{font-size:13px;padding:5px 10px}
+  .hud-farm{font-size:16px}
+  #panel{padding:18px 14px 22px}
+  #panel h2{font-size:21px}
+  .logo{font-size:36px}.logo::before{width:40px;height:40px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="world"></canvas>
+
+<!-- Toppfelt -->
+<div id="hud" class="hidden">
+  <div class="hud-farm"><span id="hudFarm">Mykje Hestegård</span><span id="hudStars"></span></div>
+  <div class="hud-row">
+    <div class="pill money" id="hudMoney">15 000 kr</div>
+    <div class="pill" id="hudDay">Dag 1 · Vår</div>
+    <div class="pill" id="hudClock">06:00</div>
+    <button class="pill btn-pill" id="btnSpeed" title="Fart">▶ 1×</button>
+    <div class="pill" id="hudHay" title="Høy på lager">🌾 150 kg</div>
+  </div>
+  <div id="dayTrack" title="Hvor langt har dagen kommet?"><div class="fence"></div><span id="dayHorse">🐎</span></div>
+  <button id="goalChip" class="goal-chip">🎯 <span id="goalTxt"></span></button>
+</div>
+
+<!-- Knappelinje nederst -->
+<nav id="dock" class="hidden">
+  <button data-open="hester"><span>🐴</span>Hestene</button>
+  <button data-open="hoyloft"><span>🌾</span>Høyloft</button>
+  <button data-open="marked"><span>🏪</span>Marked</button>
+  <button data-open="bibliotek"><span>📚</span>Bibliotek</button>
+  <button data-open="mal"><span>🎯</span>Mål</button>
+  <button data-open="regnskap"><span>📊</span>Regnskap</button>
+  <button data-open="natt" class="night"><span>🌙</span><em>Avslutt dag</em></button>
+  <button data-open="meny"><span>⚙️</span>Meny</button>
+</nav>
+
+<!-- Panel (gjenbrukes til alt) -->
+<div id="veil" class="hidden"></div>
+<section id="panel" class="hidden" role="dialog" aria-modal="true">
+  <button id="panelClose" aria-label="Lukk">✕</button>
+  <div id="panelBody"></div>
+</section>
+
+<!-- Stell-minispill -->
+<section id="mini" class="hidden">
+  <div class="mini-card">
+    <h2 id="miniTitle">Strigle</h2>
+    <p id="miniHelp"></p>
+    <div id="miniStage"></div>
+    <div class="mini-bar"><i id="miniProg"></i></div>
+    <button class="btn ghost" id="miniCancel">Avbryt</button>
+  </div>
+</section>
+
+<div id="toasts"></div>
+
+<!-- Startskjerm -->
+<section id="start">
+  <div class="start-bg"></div>
+  <div class="start-gallop" aria-hidden="true"><span>🐎</span></div>
+  <div class="start-card" id="startCard"></div>
+</section>
+
+<script>
+/* ==========================================================================
+   Mykje Hester – data (raser, områder, mål, håndbok)
+   Tallene for egenskaper er 1–10. «pris» er kjøpspris i spillet (kr).
+   ========================================================================== */
+var HDATA = (function(){
+
+const BREEDS = [
+ { id:'fjordhest', navn:'Fjordhest', land:'Norge', hoyde:'135–150 cm', vekt:450, farge:'Blakk (lys gulbrun)', type:'Kaldblod',
+   fart:4, spenst:4, uth:7, lynne:9, hard:9, pris:45000,
+   fakta:['Fjordhesten er Norges nasjonalhest og en av fire norske hesteraser.',
+          'Manen klippes ofte kort så den står rett opp. Da ser du den mørke stripa i midten, som kalles midtstol.',
+          'Den har en mørk stripe langs ryggen og ofte striper på beina, akkurat som de eldgamle villhestene.'],
+   look:{coat:0xd9c08c, mane:0x3a2a1e, maneTop:0xf1e4c4, legs:0xb89a64, hoof:0x2b2420, size:0.95, chunk:1.15, dorsal:true, legStripes:true, maneStyle:'upright'} },
+ { id:'dolahest', navn:'Dølahest', land:'Norge', hoyde:'145–160 cm', vekt:600, farge:'Brun eller svart', type:'Kaldblod',
+   fart:5, spenst:4, uth:8, lynne:8, hard:9, pris:50000,
+   fakta:['Dølahesten har også blitt kalt gudbrandsdalshest og østlandshest.',
+          'Den ble brukt til å dra tømmer, ploger og vogner på gårdene.',
+          'Norsk kaldblodstraver stammer fra de lette dølahestene.'],
+   look:{coat:0x3b2618, mane:0x15100c, legs:0x2a1a10, hoof:0x1e1712, size:1.0, chunk:1.25, feather:0x2a1a10, maneStyle:'thick'} },
+ { id:'nordlandshest', navn:'Nordlandshest/lyngshest', land:'Norge', hoyde:'ca. 125–135 cm', vekt:350, farge:'Ofte brun med lys sølvman', type:'Kaldblod (ponni)',
+   fart:5, spenst:5, uth:7, lynne:8, hard:10, pris:35000, ponni:true,
+   fakta:['Rasen kommer fra Nord-Norge og er egentlig en ponni.',
+          'Den tåler kulde, vind og dårlig vær veldig godt.',
+          'Sølvfarge – brun pels med lys man og hale – er vanlig hos denne rasen.'],
+   look:{coat:0x5a3a28, mane:0xe6dcc6, legs:0x4a2e20, hoof:0x2b2420, size:0.85, chunk:1.2, maneStyle:'thick'} },
+ { id:'kaldblodstraver', navn:'Norsk kaldblodstraver', land:'Norge', hoyde:'150–160 cm', vekt:550, farge:'Ofte rød eller brun', type:'Kaldblod',
+   fart:8, spenst:3, uth:8, lynne:6, hard:8, pris:70000, trav:true,
+   fakta:['Kaldblodstraveren er avlet fram for travløp, der hesten drar en lett vogn som heter sulky.',
+          'I et travløp må hesten holde seg i trav. Galopperer den, må kusken bremse den.',
+          'Rasen stammer fra de lette typene av dølahest.'],
+   look:{coat:0x8a4a26, mane:0xe9d6a8, legs:0x7a3e20, hoof:0x2b2420, size:1.0, chunk:1.05, maneStyle:'normal'} },
+ { id:'islandshest', navn:'Islandshest', land:'Island', hoyde:'130–145 cm', vekt:350, farge:'Alle farger', type:'Ponnistørrelse',
+   fart:6, spenst:4, uth:9, lynne:8, hard:10, pris:60000, ponni:true,
+   fakta:['Islandshesten har fem gangarter. To av dem, tølt og pass, har nesten ingen andre hester.',
+          'Ingen hester får komme inn til Island. En islandshest som forlater landet, får aldri reise tilbake.',
+          'Den har tykk pels og tåler is og snø.'],
+   look:{coat:0x6b4026, mane:0x161210, legs:0x1c1714, hoof:0x1e1712, size:0.88, chunk:1.2, maneStyle:'shaggy'} },
+ { id:'shetland', navn:'Shetlandsponni', land:'Shetland (Skottland)', hoyde:'under 107 cm', vekt:180, farge:'Mange farger, ofte skjoldet', type:'Ponni',
+   fart:3, spenst:3, uth:6, lynne:7, hard:10, pris:25000, ponni:true, liten:true,
+   fakta:['Shetlandsponnien er en av verdens minste ponnier, men veldig sterk for størrelsen.',
+          'På Shetlandsøyene ble den brukt til å bære torv og arbeide i gruver.',
+          'Mange shetlandsponnier blir over 30 år gamle.'],
+   look:{coat:0x1d1916, mane:0x161210, legs:0x1d1916, hoof:0x2b2420, size:0.66, chunk:1.45, legLen:0.8, piebald:0xf2efe8, maneStyle:'shaggy'} },
+ { id:'falabella', navn:'Falabella', land:'Argentina', hoyde:'70–85 cm', vekt:70, farge:'Mange farger', type:'Minihest',
+   fart:2, spenst:2, uth:4, lynne:8, hard:5, pris:40000, ikkeRidbar:true, liten:true,
+   fakta:['Falabella er en av verdens minste hesteraser.',
+          'Den er for liten til at noen kan ri på den, men den kan trekke en liten vogn.',
+          'Selv om den er bitteliten, regnes den som en hest og ikke en ponni, fordi kroppen er formet som en hest.'],
+   look:{coat:0x6b3e22, mane:0x1a1410, legs:0x2a1a10, hoof:0x2b2420, size:0.5, chunk:1.0, spotsWhite:true, maneStyle:'normal'} },
+ { id:'shire', navn:'Shire', land:'England', hoyde:'170–190 cm', vekt:950, farge:'Svart, brun eller grå', type:'Kaldblod',
+   fart:3, spenst:2, uth:7, lynne:9, hard:7, pris:80000,
+   fakta:['Shire er blant verdens største hester.',
+          'Den høyeste hesten som er målt, var en shire som het Mammoth. Han var over 2 meter høy.',
+          'Det lange håret nede på beina kalles behang.'],
+   look:{coat:0x1a1716, mane:0x111010, legs:0xf2efe8, hoof:0x6b625a, size:1.22, chunk:1.35, feather:0xf2efe8, blaze:true, maneStyle:'thick'} },
+ { id:'frieser', navn:'Frieser', land:'Nederland', hoyde:'155–170 cm', vekt:650, farge:'Alltid svart', type:'Kaldblod',
+   fart:5, spenst:5, uth:6, lynne:7, hard:6, pris:110000,
+   fakta:['En godkjent frieser er alltid svart.',
+          'Den har lang, bølgete man og hale.',
+          'Den løfter beina høyt når den går, og er populær i dressur og på film.'],
+   look:{coat:0x0f0e0e, mane:0x0a0a0a, legs:0x0f0e0e, hoof:0x1a1716, size:1.05, chunk:1.15, feather:0x0f0e0e, maneStyle:'long'} },
+ { id:'haflinger', navn:'Haflinger', land:'Østerrike og Italia', hoyde:'137–150 cm', vekt:500, farge:'Fuks med lys man', type:'Kaldblod',
+   fart:5, spenst:5, uth:8, lynne:9, hard:9, pris:55000,
+   fakta:['Alle haflingere er gyllenbrune (fuks) med lys man og hale.',
+          'Rasen kommer fra fjellene i Tyrol og er vant til bratte stier.',
+          'Den er snill og sterk og brukes mye til barn og turridning.'],
+   look:{coat:0xb26a2c, mane:0xf2e2b8, legs:0xa65e24, hoof:0x3a2a1e, size:0.92, chunk:1.2, maneStyle:'thick'} },
+ { id:'araber', navn:'Arabisk fullblod', land:'Den arabiske halvøy', hoyde:'145–155 cm', vekt:420, farge:'Ofte grå, brun eller fuks', type:'Fullblod',
+   fart:8, spenst:6, uth:10, lynne:4, hard:7, pris:120000,
+   fakta:['Araberen er en av de eldste hesterasene i verden.',
+          'Den har ofte innbuet neseprofil og bærer halen høyt.',
+          'Den er kjent for å klare veldig lange ritt.'],
+   look:{coat:0xe8e6e2, mane:0xd8d6d2, legs:0xd0cdc8, hoof:0x4a443e, size:0.97, chunk:0.9, tailHigh:true, maneStyle:'normal'} },
+ { id:'fullblod', navn:'Engelsk fullblod', land:'England', hoyde:'160–170 cm', vekt:500, farge:'Ofte brun eller fuks', type:'Fullblod',
+   fart:10, spenst:7, uth:7, lynne:3, hard:4, pris:150000,
+   fakta:['Engelsk fullblod er verdens mest kjente galopphest.',
+          'Den kan løpe i over 60 kilometer i timen.',
+          'Den er sky og lett å skremme, så den passer ikke for nybegynnere.'],
+   look:{coat:0x5a3018, mane:0x141010, legs:0x141010, hoof:0x1e1712, size:1.08, chunk:0.88, legLen:1.12, star:true, maneStyle:'short'} },
+ { id:'lipizzaner', navn:'Lipizzaner', land:'Slovenia og Østerrike', hoyde:'150–158 cm', vekt:500, farge:'Skimmel (blir hvit)', type:'Varmblod',
+   fart:5, spenst:6, uth:6, lynne:7, hard:6, pris:130000,
+   fakta:['Lipizzaneren fødes mørk og blir hvit etter hvert som den blir eldre.',
+          'Den er kjent fra Den spanske rideskolen i Wien.',
+          'Den kan lære svært vanskelige dressurøvelser, til og med hopp på stedet.'],
+   look:{coat:0xf3f1ec, mane:0xeceae4, legs:0xe4e1da, hoof:0x5a524a, size:1.0, chunk:1.12, maneStyle:'thick'} },
+ { id:'appaloosa', navn:'Appaloosa', land:'USA', hoyde:'142–160 cm', vekt:480, farge:'Prikkete', type:'Varmblod',
+   fart:6, spenst:6, uth:7, lynne:7, hard:8, pris:65000,
+   fakta:['Appaloosaen er kjent for de prikkete pelsmønstrene sine.',
+          'Rasen ble avlet fram av Nez Perce-folket i Nord-Amerika.',
+          'Den har ofte stripete hover.'],
+   look:{coat:0xf0ece2, mane:0x4a3828, legs:0xe6e0d4, hoof:0x6b625a, size:0.98, chunk:1.05, spots:0x3a2a1e, maneStyle:'short'} },
+ { id:'quarter', navn:'Quarter horse', land:'USA', hoyde:'142–160 cm', vekt:500, farge:'Ofte fuks', type:'Varmblod',
+   fart:9, spenst:5, uth:6, lynne:8, hard:8, pris:75000,
+   fakta:['Navnet kommer av at den er raskest over en kvart mil, omtrent 400 meter.',
+          'Det finnes flere registrerte quarter horser enn noen annen hesterase.',
+          'Den brukes mye i westernridning og til å gjete kveg.'],
+   look:{coat:0xa8501e, mane:0x8a3e16, legs:0x9a4818, hoof:0x3a2a1e, size:0.97, chunk:1.18, blaze:true, maneStyle:'short'} },
+ { id:'akhalteke', navn:'Akhal-teke', land:'Turkmenistan', hoyde:'147–163 cm', vekt:430, farge:'Ofte gyllen med metallglans', type:'Fullblod',
+   fart:8, spenst:6, uth:10, lynne:4, hard:8, pris:140000,
+   fakta:['Pelsen kan ha en helt spesiell metallglans.',
+          'Akhal-teke er nasjonalsymbol i Turkmenistan og er med i landets riksvåpen.',
+          'Den tåler ørkenvarme og kan gå langt med lite vann.'],
+   look:{coat:0xd8a648, mane:0xc89638, legs:0xc89638, hoof:0x4a3a2a, size:1.03, chunk:0.82, legLen:1.1, metal:true, maneStyle:'short'} },
+ { id:'clydesdale', navn:'Clydesdale', land:'Skottland', hoyde:'163–183 cm', vekt:850, farge:'Ofte brun med hvite bein', type:'Kaldblod',
+   fart:3, spenst:3, uth:7, lynne:9, hard:7, pris:75000,
+   fakta:['Clydesdalen har ofte hvite bein med langt behang.',
+          'Den ble brukt til å dra tunge vogner i byer og på gårder.',
+          'Den er stor, men kjent for å være rolig og snill.'],
+   look:{coat:0x6a3a1e, mane:0x141010, legs:0xf2efe8, hoof:0x6b625a, size:1.17, chunk:1.3, feather:0xf2efe8, blaze:true, maneStyle:'thick'} },
+ { id:'connemara', navn:'Connemaraponni', land:'Irland', hoyde:'128–148 cm', vekt:380, farge:'Ofte grå', type:'Ponni',
+   fart:6, spenst:9, uth:7, lynne:8, hard:9, pris:60000, ponni:true,
+   fakta:['Connemaraponnien er kjent for å være en dyktig hopper.',
+          'Den kommer fra et værhardt område på vestkysten av Irland.',
+          'Den passer både for barn og voksne ryttere.'],
+   look:{coat:0xbdbab4, mane:0xe2e0dc, legs:0x8e8a84, hoof:0x3a3632, size:0.88, chunk:1.1, dapple:true, maneStyle:'normal'} },
+ { id:'hannoveraner', navn:'Hannoveraner', land:'Tyskland', hoyde:'160–175 cm', vekt:600, farge:'Ofte fuks eller brun', type:'Varmblod',
+   fart:7, spenst:9, uth:7, lynne:6, hard:5, pris:160000,
+   fakta:['Hannoveraneren er en av verdens mest brukte sportshester.',
+          'Hester av denne rasen har vunnet mange OL-medaljer i sprang og dressur.',
+          'Et varmblod er en blanding av lette og tyngre hestetyper.'],
+   look:{coat:0x7a3418, mane:0x6a2c12, legs:0x7a3418, hoof:0x3a2a1e, size:1.1, chunk:1.0, legLen:1.06, star:true, socks:true, maneStyle:'short'} },
+ { id:'mustang', navn:'Mustang', land:'USA', hoyde:'140–150 cm', vekt:400, farge:'Mange farger', type:'Villhest',
+   fart:7, spenst:5, uth:9, lynne:4, hard:10, pris:45000,
+   fakta:['Mustanger er hester som lever vilt i det vestlige USA.',
+          'De stammer fra hester som spanjolene tok med seg til Amerika for omtrent 500 år siden.',
+          'De er seige og tåler et tøft liv.'],
+   look:{coat:0xc49a5a, mane:0x161210, legs:0x1c1714, hoof:0x1e1712, size:0.93, chunk:1.05, dorsal:true, maneStyle:'wild'} },
+ { id:'varmblodstraver', navn:'Varmblodstraver', land:'USA og Frankrike', hoyde:'155–165 cm', vekt:470, farge:'Ofte brun', type:'Varmblod',
+   fart:10, spenst:3, uth:8, lynne:5, hard:6, pris:120000, trav:true,
+   fakta:['Varmblodstraveren er den raskeste traveren.',
+          'Mange varmblodstravere i Norge er i slekt med amerikanske og franske travere.',
+          'På travbanen løper kaldblodshester og varmblodshester i hvert sine løp.'],
+   look:{coat:0x4a2814, mane:0x141010, legs:0x141010, hoof:0x1e1712, size:1.03, chunk:0.95, legLen:1.06, maneStyle:'short'} }
+];
+
+/* Områder. lvlCost[i] = pris for å gå fra nivå i til i+1. Nivå 0 = ikke kjøpt. */
+const AREAS = {
+ stall:   { navn:'Stallen', ikon:'🏠', start:1, lvlCost:[0,20000,45000,80000], maks:4,
+            besk:'Her bor hestene om natta. Hver hest trenger sin egen boks.', niva:['','2 bokser','4 bokser','6 bokser','8 bokser'] },
+ hoyloft: { navn:'Høyloftet', ikon:'🌾', start:1, lvlCost:[0,6000,15000], maks:3,
+            besk:'Her kjøper og lagrer du høy, kraftfôr og gulrøtter.', niva:['','Lager: 150 kg høy','Lager: 400 kg høy','Lager: 1000 kg høy + mengderabatt'] },
+ luft:    { navn:'Luftegården', ikon:'🪵', start:1, lvlCost:[0], maks:1,
+            besk:'En inngjerdet uteplass med vannkar. Hester trenger bevegelse og selskap hver dag.' },
+ ridebane:{ navn:'Ridebanen', ikon:'🏇', start:1, lvlCost:[0], maks:1,
+            besk:'Her trener du hestene og holder ridetimer.' },
+ beite:   { navn:'Beitet', ikon:'🌿', start:0, lvlCost:[12000], maks:1,
+            besk:'En stor gresseng. Om sommeren spiser hestene gress, og de blir ekstra glade av å gå her sammen.' },
+ rideskole:{navn:'Rideskolen', ikon:'🏫', start:0, lvlCost:[25000,30000], maks:2,
+            besk:'Flere elever vil ri hos deg, og de betaler mer.', niva:['','Rideskole','Stor rideskole'] },
+ vet:     { navn:'Veterinærstallen', ikon:'🩺', start:0, lvlCost:[10000], maks:1,
+            besk:'Veterinæren får et eget rom på gården. Alt hos veterinæren blir 30 % billigere.' },
+ stevne:  { navn:'Stevneplassen', ikon:'🏆', start:0, lvlCost:[40000], maks:1,
+            besk:'Konkurrer i sprang og dressur og vinn premiepenger.' },
+ trav:    { navn:'Travbanen', ikon:'🏁', start:0, lvlCost:[60000], maks:1,
+            besk:'Travløp for travere. Store premier!' }
+};
+
+const UPGRADES = {
+ vanning: { navn:'Automatisk vanning', area:'stall', pris:8000, besk:'Hestene får alltid friskt vann i boksen.' },
+ hinder:  { navn:'Hindersett', area:'ridebane', pris:6000, besk:'Hinder til sprangtrening og sprangtimer.' },
+ underlag:{ navn:'Bedre underlag', area:'ridebane', pris:12000, besk:'Mykere bunn. Trening gir mer, og hestene blir sjeldnere halte.' },
+ leskur:  { navn:'Leskur', area:'luft', pris:5000, besk:'Et tak hestene kan stå under når det regner eller snør.' }
+};
+
+const STAFF = {
+ stallhjelp: { navn:'Stallhjelp', lonn:600, besk:'Gir høy og vann til alle hestene morgen og kveld, og møkker boksene hver morgen.' },
+ ridelaerer: { navn:'Ridelærer', lonn:700, besk:'Gir deg flere elever hver dag, og elevene betaler 10 % mer.' }
+};
+
+const GOALS = [
+ { id:'g1',  txt:'Gi en hest høy',                       kr:200,   f:s=>s.stats.hoy>=1 },
+ { id:'g2',  txt:'Gi en hest vann',                      kr:200,   f:s=>s.stats.vann>=1 },
+ { id:'g3',  txt:'Strigle en hest',                      kr:300,   f:s=>s.stats.strigle>=1 },
+ { id:'g4',  txt:'Møkk en boks',                          kr:300,   f:s=>s.stats.mokk>=1 },
+ { id:'g5',  txt:'Slipp to hester ut sammen',            kr:400,   f:s=>s.stats.sammen>=1 },
+ { id:'g6',  txt:'Hold din første ridetime',             kr:500,   f:s=>s.stats.timer>=1 },
+ { id:'g7',  txt:'Bestill hovslageren',                  kr:500,   f:s=>s.stats.hovslager>=1 },
+ { id:'g8',  txt:'Tjen 5 000 kr til sammen',             kr:1000,  f:s=>s.stats.tjent>=5000 },
+ { id:'g9',  txt:'Kjøp en ny hest',                       kr:1000,  f:s=>s.stats.kjopt>=1 },
+ { id:'g10', txt:'Kjøp Beitet',                           kr:1500,  f:s=>s.areas.beite>=1 },
+ { id:'g11', txt:'Hold 15 ridetimer',                     kr:2000,  f:s=>s.stats.timer>=15 },
+ { id:'g12', txt:'Kjøp Rideskolen',                       kr:3000,  f:s=>s.areas.rideskole>=1 },
+ { id:'g13', txt:'Ha 4 hester på gården',                 kr:2000,  f:s=>s.horses.filter(h=>h.egen).length>=4 },
+ { id:'g14', txt:'Få 4 stjerner i rykte',                 kr:3000,  f:s=>s.rykte>=4 },
+ { id:'g15', txt:'Ta inn en pensjonær',                   kr:1500,  f:s=>s.stats.pensjonaerer>=1 },
+ { id:'g16', txt:'Kjøp Stevneplassen',                    kr:3000,  f:s=>s.areas.stevne>=1 },
+ { id:'g17', txt:'Vinn et stevne',                        kr:4000,  f:s=>s.stats.seire>=1 },
+ { id:'g18', txt:'Alle hestene friske i 7 dager på rad',  kr:4000,  f:s=>s.stats.friskeDager>=7 },
+ { id:'g19', txt:'Ha eid 6 ulike raser',                  kr:5000,  f:s=>s.stats.raser.length>=6 },
+ { id:'g20', txt:'Vinn et travløp',                       kr:6000,  f:s=>s.stats.travSeire>=1 },
+ { id:'g21', txt:'Tjen 200 000 kr til sammen',            kr:15000, f:s=>s.stats.tjent>=200000 }
+];
+
+/* Hestehåndboka – kort fakta som også dukker opp som «Visste du?» i spillet */
+const HANDBOK = [
+ { id:'hoy', ikon:'🌾', tittel:'Høy er hovedmaten',
+   tekst:'En hest skal spise mest grovfôr – høy, ensilasje eller gress. En vanlig hest på 500 kg trenger rundt 9 kg høy hver dag. Hesten er laget for å spise litt hele tiden, så den bør ikke gå lenge uten fôr.' },
+ { id:'vann', ikon:'💧', tittel:'Mye vann',
+   tekst:'En hest kan drikke mellom 20 og 50 liter vann om dagen. Den trenger mer når det er varmt eller når den har jobbet hardt.' },
+ { id:'salt', ikon:'🧂', tittel:'Salt',
+   tekst:'Hester trenger salt hver dag, særlig når de svetter. Derfor henger det en saltslikkestein i boksen.' },
+ { id:'kraft', ikon:'🥣', tittel:'Kraftfôr – bare litt',
+   tekst:'Kraftfôr er korn og pellets som gir ekstra energi. Det er bare et tillegg for hester som jobber hardt. For mye kraftfôr kan gi vondt i magen.' },
+ { id:'flokk', ikon:'🐴', tittel:'Hester er flokkdyr',
+   tekst:'Hester trenger andre hester. De har et sterkt behov for å være sammen, leke og klø hverandre. En hest som alltid er alene, blir ulykkelig.' },
+ { id:'ute', ikon:'🌤️', tittel:'Ut hver dag',
+   tekst:'Hester trenger fri bevegelse hver dag. Hester som bor i boks, skal etter reglene få minst to timer i luftegården hver dag – gjerne mye mer.' },
+ { id:'stell', ikon:'🪮', tittel:'Stell',
+   tekst:'Hesten strigles (børstes) før ridning, så pelsen blir ren og salen ikke gnager. Hovene renses for stein og møkk.' },
+ { id:'boks', ikon:'🧹', tittel:'Ren boks',
+   tekst:'Boksen må møkkes hver dag. En skitten boks gir dårlig luft og kan gjøre hesten syk.' },
+ { id:'hovslager', ikon:'🧲', tittel:'Hovslageren',
+   tekst:'Hovene vokser hele tiden, som neglene dine. Hovslageren skjærer hovene og skor hesten omtrent hver 6.–8. uke. I spillet kommer hovslageren hver 7. dag.' },
+ { id:'vaksine', ikon:'💉', tittel:'Vaksine',
+   tekst:'Hester vaksineres mot hesteinfluensa én gang i året. Uten gyldig vaksine får hesten ikke starte i travløp. Ett spillår er 28 dager.' },
+ { id:'kolikk', ikon:'🤢', tittel:'Kolikk',
+   tekst:'Kolikk betyr vondt i magen, og det kan være farlig for hester. Det henger ofte sammen med for lite vann, for lite høy eller for mye kraftfôr. Ring veterinæren med en gang!' },
+ { id:'halt', ikon:'🦵', tittel:'Halthet',
+   tekst:'En halt hest har vondt i et bein og går ujevnt. Det kan komme av for mye trening når hesten er sliten, eller av hover som ikke er stelt.' },
+ { id:'hoste', ikon:'😷', tittel:'Hoste',
+   tekst:'Støv fra skittent strø kan gi hesten hoste. Rene bokser og god luft i stallen hjelper.' },
+ { id:'vinter', ikon:'❄️', tittel:'Vinter',
+   tekst:'Om vinteren bruker hesten mye energi på å holde varmen. Den trenger da mer høy enn om sommeren.' },
+ { id:'kost', ikon:'💰', tittel:'Hva koster en hest?',
+   tekst:'En hest koster ofte flere tusen kroner i måneden: fôr, strø, hovslager, veterinær, vaksiner og forsikring. Det er lurt å regne på det før man kjøper hest!' },
+ { id:'lynne', ikon:'😌', tittel:'Lynne',
+   tekst:'Lynne betyr hvordan hesten er av seg. Rolige hester passer for nybegynnere. Hester som er sky og nervøse, skvetter lett.' },
+ { id:'kald', ikon:'🧊', tittel:'Kaldblod og varmblod',
+   tekst:'Hester deles ofte i kaldblod og varmblod. Det har ingenting med kroppstemperaturen å gjøre! Kaldblod er rolige og sterke, varmblod er lettere og raskere.' }
+];
+
+const NAVN = ['Bris','Tussi','Lykke','Storm','Kanel','Mira','Odin','Stjerne','Sølvi','Pepper','Luna','Raggen','Frøya','Toffee','Bamse','Sky','Tindra','Kaos','Rosa','Balder',
+              'Lyn','Hekla','Mjød','Prikk','Blåbær','Nova','Tor','Sandy','Kakao','Isa','Viking','Fiola','Trolla','Sprett','Snøball','Siri','Rufsen','Gullet','Flamme','Kløver'];
+const EIERE = ['Ida','Jonas','Sara','Emil','Nora','Aksel','Thea','Lukas','Ingrid','Filip','Maja','Oskar','Sofie','Henrik'];
+
+return { BREEDS, AREAS, UPGRADES, STAFF, GOALS, HANDBOK, NAVN, EIERE };
+})();
+if (typeof module!=='undefined') module.exports = HDATA;
+
+</script>
+<script>
+/* ==========================================================================
+   Mykje Hester – spillmotor
+   --------------------------------------------------------------------------
+   Ren logikk uten grafikk, så den kan testes i Node.
+   Alle behov er 0–100. Tid måles i minutter fra midnatt (06:00 = 360).
+   En dag varer fra 06:00 til 22:00.
+   Kalender: 7 dager per årstid, 28 dager = ett spillår.
+   ========================================================================== */
+var HEngine = (function(D){
+const B = Object.fromEntries(D.BREEDS.map(b=>[b.id,b]));
+const DAG_START = 360, DAG_SLUTT = 1320;
+const SESONG = ['Vår','Sommer','Høst','Vinter'];
+const BOKSER = [0,2,4,6,8];
+const LAGER = [0,150,400,1000];
+const PRIS = { hoy:4, hoyRabatt:3.5, kraft:8, gulrot:3, flis:25, hovslager:700, vaksine:850, helsesjekk:600,
+               syk:{kolikk:2000, halt:1500, hoste:1200}, fast:50 };
+const TID = { hoy:10, vann:5, kraft:5, gulrot:2, strigle:20, hover:10, mokk:15, flytt:5, tren:45, time:60, tur:120,
+              stevne:180, trav:180, vet:30, hovslager:60, vaksine:15 };
+const TIMETYPER = {
+ nybegynner:{ navn:'Nybegynnertime', ikon:'🧒', besk:'Et barn som skal ri for første gang. Trenger en rolig hest.', pris:300 },
+ tur:       { navn:'Turridning',      ikon:'🌲', besk:'Tur i skogen i to timer. Hesten må ha god utholdenhet.', pris:450 },
+ sprang:    { navn:'Sprangtime',      ikon:'🚧', besk:'Eleven vil hoppe. Hesten må kunne litt sprang, og du trenger hinder.', pris:450 },
+ dressur:   { navn:'Dressurtime',     ikon:'🎀', besk:'Eleven vil øve dressur. Hesten må kunne litt dressur.', pris:450 },
+ kos:       { navn:'Barnebursdag',    ikon:'🎂', besk:'Barna vil kose med og stelle en rolig hest. Ingen ridning.', pris:350 }
+};
+
+/* ---------- hjelpere ---------- */
+const clamp = (v,a=0,b=100)=>Math.max(a,Math.min(b,v));
+const rnd = ()=>Math.random();
+const pick = a=>a[Math.floor(rnd()*a.length)];
+const r500 = v=>Math.round(v/500)*500;
+function kr(n){ return (n<0?'−':'')+Math.abs(Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ')+' kr'; }
+function klokke(m){ m=Math.floor(m); return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
+function sesong(s){ return SESONG[Math.floor((s.day-1)/7)%4]; }
+function aar(s){ return Math.floor((s.day-1)/28)+1; }
+function bokser(s){ return BOKSER[s.areas.stall]; }
+function lager(s){ return LAGER[s.areas.hoyloft]; }
+function rase(h){ return B[h.breed]; }
+function erUte(h){ return h.loc==='luft' || h.loc==='beite'; }
+
+/* Hvor mye høy en hest trenger per dag (kg). 1,8 kg høy per 100 kg kroppsvekt
+   (ca. 1,5 kg tørrstoff), 20 % mer om vinteren. Avrundet til nærmeste halve kg. */
+function hoyDag(s,h){ const v=rase(h).vekt; return Math.max(1, Math.round(v/100*1.8*(sesong(s)==='Vinter'?1.2:1)*2)/2); }
+function hoyPorsjon(s,h){ return Math.max(0.5, Math.round(hoyDag(s,h)/2*2)/2); }
+function vannDag(h){ const v=rase(h).vekt; return Math.round(clamp(v/100*6,8,60)); }
+function hoyPris(s){ return s.areas.hoyloft>=3 ? PRIS.hoyRabatt : PRIS.hoy; }
+
+/* Ferdighetstak avhenger av rasens talent */
+function tak(h,disc){ const r=rase(h); const t = disc==='sprang'?r.spenst : disc==='dressur'?Math.round((r.lynne+r.uth)/2) : r.fart; return Math.min(100, 30+t*7); }
+
+function nyHest(breed, opts={}){
+  return Object.assign({ id:'h'+Math.random().toString(36).slice(2,8), name:'Hest', breed, age:6, loc:'stall',
+    mett:80, vann:80, ren:70, glad:75, energi:100, helse:100, mokk:0, hoof:2, hovrens:0, vacc:20,
+    syk:null, skill:{dressur:5,sprang:5,fart:5}, jobber:0, timerIdag:0, stevneIdag:false, kraftIdag:0, gulrotIdag:0,
+    egen:true, eier:null, betaling:0, eierHumor:0, kjopspris:B[breed].pris }, opts);
+}
+
+function nyttSpill(opts={}){
+  const s = { v:1, farm: opts.farm||'Mykje Hestegård', money:15000, day:1, min:DAG_START, weather:'sol', rykte:2,
+    hay:150, kraft:10, gulrot:20,
+    areas:{stall:1,hoyloft:1,luft:1,ridebane:1,beite:0,rideskole:0,vet:0,stevne:0,trav:0},
+    upg:{vanning:0,hinder:0,underlag:0,leskur:0}, staff:{stallhjelp:0,ridelaerer:0},
+    horses:[], bookings:[], market:[], pensjonar:null, ledger:[], history:[], goalsDone:{}, tips:{}, log:[],
+    stats:{hoy:0,vann:0,strigle:0,mokk:0,sammen:0,timer:0,hovslager:0,tjent:0,kjopt:0,pensjonaerer:0,seire:0,travSeire:0,friskeDager:0,raser:[],vet:0},
+    nextId:1 };
+  const starts = opts.horses || [{breed:'fjordhest',name:'Bris'},{breed:'nordlandshest',name:'Tussi'}];
+  starts.forEach(o=>{ const h=nyHest(o.breed,{name:o.name, age:7+Math.floor(rnd()*5)}); s.horses.push(h); addRase(s,o.breed); });
+  nyDagOppsett(s);
+  return s;
+}
+function addRase(s,b){ if(!s.stats.raser.includes(b)) s.stats.raser.push(b); }
+
+/* ---------- økonomi ---------- */
+function betal(s,kr_,txt){ s.money-=kr_; s.ledger.push({t:'ut',txt,kr:kr_}); }
+function tjen(s,kr_,txt){ s.money+=kr_; s.stats.tjent+=kr_; s.ledger.push({t:'inn',txt,kr:kr_}); }
+function harRad(s,kr_){ return s.money>=kr_; }
+function tips(s,id){ if(s.tips[id]) return null; s.tips[id]=1; return D.HANDBOK.find(t=>t.id===id)||null; }
+
+/* ---------- tid ---------- */
+function brukTid(s,min){
+  if (s.min+min > DAG_SLUTT) return false;
+  advance(s,min); return true;
+}
+function igjen(s){ return DAG_SLUTT - s.min; }
+
+/* Behovene endrer seg over tid */
+function advance(s,min){
+  const h_ = min/60, ses=sesong(s);
+  const ute = s.horses.filter(erUte);
+  for (const h of s.horses){
+    const sammen = ute.length>=2;
+    // mett
+    let mettTap = 3.8;                                       // to riktige måltider holder hesten mett et døgn
+    if (h.loc==='beite' && ses!=='Vinter') mettTap -= 2.5;   // gress
+    h.mett = clamp(h.mett - mettTap*h_);
+    // vann
+    if (erUte(h)) h.vann = clamp(h.vann + 25*h_);           // vannkar
+    else if (s.upg.vanning) h.vann = 100;
+    else h.vann = clamp(h.vann - (ses==='Sommer'?7:6)*h_);
+    // renhet
+    let renTap = 1;
+    if (erUte(h) && (s.weather==='regn'||s.weather==='sno')) renTap += s.upg.leskur?1.5:4;
+    if (erUte(h)) renTap += 0.5;
+    h.ren = clamp(h.ren - renTap*h_);
+    // glede
+    let g;
+    if (erUte(h)) g = sammen ? (h.loc==='beite'?10:8) : 2;
+    else g = -3;
+    if (h.mett<25 || h.vann<25) g -= 4;
+    if (h.syk) g -= 2;
+    h.glad = clamp(h.glad + g*h_);
+    // energi (hvile)
+    h.energi = clamp(h.energi + 5*h_);
+    if (h.syk && !h.syk.behandlet) h.helse = clamp(h.helse - 2*h_, 5);
+  }
+  s.min += min;
+}
+
+/* ---------- handlinger på en hest ---------- */
+function act(s, id, a, arg){
+  const h = s.horses.find(x=>x.id===id); if(!h) return {ok:false,msg:'Fant ikke hesten.'};
+  const R = rase(h), N=h.name;
+  const tid = TID[a] ?? 0;
+  if (a!=='flytt' && igjen(s) < tid) return {ok:false,msg:'Det er for sent i dag. Avslutt dagen og fortsett i morgen.'};
+  const res = (msg,extra={})=>Object.assign({ok:true,msg},extra);
+  switch(a){
+  case 'hoy': {
+    const p = hoyPorsjon(s,h);
+    if (h.mett>=90) return {ok:false,msg:`${N} er mett nå.`};
+    if (s.hay < p) return {ok:false,msg:`Du har ikke nok høy. Kjøp mer på høyloftet (trenger ${fmtKg(p)}).`};
+    s.hay = +(s.hay-p).toFixed(1); h.mett = clamp(h.mett+50); s.stats.hoy++; brukTid(s,tid);
+    return res(`${N} fikk ${fmtKg(p)} høy. Nam!`, {tip:tips(s,'hoy')});
+  }
+  case 'vann': {
+    if (h.vann>=95) return {ok:false,msg:`${N} har nok vann.`};
+    h.vann=100; s.stats.vann++; brukTid(s,tid);
+    return res(`${N} drakk godt. En hest som ${R.navn.toLowerCase()} trenger rundt ${vannDag(h)} liter vann om dagen.`, {tip:tips(s,'vann')});
+  }
+  case 'kraft': {
+    if (s.kraft < 1) return {ok:false,msg:'Du har ikke kraftfôr. Kjøp på høyloftet.'};
+    s.kraft -= 1; h.kraftIdag++; h.energi=clamp(h.energi+20); h.mett=clamp(h.mett+10); brukTid(s,tid);
+    let extra = {tip:tips(s,'kraft')};
+    if (h.kraftIdag>2 && !h.syk && rnd()<0.4){ blirSyk(s,h,'kolikk'); return res(`Å nei! ${N} fikk for mye kraftfôr og har fått kolikk. Ring veterinæren!`, {bad:true, tip:tips(s,'kolikk')}); }
+    return res(`${N} fikk 1 kg kraftfôr og fikk mer energi.`, extra);
+  }
+  case 'gulrot': {
+    if (s.gulrot < 1) return {ok:false,msg:'Du har ikke flere gulrøtter.'};
+    s.gulrot--; h.gulrotIdag++; h.glad=clamp(h.glad+(h.gulrotIdag>4?2:10)); brukTid(s,tid);
+    return res(h.gulrotIdag>4 ? `${N} er mett på gulrøtter for i dag. Godbiter er bare godbiter!` : `${N} knasket en gulrot og ble glad.`);
+  }
+  case 'strigle': {
+    h.ren=100; h.glad=clamp(h.glad+5); s.stats.strigle++; brukTid(s,tid);
+    return res(`${N} er nystriglet og skinner!`, {tip:tips(s,'stell')});
+  }
+  case 'hover': {
+    h.hovrens=0; brukTid(s,tid);
+    return res(`Du renset alle fire hovene til ${N}.`);
+  }
+  case 'mokk': {
+    if (!h.egen && false) {}
+    if (h.mokk===0) return {ok:false,msg:`Boksen til ${N} er allerede ren.`};
+    h.mokk=0; betal(s,PRIS.flis,'Flis (strø) til boks'); s.stats.mokk++; brukTid(s,tid);
+    return res(`Boksen til ${N} er møkket og har fått ny flis (${kr(PRIS.flis)}).`, {tip:tips(s,'boks')});
+  }
+  case 'flytt': {
+    const til = arg;
+    if (til===h.loc) return {ok:false,msg:`${N} er der allerede.`};
+    if (til==='beite'){ if(!s.areas.beite) return {ok:false,msg:'Du har ikke kjøpt beitet ennå.'}; if(sesong(s)==='Vinter') return {ok:false,msg:'Beitet er dekket av snø om vinteren.'}; }
+    if (igjen(s)<TID.flytt) return {ok:false,msg:'Det er for sent i dag.'};
+    h.loc=til; brukTid(s,TID.flytt);
+    const ute = s.horses.filter(erUte);
+    let t=null, msg=`${N} er flyttet til ${stedNavn(til)}.`;
+    if (erUte(h) && ute.length>=2){ s.stats.sammen++; t=tips(s,'flokk'); msg+=' Hestene er glade for å være sammen.'; }
+    else if (erUte(h)) { msg+=` ${N} står alene ute og ser seg rundt etter venner.`; t=tips(s,'flokk'); }
+    return res(msg,{tip:t});
+  }
+  case 'tren': {
+    if (!h.egen) return {ok:false,msg:'Du kan ikke trene en pensjonær. Den eies av noen andre.'};
+    const disc=arg;
+    if (h.syk) return {ok:false,msg:`${N} er syk og må hvile.`};
+    if (disc==='sprang' && !s.upg.hinder) return {ok:false,msg:'Du trenger hindersett på ridebanen for å trene sprang.'};
+    if (R.ikkeRidbar) return {ok:false,msg:`${N} er for liten til å bli ridd.`};
+    if (h.jobber>=3) return {ok:false,msg:`${N} har jobbet nok i dag. Hester trenger hvile også!`};
+    if (h.energi<25) return {ok:false,msg:`${N} er for sliten. La hesten hvile eller gi litt kraftfôr.`};
+    const sliten = h.energi<45;
+    const t = tak(h,disc), f = (s.upg.underlag?1.25:1)*(h.glad>60?1.1:0.9);
+    const gain = Math.max(1, Math.round((3 + (t/100)*6) * (1 - h.skill[disc]/(t+1)) * f));
+    h.skill[disc] = Math.min(t, h.skill[disc]+gain);
+    h.energi = clamp(h.energi-25); h.jobber++; brukTid(s,tid);
+    if (sliten && rnd() < (s.upg.underlag?0.1:0.2)){ blirSyk(s,h,'halt'); return res(`${N} var for sliten og ble halt under treningen. Ring veterinæren.`, {bad:true, tip:tips(s,'halt')}); }
+    return res(`${N} trente ${discNavn(disc)} (+${gain}). Nå: ${h.skill[disc]} av ${t} mulige.`);
+  }
+  case 'time': {
+    if (!h.egen) return {ok:false,msg:'Pensjonærer kan ikke brukes i ridetimer.'};
+    const b = s.bookings.find(x=>x.id===arg && !x.done); if(!b) return {ok:false,msg:'Fant ikke timen.'};
+    const k = kanTa(s,h,b); if(!k.ok) return k;
+    const T = TIMETYPER[b.type]; const t = b.type==='tur'?TID.tur:TID.time;
+    if (igjen(s)<t) return {ok:false,msg:'Det er ikke nok tid igjen i dag.'};
+    const fornoyd = (h.ren + h.glad)/2;
+    let faktor=1, msg, rDiff=0;
+    if (fornoyd>=70){ faktor=1; rDiff=0.03; msg='Eleven var kjempefornøyd!'; }
+    else if (fornoyd>=40){ faktor=0.8; msg='Eleven var ganske fornøyd.'; }
+    else { faktor=0.5; rDiff=-0.12; msg = h.ren<40 ? 'Eleven syntes hesten var skitten.' : 'Hesten var sur, og eleven ble skuffet.'; }
+    const betaling = Math.round(b.pris*faktor/10)*10;
+    tjen(s,betaling,`${T.navn} med ${N}`); s.rykte = clamp(s.rykte+rDiff,0,5);
+    b.done=true; b.hest=N; h.timerIdag++; h.jobber++; s.stats.timer++;
+    h.energi = clamp(h.energi-(b.type==='kos'?5:b.type==='tur'?30:20));
+    if (b.type==='kos') h.glad=clamp(h.glad+5);
+    if (b.type==='tur') h.ren=clamp(h.ren-20);
+    brukTid(s,t);
+    return res(`${T.ikon} ${T.navn} med ${N}: +${kr(betaling)}. ${msg}`, {tip:tips(s,'lynne')});
+  }
+  case 'stevne': {
+    if (!h.egen) return {ok:false,msg:'Pensjonærer kan ikke starte på stevne.'};
+    const {disc, niva} = arg; const L = STEVNE[niva];
+    if (!s.areas.stevne) return {ok:false,msg:'Du må kjøpe stevneplassen først.'};
+    const sjekk = kanKonkurrere(s,h); if(!sjekk.ok) return sjekk;
+    if (disc==='sprang' && R.ikkeRidbar) return {ok:false,msg:'Hesten er for liten.'};
+    if (!harRad(s,L.avgift)) return {ok:false,msg:`Startavgiften er ${kr(L.avgift)}. Du har ikke nok penger.`};
+    betal(s,L.avgift,`Startavgift ${L.navn.toLowerCase()}`);
+    const talent = disc==='sprang'?R.spenst:R.lynne;
+    const score = h.skill[disc]*0.7 + talent*3 + h.energi*0.1 + h.glad*0.1 + rnd()*20;
+    return konkurranse(s,h,score,L,`${L.navn} i ${discNavn(disc)}`,false);
+  }
+  case 'trav': {
+    if (!h.egen) return {ok:false,msg:'Pensjonærer kan ikke starte i travløp.'};
+    const L = TRAV[arg];
+    if (!s.areas.trav) return {ok:false,msg:'Du må kjøpe travbanen først.'};
+    if (!R.trav) return {ok:false,msg:`Bare travere kan løpe travløp. ${R.navn} er ikke en traverrase.`};
+    const sjekk = kanKonkurrere(s,h); if(!sjekk.ok) return sjekk;
+    if (h.vacc<=0) return {ok:false,msg:`${N} er ikke vaksinert. Uten gyldig vaksine får hesten ikke starte i travløp.`, tip:tips(s,'vaksine')};
+    if (!harRad(s,L.avgift)) return {ok:false,msg:`Startavgiften er ${kr(L.avgift)}. Du har ikke nok penger.`};
+    betal(s,L.avgift,`Startavgift ${L.navn.toLowerCase()}`);
+    const score = h.skill.fart*0.75 + R.fart*3 + h.energi*0.1 + h.glad*0.08 + rnd()*20;
+    return konkurranse(s,h,score,L,L.navn,true);
+  }
+  case 'vet': {
+    const rabatt = s.areas.vet?0.7:1;
+    if (h.syk && !h.syk.behandlet){
+      const pris = Math.round(PRIS.syk[h.syk.type]*rabatt);
+      const betaler = h.egen;
+      const blakk = betaler && !harRad(s,pris);
+      if (betaler) betal(s,pris,`Veterinær: ${sykNavn(h.syk.type)} (${N})`);
+      h.syk.behandlet=true; h.syk.dager = s.areas.vet?1:2; h.helse=clamp(h.helse+20); s.stats.vet++; brukTid(s,tid);
+      return res(`Veterinæren behandlet ${N} for ${sykNavn(h.syk.type)}${betaler?` (${kr(pris)})`:' (eieren betaler)'}. ${N} må hvile i ${h.syk.dager} ${h.syk.dager===1?'dag':'dager'}.`+(blakk?' Du hadde ikke nok penger, så nå er du i minus. Hestens helse går alltid først!':''), {tip:tips(s,h.syk.type)});
+    }
+    if (h.syk) return {ok:false,msg:`${N} er allerede behandlet og hviler.`};
+    const pris = Math.round(PRIS.helsesjekk*rabatt);
+    if (!harRad(s,pris)) return {ok:false,msg:`Helsesjekk koster ${kr(pris)}.`};
+    betal(s,pris,`Helsesjekk og tannkontroll (${N})`); h.helse=clamp(h.helse+15); brukTid(s,tid);
+    return res(`Veterinæren sjekket ${N} og raspet tennene. Alt ser fint ut!`);
+  }
+  case 'vaksine': {
+    const pris = Math.round(PRIS.vaksine*(s.areas.vet?0.7:1));
+    if (h.vacc>14) return {ok:false,msg:`${N} er vaksinert i ${h.vacc} dager til.`};
+    if (h.syk) return {ok:false,msg:'Bare friske hester kan vaksineres.'};
+    if (h.egen && !harRad(s,pris)) return {ok:false,msg:`Vaksinen koster ${kr(pris)}.`};
+    if (h.egen) betal(s,pris,`Vaksine mot hesteinfluensa (${N})`);
+    h.vacc=28; brukTid(s,tid);
+    return res(`${N} er vaksinert mot hesteinfluensa. Vaksinen varer ett spillår (28 dager).`, {tip:tips(s,'vaksine')});
+  }
+  case 'hovslager': {
+    const pris=PRIS.hovslager;
+    if (h.hoof<4) return {ok:false,msg:`Hovene til ${N} er fine. Hovslageren kommer igjen om ${7-h.hoof} dager.`};
+    if (h.egen && !harRad(s,pris)) return {ok:false,msg:`Hovslageren koster ${kr(pris)}.`};
+    if (h.egen) betal(s,pris,`Hovslager (${N})`);
+    h.hoof=0; s.stats.hovslager++; brukTid(s,tid);
+    return res(`Hovslageren skar hovene og satte på nye sko på ${N}.`, {tip:tips(s,'hovslager')});
+  }
+  }
+  return {ok:false,msg:'Ukjent handling.'};
+}
+
+const STEVNE = {
+  klubb:  { navn:'Klubbstevne',   avgift:200, premier:[2500,1200,600], nivaa:[25,55] },
+  region: { navn:'Regionstevne',  avgift:500, premier:[7000,3500,1800], nivaa:[45,75] },
+  norges: { navn:'Norgescup',     avgift:1200,premier:[20000,9000,4500], nivaa:[65,92] }
+};
+const TRAV = {
+  lokal: { navn:'Lokalt travløp', avgift:400, premier:[5000,2500,1200], nivaa:[35,65] },
+  stort: { navn:'Stort travløp',  avgift:1500,premier:[30000,12000,6000], nivaa:[60,92] }
+};
+
+function kanKonkurrere(s,h){
+  if (h.syk) return {ok:false,msg:`${h.name} er syk.`};
+  if (h.stevneIdag) return {ok:false,msg:`${h.name} har allerede konkurrert i dag.`};
+  if (h.energi<50) return {ok:false,msg:`${h.name} er for sliten til å konkurrere (trenger minst 50 energi).`};
+  if (h.jobber>=3) return {ok:false,msg:`${h.name} har jobbet nok i dag.`};
+  if (igjen(s)<TID.stevne) return {ok:false,msg:'Det er ikke nok tid igjen i dag. Et stevne tar 3 timer.'};
+  return {ok:true};
+}
+function konkurranse(s,h,score,L,tittel,erTrav){
+  const motstand = Array.from({length:5},()=>L.nivaa[0]+rnd()*(L.nivaa[1]-L.nivaa[0]));
+  const plass = 1 + motstand.filter(m=>m>score).length;
+  h.stevneIdag=true; h.jobber++; h.energi=clamp(h.energi-35); brukTid(s,TID.stevne);
+  let msg = `${tittel}: ${h.name} kom på ${plass}. plass av 6.`;
+  if (plass<=3){ const p=L.premier[plass-1]; tjen(s,p,`Premie ${tittel.toLowerCase()} (${plass}. plass)`); msg+=` Premie: ${kr(p)}!`;
+    s.rykte=clamp(s.rykte+(plass===1?0.25:0.1),0,5);
+    if (plass===1){ if(erTrav) s.stats.travSeire++; else s.stats.seire++; } }
+  else msg+=' Ingen premie denne gangen. Tren mer og prøv igjen!';
+  return {ok:true,msg,plass,win:plass===1};
+}
+
+function kanTa(s,h,b){
+  const R=rase(h);
+  if (h.syk) return {ok:false,msg:`${h.name} er syk.`};
+  if (h.timerIdag>=2) return {ok:false,msg:`${h.name} har hatt to timer i dag. Det er nok!`};
+  if (h.jobber>=3) return {ok:false,msg:`${h.name} har jobbet nok i dag.`};
+  if (h.energi<25) return {ok:false,msg:`${h.name} er for sliten.`};
+  if (b.type!=='kos' && R.ikkeRidbar) return {ok:false,msg:`${h.name} er for liten til å bli ridd. Prøv en barnebursdag!`};
+  if ((b.type==='nybegynner'||b.type==='kos') && R.lynne<7) return {ok:false,msg:`${h.name} er for nervøs til nybegynnere (lynne ${R.lynne} av 10).`};
+  if (b.type==='tur' && R.uth<6) return {ok:false,msg:`${h.name} har for dårlig utholdenhet til en lang tur.`};
+  if (b.type==='sprang'){ if(!s.upg.hinder) return {ok:false,msg:'Du trenger hindersett på ridebanen.'}; if(h.skill.sprang<25) return {ok:false,msg:`${h.name} må trene sprang først (trenger 25, har ${h.skill.sprang}).`}; }
+  if (b.type==='dressur' && h.skill.dressur<25) return {ok:false,msg:`${h.name} må trene dressur først (trenger 25, har ${h.skill.dressur}).`};
+  return {ok:true};
+}
+
+function blirSyk(s,h,type){ h.syk={type,behandlet:false,dager:0}; h.helse=clamp(h.helse-15,5); }
+function sykNavn(t){ return {kolikk:'kolikk',halt:'halthet',hoste:'hoste'}[t]||t; }
+function discNavn(d){ return {dressur:'dressur',sprang:'sprang',fart:'fart'}[d]; }
+function stedNavn(l){ return {stall:'stallen',luft:'luftegården',beite:'beitet'}[l]; }
+function fmtKg(k){ return (Math.round(k*10)/10).toString().replace('.',',')+' kg'; }
+
+/* ---------- gården ---------- */
+function kjopHoy(s,kg){
+  const plass = lager(s)-s.hay; kg=Math.min(kg,Math.floor(plass)); if (kg<=0) return {ok:false,msg:'Høyloftet er fullt. Oppgrader det for å lagre mer.'};
+  const pris = Math.round(kg*hoyPris(s));
+  if (!harRad(s,pris)) return {ok:false,msg:`${kg} kg høy koster ${kr(pris)}. Du har ikke nok penger.`};
+  betal(s,pris,`Høy ${kg} kg`); s.hay+=kg; return {ok:true,msg:`Du kjøpte ${kg} kg høy for ${kr(pris)}.`};
+}
+function kjopVare(s,vare,ant){
+  const pris = ant*PRIS[vare]; if(!harRad(s,pris)) return {ok:false,msg:`Det koster ${kr(pris)}.`};
+  betal(s,pris, vare==='kraft'?`Kraftfôr ${ant} kg`:`Gulrøtter ${ant} stk`); s[vare]+=ant;
+  return {ok:true,msg:`Kjøpt for ${kr(pris)}.`};
+}
+function kjopOmrade(s,id){
+  const A=D.AREAS[id], lvl=s.areas[id];
+  if (lvl>=A.maks) return {ok:false,msg:'Fullt utbygd!'};
+  if (id==='rideskole' && !s.areas.ridebane) return {ok:false,msg:'Du trenger ridebanen først.'};
+  const pris = A.lvlCost[lvl];
+  if (!harRad(s,pris)) return {ok:false,msg:`Det koster ${kr(pris)}. Du mangler ${kr(pris-s.money)}.`};
+  betal(s,pris, lvl? `Oppgradering: ${A.navn}`:`Kjøpt: ${A.navn}`); s.areas[id]++;
+  return {ok:true,msg: lvl?`${A.navn} er oppgradert!`:`${A.navn} er din!`};
+}
+function kjopUpg(s,id){
+  const U=D.UPGRADES[id]; if (s.upg[id]) return {ok:false,msg:'Du har allerede denne.'};
+  if (!s.areas[U.area]) return {ok:false,msg:'Du må ha området først.'};
+  if (!harRad(s,U.pris)) return {ok:false,msg:`Det koster ${kr(U.pris)}.`};
+  betal(s,U.pris,`Kjøpt: ${U.navn}`); s.upg[id]=1; return {ok:true,msg:`${U.navn} er på plass!`};
+}
+function ansett(s,id){ s.staff[id]=s.staff[id]?0:1; return {ok:true,msg: s.staff[id]?`${D.STAFF[id].navn} er ansatt. Lønn: ${kr(D.STAFF[id].lonn)} per dag.`:`${D.STAFF[id].navn} har sluttet.`}; }
+
+function kjopHest(s,idx,navn){
+  const o=s.market[idx]; if(!o) return {ok:false,msg:'Hesten er solgt.'};
+  if (s.horses.length>=bokser(s)) return {ok:false,msg:'Det er ingen ledig boks. Bygg ut stallen først.'};
+  if (!harRad(s,o.pris)) return {ok:false,msg:`${o.name} koster ${kr(o.pris)}. Du mangler ${kr(o.pris-s.money)}.`};
+  betal(s,o.pris,`Kjøpt hest: ${o.name} (${B[o.breed].navn})`);
+  const h = nyHest(o.breed,{name:navn||o.name, age:o.age, skill:o.skill, kjopspris:o.pris, vacc:o.vacc, hoof:3});
+  s.horses.push(h); s.market.splice(idx,1); s.stats.kjopt++; addRase(s,o.breed);
+  return {ok:true,msg:`Velkommen til gården, ${h.name}!`, id:h.id};
+}
+function verdi(h){ return r500(B[h.breed].pris*0.7 + (h.skill.dressur+h.skill.sprang+h.skill.fart)*120); }
+function selgHest(s,id){
+  const h=s.horses.find(x=>x.id===id); if(!h||!h.egen) return {ok:false,msg:'Kan ikke selges.'};
+  if (s.horses.filter(x=>x.egen).length<=1) return {ok:false,msg:'Du kan ikke selge din siste hest.'};
+  const v=verdi(h); tjen(s,v,`Solgt hest: ${h.name}`); s.stats.tjent-=v; // salg teller ikke som «tjent»
+  s.horses=s.horses.filter(x=>x!==h); return {ok:true,msg:`${h.name} ble solgt for ${kr(v)} til en ny, god familie.`};
+}
+function taPensjonar(s){
+  const p=s.pensjonar; if(!p) return {ok:false,msg:'Ingen spør om plass akkurat nå.'};
+  if (s.horses.length>=bokser(s)) return {ok:false,msg:'Det er ingen ledig boks.'};
+  const h=nyHest(p.breed,{name:p.name, egen:false, eier:p.eier, betaling:p.betaling, age:p.age, vacc:15+Math.floor(rnd()*10)});
+  s.horses.push(h); s.pensjonar=null; s.stats.pensjonaerer++;
+  return {ok:true,msg:`${p.name} har flyttet inn. ${p.eier} betaler ${kr(p.betaling)} per dag for oppstallingen.`};
+}
+
+/* ---------- dagens slutt ---------- */
+function avsluttDag(s){
+  if (s.min<DAG_SLUTT) advance(s, DAG_SLUTT-s.min);
+  const rapport = { dag:s.day, hendelser:[], inn:0, ut:0, poster:[] };
+  const ev = t=>rapport.hendelser.push(t);
+  // pensjonærer betaler
+  for (const h of s.horses.filter(x=>!x.egen)) tjen(s,h.betaling,`Oppstalling: ${h.name} (${h.eier})`);
+  // lønn og faste utgifter
+  for (const k in s.staff) if (s.staff[k]) betal(s,D.STAFF[k].lonn,`Lønn: ${D.STAFF[k].navn}`);
+  const egne = s.horses.filter(x=>x.egen).length;
+  if (egne) betal(s, egne*PRIS.fast, `Strøm, salt og forsikring (${egne} ${egne===1?'hest':'hester'})`);
+
+  let alleFriske = true;
+  for (const h of s.horses){
+    const N=h.name;
+    // natta: hesten står inne
+    h.loc='stall';
+    if (h.mett<30){ h.helse=clamp(h.helse-15,5); ev(`🌾 ${N} var sulten i kveld.`); if(!h.syk && rnd()<0.3){ blirSyk(s,h,'kolikk'); ev(`🤢 ${N} fikk kolikk i natt!`);} }
+    if (h.vann<30){ h.helse=clamp(h.helse-15,5); ev(`💧 ${N} var tørst i kveld.`); if(!h.syk && rnd()<0.25){ blirSyk(s,h,'kolikk'); ev(`🤢 ${N} fikk kolikk i natt!`);} }
+    if (h.glad<25){ h.helse=clamp(h.helse-5,5); ev(`💔 ${N} var lei seg i dag. Hester trenger selskap og tid ute.`); }
+    // over natta
+    h.mett=clamp(h.mett-30); h.vann = s.upg.vanning?100:clamp(h.vann-20);
+    h.mokk++; h.hoof++; h.hovrens++; h.vacc=Math.max(0,h.vacc-1);
+    if (h.mokk>=2){ h.helse=clamp(h.helse-5,5); if(!h.syk && rnd()<(h.vacc>0?0.1:0.2)){ blirSyk(s,h,'hoste'); ev(`😷 ${N} har begynt å hoste. Boksen er skitten og støvete.`);} }
+    if (h.hoof>7 && !h.syk && rnd()<(h.hoof>10?0.25:0.1)){ blirSyk(s,h,'halt'); ev(`🦵 ${N} har blitt halt. Hovene trenger hovslageren!`); }
+    if (h.hovrens>3 && !h.syk && rnd()<0.05){ blirSyk(s,h,'halt'); ev(`🦵 ${N} har fått en stein i hoven og har blitt halt.`); }
+    if (h.vacc===0 && h.egen && !s.tips['vaxut_'+h.id]){ s.tips['vaxut_'+h.id]=1; ev(`💉 Vaksinen til ${N} har gått ut.`); }
+    // sykdom
+    if (h.syk){
+      alleFriske=false;
+      if (h.syk.behandlet){ h.syk.dager--; if(h.syk.dager<=0){ ev(`✅ ${N} er frisk igjen!`); h.syk=null; } }
+      else { h.helse=clamp(h.helse-10,5); ev(`⚠️ ${N} er syk (${sykNavn(h.syk.type)}) og har ikke fått hjelp.`); s.rykte=clamp(s.rykte-0.15,0,5); }
+    }
+    // hvile og helse
+    h.energi = h.syk?60:100;
+    if (h.mett>=30 && h.vann>=30 && h.glad>=40 && !h.syk) h.helse=clamp(h.helse+10);
+    h.jobber=0; h.timerIdag=0; h.stevneIdag=false; h.kraftIdag=0; h.gulrotIdag=0;
+    // pensjonær-eier
+    if (!h.egen){
+      const snitt=(h.mett+h.vann+h.glad+h.ren)/4;
+      h.eierHumor += (snitt>=55 && !h.syk) ? 1 : -1;
+      if (h.eierHumor<=-3){ ev(`😠 ${h.eier} var misfornøyd med stellet og flyttet ${N} til en annen gård.`); h._ut=true; s.rykte=clamp(s.rykte-0.3,0,5); }
+    }
+  }
+  s.horses=s.horses.filter(h=>!h._ut);
+  s.stats.friskeDager = alleFriske ? s.stats.friskeDager+1 : 0;
+
+  for (const l of s.ledger){ if(l.t==='inn') rapport.inn+=l.kr; else rapport.ut+=l.kr; }
+  rapport.poster = s.ledger.slice();
+  rapport.resultat = rapport.inn-rapport.ut;
+  rapport.perHest = egne ? Math.round(rapport.poster.filter(p=>p.t==='ut' && !/^Kjøpt|^Oppgradering/.test(p.txt)).reduce((a,p)=>a+p.kr,0)/egne) : 0;
+  s.history.push({dag:s.day, inn:rapport.inn, ut:rapport.ut});
+  if (s.history.length>28) s.history.shift();
+  s.ledger=[];
+  const forrigeSesong = sesong(s);
+  s.day++; s.min=DAG_START;
+  nyDagOppsett(s);
+  if (sesong(s)!==forrigeSesong){ ev(`📅 Nå er det ${sesong(s).toLowerCase()}!`); if(sesong(s)==='Vinter') rapport.tip=tips(s,'vinter'); }
+  // stallhjelp morgen
+  morgenStallhjelp(s, ev);
+  rapport.money = s.money;
+  return rapport;
+}
+
+function morgenStallhjelp(s, ev){
+  if (!s.staff.stallhjelp) return;
+  let fikk=0;
+  for (const h of s.horses){
+    const p=hoyPorsjon(s,h);
+    if (s.hay>=p && h.mett<80){ s.hay=+(s.hay-p).toFixed(1); h.mett=clamp(h.mett+50); fikk++; }
+    h.vann=100;
+    if (h.mokk>0){ h.mokk=0; betal(s,PRIS.flis,'Flis (strø) til boks'); }
+  }
+  if (ev) ev(fikk<s.horses.length ? `👷 Stallhjelpen fant ikke nok høy til alle hestene!` : `👷 Stallhjelpen har gitt morgenfôr og møkket boksene.`);
+}
+function kveldStallhjelp(s){
+  if (!s.staff.stallhjelp || s._kveld===s.day || s.min<17*60) return false;
+  s._kveld=s.day;
+  for (const h of s.horses){ const p=hoyPorsjon(s,h); if (s.hay>=p && h.mett<80){ s.hay=+(s.hay-p).toFixed(1); h.mett=clamp(h.mett+50);} if(!erUte(h)) h.vann=100; }
+  return true;
+}
+
+function nyDagOppsett(s){
+  const ses = sesong(s);
+  const vaer = { 'Vår':['sol','sol','sky','regn'], 'Sommer':['sol','sol','sol','sky','regn'], 'Høst':['sky','regn','regn','sol'], 'Vinter':['sno','sno','sky','sol'] }[ses];
+  s.weather = pick(vaer);
+  // timebestillinger
+  let n = 3 + s.areas.rideskole*3 + (s.staff.ridelaerer?2:0);
+  n = Math.max(1, Math.round(n*(0.6+s.rykte/5)));
+  const typer = ['nybegynner','nybegynner','tur','kos'];
+  if (s.upg.hinder) typer.push('sprang','sprang');
+  typer.push('dressur');
+  s.bookings = Array.from({length:n},(_,i)=>{ const t=pick(typer); const T=TIMETYPER[t];
+    let pris = T.pris + s.areas.rideskole*50; pris *= (0.8+s.rykte*0.08); if(s.staff.ridelaerer) pris*=1.1;
+    return {id:'b'+s.day+'_'+i, type:t, pris:Math.round(pris/10)*10, done:false, elev:pick(D.EIERE)}; });
+  // hestemarked
+  const billige = D.BREEDS.slice().sort((a,b)=>a.pris-b.pris);
+  s.market = Array.from({length:4},()=>{
+    const b = rnd()<0.6 ? pick(billige.slice(0,11)) : pick(D.BREEDS);
+    const age = 3+Math.floor(rnd()*12);
+    const skill = {dressur:Math.floor(rnd()*25), sprang:Math.floor(rnd()*25), fart:Math.floor(rnd()*25)};
+    const pris = r500(b.pris*(age<5||age>12?0.8:1) + (skill.dressur+skill.sprang+skill.fart)*120);
+    return {breed:b.id, name:pick(D.NAVN), age, skill, pris, vacc: rnd()<0.7?20:0};
+  });
+  // pensjonær spør om plass
+  if (!s.pensjonar && rnd()<0.5){ const b=pick(D.BREEDS.filter(x=>!x.ikkeRidbar)); s.pensjonar={breed:b.id, name:pick(D.NAVN), eier:pick(D.EIERE), betaling:120+Math.floor(rnd()*7)*10, age:5+Math.floor(rnd()*10)}; }
+}
+
+/* ---------- mål ---------- */
+function sjekkMal(s){
+  const nye=[];
+  for (const g of D.GOALS){ if(!s.goalsDone[g.id] && g.f(s)){ s.goalsDone[g.id]=1; tjen(s,g.kr,`Mål nådd: ${g.txt}`); s.stats.tjent-=g.kr; nye.push(g); } }
+  return nye;
+}
+function nesteMal(s){ return D.GOALS.find(g=>!s.goalsDone[g.id]); }
+
+/* Hva trenger hesten mest akkurat nå? (til boblen over hesten) */
+function behov(h){
+  if (h.syk && !h.syk.behandlet) return {ikon:'🤒', txt:'Syk'};
+  if (h.vann<30) return {ikon:'💧', txt:'Tørst'};
+  if (h.mett<30) return {ikon:'🌾', txt:'Sulten'};
+  if (h.glad<30) return {ikon:'💔', txt:'Lei seg'};
+  if (h.ren<30)  return {ikon:'🧽', txt:'Skitten'};
+  if (h.mokk>=2) return {ikon:'🧹', txt:'Skitten boks'};
+  if (h.hoof>=7) return {ikon:'🧲', txt:'Trenger hovslager'};
+  return null;
+}
+
+return { nyttSpill, act, advance, avsluttDag, kveldStallhjelp, kjopHoy, kjopVare, kjopOmrade, kjopUpg, ansett, kjopHest, selgHest, taPensjonar, verdi,
+  sjekkMal, nesteMal, behov, kanTa, tak, hoyDag, hoyPorsjon, vannDag, hoyPris, bokser, lager, sesong, aar, igjen, rase, erUte,
+  kr, klokke, fmtKg, discNavn, stedNavn, sykNavn, TIMETYPER, STEVNE, TRAV, PRIS, TID, DAG_START, DAG_SLUTT, B };
+})(typeof HDATA!=='undefined'?HDATA:require('./data.js'));
+if (typeof module!=='undefined') module.exports = HEngine;
+
+</script>
+<script type="module">
+/* ==========================================================================
+   Mykje Hester – 3D-gård og brukerflate
+   ========================================================================== */
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const E = window.HEngine, D = window.HDATA;
+const SAVE = 'mykjehester-v1';
+const IMG = id => `mykjehester/${id}.webp`;
+const $ = s => document.querySelector(s);
+const kr = E.kr;
+let S = null;               // spilltilstand
+let speed = 1, paused = false, nightAsked = false, lastWarn = '';
+
+/* ======================= LAGRING ======================= */
+function save(){ try{ if(S) localStorage.setItem(SAVE, JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const t=localStorage.getItem(SAVE); return t?JSON.parse(t):null; }catch(e){ return null; } }
+
+/* ======================= 3D ======================= */
+const canvas = $('#world');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, preserveDrawingBuffer:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 400);
+camera.position.set(2, 34, 40);
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(0, 0, 2);
+controls.enableDamping = true;
+controls.maxPolarAngle = 1.2; controls.minPolarAngle = 0.35;
+controls.minDistance = 14; controls.maxDistance = 95;
+controls.screenSpacePanning = false;
+controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
+controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+
+const hemi = new THREE.HemisphereLight(0xdff3ff, 0x7aa35a, 1.0); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff1d6, 1.6);
+sun.position.set(-30, 50, 25); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left:-55, right:55, top:55, bottom:-55, near:1, far:150 });
+scene.add(sun);
+scene.fog = new THREE.Fog(0xbfe3f2, 110, 230);
+
+const M = {}; // materialbuffer
+function mat(color, opts={}){
+  const k = color + JSON.stringify(opts);
+  if (!M[k]) M[k] = opts.metal ? new THREE.MeshStandardMaterial({ color, flatShading:true, metalness:.55, roughness:.35 })
+                               : new THREE.MeshLambertMaterial({ color, flatShading:true, transparent:!!opts.op, opacity:opts.op??1 });
+  return M[k];
+}
+function mesh(geo, color, opts={}){ const m = new THREE.Mesh(geo, mat(color,opts)); m.castShadow = opts.shadow!==false; m.receiveShadow = true; return m; }
+function box(w,h,d,color,opts){ return mesh(new THREE.BoxGeometry(w,h,d), color, opts); }
+function cyl(rt,rb,h,seg,color,opts){ return mesh(new THREE.CylinderGeometry(rt,rb,h,seg), color, opts); }
+
+/* -------- landskap -------- */
+const GROUND = 0x8cc265, GROUND_W = 0xeef3f6;
+const ground = mesh(new THREE.CircleGeometry(160, 48), GROUND, {shadow:false});
+ground.rotation.x = -Math.PI/2; scene.add(ground);
+// fjord
+const water = mesh(new THREE.PlaneGeometry(300, 70), 0x4fa3d1, {shadow:false});
+water.rotation.x = -Math.PI/2; water.position.set(0, 0.05, -95); scene.add(water);
+// fjell
+for (let i=0;i<26;i++){
+  const a = -Math.PI*0.95 + i*(Math.PI*1.9/25), r = 120 + Math.random()*25;
+  const h = 22 + Math.random()*26;
+  const m = mesh(new THREE.ConeGeometry(16+Math.random()*12, h, 5), i%3? 0x6f9a63 : 0x5d8a58, {shadow:false});
+  m.position.set(Math.sin(a)*r, h/2-2, -Math.cos(a)*r); m.rotation.y = Math.random()*3; scene.add(m);
+  if (h>38){ const cap = mesh(new THREE.ConeGeometry(5.5, 8, 5), 0xf4f6f8, {shadow:false}); cap.position.set(m.position.x, h-6, m.position.z); cap.rotation.y=m.rotation.y; scene.add(cap); }
+}
+
+/* Organisk form (litt ujevn sirkel) */
+function blobShape(rx, rz, seed=1, n=14){
+  const sh = new THREE.Shape();
+  for (let i=0;i<=n;i++){
+    const a = i/n*Math.PI*2, w = 1 + 0.09*Math.sin(a*3+seed) + 0.06*Math.cos(a*5+seed*2);
+    const x = Math.cos(a)*rx*w, z = Math.sin(a)*rz*w;
+    i? sh.lineTo(x,z) : sh.moveTo(x,z);
+  }
+  return sh;
+}
+function blobPts(rx,rz,seed,n=28){ const p=[]; for(let i=0;i<n;i++){ const a=i/n*Math.PI*2, w=1+0.09*Math.sin(a*3+seed)+0.06*Math.cos(a*5+seed*2); p.push(new THREE.Vector3(Math.cos(a)*rx*w,0,Math.sin(a)*rz*w)); } return p; }
+function flat(shape, color, y=0.03){ const m = mesh(new THREE.ShapeGeometry(shape), color, {shadow:false}); m.rotation.x = -Math.PI/2; m.position.y = y; return m; }
+function fenceAround(pts, color=0x8a5a35, gapIdx=-1){
+  const g = new THREE.Group();
+  for (let i=0;i<pts.length;i++){
+    const a=pts[i], b=pts[(i+1)%pts.length];
+    const post = box(.18, 1.1, .18, color); post.position.set(a.x, .55, a.z); g.add(post);
+    if (i===gapIdx) continue;
+    const len = a.distanceTo(b), mid = a.clone().add(b).multiplyScalar(.5), ang = Math.atan2(b.z-a.z, b.x-a.x);
+    for (const y of [.45,.85]){ const rail = box(len, .1, .07, 0xa06c42); rail.position.set(mid.x, y, mid.z); rail.rotation.y = -ang; g.add(rail); }
+  }
+  return g;
+}
+function roofPrism(w, d, h, color){
+  const s = new THREE.Shape(); s.moveTo(-d/2,0); s.lineTo(d/2,0); s.lineTo(0,h); s.lineTo(-d/2,0);
+  const geo = new THREE.ExtrudeGeometry(s, {depth:w, bevelEnabled:false}); geo.translate(0,0,-w/2);
+  const m = mesh(geo, color); m.rotation.y = Math.PI/2; return m;
+}
+function tree(x,z,kind){
+  const g = new THREE.Group();
+  if (kind==='bjork'){
+    const t = cyl(.14,.2,2.6,5,0xf3f0e8); t.position.y=1.3; g.add(t);
+    const c = mesh(new THREE.IcosahedronGeometry(1.4,0), Math.random()<.5?0x7cbf52:0x6aaf47); c.position.y=3.1; c.scale.set(1,1.25,1); g.add(c);
+  } else {
+    const t = cyl(.15,.22,1,5,0x6b4a2e); t.position.y=.5; g.add(t);
+    for (let i=0;i<3;i++){ const c = mesh(new THREE.ConeGeometry(1.5-i*.35, 1.8, 6), 0x3f7a45); c.position.y=1.5+i*1.0; g.add(c); }
+  }
+  g.position.set(x,0,z); g.rotation.y=Math.random()*6; const s=.8+Math.random()*.5; g.scale.setScalar(s); return g;
+}
+
+/* Hvor områdene ligger */
+const POS = {
+  stall:    { x:-12, z:-15, label:[-12,7.5,-15] },
+  hoyloft:  { x:-27, z:-15, label:[-27,7,-15] },
+  bibliotek:{ x:2,   z:-25, label:[2,6.5,-25] },
+  vet:      { x:14,  z:-25, r:5, label:[14,6,-25] },
+  luft:     { x:0,   z:-2,  r:7.5, label:[0,3.2,-10] },
+  marked:   { x:13,  z:-7,  label:[13,6,-7] },
+  beite:    { x:28,  z:-9,  r:10, label:[28,3.2,-20] },
+  ridebane: { x:-18, z:9,   label:[-18,3.2,2.5] },
+  rideskole:{ x:-34, z:8,   label:[-34,7,8] },
+  stevne:   { x:20,  z:14,  label:[20,6,6] },
+  trav:     { x:-2,  z:32,  label:[-2,4,24] }
+};
+
+/* Sprite-etiketter (tekst på lerret) */
+function label(text, opts={}){
+  const c = document.createElement('canvas'), x = c.getContext('2d');
+  const fs = 44; x.font = `700 ${fs}px Fredoka, sans-serif`;
+  const w = Math.ceil(x.measureText(text).width) + 44, h = fs + 30;
+  c.width = w; c.height = h; x.font = `700 ${fs}px Fredoka, sans-serif`;
+  const r = 18, rr = ()=>{ x.beginPath(); x.moveTo(r+3,3); x.arcTo(w-3,3,w-3,h-3,r); x.arcTo(w-3,h-3,3,h-3,r); x.arcTo(3,h-3,3,3,r); x.arcTo(3,3,w-3,3,r); x.closePath(); };
+  if (opts.bg){ x.fillStyle = opts.bg; rr(); x.fill(); x.setLineDash([10,7]); x.lineWidth=3; x.strokeStyle='rgba(255,255,255,.55)'; rr(); x.stroke(); }
+  else if (opts.tag){ x.fillStyle='#fffaf0'; rr(); x.fill(); x.lineWidth=5; x.strokeStyle='#f5bf3a'; rr(); x.stroke(); }
+  else { const g=x.createLinearGradient(0,0,0,h); g.addColorStop(0,'#b07443'); g.addColorStop(.55,'#8b5530'); g.addColorStop(1,'#5e3518'); x.fillStyle=g; rr(); x.fill();
+    x.save(); x.translate(0,0); x.setLineDash([9,6]); x.lineWidth=2.5; x.strokeStyle='rgba(246,220,166,.8)'; x.beginPath(); x.moveTo(r+8,10); x.arcTo(w-10,10,w-10,h-10,r-6); x.arcTo(w-10,h-10,10,h-10,r-6); x.arcTo(10,h-10,10,10,r-6); x.arcTo(10,10,w-10,10,r-6); x.closePath(); x.stroke(); x.restore(); }
+  x.fillStyle = opts.fg || (opts.tag ? '#5e3518' : '#fff3dc'); x.textBaseline='middle'; x.fillText(text, 22, h/2+2);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, depthTest:false, transparent:true, sizeAttenuation:false }));
+  const k = opts.k || 0.00042; sp.scale.set(w*k, h*k, 1); sp.renderOrder = 10; return sp;
+}
+
+/* -------- Områder -------- */
+let areaGroup = new THREE.Group(); scene.add(areaGroup);
+const pickables = [];
+function addPick(obj, data){ obj.traverse(o=>{ if(o.isMesh) o.userData.pick = data; }); pickables.push(obj); }
+
+function buildWorld(){
+  scene.remove(areaGroup); areaGroup = new THREE.Group(); scene.add(areaGroup);
+  pickables.length = 0;
+  const A = S.areas, vinter = E.sesong(S)==='Vinter';
+  ground.material = mat(vinter?GROUND_W:GROUND);
+
+  // stier
+  const path = (x1,z1,x2,z2,w=2.2)=>{ const len=Math.hypot(x2-x1,z2-z1); const p=mesh(new THREE.PlaneGeometry(len,w), vinter?0xd9d4ca:0xcfae7a,{shadow:false}); p.rotation.x=-Math.PI/2; p.rotation.z=-Math.atan2(z2-z1,x2-x1); p.position.set((x1+x2)/2,.02,(z1+z2)/2); areaGroup.add(p); };
+  // hovedvei rundt luftegården
+  const HUB=[-4,-10.5];
+  path(-12,-8,HUB[0],HUB[1]); path(-27,-11,-12,-9); path(HUB[0],HUB[1],2,-21); path(2,-21,14,-21); path(HUB[0],HUB[1],13,-10); path(13,-10,19,-9);
+  path(HUB[0],HUB[1],-10,1); path(-10,1,-18,3.5); path(-18,9,-31,8); path(13,-10,10,6); path(10,6,15,10); path(10,6,-2,20);
+
+  // trær
+  const trees = [[-40,-30],[-36,-26],[-44,-6],[-46,14],[-40,24],[-22,24],[-30,30],[30,30],[38,22],[42,4],[44,-20],[36,-30],[22,-34],[-6,-36],[-18,-32],[-30,-36],[8,-38],[-42,-18],[46,-8],[28,40],[-26,40],[12,44],[-14,46],[-48,30]];
+  trees.forEach(([x,z],i)=>areaGroup.add(tree(x,z,i%3?'bjork':'gran')));
+
+  // ---- Stallen ----
+  { const P=POS.stall, g=new THREE.Group();
+    const body = box(13,3.4,5.2, 0xb33a2c); body.position.y=1.7; g.add(body);
+    for (const sx of [-6.5,6.5]){ const tr=box(.25,3.5,5.3,0xf6f1e6); tr.position.set(sx,1.75,0); g.add(tr); }
+    const roof = roofPrism(13.6, 6.2, 2.4, 0x4b4f57); roof.position.y=3.4; g.add(roof);
+    const door = box(2.2,2.4,.15,0xf6f1e6); door.position.set(0,1.2,2.65); g.add(door);
+    const doorIn = box(1.8,2.1,.16,0x7a2a20); doorIn.position.set(0,1.1,2.66); g.add(doorIn);
+    for (const wx of [-4.2,-2.4,2.4,4.2]){ const w=box(.9,.8,.12,0xf6f1e6); w.position.set(wx,2.3,2.62); g.add(w); }
+    // bokser foran stallen
+    const n = E.bokser(S);
+    for (let i=0;i<=8;i++){
+      const x = -6.4 + i*1.6;
+      if (i<=n){ const wall = box(.12,1.1,4.6,0x9a6a40); wall.position.set(x,.55,5.0); g.add(wall); }
+      if (i<n){ const fl = mesh(new THREE.PlaneGeometry(1.55,4.6),0xd8c79a,{shadow:false}); fl.rotation.x=-Math.PI/2; fl.position.set(x+.8,.03,5.0); g.add(fl);
+                const bucket=cyl(.16,.12,.25,6,0x3b82c4); bucket.position.set(x+.4,.7,2.9); g.add(bucket); }
+    }
+    if (n){ const front = box(n*1.6,.12,.12,0x9a6a40); front.position.set(-6.4+n*0.8,1.0,7.3); g.add(front); }
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'stall'});
+    const l=label('🏠 Stallen'); l.position.set(...P.label); areaGroup.add(l);
+  }
+  // ---- Høyloftet ----
+  { const P=POS.hoyloft, g=new THREE.Group();
+    for (const [x,z] of [[-3,-2],[3,-2],[-3,2],[3,2]]){ const p=box(.35,3.6,.35,0x7a4e2e); p.position.set(x,1.8,z); g.add(p); }
+    const back = box(6.4,3.6,.25,0x8a5a35); back.position.set(0,1.8,-2.1); g.add(back);
+    const roof = roofPrism(7.2,5.4,1.6,0x6b4a2e); roof.position.y=3.6; g.add(roof);
+    const bales = Math.min(12, Math.ceil(S.hay/ (E.lager(S)/12)));
+    for (let i=0;i<bales;i++){ const b=cyl(.75,.75,1.1,10,0xe6c25a); b.rotation.z=Math.PI/2; b.position.set(-2.1+(i%4)*1.4, .75+Math.floor(i/4)*1.45, -.6+((i>>2)%2)*0.2); g.add(b); }
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'hoyloft'});
+    const l=label('🌾 Høyloftet'); l.position.set(...P.label); areaGroup.add(l);
+  }
+  // ---- Luftegården ----
+  { const P=POS.luft, g=new THREE.Group();
+    g.add(flat(blobShape(7.5,6.5,2), vinter?0xe9e4da:0xd9bf86));
+    g.add(fenceAround(blobPts(7.6,6.6,2,26),0x8a5a35,6));
+    const kar = box(2,.6,.8,0x7f8b95); kar.position.set(5.2,.3,-2.5); g.add(kar);
+    const vann = box(1.8,.05,.6,0x4fa3d1); vann.position.set(5.2,.62,-2.5); g.add(vann);
+    if (S.upg.leskur){ const sk=new THREE.Group(); for(const [x,z] of [[-1.6,-1],[1.6,-1],[-1.6,1],[1.6,1]]){const p=box(.2,2.2,.2,0x7a4e2e);p.position.set(x,1.1,z);sk.add(p);} const r=box(3.8,.2,2.6,0x6b4a2e); r.position.y=2.25; r.rotation.x=.12; sk.add(r); sk.position.set(-4.6,0,-3.2); g.add(sk); }
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'luft'});
+    const l=label('🪵 Luftegården'); l.position.set(...P.label); areaGroup.add(l);
+  }
+  // ---- Ridebanen ----
+  { const P=POS.ridebane, g=new THREE.Group();
+    const sand = mesh(new THREE.PlaneGeometry(16,10),0xe3cfa0,{shadow:false}); sand.rotation.x=-Math.PI/2; sand.position.y=.03; g.add(sand);
+    const pts=[]; for(let i=0;i<10;i++) pts.push(new THREE.Vector3(-8+i*16/9,0,-5)); for(let i=1;i<6;i++) pts.push(new THREE.Vector3(8,0,-5+i*2)); for(let i=1;i<10;i++) pts.push(new THREE.Vector3(8-i*16/9,0,5)); for(let i=1;i<5;i++) pts.push(new THREE.Vector3(-8,0,5-i*2));
+    g.add(fenceAround(pts,0xf1ece2,4));
+    if (S.upg.hinder){ const col=[0xc8553d,0x3b82c4,0xe8a628]; [[-4,0],[0,-1.5],[4,1]].forEach(([x,z],i)=>{ for(const s of [-.9,.9]){const st=box(.15,1.1,.15,0xf6f1e6); st.position.set(x,.55,z+s); g.add(st);} const bar=cyl(.06,.06,1.8,6,col[i]); bar.rotation.x=Math.PI/2; bar.position.set(x,.75,z); g.add(bar); }); }
+    if (S.upg.underlag){ const s2=mesh(new THREE.PlaneGeometry(15.6,9.6),0xd7b98a,{shadow:false}); s2.rotation.x=-Math.PI/2; s2.position.y=.04; g.add(s2); }
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'ridebane'});
+    const l=label('🏇 Ridebanen'); l.position.set(...P.label); areaGroup.add(l);
+  }
+  // ---- Bibliotek ----
+  { const P=POS.bibliotek, g=new THREE.Group();
+    const b=box(5,2.8,4,0xf2d06b); b.position.y=1.4; g.add(b);
+    const r=roofPrism(5.6,4.8,1.8,0x4a7fb5); r.position.y=2.8; g.add(r);
+    const d=box(1.2,1.9,.12,0x7a4e2e); d.position.set(0,.95,2.02); g.add(d);
+    const bok=box(1.6,1.1,.2,0xc8553d); bok.position.set(0,3.6,2.1); bok.rotation.z=.1; g.add(bok);
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'bibliotek'});
+    const l=label('📚 Hestebiblioteket'); l.position.set(...P.label); areaGroup.add(l);
+  }
+  // ---- Marked ----
+  { const P=POS.marked, g=new THREE.Group();
+    const t=mesh(new THREE.ConeGeometry(3.2,2.6,8),0xc8553d); t.position.y=3.3; g.add(t);
+    const t2=mesh(new THREE.CylinderGeometry(3.2,3.2,.4,8),0xf6f1e6); t2.position.y=1.9; g.add(t2);
+    for(let i=0;i<4;i++){ const a=i*Math.PI/2+.4; const p=box(.15,2,.15,0x7a4e2e); p.position.set(Math.cos(a)*2.8,1,Math.sin(a)*2.8); g.add(p);}
+    const bord=box(2.4,.9,1,0x8a5a35); bord.position.set(0,.45,1.2); g.add(bord);
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'marked'});
+    const l=label('🏪 Hestemarkedet'); l.position.set(...P.label); areaGroup.add(l);
+  }
+  // ---- Kjøpbare områder ----
+  const locked = (id, x, z, rx, rz)=>{
+    const g=new THREE.Group(); g.add(flat(blobShape(rx,rz,id.length), 0x7aa95a, .025));
+    const post=box(.2,1.8,.2,0x7a4e2e); post.position.set(0,.9,0); g.add(post);
+    const sign=box(1.8,1,.12,0xf3e6c8); sign.position.set(0,1.6,.1); g.add(sign);
+    g.position.set(x,0,z); areaGroup.add(g); addPick(g,{type:'area',id});
+    const A_=D.AREAS[id]; const l=label(`🔒 ${A_.navn} · ${kr(A_.lvlCost[0])}`, {bg:'rgba(60,50,40,.85)', fg:'#fff'}); l.position.set(x,3.4,z); areaGroup.add(l);
+  };
+  // Beitet
+  if (A.beite){ const P=POS.beite, g=new THREE.Group();
+    g.add(flat(blobShape(10,9,4), vinter?0xf4f6f8:0x9ed36e)); g.add(fenceAround(blobPts(10.1,9.1,4,30),0x8a5a35,15));
+    if (!vinter) for(let i=0;i<26;i++){ const f=mesh(new THREE.IcosahedronGeometry(.16,0), [0xffffff,0xf7d34a,0xe98fb0][i%3]); const a=Math.random()*6.28, r=Math.random()*8; f.position.set(Math.cos(a)*r,.15,Math.sin(a)*r*.85); g.add(f); }
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'beite'});
+    const l=label(vinter?'🌿 Beitet (snø)':'🌿 Beitet'); l.position.set(...P.label); areaGroup.add(l);
+  } else locked('beite', POS.beite.x, POS.beite.z, 9, 8);
+  // Rideskolen
+  if (A.rideskole){ const P=POS.rideskole, g=new THREE.Group();
+    const b=box(7,3,4.5,0xf3efe6); b.position.y=1.5; g.add(b);
+    const r=roofPrism(7.6,5.4,1.8,0x2f6b3a); r.position.y=3; g.add(r);
+    for(const x of [-2.4,0,2.4]){ const w=box(1,.9,.12,0x9fd3f0); w.position.set(x,1.8,2.27); g.add(w); }
+    if (A.rideskole>1){ const b2=box(4,2.6,4,0xf3efe6); b2.position.set(5.4,1.3,0); g.add(b2); const r2=roofPrism(4.4,4.8,1.4,0x2f6b3a); r2.position.set(5.4,2.6,0); g.add(r2); }
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'rideskole'});
+    const l=label('🏫 Rideskolen'); l.position.set(...P.label); areaGroup.add(l);
+  } else locked('rideskole', POS.rideskole.x, POS.rideskole.z, 5, 4);
+  // Veterinær
+  if (A.vet){ const P=POS.vet, g=new THREE.Group();
+    const b=box(5,2.8,4,0xffffff); b.position.y=1.4; g.add(b);
+    const r=box(5.4,.3,4.4,0x7f8b95); r.position.y=2.95; g.add(r);
+    const s1=box(1.2,.35,.12,0x3f8a3a), s2=box(.35,1.2,.12,0x3f8a3a); s1.position.set(0,2.1,2.05); s2.position.set(0,2.1,2.05); g.add(s1,s2);
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'vet'});
+    const l=label('🩺 Veterinærstallen'); l.position.set(...P.label); areaGroup.add(l);
+  } else locked('vet', POS.vet.x, POS.vet.z, 4.5, 4);
+  // Stevneplassen
+  if (A.stevne){ const P=POS.stevne, g=new THREE.Group();
+    const sand=mesh(new THREE.PlaneGeometry(14,9),0xe8d5a8,{shadow:false}); sand.rotation.x=-Math.PI/2; sand.position.y=.03; g.add(sand);
+    for(let i=0;i<3;i++){ const t=box(10,.5,1,0x9aa4ad); t.position.set(0,.25+i*.5,5.6+i*.9); g.add(t); }
+    const col=[0xc8553d,0x3b82c4,0xe8a628,0x3f8a3a,0x9b59b6];
+    for(let i=0;i<5;i++){ const p=cyl(.06,.06,3.5,5,0xffffff); p.position.set(-6+i*3,1.75,-4.6); g.add(p); const f=box(.9,.55,.05,col[i]); f.position.set(-5.5+i*3,3.2,-4.6); g.add(f); }
+    [[-3,0],[2,-1],[4,2]].forEach(([x,z],i)=>{ for(const s of [-.9,.9]){const st=box(.15,1.2,.15,0xffffff); st.position.set(x,.6,z+s); g.add(st);} const bar=cyl(.06,.06,1.8,6,col[i]); bar.rotation.x=Math.PI/2; bar.position.set(x,.9,z); g.add(bar); });
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'stevne'});
+    const l=label('🏆 Stevneplassen'); l.position.set(...P.label); areaGroup.add(l);
+  } else locked('stevne', POS.stevne.x, POS.stevne.z, 7, 6);
+  // Travbanen
+  if (A.trav){ const P=POS.trav, g=new THREE.Group();
+    const ring=mesh(new THREE.RingGeometry(6,9,40),0xb98a5a,{shadow:false}); ring.rotation.x=-Math.PI/2; ring.scale.set(1.9,1,1); ring.position.y=.03; g.add(ring);
+    const inner=mesh(new THREE.CircleGeometry(6,40),0x7fbf5a,{shadow:false}); inner.rotation.x=-Math.PI/2; inner.scale.set(1.9,1,1); inner.position.y=.035; g.add(inner);
+    const tower=box(1.6,4,1.6,0xf3efe6); tower.position.set(0,2,-10.5); g.add(tower); const tr=mesh(new THREE.ConeGeometry(1.4,1.2,4),0xc8553d); tr.position.set(0,4.6,-10.5); tr.rotation.y=Math.PI/4; g.add(tr);
+    g.position.set(P.x,0,P.z); areaGroup.add(g); addPick(g,{type:'area',id:'trav'});
+    const l=label('🏁 Travbanen'); l.position.set(...P.label); areaGroup.add(l);
+  } else locked('trav', POS.trav.x, POS.trav.z, 12, 7);
+
+  // snø / sesongfarge på trær
+  hemi.groundColor.set(vinter?0xdfe8ee:0x7aa35a);
+}
+
+/* -------- Hestemodell -------- */
+const HS = 1.7; // hestene er litt større enn virkeligheten, så de er lette å trykke på
+function makeHorse(look){
+  const k = look.size||1, ch = look.chunk||1, L = 0.82*(look.legLen||1);
+  const g = new THREE.Group(), coat = look.coat, body = new THREE.Group(); g.add(body);
+  const cm = look.metal ? {metal:true} : {};
+  const torso = mesh(new THREE.CapsuleGeometry(.32, .95, 2, 7), coat, cm);
+  torso.rotation.z = Math.PI/2; torso.scale.set(1, 1, .82*ch); torso.position.y = L+.28; body.add(torso);
+  // hals
+  const neck = new THREE.Group(); neck.position.set(.55, L+.45, 0); neck.rotation.z = -.62; body.add(neck);
+  const nm = mesh(new THREE.CylinderGeometry(.15, .25, .8, 6), coat, cm); nm.position.y = .38; neck.add(nm);
+  // hode
+  const head = new THREE.Group(); head.position.set(0, .78, 0); neck.add(head);
+  const hm = mesh(new THREE.CylinderGeometry(.085, .15, .58, 6), coat, cm); hm.rotation.z = -(Math.PI/2) + .62 - 1.0; hm.position.set(.2, -.07, 0); head.add(hm);
+  const muz = mesh(new THREE.CylinderGeometry(.08,.09,.12,6), 0x3a302a); muz.rotation.z = hm.rotation.z; muz.position.set(.43,-.21,0); head.add(muz);
+  for (const s of [-1,1]){ const ear = mesh(new THREE.ConeGeometry(.05,.16,4), coat, cm); ear.position.set(-.04,.13,s*.07); ear.rotation.z=.25; head.add(ear);
+    const eye = mesh(new THREE.SphereGeometry(.03,5,4), 0x15100c); eye.position.set(.08,.0,s*.11); head.add(eye); }
+  if (look.blaze){ const bl=box(.36,.03,.06,0xf5f2ea); bl.rotation.z=hm.rotation.z+Math.PI/2; bl.position.set(.24,-.05,0); bl.rotation.set(0,0,-0.95+0.62-0.0); bl.position.y=-.02; head.add(bl); }
+  if (look.star){ const st=box(.07,.03,.07,0xf5f2ea); st.position.set(.1,.07,0); head.add(st); }
+  // man
+  const style = look.maneStyle||'normal';
+  if (style==='upright'){
+    const m1 = box(.16,.72,.07, look.maneTop||look.mane); m1.position.set(-.16,.38,0); neck.add(m1);
+    const m2 = box(.12,.72,.03, look.mane); m2.position.set(-.17,.38,0); neck.add(m2);
+  } else {
+    const long = {long:.45, shaggy:.32, thick:.26, wild:.3, short:.12, normal:.18}[style]||.18;
+    const crest = box(.1,.74,.1, look.mane); crest.position.set(-.15,.38,0); neck.add(crest);
+    const drape = box(long,.7,.06, look.mane); drape.position.set(-.13+long/2-.05,.38,.12); neck.add(drape);
+    const fore = box(.12,.06,.16, look.mane); fore.position.set(.06,.16,0); head.add(fore);
+  }
+  // hale
+  const tail = new THREE.Group(); tail.position.set(-.82, L+.5, 0); tail.rotation.z = look.tailHigh? -.9 : -.25; body.add(tail);
+  const tl = {long:1.0, shaggy:.95, thick:.85, wild:.95}[style]||.75;
+  const tm = mesh(new THREE.ConeGeometry(.12, tl, 5), look.mane); tm.rotation.z = Math.PI; tm.position.set(0,-tl/2,0); tm.rotation.x=0; tail.add(tm);
+  tail.rotation.order='ZXY';
+  // bein
+  const legs = [];
+  for (const [x,z] of [[.52,.15],[.52,-.15],[-.55,.15],[-.55,-.15]]){
+    const pivot = new THREE.Group(); pivot.position.set(x, L+.12, z*ch); body.add(pivot);
+    const hind = x<0;
+    const leg = mesh(new THREE.CylinderGeometry(.075,.06,L,5), look.legs||coat); leg.position.y = -L/2; pivot.add(leg);
+    if (look.socks && hind){ const so=cyl(.068,.068,L*.4,5,0xf5f2ea); so.position.y=-L*.78; pivot.add(so); }
+    if (look.legStripes){ for(const y of [.45,.6]){ const st=cyl(.08,.075,.03,5,0x3a2a1e); st.position.y=-L*y; pivot.add(st);} }
+    if (look.feather){ const f=cyl(.1,.15,.26,6,look.feather); f.position.y=-L+.16; pivot.add(f); }
+    const hoof = cyl(.065,.08,.09,6,look.hoof||0x2b2420); hoof.position.y=-L+.04; pivot.add(hoof);
+    legs.push(pivot);
+  }
+  // mønstre
+  if (look.dorsal){ const d=box(1.3,.04,.06,0x3a2a1e); d.position.set(-.05,L+.6,0); body.add(d); }
+  if (look.piebald){ [[-.3,.1],[.25,-.12],[-.6,-.05]].forEach(([x,y],i)=>{ const p=mesh(new THREE.IcosahedronGeometry(.27,0),look.piebald); p.scale.set(1.2,.9,.96*ch); p.position.set(x,L+.28+y,i%2?-.03:.03); body.add(p); }); }
+  if (look.spots || look.spotsWhite || look.dapple){
+    const c = look.spots || (look.spotsWhite?0xf5f2ea:0xe8e6e2), n = look.spots?20:look.dapple?18:6;
+    for (let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, x=-.75+Math.random()*(look.spots?.9:1.4); const sp=mesh(new THREE.SphereGeometry(look.dapple?.055:.045,4,3),c); sp.scale.set(1,1,.5); sp.position.set(x, L+.28+Math.sin(a)*.3, Math.cos(a)*.3*.82*ch); sp.lookAt(sp.position.x, L+.28, 0); body.add(sp); }
+  }
+  g.scale.setScalar(k*HS);
+  return { g, body, legs, neck, head, tail };
+}
+
+/* -------- Hester i verden -------- */
+const H3 = new Map(); // id -> objekt
+function stallSlot(i){ return new THREE.Vector3(POS.stall.x - 6.4 + i*1.6 + .8, 0, POS.stall.z + 5.0); }
+function randIn(loc){
+  const P = POS[loc], r = loc==='beite'?7:5, a=Math.random()*Math.PI*2, d=Math.sqrt(Math.random())*r;
+  return new THREE.Vector3(P.x + Math.cos(a)*d, 0, P.z + Math.sin(a)*d*.85);
+}
+function syncHorses(){
+  const ids = new Set(S.horses.map(h=>h.id));
+  for (const [id,o] of H3) if (!ids.has(id)){ scene.remove(o.g); H3.delete(id); }
+  S.horses.forEach((h,i)=>{
+    let o = H3.get(h.id);
+    if (!o){
+      o = makeHorse(E.B[h.breed].look); o.id=h.id; o.loc=null; o.t=0; o.walk=0; o.phase=Math.random()*6;
+      o.g.traverse(m=>{ if(m.isMesh) m.userData.pick={type:'horse',id:h.id}; });
+      scene.add(o.g); H3.set(h.id,o);
+      o.bubble = new THREE.Sprite(new THREE.SpriteMaterial({ transparent:true, depthTest:false, sizeAttenuation:false })); o.bubble.renderOrder=11; o.bubble.position.set(0,2.35,0); o.bubble.visible=false; o.g.add(o.bubble);
+      o.bubble.userData.pick={type:'horse',id:h.id};
+      o.tag = null;
+    }
+    if (o.loc!==h.loc || o.slot!==i){
+      o.loc=h.loc; o.slot=i;
+      if (h.loc==='stall'){ o.g.position.copy(stallSlot(i)); o.g.rotation.y = -Math.PI/2; o.target=null; }
+      else { o.g.position.copy(randIn(h.loc)); o.target=randIn(h.loc); o.t=0; }
+    }
+    // navnelapp
+    const tagTxt = h.name + (h.egen?'':' (pensjonær)');
+    const gs = (E.B[h.breed].look.size||1)*HS;
+    if (o.tagTxt!==tagTxt){ if(o.tag) o.g.remove(o.tag); o.tag=label(tagTxt,{k:.0003/gs, tag:true}); o.tag.position.set(0,2.15,0); o.g.add(o.tag); o.tagTxt=tagTxt; o.tag.userData.pick={type:'horse',id:h.id}; }
+    // behovsboble
+    const b = E.behov(h);
+    const key = b? b.ikon : '';
+    if (o.bkey!==key){ o.bkey=key; if(b){ o.bubble.material.map = emojiTex(b.ikon); o.bubble.material.needsUpdate=true; o.bubble.visible=true; } else o.bubble.visible=false; }
+    o.bubble.scale.set(.055/gs,.055/gs,1); o.bubble.position.y = 2.75;
+  });
+}
+const ETEX = {};
+function emojiTex(e){
+  if (ETEX[e]) return ETEX[e];
+  const c=document.createElement('canvas'); c.width=c.height=128; const x=c.getContext('2d');
+  x.fillStyle='#fffaf0'; x.beginPath(); x.arc(64,58,50,0,Math.PI*2); x.fill();
+  x.beginPath(); x.moveTo(50,102); x.lineTo(78,102); x.lineTo(64,124); x.fill();
+  x.lineWidth=6; x.strokeStyle='#f5bf3a'; x.beginPath(); x.arc(64,58,50,0,Math.PI*2); x.stroke();
+  x.font='64px serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(e,64,62);
+  const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return ETEX[e]=t;
+}
+function animateHorses(dt, now){
+  for (const [id,o] of H3){
+    const h = S.horses.find(x=>x.id===id); if(!h) continue;
+    let moving = false;
+    if (o.target && h.loc!=='stall'){
+      o.t -= dt;
+      const p=o.g.position, d=o.target.clone().sub(p); d.y=0; const dist=d.length();
+      if (o.t<=0 && dist>.15){
+        const sp = (h.syk?0.6:1.3)*dt; p.add(d.normalize().multiplyScalar(Math.min(sp,dist)));
+        const want = Math.atan2(-d.z, d.x); let diff = want - o.g.rotation.y; diff = Math.atan2(Math.sin(diff),Math.cos(diff)); o.g.rotation.y += diff*Math.min(1,dt*4);
+        moving = true;
+      } else if (dist<=.15 && o.t<=0){ o.t = 2 + Math.random()*6; o.target = randIn(h.loc); o.graze = Math.random()<.6; }
+    }
+    o.walk += dt*(moving?9:0);
+    const sw = moving? Math.sin(o.walk)*.5 : 0;
+    o.legs[0].rotation.z = sw; o.legs[3].rotation.z = sw; o.legs[1].rotation.z = -sw; o.legs[2].rotation.z = -sw;
+    const grazing = !moving && o.graze && h.loc!=='stall';
+    const nt = grazing ? .55 : -.62 + Math.sin(now*.0015+o.phase)*.05;
+    o.neck.rotation.z += ((grazing? .35 : -.62) - o.neck.rotation.z)*Math.min(1,dt*2.5) + (grazing?0:Math.sin(now*.0015+o.phase)*.002);
+    o.tail.rotation.x = Math.sin(now*.003+o.phase)*.25;
+    o.body.position.y = moving? Math.abs(Math.sin(o.walk))*.04 : 0;
+  }
+}
+
+/* -------- Vær og lys -------- */
+const precip = (()=>{ const n=900, geo=new THREE.BufferGeometry(), pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){ pos[i*3]=(Math.random()-.5)*110; pos[i*3+1]=Math.random()*40; pos[i*3+2]=(Math.random()-.5)*110; }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const p=new THREE.Points(geo,new THREE.PointsMaterial({color:0xffffff,size:.25,transparent:true,opacity:.8})); p.visible=false; scene.add(p); return p; })();
+function updateSky(){
+  const m=S.min, t = (m-360)/960; // 0..1
+  let day=1; if (t>.8) day = 1 - (t-.8)/.2*0.55;
+  const grey = S.weather==='regn'||S.weather==='sky'||S.weather==='sno';
+  const col = new THREE.Color(grey?0xb8c6d0:0xbfe3f2).lerp(new THREE.Color(0x1d2a4a), 1-day);
+  if (t>.72 && t<.95) col.lerp(new THREE.Color(0xf2a36b), Math.sin((t-.72)/.23*Math.PI)*.35);
+  scene.background = col; scene.fog.color = col;
+  hemi.intensity = .55 + .5*day - (grey?.15:0); sun.intensity = (grey?.6:1.6)*day;
+  precip.visible = S.weather==='regn'||S.weather==='sno';
+  precip.material.color.set(S.weather==='sno'?0xffffff:0x9fc4e6); precip.material.size = S.weather==='sno'?.35:.18;
+}
+function animatePrecip(dt){
+  if (!precip.visible) return;
+  const a=precip.geometry.attributes.position, v = S.weather==='sno'?4:22;
+  for (let i=0;i<a.count;i++){ let y=a.getY(i)-v*dt; if(y<0) y+=40; a.setY(i,y); }
+  a.needsUpdate=true; precip.position.x = controls.target.x; precip.position.z = controls.target.z;
+}
+
+/* -------- Plukking -------- */
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let downAt = null;
+canvas.addEventListener('pointerdown', e=>{ downAt = {x:e.clientX,y:e.clientY,t:performance.now()}; });
+canvas.addEventListener('pointerup', e=>{
+  if (!downAt || !S) return; const moved = Math.hypot(e.clientX-downAt.x, e.clientY-downAt.y); if (moved>8) return;
+  ptr.x = e.clientX/innerWidth*2-1; ptr.y = -(e.clientY/innerHeight)*2+1;
+  ray.setFromCamera(ptr, camera);
+  const objs = [...pickables]; for (const o of H3.values()) objs.push(o.g);
+  const hits = ray.intersectObjects(objs, true);
+  // hester før områder, og sprites (navnelapper) teller
+  const hHit = hits.find(h=>h.object.userData.pick?.type==='horse');
+  const hit = hHit || hits.find(h=>h.object.userData.pick);
+  if (!hit) return;
+  const p = hit.object.userData.pick;
+  if (p.type==='horse') openHorse(p.id); else openArea(p.id);
+});
+
+function resize(){ renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+/* ======================= SPILLØKKE ======================= */
+let last = performance.now(), saveT = 0, uiT = 0;
+function loop(now){
+  const dt = Math.min(.1,(now-last)/1000); last = now;
+  if (S){
+    if (!paused && $('#panel').classList.contains('hidden') && $('#mini').classList.contains('hidden') && $('#start').classList.contains('hidden')){
+      if (S.min < E.DAG_SLUTT){
+        const before = S.min;
+        E.advance(S, Math.min(E.DAG_SLUTT - S.min, dt*2*speed));
+        timeHooks(before, S.min);
+      } else if (!nightAsked){ nightAsked = true; openNight(true); }
+    }
+    uiT += dt; if (uiT>.5){ uiT=0; updateHud(); syncHorses(); updateSky(); }
+    saveT += dt; if (saveT>8){ saveT=0; save(); }
+    animateHorses(dt, now); animatePrecip(dt);
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+function timeHooks(a,b){
+  const cross = h => a < h*60 && b >= h*60;
+  if (cross(17) && E.kveldStallhjelp(S)) toast('👷 Stallhjelpen har gitt kveldsfôr.','info');
+  if (cross(12)) remind('Kl. 12: Har hestene vært ute i dag? Hester trenger bevegelse og selskap.');
+  if (cross(16)) remind('Kl. 16: Snart kveldsfôring! Hestene trenger høy før natta.');
+  if (cross(21)) remind('Kl. 21: Dagen er nesten over. Sjekk at alle har fått mat og vann!');
+}
+function remind(t){ if (lastWarn===t+S.day) return; lastWarn=t+S.day; toast('⏰ '+t,'gold',5000); }
+
+/* ======================= HUD ======================= */
+function stars(r){ const f=Math.round(r*2)/2; let s=''; for(let i=1;i<=5;i++) s += `<i class="ros ${f>=i?'on':(f>=i-.5?'half':'off')}"></i>`; return s; }
+let lastMoney = null;
+function floatNum(el, diff){
+  const r = el.getBoundingClientRect(), f = document.createElement('div');
+  f.className = 'float-num '+(diff>0?'inn':'ut'); f.textContent = (diff>0?'+':'')+kr(diff);
+  f.style.left = (r.left + r.width/2 - 30)+'px'; f.style.top = (r.bottom + 2)+'px';
+  document.body.appendChild(f); setTimeout(()=>f.remove(), 1300);
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}
+function confetti(n=46){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c = document.createElement('div'); c.className='confetti';
+  const bits = ['🏵️','🎀','⭐','🥕','🐴','✨','🏆'];
+  for (let i=0;i<n;i++){ const b=document.createElement('i'); b.textContent=bits[i%bits.length];
+    b.style.left = Math.random()*100+'vw'; b.style.fontSize = (16+Math.random()*18)+'px';
+    b.style.setProperty('--dx', (Math.random()*160-80)+'px'); b.style.setProperty('--rot', (Math.random()*720-360)+'deg');
+    b.style.animationDuration = (2.2+Math.random()*1.8)+'s'; b.style.animationDelay = (Math.random()*.6)+'s'; c.appendChild(b); }
+  document.body.appendChild(c); setTimeout(()=>c.remove(), 4800);
+}
+const VAER = { sol:'☀️', sky:'⛅', regn:'🌧️', sno:'❄️' };
+function updateHud(){
+  $('#hudFarm').textContent = S.farm;
+  $('#hudStars').innerHTML = stars(S.rykte); $('#hudStars').title = 'Rykte: '+(Math.round(S.rykte*2)/2).toString().replace('.',',')+' av 5 rosetter';
+  const m=$('#hudMoney'); m.textContent = kr(S.money); m.classList.toggle('neg', S.money<0);
+  if (lastMoney!==null && S.money!==lastMoney) floatNum(m, S.money-lastMoney);
+  lastMoney = S.money;
+  const p = Math.max(0, Math.min(1, (S.min-E.DAG_START)/(E.DAG_SLUTT-E.DAG_START)));
+  const dh = $('#dayHorse'); dh.style.left = `calc(34px + (100% - 68px) * ${p.toFixed(4)})`;
+  dh.classList.toggle('run', !paused && p<1 && $('#panel').classList.contains('hidden'));
+  $('#dayTrack').classList.toggle('late', S.min >= 20*60);
+  $('#dayTrack').title = `Klokka er ${E.klokke(S.min)}. Dagen slutter kl. 22.`;
+  document.querySelector('#dock .night').classList.toggle('ready', S.min >= 20*60);
+  $('#hudDay').textContent = `Dag ${S.day} · ${E.sesong(S)} ${VAER[S.weather]}`;
+  $('#hudClock').textContent = '🕒 '+E.klokke(S.min);
+  $('#hudHay').textContent = '🌾 '+E.fmtKg(S.hay);
+  const g = E.nesteMal(S); $('#goalTxt').textContent = g ? `${g.txt} (+${kr(g.kr)})` : 'Alle mål er nådd! 🎉';
+}
+$('#btnSpeed').onclick = ()=>{ speed = speed===1?3:speed===3?6:1; $('#btnSpeed').textContent = (speed===1?'▶':'⏩')+' '+speed+'×'; };
+$('#goalChip').onclick = ()=>openGoals();
+document.querySelectorAll('#dock button').forEach(b=>b.onclick=()=>{
+  const k=b.dataset.open;
+  ({hester:openHorses, hoyloft:()=>openArea('hoyloft'), marked:()=>openArea('marked'), bibliotek:()=>openLibrary(), mal:openGoals, regnskap:openLedger, natt:()=>openNight(false), meny:openMenu})[k]();
+});
+
+/* ======================= TOASTS OG TIPS ======================= */
+function toast(msg, kind='good', ms=3200){
+  if (!msg) return;
+  if (/Mål nådd/.test(msg)) confetti();
+  const t=document.createElement('div'); t.className='toast '+kind; t.textContent=msg; $('#toasts').prepend(t);
+  setTimeout(()=>t.remove(), ms); const vanlige=[...$('#toasts').children].filter(x=>!x.classList.contains('tip')); while (vanlige.length>3) vanlige.pop().remove();
+}
+const tipKo = []; let tipVises = false;
+function tipToast(tip){
+  if (!tip) return;
+  if (!tipKo.some(t=>t.id===tip.id)) tipKo.push(tip);
+  visNesteTip();
+}
+function visNesteTip(){
+  if (tipVises || !tipKo.length) return;
+  const tip = tipKo.shift(); tipVises = true;
+  const t=document.createElement('div'); t.className='toast tip';
+  t.innerHTML = `<b>${tip.ikon} Visste du? ${tip.tittel}</b>${tip.tekst}<div style="text-align:right;margin-top:6px"><button class="btn ghost" style="padding:5px 12px;font-size:14px">Skjønner!</button></div>`;
+  let ferdig=false; const lukk=()=>{ if(ferdig) return; ferdig=true; t.remove(); tipVises=false; setTimeout(visNesteTip, 600); };
+  t.querySelector('button').onclick=lukk;
+  $('#toasts').prepend(t); setTimeout(lukk, 15000);
+}
+function after(res){
+  if (!res) return;
+  toast(res.msg, res.ok ? (res.bad?'bad':'good') : 'bad', res.ok?3200:4200);
+  if (res.tip) setTimeout(()=>tipToast(res.tip), 500);
+  const nye = E.sjekkMal(S); nye.forEach((g,i)=>setTimeout(()=>toast(`🎯 Mål nådd: ${g.txt}! +${kr(g.kr)}`,'gold',4500), 300+i*400));
+  syncHorses(); updateHud(); save();
+  if (S.min>=E.DAG_SLUTT && !nightAsked){ nightAsked=true; setTimeout(()=>openNight(true),700); }
+}
+
+/* ======================= PANEL ======================= */
+let panelRefresh = null, refreshing = false;
+function openPanel(html, refresh){
+  const pn = $('#panel');
+  if (!refreshing){ pn.classList.remove('anim'); void pn.offsetWidth; pn.classList.add('anim'); }
+  else pn.classList.remove('anim');
+  $('#panelBody').innerHTML = html; pn.classList.remove('hidden'); $('#veil').classList.remove('hidden');
+  panelRefresh = refresh||null; $('#panel').scrollTop = 0;
+}
+function closePanel(){ $('#panel').classList.add('hidden'); $('#veil').classList.add('hidden'); panelRefresh=null; }
+$('#panelClose').onclick = closePanel; $('#veil').onclick = closePanel;
+function refresh(){ if (panelRefresh){ const st=$('#panel').scrollTop; refreshing=true; try{ panelRefresh(); } finally { refreshing=false; } $('#panel').scrollTop=st; } }
+function on(sel, fn){ document.querySelectorAll('#panelBody '+sel).forEach(el=>el.onclick=()=>{ if(el.classList.contains('act')){ el.classList.remove('pressed'); void el.offsetWidth; el.classList.add('pressed'); } fn(el.dataset, el); }); }
+function esc(t){ return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function barHTML(ikon, navn, v){
+  const c = v>=60?'#4fa548':v>=30?'#f5bf3a':'#d2452f';
+  return `<div class="bar${v<30?' low':''}"><span>${ikon}</span><span>${navn}</span><div class="track"><div class="fill" style="width:${v}%;background:${c}"></div></div><span class="val">${Math.round(v)}</span></div>`;
+}
+function act(i, txt, sub, data, dim=false){
+  const attrs = Object.entries(data).map(([k,v])=>`data-${k}="${esc(v)}"`).join(' ');
+  return `<button class="act${dim?' dim':''}" ${attrs}><span class="i">${i}</span><span>${txt}<small>${sub}</small></span></button>`;
+}
+function tidTxt(min){ return min>=60 ? (min%60? `${Math.floor(min/60)} t ${min%60} min` : `${min/60} t`) : `${min} min`; }
+
+/* ---------- Hestepanel ---------- */
+function openHorse(id){
+  const h = S.horses.find(x=>x.id===id); if(!h) return;
+  const R = E.B[h.breed], ses=E.sesong(S), vRabatt = S.areas.vet?0.7:1;
+  const chips = [];
+  chips.push(`<span class="chip">📍 ${E.stedNavn(h.loc)[0].toUpperCase()+E.stedNavn(h.loc).slice(1)}</span>`);
+  if (h.syk) chips.push(`<span class="chip bad">🤒 ${E.sykNavn(h.syk.type)}${h.syk.behandlet?` · hviler ${h.syk.dager} d`:' · trenger veterinær!'}</span>`);
+  chips.push(h.mokk===0?`<span class="chip good">🧹 Ren boks</span>`:`<span class="chip ${h.mokk>=2?'bad':'warn'}">🧹 Boksen er skitten</span>`);
+  chips.push(h.hoof>=7?`<span class="chip bad">🧲 Trenger hovslager</span>`:`<span class="chip">🧲 Hovslager om ${7-h.hoof} d</span>`);
+  chips.push(h.vacc>0?`<span class="chip ${h.vacc<5?'warn':'good'}">💉 Vaksinert ${h.vacc} d til</span>`:`<span class="chip bad">💉 Ikke vaksinert</span>`);
+  if (h.hovrens>3) chips.push(`<span class="chip warn">🪨 Hovene trenger rens</span>`);
+  const egen = h.egen;
+  let html = `<div class="hhead"><img src="${IMG(h.breed)}" alt=""><div>
+    <div class="nm">${esc(h.name)} ${egen?`<button class="rename" data-ren="1">✏️</button>`:''}</div>
+    <div class="sub">${R.navn} · ${h.age} år · ${R.type}${egen?` · verdi ca. ${kr(E.verdi(h))}`:` · eies av ${esc(h.eier)} (betaler ${kr(h.betaling)}/dag)`}</div>
+    <div class="row">${chips.join('')}</div></div></div>
+    <h3>Hvordan har ${esc(h.name)} det?</h3>
+    <div class="bars">${barHTML('🌾','Mett',h.mett)}${barHTML('💧','Vann',h.vann)}${barHTML('🪮','Ren',h.ren)}${barHTML('😊','Glad',h.glad)}${barHTML('⚡','Energi',h.energi)}${barHTML('❤️','Helse',h.helse)}</div>
+    <p class="small">Hver dag trenger ${esc(h.name)} ca. <b>${E.fmtKg(E.hoyDag(S,h))} høy</b>${ses==='Vinter'?' (mer om vinteren)':''} og <b>${E.vannDag(h)} liter vann</b>. Gi høy morgen og kveld.</p>
+    <h3>🌾 Fôr</h3><div class="acts">
+      ${act('🌾','Gi høy',`${E.fmtKg(E.hoyPorsjon(S,h))} · ${E.TID.hoy} min`,{a:'hoy'})}
+      ${act('💧','Gi vann',S.upg.vanning?'Automatisk vanning':`${E.TID.vann} min`,{a:'vann'})}
+      ${act('🥣','Kraftfôr','1 kg · gir energi',{a:'kraft'})}
+      ${act('🥕','Gulrot',`Godbit · ${S.gulrot} igjen`,{a:'gulrot'})}
+    </div>
+    <h3>🪮 Stell</h3><div class="acts">
+      ${act('🪮','Strigle','Børst pelsen · 20 min',{a:'strigle'})}
+      ${act('🪨','Rens hovene','4 hover · 10 min',{a:'hover'})}
+      ${act('🧹','Møkk boksen',`Ny flis · ${kr(E.PRIS.flis)}`,{a:'mokk'})}
+    </div>
+    <h3>🚪 Hvor skal ${esc(h.name)} være?</h3><div class="acts">
+      ${act('🏠','Stallen','Inne i boksen',{a:'flytt',arg:'stall'}, h.loc==='stall')}
+      ${act('🪵','Luftegården','Ute med vannkar',{a:'flytt',arg:'luft'}, h.loc==='luft')}
+      ${act('🌿','Beitet',S.areas.beite?(ses==='Vinter'?'Snødekt nå':'Gress og plass'):'Ikke kjøpt',{a:'flytt',arg:'beite'}, h.loc==='beite'||!S.areas.beite||ses==='Vinter')}
+    </div>`;
+  if (egen){
+    html += `<h3>🏇 Trening og jobb</h3>
+    <div class="bars">${['dressur','sprang','fart'].map(d=>barHTML({dressur:'🎀',sprang:'🚧',fart:'💨'}[d], E.discNavn(d)[0].toUpperCase()+E.discNavn(d).slice(1), h.skill[d])).join('')}</div>
+    <p class="small">Talentet til rasen bestemmer hvor flink ${esc(h.name)} kan bli: dressur maks ${E.tak(h,'dressur')}, sprang maks ${E.tak(h,'sprang')}, fart maks ${E.tak(h,'fart')}. Jobbet i dag: ${h.jobber} av 3.</p>
+    <div class="acts">
+      ${act('🎀','Tren dressur','45 min · −25 energi',{a:'tren',arg:'dressur'})}
+      ${act('🚧','Tren sprang',S.upg.hinder?'45 min · −25 energi':'Trenger hindersett',{a:'tren',arg:'sprang'},!S.upg.hinder)}
+      ${act('💨','Tren fart','45 min · −25 energi',{a:'tren',arg:'fart'})}
+      ${act('🧒','Ridetime',`${S.bookings.filter(b=>!b.done).length} elever venter`,{go:'timer'})}
+      ${S.areas.stevne?act('🏆','Stevne','Sprang eller dressur',{go:'stevne'}):''}
+      ${S.areas.trav?act('🏁','Travløp',R.trav?'Bare for travere':'Ikke traver',{go:'trav'},!R.trav):''}
+    </div>`;
+  }
+  html += `<h3>🩺 Helse</h3><div class="acts">
+      ${h.syk&&!h.syk.behandlet ? act('🩺','Ring veterinær', egen?kr(Math.round(E.PRIS.syk[h.syk.type]*vRabatt)):'Eieren betaler',{a:'vet'}) : act('🩺','Helsesjekk',kr(Math.round(E.PRIS.helsesjekk*vRabatt))+' · tenner',{a:'vet'})}
+      ${act('💉','Vaksine',egen?kr(Math.round(E.PRIS.vaksine*vRabatt)):'Eieren betaler',{a:'vaksine'}, h.vacc>14)}
+      ${act('🧲','Hovslager',egen?kr(E.PRIS.hovslager)+' · 1 t':'Eieren betaler',{a:'hovslager'}, h.hoof<4)}
+    </div>`;
+  if (egen) html += `<p style="margin-top:22px"><button class="btn ghost" data-sell="1">Selg ${esc(h.name)} (ca. ${kr(E.verdi(h))})</button></p>`;
+  else html += `<p class="small" style="margin-top:16px">Pensjonærer eies av andre. Du får betalt for å stelle dem godt. Er eieren misfornøyd flere dager på rad, flytter hesten.</p>`;
+  openPanel(html, ()=>openHorse(id));
+  on('[data-a]', d=>{
+    if (d.a==='strigle') return miniStrigle(h);
+    if (d.a==='hover') return miniHover(h);
+    after(E.act(S, h.id, d.a, d.arg)); refresh();
+  });
+  on('[data-go]', d=>{ if(d.go==='timer') openBookings(h.id); else if(d.go==='stevne') openStevne(h.id); else openTrav(h.id); });
+  on('[data-ren]', ()=>{ const n=prompt('Nytt navn til hesten:', h.name); if(n&&n.trim()){ h.name=n.trim().slice(0,16); save(); syncHorses(); refresh(); } });
+  on('[data-sell]', ()=>{ if(confirm(`Vil du selge ${h.name} for ca. ${kr(E.verdi(h))}?`)){ after(E.selgHest(S,h.id)); closePanel(); } });
+}
+
+/* ---------- Liste over hestene ---------- */
+function openHorses(){
+  const rows = S.horses.map(h=>{ const b=E.behov(h); return `<button class="hrow" data-h="${h.id}"><img src="${IMG(h.breed)}" alt=""><div class="t"><b>${esc(h.name)}</b> <span class="small">${E.B[h.breed].navn}${h.egen?'':' · pensjonær'}</span>
+    <div class="mini"><span>🌾${Math.round(h.mett)}</span><span>💧${Math.round(h.vann)}</span><span>🪮${Math.round(h.ren)}</span><span>😊${Math.round(h.glad)}</span><span>⚡${Math.round(h.energi)}</span><span>📍${E.stedNavn(h.loc)}</span></div></div>
+    <span style="font-size:26px">${b?b.ikon:'✅'}</span></button>`; }).join('');
+  openPanel(`<h2>🐴 Hestene dine</h2><p class="sub">${S.horses.length} av ${E.bokser(S)} bokser er i bruk. Trykk på en hest for å stelle den.</p>
+    <div class="row" style="margin-bottom:10px"><button class="btn" data-all="hoy">🌾 Gi alle høy</button><button class="btn blue" data-all="vann">💧 Gi alle vann</button><button class="btn ghost" data-all="ut">🪵 Alle ut</button><button class="btn ghost" data-all="inn">🏠 Alle inn</button></div>
+    <div class="hlist">${rows}</div>`, openHorses);
+  on('[data-h]', d=>openHorse(d.h));
+  on('[data-all]', d=>{
+    let ok=0, msgs=[];
+    for (const h of S.horses){
+      const r = d.all==='ut' ? (h.loc==='stall'?E.act(S,h.id,'flytt','luft'):null) : d.all==='inn' ? (h.loc!=='stall'?E.act(S,h.id,'flytt','stall'):null) : E.act(S,h.id,d.all);
+      if (r&&r.ok) ok++; else if (r) msgs.push(r.msg);
+      if (r&&r.tip) setTimeout(()=>tipToast(r.tip),600);
+    }
+    toast(ok? `Ferdig! (${ok} ${ok===1?'hest':'hester'})` : (msgs[0]||'Ingenting å gjøre.'), ok?'good':'bad');
+    if (d.all==='ut' && S.horses.filter(E.erUte).length>=2) setTimeout(()=>tipToast(null),0);
+    after({ok:true,msg:'',noToast:true}); refresh();
+  });
+}
+// liten justering: «after» skal ikke vise tom toast
+const _after = after; after = function(res){ if(res && res.noToast){ const nye=E.sjekkMal(S); nye.forEach(g=>toast(`🎯 Mål nådd: ${g.txt}! +${kr(g.kr)}`,'gold',4500)); syncHorses(); updateHud(); save(); if (S.min>=E.DAG_SLUTT && !nightAsked){ nightAsked=true; setTimeout(()=>openNight(true),700);} return; } _after(res); };
+
+/* ---------- Ridetimer ---------- */
+function openBookings(onlyHorse){
+  const open = S.bookings.filter(b=>!b.done), done = S.bookings.filter(b=>b.done);
+  const horses = S.horses.filter(h=>h.egen && (!onlyHorse || h.id===onlyHorse));
+  const cards = open.map(b=>{ const T=E.TIMETYPER[b.type];
+    const btns = horses.map(h=>{ const k=E.kanTa(S,h,b); return `<button class="act${k.ok?'':' dim'}" data-b="${b.id}" data-h="${h.id}"><img src="${IMG(h.breed)}" style="width:34px;height:34px;border-radius:8px;object-fit:cover"><span>${esc(h.name)}<small>${k.ok?'Kan ta timen':esc(k.msg)}</small></span></button>`; }).join('');
+    return `<div class="card" style="margin-bottom:10px"><div class="row" style="justify-content:space-between"><b style="font-size:17px">${T.ikon} ${T.navn} – ${esc(b.elev)}</b><span class="chip good">${kr(b.pris)}</span></div><p class="small" style="margin:4px 0 8px">${T.besk} Tar ${b.type==='tur'?'2 timer':b.type==='kos'?'1 time':'1 time'}.</p><div class="acts">${btns||'<span class="small">Ingen hester.</span>'}</div></div>`; }).join('');
+  openPanel(`<h2>🧒 Ridetimer i dag</h2><p class="sub">Velg en hest som passer til hver elev. Glade og rene hester gir fornøyde elever – og bedre rykte!</p>
+    ${cards || '<div class="card">Ingen flere elever i dag. Flere kommer i morgen! Rideskolen og ridelærer gir flere elever.</div>'}
+    ${done.length?`<h3>Ferdige timer</h3><p class="small">${done.map(b=>`${E.TIMETYPER[b.type].ikon} ${E.TIMETYPER[b.type].navn} med ${esc(b.hest)}`).join(' · ')}</p>`:''}`, ()=>openBookings(onlyHorse));
+  on('[data-b]', d=>{ after(E.act(S,d.h,'time',d.b)); refresh(); });
+}
+
+/* ---------- Stevne og trav ---------- */
+let stevneValg = {disc:'sprang', niva:'klubb'};
+function openStevne(hid){
+  const egne = S.horses.filter(h=>h.egen);
+  const h = egne.find(x=>x.id===hid) || egne[0];
+  const lv = Object.entries(E.STEVNE).map(([k,L])=>`<button class="act" data-niva="${k}" style="${stevneValg.niva===k?'border-color:#e8a628;background:#fff7e0':''}"><span class="i">${k==='klubb'?'🥉':k==='region'?'🥈':'🥇'}</span><span>${L.navn}<small>Avgift ${kr(L.avgift)} · 1. premie ${kr(L.premier[0])}</small></span></button>`).join('');
+  openPanel(`<h2>🏆 Stevneplassen</h2><p class="sub">Konkurrer mot fem andre hester. De tre beste får premie. Hesten må være frisk, uthvilt og kan starte én gang per dag.</p>
+    <h3>1. Velg hest</h3><div class="acts">${egne.map(x=>`<button class="act" data-hs="${x.id}" style="${x.id===h.id?'border-color:#3f8a3a;background:#eef8ea':''}"><img src="${IMG(x.breed)}" style="width:34px;height:34px;border-radius:8px;object-fit:cover"><span>${esc(x.name)}<small>🎀 ${x.skill.dressur} · 🚧 ${x.skill.sprang} · ⚡ ${Math.round(x.energi)}</small></span></button>`).join('')}</div>
+    <h3>2. Velg gren</h3><div class="acts">${act('🚧','Sprang',`${h.name}: ${h.skill.sprang} poeng`,{disc:'sprang'},stevneValg.disc!=='sprang')}${act('🎀','Dressur',`${h.name}: ${h.skill.dressur} poeng`,{disc:'dressur'},stevneValg.disc!=='dressur')}</div>
+    <h3>3. Velg stevne</h3><div class="acts">${lv}</div>
+    <p style="margin-top:16px"><button class="btn gold big" data-go="1">Start! 🏁</button></p>
+    <p class="small">Tips: Klubbstevne passer for hester med rundt 30 poeng. Regionstevne trenger rundt 50, Norgescup over 70.</p>`, ()=>openStevne(h.id));
+  on('[data-hs]', d=>openStevne(d.hs));
+  on('[data-disc]', d=>{ stevneValg.disc=d.disc; refresh(); });
+  on('[data-niva]', d=>{ stevneValg.niva=d.niva; refresh(); });
+  on('[data-go]', ()=>{ const r=E.act(S,h.id,'stevne',{...stevneValg}); showResult(r); });
+}
+let travValg='lokal';
+function openTrav(hid){
+  const egne = S.horses.filter(h=>h.egen && E.B[h.breed].trav);
+  if (!egne.length){ openPanel(`<h2>🏁 Travbanen</h2><p>Du har ingen travere ennå. Bare <b>norsk kaldblodstraver</b> og <b>varmblodstraver</b> kan løpe travløp. Se etter dem på hestemarkedet!</p><p class="small">I et travløp drar hesten en lett vogn som heter sulky, og må holde seg i trav hele veien.</p>`); return; }
+  const h = egne.find(x=>x.id===hid)||egne[0];
+  openPanel(`<h2>🏁 Travbanen</h2><p class="sub">Husk: hesten må være vaksinert for å få starte i travløp.</p>
+    <h3>1. Velg traver</h3><div class="acts">${egne.map(x=>`<button class="act" data-hs="${x.id}" style="${x.id===h.id?'border-color:#3f8a3a;background:#eef8ea':''}"><img src="${IMG(x.breed)}" style="width:34px;height:34px;border-radius:8px;object-fit:cover"><span>${esc(x.name)}<small>💨 ${x.skill.fart} · ⚡ ${Math.round(x.energi)} · 💉 ${x.vacc>0?'ok':'mangler'}</small></span></button>`).join('')}</div>
+    <h3>2. Velg løp</h3><div class="acts">${Object.entries(E.TRAV).map(([k,L])=>`<button class="act" data-niva="${k}" style="${travValg===k?'border-color:#e8a628;background:#fff7e0':''}"><span class="i">${k==='lokal'?'🏁':'🏆'}</span><span>${L.navn}<small>Avgift ${kr(L.avgift)} · 1. premie ${kr(L.premier[0])}</small></span></button>`).join('')}</div>
+    <p style="margin-top:16px"><button class="btn gold big" data-go="1">Start! 🏁</button></p>`, ()=>openTrav(h.id));
+  on('[data-hs]', d=>openTrav(d.hs)); on('[data-niva]', d=>{ travValg=d.niva; refresh(); });
+  on('[data-go]', ()=>showResult(E.act(S,h.id,'trav',travValg)));
+}
+function showResult(r){
+  if (!r.ok){ after(r); return; }
+  const medal = r.plass===1?'🥇':r.plass===2?'🥈':r.plass===3?'🥉':'🎗️';
+  if (r.plass<=3) confetti(r.plass===1?70:36);
+  after({...r, msg: r.win?'Seier!':'Løpet er ferdig'});
+  openPanel(`<div class="res-big">${medal}</div><h2 class="center">${r.plass}. plass!</h2><p class="center">${esc(r.msg)}</p><p class="center"><button class="btn" data-x="1">Fint!</button></p>`);
+  on('[data-x]', closePanel);
+}
+
+/* ---------- Områdepaneler ---------- */
+function upgBtn(id){
+  const U=D.UPGRADES[id]; if (S.upg[id]) return `<div class="card">✅ <b>${U.navn}</b> – ${U.besk}</div>`;
+  return `<button class="act" data-upg="${id}"><span class="i">🛠️</span><span>${U.navn} – ${kr(U.pris)}<small>${U.besk}</small></span></button>`;
+}
+function areaBuy(id){
+  const A=D.AREAS[id], lvl=S.areas[id];
+  if (lvl>=A.maks) return '';
+  const pris=A.lvlCost[lvl];
+  return `<p><button class="btn gold" data-buy="${id}">${lvl?'Oppgrader':'Kjøp'} ${A.navn.toLowerCase()} – ${kr(pris)}</button>${A.niva&&lvl?` <span class="small">Neste nivå: ${A.niva[lvl+1]}</span>`:''}</p>`;
+}
+function openArea(id){
+  const A = D.AREAS[id];
+  if (id==='bibliotek') return openLibrary();
+  if (id==='marked') return openMarket();
+  if (A && !S.areas[id]){
+    openPanel(`<h2>${A.ikon} ${A.navn}</h2><p>${A.besk}</p>${areaBuy(id)}<p class="small">Du har ${kr(S.money)}.</p>`, ()=>openArea(id));
+    on('[data-buy]', d=>{ const r=E.kjopOmrade(S,d.buy); after(r); if(r.ok){ buildWorld(); refresh(); } });
+    return;
+  }
+  let html = `<h2>${A.ikon} ${A.navn}</h2><p class="sub">${A.besk}${A.niva?` <b>${A.niva[S.areas[id]]}</b>`:''}</p>`;
+  if (id==='stall'){
+    html += `<p>Bokser: <b>${S.horses.length} av ${E.bokser(S)}</b> i bruk.</p>${areaBuy('stall')}<h3>Utstyr</h3><div class="acts">${upgBtn('vanning')}</div>
+      <h3>Boksene</h3><div class="hlist">${S.horses.map(h=>`<button class="hrow" data-h="${h.id}"><img src="${IMG(h.breed)}"><div class="t"><b>${esc(h.name)}</b><div class="mini">${h.mokk?`🧹 Skitten boks (${h.mokk} d)`:'🧹 Ren boks'} · 📍 ${E.stedNavn(h.loc)}</div></div></button>`).join('')}</div>
+      <p><button class="btn" data-mokkall="1">🧹 Møkk alle bokser (${kr(E.PRIS.flis)} per boks)</button></p>
+      <h3>👷 Ansatte</h3><div class="acts">${Object.entries(D.STAFF).map(([k,St])=>`<button class="act" data-staff="${k}"><span class="i">${k==='stallhjelp'?'👷':'🧑‍🏫'}</span><span>${St.navn} – ${S.staff[k]?'ansatt ✅':'ledig'}<small>${St.besk} Lønn ${kr(St.lonn)}/dag. Trykk for å ${S.staff[k]?'si opp':'ansette'}.</small></span></button>`).join('')}</div>`;
+  }
+  if (id==='hoyloft'){
+    const plass = Math.floor(E.lager(S)-S.hay), pr=E.hoyPris(S);
+    const forbruk = S.horses.reduce((a,h)=>a+E.hoyDag(S,h),0);
+    html += `<div class="card"><b>🌾 Høy: ${E.fmtKg(S.hay)} av ${E.lager(S)} kg</b><div class="progress"><i style="width:${S.hay/E.lager(S)*100}%"></i></div>
+      Hestene dine spiser ca. <b>${E.fmtKg(forbruk)}</b> høy per dag. Det du har, holder i ca. <b>${forbruk?Math.floor(S.hay/forbruk):'–'} dager</b>.<br>Pris: ${kr(pr).replace(' kr','')} kr per kg${S.areas.hoyloft>=3?' (mengderabatt!)':''}.</div>
+      <h3>Kjøp høy</h3><div class="acts">${[25,50,100].map(k=>act('🌾',`${k} kg`,kr(Math.round(Math.min(k,plass)*pr)),{hay:k},plass<=0)).join('')}${act('📦','Fyll lageret',`${plass} kg · ${kr(Math.round(plass*pr))}`,{hay:plass},plass<=0)}</div>
+      <h3>Annet fôr</h3><div class="acts">${act('🥣','5 kg kraftfôr',kr(5*E.PRIS.kraft)+` · har ${S.kraft} kg`,{vare:'kraft',ant:5})}${act('🥕','10 gulrøtter',kr(10*E.PRIS.gulrot)+` · har ${S.gulrot}`,{vare:'gulrot',ant:10})}</div>
+      ${areaBuy('hoyloft')}
+      <p class="small">Regnestykke: Hvis en hest spiser 9 kg høy om dagen og høyet koster ${String(pr).replace('.',',')} kr per kg, hva koster høyet for én hest i en uke?</p>`;
+  }
+  if (id==='luft'){
+    const ute = S.horses.filter(h=>h.loc==='luft');
+    html += `<p>Ute nå: <b>${ute.map(h=>esc(h.name)).join(', ')||'ingen'}</b></p>
+      <p class="small">Hester er flokkdyr. De blir mye gladere når de er ute <b>sammen</b> med andre hester. Ute har de alltid vann fra vannkaret.</p>
+      <div class="row"><button class="btn" data-ut="1">🪵 Slipp alle ut</button><button class="btn ghost" data-inn="1">🏠 Ta alle inn</button></div><h3>Utstyr</h3><div class="acts">${upgBtn('leskur')}</div>`;
+  }
+  if (id==='beite'){
+    const ute = S.horses.filter(h=>h.loc==='beite');
+    html += `<p>På beitet nå: <b>${ute.map(h=>esc(h.name)).join(', ')||'ingen'}</b></p><p class="small">På beitet spiser hestene gress, så de blir ikke like fort sultne. Om vinteren er beitet dekket av snø.</p>
+      <div class="row"><button class="btn" data-beite="1">🌿 Slipp alle på beite</button><button class="btn ghost" data-inn="1">🏠 Ta alle inn</button></div>`;
+  }
+  if (id==='ridebane' || id==='rideskole'){
+    const open = S.bookings.filter(b=>!b.done).length;
+    html += `<p><b>${open}</b> ${open===1?'elev venter':'elever venter'} på ridetime i dag.</p><p><button class="btn big" data-timer="1">🧒 Se ridetimene</button></p>`;
+    if (id==='ridebane') html += `<h3>Utstyr</h3><div class="acts">${upgBtn('hinder')}${upgBtn('underlag')}</div>${S.areas.rideskole?'':`<p class="small">Tips: Kjøp rideskolen for å få flere elever som betaler mer.</p>`}`;
+    else html += areaBuy('rideskole');
+  }
+  if (id==='vet'){
+    const syke = S.horses.filter(h=>h.syk);
+    html += `<p>${syke.length?`Syke hester: <b>${syke.map(h=>esc(h.name)+' ('+E.sykNavn(h.syk.type)+')').join(', ')}</b>`:'Alle hestene er friske! 🎉'}</p><p class="small">Med veterinærstallen er alle veterinærbesøk og vaksiner 30 % billigere, og syke hester blir raskere friske.</p>
+      <div class="hlist">${S.horses.map(h=>`<button class="hrow" data-h="${h.id}"><img src="${IMG(h.breed)}"><div class="t"><b>${esc(h.name)}</b><div class="mini">❤️ ${Math.round(h.helse)} · 💉 ${h.vacc>0?h.vacc+' d':'mangler'} · 🧲 ${h.hoof>=7?'trenger hovslager':'ok'}</div></div></button>`).join('')}</div>`;
+  }
+  if (id==='stevne') return openStevne();
+  if (id==='trav') return openTrav();
+  openPanel(html, ()=>openArea(id));
+  on('[data-buy]', d=>{ const r=E.kjopOmrade(S,d.buy); after(r); if(r.ok){ buildWorld(); syncHorses(); refresh(); } });
+  on('[data-upg]', d=>{ const r=E.kjopUpg(S,d.upg); after(r); if(r.ok){ buildWorld(); refresh(); } });
+  on('[data-h]', d=>openHorse(d.h));
+  on('[data-hay]', d=>{ after(E.kjopHoy(S,+d.hay)); buildWorld(); refresh(); });
+  on('[data-vare]', d=>{ after(E.kjopVare(S,d.vare,+d.ant)); refresh(); });
+  on('[data-staff]', d=>{ after(E.ansett(S,d.staff)); refresh(); });
+  on('[data-timer]', ()=>openBookings());
+  on('[data-mokkall]', ()=>{ let n=0; for(const h of S.horses){ const r=E.act(S,h.id,'mokk'); if(r.ok)n++; } toast(n?`${n} bokser møkket.`:'Alle boksene er rene.', n?'good':'info'); after({noToast:true}); refresh(); });
+  const flyttAlle = til=>{ let n=0; for(const h of S.horses){ if(h.loc!==til){ const r=E.act(S,h.id,'flytt',til); if(r.ok) n++; else { toast(r.msg,'bad'); break; } } } if(n) toast(`${n} ${n===1?'hest':'hester'} flyttet.`); if(til!=='stall' && S.horses.filter(E.erUte).length>=2){ const t=null; } after({noToast:true}); refresh(); };
+  on('[data-ut]', ()=>flyttAlle('luft')); on('[data-inn]', ()=>flyttAlle('stall')); on('[data-beite]', ()=>flyttAlle('beite'));
+}
+
+/* ---------- Marked ---------- */
+function openMarket(){
+  const fri = E.bokser(S)-S.horses.length;
+  const offers = S.market.map((o,i)=>{ const R=E.B[o.breed]; return `<div class="card"><div class="hhead"><img src="${IMG(o.breed)}" style="width:86px;height:86px"><div><b style="font-size:18px">${esc(o.name)}</b><div class="small">${R.navn} · ${o.age} år${R.ikkeRidbar?' · kan ikke ris':''}</div>
+    <div class="small">🎀 ${o.skill.dressur} · 🚧 ${o.skill.sprang} · 💨 ${o.skill.fart} · 😌 lynne ${R.lynne}/10 · 💉 ${o.vacc?'vaksinert':'ikke vaksinert'}</div>
+    <div class="row" style="margin-top:6px"><button class="btn gold" data-kjop="${i}">Kjøp – ${kr(o.pris)}</button><button class="btn ghost" data-info="${o.breed}">Om rasen</button></div></div></div></div>`; }).join('');
+  const p = S.pensjonar;
+  openPanel(`<h2>🏪 Hestemarkedet</h2><p class="sub">Nye hester kommer hver dag. Du har <b>${fri}</b> ${fri===1?'ledig boks':'ledige bokser'}.</p>
+    <div class="grid2" style="grid-template-columns:1fr">${offers||'<div class="card">Ingen hester til salgs i dag.</div>'}</div>
+    <h3>🏡 Pensjonærplass</h3>${p?`<div class="card"><div class="hhead"><img src="${IMG(p.breed)}" style="width:76px;height:76px"><div><b>${esc(p.eier)}</b> spør om hesten <b>${esc(p.name)}</b> (${E.B[p.breed].navn}) kan bo hos deg.<br>Hun/han betaler <b>${kr(p.betaling)} per dag</b>. Du må stelle hesten godt!<div class="row" style="margin-top:6px"><button class="btn" data-pens="1">Si ja</button></div></div></div></div>`:'<div class="card small">Ingen spør om plass akkurat nå. Kanskje i morgen!</div>'}
+    <p class="small">Husk: Hester er flokkdyr. Flere hester gjør hestene gladere – men hver hest koster penger hver dag.</p>`, openMarket);
+  on('[data-kjop]', d=>{ const o=S.market[+d.kjop]; if(!o) return; const n=prompt(`Hva skal ${E.B[o.breed].navn.toLowerCase()}en hete?`, o.name); if(n===null) return; const r=E.kjopHest(S,+d.kjop,(n||o.name).trim().slice(0,16)); after(r); if(r.ok){ syncHorses(); openHorse(r.id); } else refresh(); });
+  on('[data-info]', d=>openBreed(d.info, openMarket));
+  on('[data-pens]', ()=>{ const r=E.taPensjonar(S); after(r); refresh(); });
+}
+
+/* ---------- Bibliotek ---------- */
+let libTab='raser';
+function typeKey(t){ t=t.toLowerCase(); return t.includes('mini')?'mini':t.includes('ponni')?'ponni':t.includes('kald')?'kald':t.includes('varm')?'varm':t.includes('full')?'full':'vill'; }
+function typeNavn(t){ return {mini:'Minihest',ponni:'Ponni',kald:'Kaldblod',varm:'Varmblod',full:'Fullblod',vill:'Villhest'}[typeKey(t)]; }
+function openLibrary(){
+  let html = `<h2>📚 Hestebiblioteket</h2><div class="tabs"><button data-tab="raser" class="${libTab==='raser'?'on':''}">Hesteraser (${D.BREEDS.length})</button><button data-tab="bok" class="${libTab==='bok'?'on':''}">Hestehåndboka</button></div>`;
+  if (libTab==='raser'){
+    html += `<p class="sub">Du har hatt ${S.stats.raser.length} av ${D.BREEDS.length} raser på gården.</p><div class="lib">${D.BREEDS.map(b=>`<button class="libc t-${typeKey(b.type)}" data-type="${typeNavn(b.type)}" data-b="${b.id}"><img src="${IMG(b.id)}" alt="">${S.stats.raser.includes(b.id)?'<span class="own">Din!</span>':''}<div>${b.navn}</div><div class="small">${b.land}</div></button>`).join('')}</div>`;
+  } else {
+    html += `<p class="sub">Alt du trenger å vite for å ta godt vare på hester.</p>${D.HANDBOK.map(t=>`<div class="fact"><b>${t.ikon} ${t.tittel}</b><br>${t.tekst}</div>`).join('')}
+      <p class="small">Kilder: Mattilsynet (hold av hest), Det Norske Travselskap, Store norske leksikon, Eurofins (grovfôr til hest). Tallene i spillet er forenklet.</p>`;
+  }
+  openPanel(html, openLibrary);
+  on('[data-tab]', d=>{ libTab=d.tab; refresh(); });
+  on('[data-b]', d=>openBreed(d.b, openLibrary));
+}
+function dots(n){ return `<div class="dots">${Array.from({length:10},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('')}</div>`; }
+function openBreed(id, back){
+  const b = E.B[id];
+  openPanel(`<button class="btn ghost" data-back="1" style="margin-bottom:10px">← Tilbake</button>
+    <div class="hhead"><img src="${IMG(id)}" style="width:150px;height:150px"><div><div class="nm">${b.navn}</div><div class="sub">${b.land} · ${b.type}</div>
+    <div class="small">📏 Høyde: ${b.hoyde}<br>⚖️ Vekt: ca. ${b.vekt} kg<br>🎨 Farge: ${b.farge}<br>💰 Pris i spillet: ca. ${kr(b.pris)}</div></div></div>
+    <h3>Fakta</h3>${b.fakta.map(f=>`<div class="fact">${f}</div>`).join('')}
+    <h3>Egenskaper</h3>
+    <div class="stat"><span>💨 Fart</span>${dots(b.fart)}</div><div class="stat"><span>🚧 Spenst</span>${dots(b.spenst)}</div>
+    <div class="stat"><span>🏃 Utholdenhet</span>${dots(b.uth)}</div><div class="stat"><span>😌 Lynne (rolig)</span>${dots(b.lynne)}</div><div class="stat"><span>🛡️ Hardfør</span>${dots(b.hard)}</div>
+    <p class="small">${b.trav?'🏁 Denne rasen kan løpe travløp. ':''}${b.ikkeRidbar?'🚫 For liten til å bli ridd. ':''}${b.lynne>=7?'🧒 Passer for nybegynnere.':'⚠️ For nervøs for nybegynnere.'} En hest på ${b.vekt} kg trenger ca. ${E.fmtKg(Math.round(b.vekt/100*1.8*2)/2)} høy om dagen.</p>`, ()=>openBreed(id,back));
+  on('[data-back]', ()=>back());
+}
+
+/* ---------- Mål ---------- */
+function openGoals(){
+  const done = D.GOALS.filter(g=>S.goalsDone[g.id]).length, next = E.nesteMal(S);
+  const idx = next ? D.GOALS.indexOf(next) : 99;
+  openPanel(`<h2>🎯 Mål</h2><p class="sub">${done} av ${D.GOALS.length} mål nådd. Hvert mål gir en pengebelønning.</p><div class="progress"><i style="width:${done/D.GOALS.length*100}%"></i></div>
+    <div class="goals">${D.GOALS.map((g,i)=>`<div class="goal ${S.goalsDone[g.id]?'done':g===next?'next':i>idx+4?'far':''}">${g===next?'▶ Neste<br>':''}${g.txt}<small>Belønning: ${kr(g.kr)}</small></div>`).join('')}</div>`, openGoals);
+}
+
+/* ---------- Regnskap ---------- */
+function openLedger(){
+  const inn = S.ledger.filter(l=>l.t==='inn'), ut = S.ledger.filter(l=>l.t==='ut');
+  const si = inn.reduce((a,l)=>a+l.kr,0), su = ut.reduce((a,l)=>a+l.kr,0);
+  const hist = S.history.slice(-14); const mx = Math.max(1,...hist.map(h=>Math.max(h.inn,h.ut)));
+  const bw = 100/Math.max(hist.length,1);
+  const svg = hist.length ? `<svg class="svgchart" viewBox="0 0 100 50" preserveAspectRatio="none">${hist.map((h,i)=>`<rect x="${i*bw+bw*.12}" y="${50-h.inn/mx*46}" width="${bw*.36}" height="${h.inn/mx*46}" fill="#3f8a3a" rx=".6"/><rect x="${i*bw+bw*.52}" y="${50-h.ut/mx*46}" width="${bw*.36}" height="${h.ut/mx*46}" fill="#c8553d" rx=".6"/>`).join('')}</svg><p class="small center">Grønn = inntekter, rød = utgifter. De siste ${hist.length} dagene.</p>` : '<p class="small">Grafen kommer etter første dag.</p>';
+  const egne = S.horses.filter(h=>h.egen);
+  const dag = egne.reduce((a,h)=>a+E.hoyDag(S,h)*E.hoyPris(S),0)/Math.max(egne.length,1);
+  openPanel(`<h2>📊 Regnskap</h2><p class="sub">Dag ${S.day}. Inntekter er penger inn, utgifter er penger ut.</p>
+    <table class="ledger">${inn.map(l=>`<tr><td>${esc(l.txt)}</td><td class="inn">+${kr(l.kr)}</td></tr>`).join('')}${ut.map(l=>`<tr><td>${esc(l.txt)}</td><td class="ut">−${kr(l.kr)}</td></tr>`).join('')}
+    <tr><td class="sum">Resultat i dag så langt</td><td class="sum ${si-su>=0?'inn':'ut'}">${si-su>=0?'+':'−'}${kr(Math.abs(si-su))}</td></tr></table>
+    <h3>Siste dager</h3>${svg}
+    <h3>💰 Hva koster en hest?</h3><div class="card small">
+      Høy: ca. ${kr(Math.round(dag))} per hest per dag<br>Flis til boksen: ${kr(E.PRIS.flis)} per dag<br>Strøm, salt og forsikring: ${kr(E.PRIS.fast)} per dag<br>
+      Hovslager: ${kr(E.PRIS.hovslager)} hver 7. dag (i virkeligheten hver 6.–8. uke)<br>Vaksine: ${kr(E.PRIS.vaksine)} én gang i året (28 spilldager)<br>Veterinær når hesten blir syk: ${kr(E.PRIS.syk.hoste)}–${kr(E.PRIS.syk.kolikk)}<br><br>
+      I virkeligheten bruker mange hesteeiere flere tusen kroner i måneden på én hest.</div>`, openLedger);
+}
+
+/* ---------- Kveld og natt ---------- */
+function openNight(tvunget){
+  const warn = [];
+  for (const h of S.horses){
+    if (h.mett<45) warn.push(`🌾 ${esc(h.name)} er sulten – gi kveldsmat!`);
+    if (h.vann<45 && !S.upg.vanning) warn.push(`💧 ${esc(h.name)} er tørst.`);
+    if (h.syk && !h.syk.behandlet) warn.push(`🤒 ${esc(h.name)} er syk og trenger veterinær.`);
+    if (h.mokk>=1) warn.push(`🧹 Boksen til ${esc(h.name)} er skitten.`);
+    if (h.glad<35) warn.push(`💔 ${esc(h.name)} er lei seg. Har hesten vært ute med de andre?`);
+  }
+  openPanel(`<h2>🌙 ${tvunget?'Klokka er 22 – dagen er over':'Vil du avslutte dagen?'}</h2>
+    ${warn.length?`<p class="sub">Sjekkliste før natta:</p><div class="card">${warn.map(w=>`<div>${w}</div>`).join('')}</div>`:`<p class="sub">Alle hestene har det fint. Godt jobbet! ✨</p>`}
+    <p class="small">Om natta står alle hestene inne i stallen.${tvunget?'':' Hvis du sover nå, hopper klokka til 22:00 – og hestene blir sultnere i mellomtiden.'}</p>
+    <div class="row">${tvunget?'':`<button class="btn ghost" data-back="1">Gå tilbake</button>`}<button class="btn big" data-sleep="1" style="background:#2c3557;box-shadow:0 3px 0 #1a2038">😴 Sov godt</button></div>`);
+  on('[data-back]', closePanel);
+  on('[data-sleep]', ()=>{
+    const rep = E.avsluttDag(S); nightAsked=false; buildWorld(); syncHorses(); save();
+    const inn = rep.poster.filter(p=>p.t==='inn'), ut = rep.poster.filter(p=>p.t==='ut');
+    openPanel(`<h2>☀️ God morgen! Dag ${S.day}</h2><p class="sub">Slik gikk dag ${rep.dag}:</p>
+      <table class="ledger">${inn.map(l=>`<tr><td>${esc(l.txt)}</td><td class="inn">+${kr(l.kr)}</td></tr>`).join('')}${ut.map(l=>`<tr><td>${esc(l.txt)}</td><td class="ut">−${kr(l.kr)}</td></tr>`).join('')}
+      <tr><td class="sum">Inntekter − utgifter</td><td class="sum ${rep.resultat>=0?'inn':'ut'}">${rep.resultat>=0?'+':'−'}${kr(Math.abs(rep.resultat))}</td></tr></table>
+      ${rep.hendelser.length?`<h3>I natt</h3><div class="card">${rep.hendelser.map(e=>`<div>${esc(e)}</div>`).join('')}</div>`:''}
+      <p>Vær i dag: <b>${VAER[S.weather]} ${{sol:'Sol',sky:'Overskyet',regn:'Regn',sno:'Snø'}[S.weather]}</b> · ${E.sesong(S)} · ${S.bookings.length} elever har bestilt ridetime.</p>
+      <p><button class="btn big" data-ok="1">Start dagen!</button></p>`);
+    on('[data-ok]', ()=>{ closePanel(); if(rep.tip) tipToast(rep.tip); });
+  });
+}
+
+/* ---------- Meny ---------- */
+function openMenu(){
+  openPanel(`<h2>⚙️ Meny</h2>
+    <h3>Gårdens navn</h3><div class="row"><input id="farmName" value="${esc(S.farm)}" maxlength="28" style="font:inherit;font-size:17px;padding:9px;border-radius:12px;border:2px solid #eadfcb;flex:1"><button class="btn" data-name="1">Lagre</button></div>
+    <h3>Slik spiller du</h3><div class="card small">
+      • <b>Dra</b> med én finger for å flytte deg rundt. <b>Klyp</b> for å zoome, og vri med to fingre.<br>
+      • <b>Trykk på en hest</b> for å stelle den, eller på et <b>område</b> for å bruke eller kjøpe det.<br>
+      • Gi høy <b>morgen og kveld</b>, slipp hestene ut <b>sammen</b>, og hold boksene rene.<br>
+      • Tjen penger på <b>ridetimer</b>, stevner, travløp og pensjonærer.<br>
+      • Boblene over hestene viser hva de trenger.<br>
+      • Spillet lagres automatisk på denne enheten.</div>
+    <h3>Start på nytt</h3><p class="small">Sletter gården din på denne enheten. Spør en voksen først!</p><button class="btn red" data-reset="1">Slett og start på nytt</button>`);
+  on('[data-name]', ()=>{ const v=$('#farmName').value.trim(); if(v){ S.farm=v; save(); updateHud(); toast('Navnet er lagret.'); } });
+  on('[data-reset]', ()=>{ if(confirm('Er du helt sikker? Hele gården blir slettet.') && confirm('Helt, helt sikker?')){ localStorage.removeItem(SAVE); location.reload(); } });
+}
+
+/* ======================= MINISPILL ======================= */
+let miniDone = null;
+function closeMini(){ $('#mini').classList.add('hidden'); miniDone=null; }
+$('#miniCancel').onclick = closeMini;
+function miniStrigle(h){
+  if (h.ren>=95){ toast(`${h.name} er allerede ren og fin!`,'info'); return; }
+  if (E.igjen(S)<E.TID.strigle){ toast('Det er for sent i dag.','bad'); return; }
+  $('#miniTitle').textContent = `🪮 Strigle ${h.name}`;
+  $('#miniHelp').textContent = 'Dra fingeren over møkkflekkene til pelsen er ren!';
+  const st = $('#miniStage'); st.innerHTML = `<img src="${IMG(h.breed)}"><canvas></canvas>`;
+  $('#mini').classList.remove('hidden');
+  const cv = st.querySelector('canvas'), r = st.getBoundingClientRect();
+  cv.width = 400; cv.height = 400; const x = cv.getContext('2d');
+  const spots = Math.round(8 + (100-h.ren)/6);
+  for (let i=0;i<spots;i++){
+    const cx = 120+Math.random()*190, cy = 140+Math.random()*130, rr = 14+Math.random()*16;
+    x.fillStyle = ['#6b4a2e','#7d5a3a','#5a3f28'][i%3]; x.globalAlpha=.85;
+    x.beginPath(); for(let k=0;k<9;k++){ const a=k/9*Math.PI*2, d=rr*(.7+Math.random()*.5); k?x.lineTo(cx+Math.cos(a)*d,cy+Math.sin(a)*d):x.moveTo(cx+Math.cos(a)*d,cy+Math.sin(a)*d);} x.fill();
+  }
+  x.globalAlpha=1;
+  const total = countDirt(x); let finished=false;
+  const brush = e=>{
+    const b = cv.getBoundingClientRect(); const px=(e.clientX-b.left)/b.width*400, py=(e.clientY-b.top)/b.height*400;
+    x.globalCompositeOperation='destination-out'; x.beginPath(); x.arc(px,py,26,0,Math.PI*2); x.fill(); x.globalCompositeOperation='source-over';
+  };
+  let down=false, n=0;
+  cv.onpointerdown = e=>{ down=true; cv.setPointerCapture(e.pointerId); brush(e); };
+  cv.onpointermove = e=>{ if(!down) return; brush(e); if(++n%6===0) check(); };
+  cv.onpointerup = ()=>{ down=false; check(); };
+  function check(){
+    const left = countDirt(x), p = total? 1-left/total : 1;
+    $('#miniProg').style.width = Math.min(100,p/0.9*100)+'%';
+    if (p>=0.9 && !finished){ finished=true; setTimeout(()=>{ closeMini(); after(E.act(S,h.id,'strigle')); refresh(); }, 250); }
+  }
+  $('#miniProg').style.width='0%';
+}
+function countDirt(x){ const d=x.getImageData(0,0,400,400).data; let n=0; for(let i=3;i<d.length;i+=16) if(d[i]>40) n++; return n; }
+function miniHover(h){
+  if (E.igjen(S)<E.TID.hover){ toast('Det er for sent i dag.','bad'); return; }
+  $('#miniTitle').textContent = `🪨 Rens hovene til ${h.name}`;
+  $('#miniHelp').textContent = 'Trykk på hver hov til alle steinene er borte. Løft hoven forsiktig!';
+  const navn = ['Venstre fram','Høyre fram','Venstre bak','Høyre bak'];
+  const left = navn.map(()=>1+Math.floor(Math.random()*3));
+  const st=$('#miniStage'); st.innerHTML = `<div class="hooves">${navn.map((n,i)=>`<button class="hoof" data-i="${i}"><span class="st">${'🪨'.repeat(left[i])}</span>${n}</button>`).join('')}</div>`;
+  $('#mini').classList.remove('hidden'); $('#miniProg').style.width='0%';
+  const tot = left.reduce((a,b)=>a+b,0);
+  st.querySelectorAll('.hoof').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i; if(left[i]<=0) return; left[i]--;
+    b.querySelector('.st').textContent = left[i]? '🪨'.repeat(left[i]) : '✨'; if(!left[i]) b.classList.add('ok');
+    const rest = left.reduce((a,b)=>a+b,0); $('#miniProg').style.width = (1-rest/tot)*100+'%';
+    if (!rest) setTimeout(()=>{ closeMini(); after(E.act(S,h.id,'hover')); refresh(); }, 300);
+  });
+}
+
+/* ======================= START ======================= */
+const STARTERE = ['fjordhest','nordlandshest','dolahest','shetland','haflinger','islandshest'];
+function startScreen(){
+  const har = load();
+  const card = $('#startCard');
+  card.innerHTML = `<h1 class="logo">Mykje <span>Hester</span></h1><p class="sub" style="margin-top:6px">Bygg din egen hestegård! Stell hestene, hold ridetimer og bli den beste gården i fjorden.</p>
+    ${har?`<p><button class="btn big" data-cont="1">▶ Fortsett ${esc(har.farm)} (dag ${har.day})</button></p><p><button class="btn ghost" data-new="1">Ny gård</button></p>`:`<p><button class="btn big" data-new="1">Start en ny gård</button></p>`}`;
+  card.querySelector('[data-cont]')?.addEventListener('click', ()=>begin(har));
+  card.querySelector('[data-new]').addEventListener('click', ()=>{ if(har && !confirm('Den gamle gården blir slettet. Vil du starte på nytt?')) return; newGameForm(); });
+}
+function newGameForm(){
+  const valgt = ['fjordhest','nordlandshest'];
+  const card = $('#startCard');
+  const draw = ()=>{
+    card.innerHTML = `<h1 class="logo" style="font-size:32px">Ny <span>hestegård</span></h1>
+      <p style="text-align:left;margin:14px 0 4px"><b>Hva skal gården hete?</b></p><input id="nf" value="Mykje Hestegård" maxlength="28">
+      <p style="text-align:left;margin:14px 0 0"><b>Velg to hester å starte med</b> <span class="small">(hester trenger selskap!)</span></p>
+      <div class="pickh">${STARTERE.map(id=>`<button data-p="${id}" class="${valgt.includes(id)?'on':''}"><img src="${IMG(id)}" alt="">${E.B[id].navn.replace('/lyngshest','')}</button>`).join('')}</div>
+      <div class="row" style="justify-content:center">${valgt.map((id,i)=>`<label style="flex:1;min-width:140px;text-align:left"><span class="small">Navn på ${E.B[id].navn.replace('/lyngshest','').toLowerCase()}en</span><input id="nn${i}" value="${['Bris','Tussi'][i]}" maxlength="16"></label>`).join('')}</div>
+      <p style="margin-top:16px"><button class="btn big" data-go="1">Bygg gården! 🐴</button></p>`;
+    card.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const id=b.dataset.p; if(valgt.includes(id)) return; valgt.shift(); valgt.push(id); draw(); });
+    card.querySelector('[data-go]').onclick=()=>{
+      const farm = $('#nf').value.trim()||'Mykje Hestegård';
+      const horses = valgt.map((id,i)=>({breed:id, name:($('#nn'+i).value.trim()||['Bris','Tussi'][i]).slice(0,16)}));
+      localStorage.removeItem(SAVE);
+      const s = E.nyttSpill({farm, horses}); begin(s, true);
+    };
+  };
+  draw();
+}
+function begin(state, fresh){
+  S = state; H3.forEach(o=>scene.remove(o.g)); H3.clear();
+  $('#start').classList.add('hidden'); $('#hud').classList.remove('hidden'); $('#dock').classList.remove('hidden');
+  buildWorld(); syncHorses(); updateHud(); updateSky(); save();
+  if (fresh){
+    openPanel(`<h2>Velkommen til ${esc(S.farm)}! 🐴</h2>
+      <p>Du har to hester, en stall, et høyloft, en luftegård og en ridebane. Og ${kr(S.money)} i kassa.</p>
+      <div class="card">
+        <b>Slik tar du vare på hestene:</b><br>
+        🌾 Gi høy morgen og kveld<br>💧 Sørg for at de har vann<br>🪵 Slipp dem ut sammen – hester er flokkdyr<br>🪮 Strigle dem og hold boksen ren<br>🧲 Husk hovslager og 💉 vaksine
+      </div>
+      <p class="small">Tjen penger på ridetimer: trykk på ridebanen. Trykk på en hest for å se hvordan den har det.</p>
+      <p><button class="btn big" data-ok="1">La oss begynne!</button></p>`);
+    on('[data-ok]', closePanel);
+  }
+}
+startScreen();
+requestAnimationFrame(loop);
+window.__mh = { get S(){return S;}, E, openHorse, openArea, openLibrary, openMarket, openBookings, openNight, openLedger, openGoals, closePanel, buildWorld, syncHorses, camera, controls };
+
+</script>
+</body>
+</html>
