@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Mykje Kort – kabaler og kortspill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='10' y='4' width='80' height='92' rx='12' fill='%23fff8ea'/%3E%3Cpath fill='%23c8102e' d='M50 80C28 62 18 50 18 38c0-10 8-17 17-17 7 0 12 4 15 10 3-6 8-10 15-10 9 0 17 7 17 17 0 12-10 24-32 42z'/%3E%3C/svg%3E">
+<style>:root{--ink:#1f2340;--cream:#fff8ea;--gold:#f2b134;--coral:#ef6f6c;--sky:#4f9dde;--mint:#5cbf8a;--table:radial-gradient(ellipse at 50% 30%,#2a8a5a 0%,#145c38 60%,#0b3d25 100%);--r:18px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;color:var(--ink);background:#0e3b27;overscroll-behavior:none}
+body{background:var(--table);background-attachment:fixed}
+h1,h2,h3,h4,.btn,.chip,.fred{font-family:'Fredoka','Atkinson Hyperlegible',sans-serif}
+button{font:inherit;cursor:pointer}
+.screen{display:none;position:fixed;inset:0;flex-direction:column}
+.screen.active{display:flex}
+[hidden]{display:none!important}
+
+/* knapper */
+.btn{border:0;border-radius:999px;padding:.6em 1.2em;font-weight:600;font-size:1rem;background:#fff;color:var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.18);transition:transform .1s}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.btn.primary{background:var(--gold);color:#3a2500}
+.btn.ghost{background:rgba(255,255,255,.14);color:#fff;box-shadow:none;border:2px solid rgba(255,255,255,.35)}
+.modal .btn.ghost,.tile .btn.ghost{background:transparent;color:var(--ink);border-color:#d9d2c2}
+.btn:disabled{opacity:.45}
+.mini{border:0;border-radius:8px;background:#eee;padding:2px 8px;font-size:.8rem;margin-left:auto}
+.ibtn{border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:14px;min-width:46px;height:46px;font-size:1.05rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;font-family:'Fredoka',sans-serif}
+.ibtn:active{background:rgba(255,255,255,.3)}
+.chip{border:2px solid rgba(255,255,255,.4);background:transparent;color:#fff;border-radius:999px;padding:.3em .8em;font-size:.9rem}
+.chip.on{background:#fff;color:var(--ink);border-color:#fff}
+
+/* ---------- HJEM ---------- */
+#home{overflow-y:auto;color:#fff}
+.hhead{display:flex;align-items:center;gap:14px;padding:18px clamp(14px,4vw,40px) 6px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo .suits4{display:grid;grid-template-columns:1fr 1fr;gap:2px;width:52px;height:52px;background:var(--cream);border-radius:14px;padding:7px;transform:rotate(-6deg);box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.logo .suits4 svg{width:100%;height:100%}
+.logo h1{margin:0;font-size:clamp(1.8rem,4vw,2.6rem);letter-spacing:.5px;text-shadow:0 3px 0 rgba(0,0,0,.25)}
+.logo small{display:block;font-family:'Atkinson Hyperlegible';font-weight:400;font-size:.95rem;opacity:.85;text-shadow:none}
+.hhead .sp{flex:1}
+.backlink{text-decoration:none}
+@media (max-width:600px){.backlink .lbl{display:none}}
+#hello{font-family:'Fredoka';font-size:1.1rem;opacity:.9}
+.sect{padding:6px clamp(14px,4vw,40px) 10px}
+.sect h2{font-size:1.35rem;margin:14px 0 10px;display:flex;align-items:center;gap:10px}
+.sect h2 span{font-size:.95rem;font-weight:400;opacity:.8;font-family:'Atkinson Hyperlegible'}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.tile{background:var(--cream);color:var(--ink);border-radius:var(--r);padding:16px 16px 14px;box-shadow:0 6px 0 rgba(0,0,0,.2);display:flex;flex-direction:column;position:relative;overflow:hidden}
+.tile h3{margin:6px 0 2px;font-size:1.35rem}
+.tile p{margin:0 0 8px;color:#5a5c75;font-size:.95rem}
+.tile .meta{display:flex;justify-content:space-between;font-size:.85rem;color:#6b6d85;margin-bottom:10px}
+.tile .meta span:last-child{color:#d89a12;letter-spacing:2px}
+.tbtns{display:flex;gap:8px;margin-top:auto}
+.tbtns .btn{flex:1;padding:.55em .6em}
+.minifan{height:96px;position:relative;margin:0 auto 4px;width:140px}
+.minifan .mc{position:absolute;left:50%;bottom:0;width:58px;height:84px;margin-left:-29px;border-radius:7px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.25);transform-origin:50% 120%;transform:rotate(calc((var(--i) - 1) * 16deg))}
+.minifan .mc svg{width:100%;height:100%;display:block}
+.tile:hover .minifan .mc{transform:rotate(calc((var(--i) - 1) * 22deg))}
+.minifan .mc{transition:transform .25s}
+.foot{padding:20px clamp(14px,4vw,40px) 30px;opacity:.7;font-size:.85rem}
+
+/* ---------- KORT ---------- */
+.card{position:absolute;left:0;top:0;width:var(--cw);height:var(--ch);border-radius:calc(var(--cw) * .09);transition:transform .3s cubic-bezier(.2,.8,.3,1),opacity .4s,box-shadow .2s;will-change:transform;touch-action:none;user-select:none;-webkit-user-select:none}
+.card .face,.card .back{position:absolute;inset:0;border-radius:inherit;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.08)}
+.card .face svg{width:100%;height:100%;display:block}
+.card .back{background-size:112% auto,auto;background-position:center;border:calc(var(--cw) * .045) solid #fff}
+.card .face{display:none}.card.up .face{display:block}.card.up .back{display:none}
+.card .val{display:none}
+.show-vals .card.up .val{display:flex;position:absolute;left:50%;transform:translateX(-50%);top:-11px;min-width:24px;height:24px;border-radius:12px;background:var(--ink);color:#fff;font:700 13px 'Fredoka';align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.noanim .card{transition:none!important}
+.card.dragging{transition:none;filter:drop-shadow(0 12px 14px rgba(0,0,0,.4))}
+.card.hint .face,.card.hint .back{box-shadow:0 0 0 4px var(--gold),0 0 22px 6px rgba(242,177,52,.9)}
+.card.hint2 .face,.slot.hint2{box-shadow:0 0 0 4px #7fe0ff,0 0 22px 6px rgba(127,224,255,.9)}
+.card.sel .face{box-shadow:0 0 0 4px var(--sky),0 0 18px 4px rgba(79,157,222,.8)}
+.card.sel{translate:0 -6px}
+.card.canflip .back{box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 14px 3px rgba(242,177,52,.85);animation:flipglow 1.3s infinite}
+@keyframes flipglow{50%{box-shadow:0 0 0 3px #fff,0 0 22px 6px rgba(242,177,52,1)}}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{translate:0}20%{translate:-6px}40%{translate:6px}60%{translate:-4px}80%{translate:4px}}
+
+/* ---------- KABAL ---------- */
+#sol{background:var(--table)}
+.topbar{display:flex;align-items:center;gap:8px;padding:8px 10px;color:#fff;flex-wrap:wrap;background:rgba(0,0,0,.18)}
+.topbar h2{margin:0 6px;font-size:1.3rem}
+.topbar .sp{flex:1}
+#solHud{font-family:'Fredoka';opacity:.9;font-size:.95rem;min-width:150px}
+#solOpts{display:flex;gap:6px}
+#solBoard{flex:1;position:relative;min-height:0}
+.board{position:absolute;inset:6px 8px 8px;}
+.slot{position:absolute;left:0;top:0;width:var(--cw);height:var(--ch);border-radius:calc(var(--cw) * .09);border:2px dashed rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font:600 calc(var(--cw) * .32) 'Fredoka';background:rgba(255,255,255,.04)}
+.slot.ghost{opacity:0}
+.slot.cell{background:rgba(0,0,0,.12)}
+.pyramide .card.up:not(.free){filter:brightness(.78) saturate(.8)}
+#btnAuto{position:absolute;right:18px;bottom:18px;z-index:2000}
+#bubble{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);background:#fff;color:var(--ink);font:600 1.15rem 'Fredoka';padding:10px 20px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.3);opacity:0;transition:.25s;pointer-events:none;z-index:3000}
+#bubble.show{opacity:1;transform:translate(-50%,0)}
+#bubble.good{background:var(--mint);color:#fff}
+
+/* ---------- TOAST / MODAL ---------- */
+#toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-80px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:14px;font-size:1rem;max-width:90vw;text-align:center;transition:.3s;z-index:5000;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+#toast.show{transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;background:rgba(10,20,30,.55);display:none;align-items:center;justify-content:center;z-index:4000;padding:14px}
+.modal.open{display:flex}
+#modalBox{background:var(--cream);border-radius:22px;padding:22px 24px;max-width:560px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 14px 40px rgba(0,0,0,.4);animation:pop .25s}
+@keyframes pop{from{transform:scale(.9);opacity:0}}
+#modalBox h2{margin:0 0 10px}
+#modalBox h4{margin:16px 0 8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.muted{color:#6b6d85}.small{font-size:.85rem}.big{font:600 1.4rem 'Fredoka';margin:6px 0}
+.choice{background:#fff;border-radius:16px;padding:12px 14px;margin:10px 0}
+.choice h4{margin:0!important}
+.choice .row{margin-top:10px}
+.close{margin-top:10px}
+.codein,.namein{width:100%;font:600 1.3rem 'Fredoka';padding:12px 14px;border-radius:14px;border:2px solid #d9d2c2;margin:6px 0;background:#fff}
+.codein{text-transform:uppercase;letter-spacing:.5em;text-align:center;font-size:2rem}
+.themes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.theme{border:3px solid transparent;background:#fff;border-radius:14px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.85rem}
+.theme.on{border-color:var(--gold)}
+.tprev{width:100%;height:90px;border-radius:10px;position:relative}
+.tprev .tb,.tprev .tf{position:absolute;width:44px;height:64px;top:13px;border-radius:5px;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,.35)}
+.tprev .tb{left:calc(50% - 44px);transform:rotate(-8deg);background-size:112% auto,auto;background-position:center;border:2px solid #fff}
+.tprev .tf{left:calc(50% - 4px);transform:rotate(8deg)}
+.tprev .tf svg{width:100%;height:100%;display:block}
+.tog{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:.98rem}
+.tog input{width:22px;height:22px;flex:none;accent-color:#d89a12}
+.suits{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.suitbtn{background:#fff;border:3px solid #eee;border-radius:16px;padding:12px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font:600 1rem 'Fredoka'}
+.suitbtn svg{width:48px;height:48px;fill:currentColor}
+.suitbtn:active{border-color:var(--gold)}
+.rank{list-style:none;padding:0;margin:10px 0}
+.rank li{display:flex;gap:12px;align-items:center;background:#fff;border-radius:14px;padding:10px 14px;margin:6px 0;font-size:1.1rem}
+.rank li span{font-size:1.5rem}.rank li em{margin-left:auto;color:#6b6d85;font-style:normal}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:4500;display:none}
+
+/* ---------- OPPLÆRING ---------- */
+#tut{position:fixed;inset:0;background:rgba(10,20,30,.7);display:none;align-items:center;justify-content:center;z-index:3500;padding:12px}
+#tut.open{display:flex}
+.tutbox{background:var(--cream);border-radius:24px;width:min(760px,100%);max-height:96vh;overflow:auto;box-shadow:0 14px 40px rgba(0,0,0,.45);padding:16px 18px;animation:pop .25s}
+.tuthead{display:flex;align-items:center;gap:10px}
+.tuthead h2{margin:0;flex:1;font-size:1.3rem}
+#tutStage{position:relative;width:100%;aspect-ratio:100/62;border-radius:16px;overflow:hidden;margin:12px 0;box-shadow:inset 0 0 30px rgba(0,0,0,.35)}
+#tutStage .card{transition:transform .65s cubic-bezier(.3,.7,.3,1),opacity .5s}
+#tutStage.noanim .card,#tutStage.noanim .finger{transition:none!important}
+.tmark{position:absolute;border:2px dashed rgba(255,255,255,.55);border-radius:10px;color:rgba(255,255,255,.85);font:600 1rem 'Fredoka';display:flex;align-items:center;justify-content:center;text-align:center}
+.finger{position:absolute;left:0;top:0;font-size:clamp(28px,5vw,44px);z-index:999;transition:transform .55s cubic-bezier(.3,.7,.3,1),opacity .3s;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4));pointer-events:none}
+#tutH{margin:2px 0 4px;font-size:1.25rem}
+#tutX{margin:0;font-size:1.12rem;line-height:1.45;min-height:3em}
+.tutnav{display:flex;align-items:center;gap:10px;margin-top:12px}
+#tutDots{flex:1;display:flex;gap:6px;justify-content:center}
+#tutDots i{width:10px;height:10px;border-radius:5px;background:#d9d2c2}
+#tutDots i.on{background:var(--gold);width:26px}
+.skipbtn{background:#fff;border:2px solid #d9d2c2;box-shadow:none;font-size:.9rem;padding:.45em .9em}
+@media (max-width:520px){.skipbtn{font-size:.8rem;padding:.4em .7em}}
+.xbtn{border:0;background:#eee;border-radius:12px;width:40px;height:40px;font-size:1.2rem}
+
+/* ---------- LOBBY ---------- */
+#lobby{align-items:center;justify-content:flex-start;overflow:auto;color:#fff;padding-bottom:30px}
+.lobbybox{background:var(--cream);color:var(--ink);border-radius:24px;padding:20px 24px;width:min(720px,94vw);margin-top:16px;box-shadow:0 8px 0 rgba(0,0,0,.2)}
+.lgrid{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+.codebig{font:700 clamp(3rem,10vw,5rem) 'Fredoka';letter-spacing:.15em;color:var(--ink);line-height:1}
+#lobbyQR{width:170px;height:170px;background:#fff;border-radius:14px;padding:6px}
+#lobbyQR svg{width:100%;height:100%}
+#lobbyPlayers{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#lobbyPlayers li{background:#fff;border-radius:14px;padding:10px;display:flex;align-items:center;gap:10px}
+#lobbyPlayers li.empty{opacity:.5;border:2px dashed #ccc;background:transparent}
+.av{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font:700 1rem 'Fredoka';background:#bbb;flex:none;text-transform:uppercase}
+.note{background:#fff3cd;border-radius:12px;padding:10px 12px;font-size:.9rem;margin-top:12px}
+
+/* ---------- BORD (flerspiller) ---------- */
+#table{background:var(--table)}
+#tarea{flex:1;position:relative;min-height:0}
+#opps{position:absolute;inset:0;pointer-events:none}
+.opp{position:absolute;pointer-events:auto;background:rgba(255,255,255,.92);border-radius:18px;padding:8px 12px;min-width:170px;max-width:240px;box-shadow:0 4px 0 rgba(0,0,0,.2);transition:box-shadow .2s,transform .2s}
+.opp.top{top:10px;left:50%;transform:translateX(-50%)}
+.opp.left{left:10px;top:30%}
+.opp.right{right:10px;top:30%}
+.opp.turn{box-shadow:0 0 0 4px var(--gold),0 0 24px rgba(242,177,52,.8)}
+.opp.askable{cursor:pointer;animation:askpulse 1s infinite}
+@keyframes askpulse{50%{box-shadow:0 0 0 5px var(--sky),0 0 24px rgba(79,157,222,.9)}}
+.opp .who{display:flex;align-items:center;gap:8px}
+.opp .who b{font-family:'Fredoka';font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opp .cnt{margin-left:auto;font-size:.85rem;color:#6b6d85;white-space:nowrap}
+.opp .fan{display:flex;height:40px;margin-top:6px;padding-left:4px}
+.opp .fan i{width:26px;height:38px;border-radius:4px;margin-left:-14px;border:2px solid #fff;background-size:112% auto,auto;background-position:center;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.opp .fan i:first-child{margin-left:0}
+.books{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;font-size:.8rem}
+.books span,.mybooks span{background:var(--mint);color:#fff;border-radius:6px;padding:1px 6px;font:600 .85rem 'Fredoka'}
+.books em{color:#888}
+.safe{margin-top:6px;font-family:'Fredoka';color:#2e8a5a}
+#center{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);display:flex;gap:26px;align-items:center;justify-content:center;flex-wrap:wrap;width:min(92%,640px)}
+.pilebox{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;width:var(--cw);}
+.pilebox .card{position:relative}
+.pilebox.wide{width:auto}
+#table[data-game=fisk] #center{flex-direction:column;gap:10px}
+.pilebox label{white-space:nowrap;color:#fff;font:600 .95rem 'Fredoka';opacity:.85}
+.stackback{width:var(--cw);height:var(--ch);border-radius:calc(var(--cw) * .09);border:calc(var(--cw) * .045) solid #fff;background-size:112% auto,auto;background-position:center;box-shadow:2px 2px 0 #ddd,4px 4px 0 #bbb,0 6px 10px rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center;cursor:pointer}
+.stackback span{background:rgba(0,0,0,.6);color:#fff;border-radius:10px;padding:0 8px;margin-bottom:6px;font:600 .9rem 'Fredoka'}
+.stackback.can{animation:glow 1.4s infinite}
+@keyframes glow{50%{box-shadow:2px 2px 0 #ddd,4px 4px 0 #bbb,0 0 0 4px var(--gold),0 0 22px rgba(242,177,52,.9)}}
+.drop-in{animation:dropin .35s}
+@keyframes dropin{from{transform:translateY(-40px) rotate(-10deg) scale(1.1);opacity:.4}}
+.suitbadge{background:#fff;border-radius:999px;padding:6px 14px;font:700 1.1rem 'Fredoka';display:flex;align-items:center;gap:6px;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.suitbadge svg{width:22px;height:22px;fill:currentColor}
+.pond{position:relative;width:calc(var(--cw) * 1.9);height:calc(var(--ch) * .9)}
+.pond i{position:absolute;width:calc(var(--cw) * .62);height:calc(var(--ch) * .62);border-radius:6px;border:2px solid #fff;background-size:112% auto,auto;background-position:center;box-shadow:0 2px 4px rgba(0,0,0,.35)}
+.pond i:nth-child(7n+1){left:8%;top:10%;transform:rotate(-20deg)}.pond i:nth-child(7n+2){left:30%;top:2%;transform:rotate(12deg)}.pond i:nth-child(7n+3){left:52%;top:14%;transform:rotate(-8deg)}.pond i:nth-child(7n+4){left:18%;top:32%;transform:rotate(25deg)}.pond i:nth-child(7n+5){left:44%;top:36%;transform:rotate(-30deg)}.pond i:nth-child(7n+6){left:62%;top:30%;transform:rotate(18deg)}.pond i:nth-child(7n){left:34%;top:20%;transform:rotate(-2deg)}
+.mybooks{color:#fff;font-size:.95rem;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.picklabel{width:100%;text-align:center;color:#fff;font:600 1.2rem 'Fredoka';text-shadow:0 2px 0 rgba(0,0,0,.3)}
+.pickfan{display:flex;justify-content:center;padding:10px 20px}
+.pickcard{width:calc(var(--cw) * .85);height:calc(var(--ch) * .85);border-radius:8px;border:3px solid #fff;background-size:112% auto,auto;background-position:center;margin-left:calc(var(--cw) * -.38);box-shadow:0 3px 8px rgba(0,0,0,.35);transition:transform .2s}
+.pickcard:first-child{margin-left:0}
+.pickfan.can .pickcard{cursor:pointer}
+.pickfan.can .pickcard:hover,.pickfan.can .pickcard:active{transform:translateY(-16px)}
+.pickcard.pulled{transform:translateY(60px) scale(.8)!important;opacity:.3}
+#tbottom{position:relative;padding:4px 10px 10px;display:flex;flex-direction:column;align-items:center;gap:4px}
+#banner{color:#fff;font:600 1.15rem 'Fredoka';background:rgba(0,0,0,.25);padding:6px 16px;border-radius:999px;text-align:center}
+#banner.mine{background:var(--gold);color:#3a2500;animation:pop .3s}
+#log{color:#fff;opacity:.85;font-size:.9rem;text-align:center;min-height:2.6em;max-width:94vw}
+#log div:not(:last-child){opacity:.6;font-size:.85rem}
+#hand{position:relative;width:100%;height:calc(var(--ch) * 1.22)}
+#hand .card{left:calc(50% - var(--cw) / 2 + (var(--k) - (var(--n) - 1) / 2) * var(--step));top:calc(var(--ch) * .1);transform:rotate(calc((var(--k) - (var(--n) - 1) / 2) * var(--rot)));transform-origin:50% 140%;cursor:pointer}
+#hand .card.new{animation:dealin .35s backwards}
+@keyframes dealin{from{opacity:0;translate:0 40px}}
+#hand .card.playable{top:calc(var(--ch) * -.02)}
+#hand .card.playable .face{box-shadow:0 0 0 3px var(--gold),0 0 16px rgba(242,177,52,.8)}
+#hand .card.picked{top:calc(var(--ch) * -.06)}
+#hand .card.picked .face{box-shadow:0 0 0 4px var(--sky),0 0 18px rgba(79,157,222,.9)}
+#hand .card.fly{transition:transform .2s,opacity .2s;opacity:0}
+.mebar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
+#myName{color:#fff;font:600 1rem 'Fredoka';display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.2);padding:4px 12px 4px 4px;border-radius:999px}
+#myName.turn{box-shadow:0 0 0 3px var(--gold)}
+#myName .av{width:28px;height:28px;font-size:.9rem}
+
+@media (max-width:700px){.opp{min-width:130px;padding:6px 8px}.opp .fan{display:none}.topbar h2{font-size:1.05rem}#solHud{min-width:0;font-size:.8rem}.lgrid{grid-template-columns:1fr}#lobbyQR{margin:auto}}
+@media (max-height:620px){.opp.left,.opp.right{top:8px}}
+
+/* Idiot */
+.tcards{display:flex;gap:6px;margin-top:6px}
+.tslot{position:relative;width:34px;height:49px}
+.tslot.empty{border:1.5px dashed #ccc;border-radius:5px}
+.tdown,.tup{position:absolute;inset:0;border-radius:5px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.tdown{border:2px solid #fff;background-size:112% auto,auto;background-position:center}
+.tup{top:-6px;left:4px;right:-4px;bottom:6px}
+.tup svg{width:100%;height:100%;display:block}
+#mytable{display:flex;justify-content:center;margin-top:12px}
+.tcards.mine{gap:12px;margin:0}
+.tcards.mine .tslot{width:calc(var(--cw) * .7);height:calc(var(--ch) * .7)}
+.tcards.mine .tup{top:-10px;left:6px;right:-6px;bottom:10px;cursor:pointer}
+.tcards.mine .tdown{cursor:pointer}
+.tup.can,.tdown.can{box-shadow:0 0 0 3px var(--gold),0 0 14px rgba(242,177,52,.9);animation:glow2 1.4s infinite}
+@keyframes glow2{50%{box-shadow:0 0 0 3px var(--gold),0 0 22px rgba(242,177,52,1)}}
+.tup.swappable{box-shadow:0 0 0 2px rgba(255,255,255,.9)}
+.tup.picked{box-shadow:0 0 0 4px var(--sky)!important}
+.tdown.flipme{transform:scale(1.15) rotateY(90deg);transition:transform .2s}
+.pilebox .card.under{position:absolute;top:0;left:0;transform:rotate(-8deg) translate(-6px,2px);filter:brightness(.92)}
+.emptypile{width:var(--cw);height:var(--ch);border-radius:calc(var(--cw) * .09);border:2px dashed rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font:600 1rem 'Fredoka'}
+.idinfo{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.idneed{font-size:.95rem!important}
+.burned{color:#fff;font:600 .95rem 'Fredoka';opacity:.9}
+#table[data-game=idiot] #hand{height:calc(var(--ch) * 1.12)}
+#table[data-game=idiot] .tcards:not(.mine) .tslot{width:30px;height:43px}
+#table[data-game=idiot] .opp{padding:6px 10px}
+#table[data-game=idiot] .opp .fan{height:30px;margin-top:4px}
+#table[data-game=idiot] .opp .fan i{width:20px;height:29px;margin-left:-11px}
+#table[data-game=idiot] .tcards.mine .tslot{width:calc(var(--cw) * .62);height:calc(var(--ch) * .62)}
+#table[data-game=idiot] #tarea{display:flex;flex-direction:column;overflow:hidden}
+#table[data-game=idiot] #opps{position:static;display:flex;justify-content:space-between;gap:8px;padding:8px 10px 0}
+#table[data-game=idiot] .opp{position:static;transform:none}
+#table[data-game=idiot] .opp.top{order:2}#table[data-game=idiot] .opp.left{order:1}#table[data-game=idiot] .opp.right{order:3}
+#table[data-game=idiot] #center{position:static;transform:none;margin:auto;flex-wrap:nowrap}
+#table[data-game=idiot] #opps:has(.opp:only-child){justify-content:center}
+@media (max-height:760px){#log div:not(:last-child){display:none}#log{min-height:1.3em}}
+</style>
+</head>
+<body>
+
+<!-- ============ HJEM ============ -->
+<section class="screen active" id="home">
+  <header class="hhead">
+    <a class="ibtn backlink" href="index.html" title="Tilbake til Mykje spill">← <span class="lbl">Mykje spill</span></a>
+    <div class="logo">
+      <div class="suits4"><svg viewBox="0 0 100 100" fill="#1b1b2f"><path d="M50 4C31 30 6 43 6 62c0 14 11 22 23 22 8 0 15-4 18-11-1 10-6 18-14 23h34c-8-5-13-13-14-23 3 7 10 11 18 11 12 0 23-8 23-22C94 43 69 30 50 4z"/></svg><svg viewBox="0 0 100 100" fill="#c8102e"><path d="M50 90C22 66 4 48 4 29 4 14 15 4 28 4c10 0 18 6 22 15 4-9 12-15 22-15 13 0 24 10 24 25 0 19-18 37-46 61z"/></svg><svg viewBox="0 0 100 100" fill="#c8102e"><path d="M50 2 88 50 50 98 12 50z"/></svg><svg viewBox="0 0 100 100" fill="#1b1b2f"><circle cx="50" cy="27" r="20"/><circle cx="27" cy="58" r="20"/><circle cx="73" cy="58" r="20"/><circle cx="50" cy="50" r="12"/><path d="M45 55c0 18-5 31-13 41h36c-8-10-13-23-13-41z"/></svg></div>
+      <h1>Mykje Kort<small>Kabaler og kortspill</small></h1>
+    </div>
+    <div class="sp"></div>
+    <span id="hello"></span>
+    <button class="btn" id="btnJoin">📱 Bli med i rom</button>
+    <button class="ibtn" id="btnSettings" title="Innstillinger og kortdesign">⚙️</button>
+  </header>
+  <div class="sect"><h2>🃏 Kabal <span>– spill alene</span></h2><div class="tiles" id="soloTiles"></div></div>
+  <div class="sect"><h2>👥 Spill sammen <span>– 2 til 4 spillere, hver sin iPad eller mot datamaskinen</span></h2><div class="tiles" id="multiTiles"></div></div>
+  <div class="foot"><a href="index.html" style="color:inherit">← Tilbake til Mykje spill</a> · Kortdesign velger du under ⚙️</div>
+</section>
+
+<!-- ============ KABAL ============ -->
+<section class="screen" id="sol">
+  <div class="topbar">
+    <button class="ibtn" id="solBack" title="Til menyen">←</button>
+    <h2 id="solTitle">Kabal</h2>
+    <div id="solOpts"></div>
+    <div class="sp"></div>
+    <span id="solHud"></span>
+    <button class="ibtn" id="solHint" title="Hint">💡 <span class="lbl">Hint</span></button>
+    <button class="ibtn" id="solUndo" title="Angre">↶ <span class="lbl">Angre</span></button>
+    <button class="ibtn" id="solHelp" title="Lær spillet">?</button>
+    <button class="ibtn" id="solNew" title="Nytt spill">⟳ <span class="lbl">Nytt</span></button>
+  </div>
+  <div id="solBoard"><button class="btn primary" id="btnAuto" hidden>✨ Fullfør automatisk</button></div>
+</section>
+
+<!-- ============ LOBBY ============ -->
+<section class="screen" id="lobby">
+  <div class="topbar" style="width:100%"><button class="ibtn" id="lobbyBack">←</button><h2>Rom for <span id="lobbyGame"></span></h2></div>
+  <div class="lobbybox">
+    <div class="lgrid">
+      <div>
+        <p class="muted" style="margin:0">Romkode – skriv denne på de andre iPadene:</p>
+        <div class="codebig" id="lobbyCode">----</div>
+        <p class="muted small">eller skann QR-koden · <span id="lobbyUrl"></span></p>
+      </div>
+      <div id="lobbyQR"></div>
+    </div>
+    <h3>Spillere</h3>
+    <ul id="lobbyPlayers"></ul>
+    <div id="lobbyHost" class="row"><button class="btn" id="btnAddBot">🤖 Legg til datamaskin</button><button class="btn primary" id="btnBegin">▶ Start spillet</button></div>
+    <p id="lobbyWait" class="muted">⏳ Venter på at verten starter spillet …</p>
+    <div class="note" id="lobbyLocalNote" hidden>⚠️ Firebase er ikke koblet til ennå, så rommet virker bare i andre faner i samme nettleser. Lim inn Firebase-oppsettet i koden for å spille på flere iPader.</div>
+  </div>
+</section>
+
+<!-- ============ BORD ============ -->
+<section class="screen" id="table">
+  <div class="topbar"><button class="ibtn" id="tblBack">←</button><h2 id="tblTitle"></h2><div class="sp"></div><button class="ibtn" id="tblHelp" title="Lær spillet">? Regler</button></div>
+  <div id="tarea"><div id="opps"></div><div id="center"></div></div>
+  <div id="tbottom">
+    <div id="banner"></div>
+    <div id="log"></div>
+    <div id="mytable" hidden></div>
+    <div id="hand"></div>
+    <div class="mebar"><span id="myName"></span><button class="btn primary" id="btnAsk" hidden></button><button class="btn" id="btnPass" hidden>Stå over</button><button class="btn primary" id="btnReady" hidden>✓ Klar</button><button class="btn primary" id="btnPlaySel" hidden>Legg</button><button class="btn" id="btnTake" hidden>Ta opp bunken</button></div>
+  </div>
+</section>
+
+<!-- ============ OPPLÆRING ============ -->
+<div id="tut"><div class="tutbox">
+  <div class="tuthead"><h2 id="tutTitle">Lær</h2><button class="btn skipbtn" id="tutSkip">Jeg kan spillet – hopp over ⏭</button><button class="xbtn" id="tutClose" title="Lukk">✕</button></div>
+  <div id="tutStage"></div>
+  <h3 id="tutH"></h3><p id="tutX"></p>
+  <div class="tutnav"><button class="btn" id="tutPrev">← Tilbake</button><div id="tutDots"></div><button class="btn primary" id="tutNext">Neste →</button></div>
+</div></div>
+
+<div class="modal" id="modal"><div id="modalBox"></div></div>
+<div id="toast"></div><div id="bubble"></div><canvas id="confetti"></canvas>
+
+<script>
+/* ============ KORT: data, temaer og tegning ============ */
+const SUITS = ['S', 'H', 'D', 'C'];
+const SUIT_NAME = { S: 'spar', H: 'hjerter', D: 'ruter', C: 'kløver' };
+const RANK_LABEL = [null, 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Kn', 'D', 'K'];
+const RANK_NAME = [null, 'ess', 'toer', 'treer', 'firer', 'femmer', 'sekser', 'sjuer', 'åtter', 'nier', 'tier', 'knekt', 'dame', 'konge'];
+const RANK_PLURAL = [null, 'ess', 'toere', 'treere', 'firere', 'femmere', 'seksere', 'sjuere', 'åttere', 'niere', 'tiere', 'knekter', 'damer', 'konger'];
+const isRed = s => s === 'H' || s === 'D';
+
+function code(c) { return c.s + c.r; }
+function parse(cd) { return { s: cd[0], r: +cd.slice(1) }; }
+function cardName(c) { if (typeof c === 'string') c = parse(c); return SUIT_NAME[c.s] + ' ' + RANK_NAME[c.r].replace(/e?r$/, '') ; }
+function niceName(c) {
+  if (typeof c === 'string') c = parse(c);
+  const n = { 1: 'ess', 11: 'knekt', 12: 'dame', 13: 'konge' }[c.r] || String(c.r);
+  return SUIT_NAME[c.s] + ' ' + n;
+}
+
+function rngFrom(seed) {
+  let a = seed >>> 0 || 1;
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function shuffle(a, rng = Math.random) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+/* lager kortstokk(er). suits = hvilke sorter (for Edderkopp med 1 eller 2 sorter) */
+function makeDeck(decks = 1, suits = SUITS) {
+  const out = []; let n = 0;
+  const reps = decks * 4 / suits.length;
+  for (let d = 0; d < reps; d++) for (const s of suits) for (let r = 1; r <= 13; r++) out.push({ s, r, up: false, id: 'k' + (n++) });
+  return out;
+}
+
+/* ---------- TEMAER ---------- */
+const THEMES = {
+  klassisk: { name: 'Klassisk', table: 'radial-gradient(ellipse at 50% 30%, #2a8a5a 0%, #145c38 60%, #0b3d25 100%)', face: '#fffdf6', red: '#c8102e', black: '#1b1b2f', accent: '#b8901e', courtBg: '#fbf3dc', back: { pattern: ['#1d3a8a', '#e3c15a'] } },
+  hav: { name: 'Havet', table: 'radial-gradient(ellipse at 50% 30%, #2a8fa8 0%, #13607a 60%, #0a3a4f 100%)', face: '#fbfeff', red: '#d1263f', black: '#0f2c45', accent: '#1d8fa8', courtBg: '#e6f6fa', back: { img: 'mykjekort/bakside-hav.jpg', fallback: ['#0f5c78', '#8fd3e3'] } },
+  rom: { name: 'Verdensrommet', table: 'radial-gradient(ellipse at 50% 30%, #4b3a8f 0%, #2a1f5c 60%, #140f33 100%)', face: '#fdfcff', red: '#d4245c', black: '#231a4f', accent: '#7a5cd6', courtBg: '#efeafc', back: { img: 'mykjekort/bakside-rom.jpg', fallback: ['#2a1f5c', '#e8c35a'] } },
+  nordlys: { name: 'Nordlys', table: 'radial-gradient(ellipse at 50% 30%, #2f7a5c 0%, #18503c 60%, #0b2e24 100%)', face: '#fffefa', red: '#c4302b', black: '#12312a', accent: '#2f8a68', courtBg: '#e9f5ef', back: { img: 'mykjekort/bakside-nordlys.jpg', fallback: ['#18503c', '#9be3c4'] } },
+  godteri: { name: 'Godteri', table: 'radial-gradient(ellipse at 50% 30%, #f5a8c8 0%, #e27aa6 60%, #b8507f 100%)', face: '#fffafc', red: '#e0336f', black: '#3a2a5a', accent: '#ef7fb0', courtBg: '#fff0f6', back: { img: 'mykjekort/bakside-godteri.jpg', fallback: ['#ffd1e3', '#9fe3cf'] } },
+  kontrast: { name: 'Høy kontrast', table: '#0d2a1d', face: '#ffffff', red: '#d10000', black: '#000000', accent: '#000000', courtBg: '#ffffff', back: { pattern: ['#111111', '#ffd400'] } },
+};
+const FOUR_COLORS = { S: '#111111', H: '#d10f2f', D: '#1565c0', C: '#2e7d32' };
+
+const Settings = {
+  theme: 'klassisk', four: false, big: false, hints: true, sound: true, name: '', draw3: false, spiderSuits: 1, pyrValues: true, idiot3: false, idiot7: false, autoFlip: false,
+};
+function loadSettings() { try { Object.assign(Settings, JSON.parse(localStorage.getItem('mykjekort-innst') || '{}')); } catch (e) { } }
+function saveSettings() { try { localStorage.setItem('mykjekort-innst', JSON.stringify(Settings)); } catch (e) { } }
+
+/* ---------- SVG-tegning av kortforsider ---------- */
+const SUIT_SVG = {
+  H: '<path d="M50 90C22 66 4 48 4 29 4 14 15 4 28 4c10 0 18 6 22 15 4-9 12-15 22-15 13 0 24 10 24 25 0 19-18 37-46 61z"/>',
+  D: '<path d="M50 2 88 50 50 98 12 50z"/>',
+  S: '<path d="M50 4C31 30 6 43 6 62c0 14 11 22 23 22 8 0 15-4 18-11-1 10-6 18-14 23h34c-8-5-13-13-14-23 3 7 10 11 18 11 12 0 23-8 23-22C94 43 69 30 50 4z"/>',
+  C: '<circle cx="50" cy="27" r="20"/><circle cx="27" cy="58" r="20"/><circle cx="73" cy="58" r="20"/><circle cx="50" cy="50" r="12"/><path d="M45 55c0 18-5 31-13 41h36c-8-10-13-23-13-41z"/>',
+};
+function suitColor(s, th) { return Settings.four ? FOUR_COLORS[s] : (isRed(s) ? th.red : th.black); }
+function pip(s, x, y, size, col, flip) {
+  const sc = size / 100;
+  return `<g transform="translate(${x},${y}) ${flip ? 'rotate(180)' : ''} scale(${sc}) translate(-50,-50)" fill="${col}">${SUIT_SVG[s]}</g>`;
+}
+const PIPS = (() => {
+  const L = 62, M = 100, R = 138, T = 64, B = 236;
+  const r4 = [T, T + (B - T) / 3, T + 2 * (B - T) / 3, B];
+  const mid = 150;
+  return {
+    2: [[M, T], [M, B]], 3: [[M, T], [M, mid], [M, B]],
+    4: [[L, T], [R, T], [L, B], [R, B]], 5: [[L, T], [R, T], [M, mid], [L, B], [R, B]],
+    6: [[L, T], [R, T], [L, mid], [R, mid], [L, B], [R, B]],
+    7: [[L, T], [R, T], [M, 107], [L, mid], [R, mid], [L, B], [R, B]],
+    8: [[L, T], [R, T], [M, 107], [L, mid], [R, mid], [M, 193], [L, B], [R, B]],
+    9: [[L, r4[0]], [R, r4[0]], [L, r4[1]], [R, r4[1]], [M, mid], [L, r4[2]], [R, r4[2]], [L, r4[3]], [R, r4[3]]],
+    10: [[L, r4[0]], [R, r4[0]], [M, 93], [L, r4[1]], [R, r4[1]], [L, r4[2]], [R, r4[2]], [M, 207], [L, r4[3]], [R, r4[3]]],
+  };
+})();
+function courtEmblem(r, col, acc) {
+  if (r === 13) // krone
+    return `<g transform="translate(100,112)"><path d="M-34 14 -34 -14 -17 2 0 -24 17 2 34 -14 34 14z" fill="${acc}" stroke="${col}" stroke-width="3" stroke-linejoin="round"/><rect x="-36" y="14" width="72" height="10" rx="3" fill="${col}"/><circle cx="-34" cy="-17" r="5" fill="${col}"/><circle cx="0" cy="-27" r="6" fill="${col}"/><circle cx="34" cy="-17" r="5" fill="${col}"/><circle cx="-16" cy="19" r="3" fill="${acc}"/><circle cx="0" cy="19" r="3" fill="${acc}"/><circle cx="16" cy="19" r="3" fill="${acc}"/></g>`;
+  if (r === 12) // diadem med blomst
+    return `<g transform="translate(100,112)"><path d="M-36 18 C-30 -4 -14 -10 0 -10 C14 -10 30 -4 36 18 Z" fill="${acc}" stroke="${col}" stroke-width="3"/><g fill="${col}"><circle cx="0" cy="-20" r="7"/><circle cx="-10" cy="-14" r="6"/><circle cx="10" cy="-14" r="6"/><circle cx="-7" cy="-27" r="6"/><circle cx="7" cy="-27" r="6"/></g><circle cx="0" cy="-20" r="4" fill="${acc}"/><circle cx="-20" cy="8" r="4" fill="${col}"/><circle cx="20" cy="8" r="4" fill="${col}"/></g>`;
+  // knekt: skjold med stjerne
+  return `<g transform="translate(100,112)"><path d="M-28 -26 H28 V0 C28 18 14 28 0 33 C-14 28 -28 18 -28 0Z" fill="${acc}" stroke="${col}" stroke-width="3"/><path d="M0 -16 5 -4 18 -4 8 4 12 17 0 9 -12 17 -8 4 -18 -4 -5 -4z" fill="${col}"/></g>`;
+}
+const _faceCache = {};
+function faceSVG(c) {
+  const th = THEMES[Settings.theme] || THEMES.klassisk;
+  const key = Settings.theme + (Settings.four ? 4 : 2) + c.s + c.r;
+  if (_faceCache[key]) return _faceCache[key];
+  const col = suitColor(c.s, th);
+  const lab = RANK_LABEL[c.r];
+  const fs = lab.length > 1 ? 40 : 48;
+  let body = '';
+  if (c.r === 1) {
+    body = `<circle cx="100" cy="150" r="62" fill="none" stroke="${th.accent}" stroke-width="3" opacity=".55"/><circle cx="100" cy="150" r="70" fill="none" stroke="${th.accent}" stroke-width="1.5" opacity=".4" stroke-dasharray="4 6"/>` + pip(c.s, 100, 150, 84, col);
+  } else if (c.r <= 10) {
+    const sz = c.r >= 9 ? 36 : 42;
+    body = PIPS[c.r].map(([x, y]) => pip(c.s, x, y, sz, col, y > 151)).join('');
+  } else {
+    body = `<rect x="38" y="58" width="124" height="184" rx="14" fill="${th.courtBg}" stroke="${th.accent}" stroke-width="3"/>` +
+      `<rect x="45" y="65" width="110" height="170" rx="10" fill="none" stroke="${col}" stroke-width="1.2" opacity=".5"/>` +
+      courtEmblem(c.r, col, th.accent) +
+      `<text x="100" y="205" text-anchor="middle" font-family="Fredoka,Atkinson Hyperlegible,Arial,sans-serif" font-weight="700" font-size="52" fill="${col}">${lab}</text>` +
+      pip(c.s, 62, 222, 20, col) + pip(c.s, 138, 222, 20, col);
+  }
+  const corner = `<text x="24" y="${lab.length > 1 ? 44 : 50}" text-anchor="middle" font-family="Fredoka,Atkinson Hyperlegible,Arial,sans-serif" font-weight="700" font-size="${fs}" fill="${col}" ${lab.length > 1 ? 'textLength="38" lengthAdjust="spacingAndGlyphs"' : ''}>${lab}</text>` + pip(c.s, 24, 72, 28, col);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300" preserveAspectRatio="none"><rect x="1" y="1" width="198" height="298" rx="16" fill="${th.face}"/>${body}<g>${corner}</g><g transform="rotate(180 100 150)">${corner}</g></svg>`;
+  _faceCache[key] = svg;
+  return svg;
+}
+function backStyle(themeKey) {
+  const th = THEMES[themeKey || Settings.theme] || THEMES.klassisk;
+  const b = th.back;
+  const [c1, c2] = b.pattern || b.fallback;
+  const pat = `repeating-linear-gradient(45deg, ${c1} 0 6px, ${c2}33 6px 8px, ${c1} 8px 14px), repeating-linear-gradient(-45deg, transparent 0 6px, ${c2}55 6px 8px, transparent 8px 14px)`;
+  if (b.img) return `background-image:url('${b.img}'), ${pat}; background-color:${c1}`;
+  return `background-image:${pat}; background-color:${c1}`;
+}
+
+/* lager et kort-element (gjenbrukes i alle spill) */
+function makeCardEl(c) {
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = `<div class="face"></div><div class="back"></div><div class="val"></div>`;
+  el._c = c;
+  paintCard(el);
+  return el;
+}
+function paintCard(el) {
+  const c = el._c;
+  el.querySelector('.face').innerHTML = faceSVG(c);
+  el.querySelector('.back').style.cssText = backStyle();
+  el.classList.toggle('up', !!c.up);
+}
+
+/* ============ KABALER: felles motor + fire spill ============ */
+const CH_RATIO = 1.45;
+const topOf = a => a[a.length - 1];
+const seqAlt = cs => cs.every((c, i) => i === 0 || (c.up && isRed(c.s) !== isRed(cs[i - 1].s) && c.r === cs[i - 1].r - 1));
+const seqSuit = cs => cs.every((c, i) => i === 0 || (c.up && c.s === cs[i - 1].s && c.r === cs[i - 1].r - 1));
+const range = (n, f) => Array.from({ length: n }, (_, i) => f(i));
+
+function flipTops(st, ids) {
+  let flipped = false;
+  for (const id of ids) { const t = topOf(st.piles[id]); if (t && !t.up) { t.up = true; flipped = true; } }
+  return flipped;
+}
+function canFound(st, cards, to) {
+  if (cards.length !== 1) return false;
+  const c = cards[0], t = topOf(st.piles[to]);
+  return t ? (t.s === c.s && c.r === t.r + 1) : c.r === 1;
+}
+
+/* ---------- KLONDIKE ---------- */
+const KLONDIKE = {
+  id: 'klondike', name: 'Klondike',
+  tab: range(7, i => 't' + i), found: range(4, i => 'f' + i),
+  deal(rng) {
+    const d = shuffle(makeDeck(), rng); const piles = { stock: [], waste: [] };
+    this.found.forEach(f => piles[f] = []);
+    this.tab.forEach((t, i) => { piles[t] = d.splice(0, i + 1); topOf(piles[t]).up = true; });
+    piles.stock = d; return { piles, passes: 0 };
+  },
+  layout(W, H) {
+    const cw = Math.min(W / 7.9, H / 5.4, 130), ch = cw * CH_RATIO, g = (W - 7 * cw) / 8;
+    const P = { stock: { x: g, y: g, fan: 'none', label: '↻' }, waste: { x: g * 2 + cw, y: g, fan: Settings.draw3 ? 'right3' : 'none' } };
+    this.found.forEach((f, i) => P[f] = { x: g + (3 + i) * (cw + g), y: g, fan: 'none', label: 'A' });
+    this.tab.forEach((t, i) => P[t] = { x: g + i * (cw + g), y: g * 2 + ch, fan: 'down', label: 'K' });
+    return { cw, ch, g, P };
+  },
+  stockId: 'stock',
+  canPick(st, p, i) {
+    const pile = st.piles[p], c = pile[i];
+    if (!c || !c.up) return false;
+    if (p === 'waste' || p[0] === 'f') return i === pile.length - 1;
+    if (p[0] === 't') return seqAlt(pile.slice(i));
+    return false;
+  },
+  canDrop(st, cards, from, to) {
+    if (to[0] === 'f') return canFound(st, cards, to);
+    if (to[0] !== 't') return false;
+    const t = topOf(st.piles[to]), c = cards[0];
+    if (!t) return c.r === 13;
+    return t.up && isRed(t.s) !== isRed(c.s) && c.r === t.r - 1;
+  },
+  onStock(st) {
+    if (st.piles.stock.length) {
+      const n = Settings.draw3 ? 3 : 1;
+      for (let k = 0; k < n && st.piles.stock.length; k++) { const c = st.piles.stock.pop(); c.up = true; st.piles.waste.push(c); }
+      return true;
+    }
+    if (!st.piles.waste.length) return false;
+    st.piles.stock = st.piles.waste.reverse().map(c => (c.up = false, c)); st.piles.waste = []; st.passes++;
+    return true;
+  },
+  after(st) { if (Settings.autoFlip) flipTops(st, this.tab); },
+  won(st) { return this.found.every(f => st.piles[f].length === 13); },
+  canAutoFinish(st) { return !st.piles.stock.length && !st.piles.waste.length && this.tab.every(t => st.piles[t].every(c => c.up)); },
+  pickPiles() { return ['waste', ...this.tab, ...this.found]; },
+  targets() { return [...this.found, ...this.tab]; },
+};
+
+/* ---------- EDDERKOPP ---------- */
+const SPIDER = {
+  id: 'edderkopp', name: 'Edderkopp',
+  tab: range(10, i => 't' + i), done: range(8, i => 'd' + i),
+  deal(rng) {
+    const suits = Settings.spiderSuits === 4 ? SUITS : Settings.spiderSuits === 2 ? ['S', 'H'] : ['S'];
+    const d = shuffle(makeDeck(2, suits), rng); const piles = { stock: [] };
+    this.done.forEach(x => piles[x] = []);
+    this.tab.forEach((t, i) => { piles[t] = d.splice(0, i < 4 ? 6 : 5); topOf(piles[t]).up = true; });
+    piles.stock = d; return { piles, nDone: 0 };
+  },
+  layout(W, H) {
+    const cw = Math.min(W / 10.9, H / 5.6, 118), ch = cw * CH_RATIO, g = (W - 10 * cw) / 11;
+    const P = { stock: { x: g, y: g, fan: 'none', label: '' } };
+    this.done.forEach((d, i) => P[d] = { x: W - g - cw - i * cw * 0.32, y: g, fan: 'none', label: i === 0 ? 'K→A' : '', ghost: i > 0 });
+    this.tab.forEach((t, i) => P[t] = { x: g + i * (cw + g), y: g * 2 + ch, fan: 'down', label: '' });
+    return { cw, ch, g, P };
+  },
+  stockId: 'stock',
+  canPick(st, p, i) { const pile = st.piles[p]; return p[0] === 't' && pile[i] && pile[i].up && seqSuit(pile.slice(i)); },
+  canDrop(st, cards, from, to) {
+    if (to[0] !== 't') return false;
+    const t = topOf(st.piles[to]); return !t || (t.up && t.r === cards[0].r + 1);
+  },
+  onStock(st, ui) {
+    if (!st.piles.stock.length) return false;
+    if (this.tab.some(t => !st.piles[t].length)) { ui && ui.toast('Alle kolonnene må ha minst ett kort før du deler ut nye.'); return false; }
+    for (const t of this.tab) { const c = st.piles.stock.pop(); c.up = true; st.piles[t].push(c); }
+    return true;
+  },
+  after(st, ui) {
+    for (const t of this.tab) {
+      const pile = st.piles[t];
+      if (pile.length >= 13) {
+        const run = pile.slice(-13);
+        if (run[0].r === 13 && run[0].up && seqSuit(run)) {
+          pile.splice(-13); st.piles['d' + st.nDone] = run; st.nDone++;
+          ui && ui.sfx('win1'); ui && ui.toast('Hel rekke fra konge til ess! 🎉');
+        }
+      }
+    }
+    if (Settings.autoFlip) flipTops(st, this.tab);
+  },
+  won(st) { return st.nDone === 8; },
+  pickPiles() { return this.tab; }, targets() { return this.tab; },
+};
+
+/* ---------- FREECELL ---------- */
+const FREECELL = {
+  id: 'freecell', name: 'FreeCell',
+  tab: range(8, i => 't' + i), found: range(4, i => 'f' + i), cells: range(4, i => 'c' + i),
+  deal(rng) {
+    const d = shuffle(makeDeck(), rng); const piles = {};
+    [...this.found, ...this.cells].forEach(x => piles[x] = []);
+    this.tab.forEach(t => piles[t] = []);
+    d.forEach((c, i) => { c.up = true; piles['t' + (i % 8)].push(c); });
+    return { piles };
+  },
+  layout(W, H) {
+    const cw = Math.min(W / 8.9, H / 5.3, 124), ch = cw * CH_RATIO, g = (W - 8 * cw) / 9;
+    const P = {};
+    this.cells.forEach((c, i) => P[c] = { x: g + i * (cw + g), y: g, fan: 'none', label: '' , cell: true});
+    this.found.forEach((f, i) => P[f] = { x: g + (4 + i) * (cw + g), y: g, fan: 'none', label: 'A' });
+    this.tab.forEach((t, i) => P[t] = { x: g + i * (cw + g), y: g * 2 + ch, fan: 'down', label: '' });
+    return { cw, ch, g, P };
+  },
+  freeCells(st) { return this.cells.filter(c => !st.piles[c].length).length; },
+  emptyCols(st, except) { return this.tab.filter(t => t !== except && !st.piles[t].length).length; },
+  maxMove(st, to) { return (this.freeCells(st) + 1) * Math.pow(2, this.emptyCols(st, to)); },
+  canPick(st, p, i) {
+    const pile = st.piles[p]; if (!pile[i]) return false;
+    if (p[0] === 't') { const run = pile.slice(i); return seqAlt(run) && run.length <= this.maxMove(st, null); }
+    return i === pile.length - 1;
+  },
+  canDrop(st, cards, from, to) {
+    if (to[0] === 'f') return canFound(st, cards, to);
+    if (to[0] === 'c') return cards.length === 1 && !st.piles[to].length;
+    if (to[0] !== 't') return false;
+    if (cards.length > this.maxMove(st, to)) return false;
+    const t = topOf(st.piles[to]), c = cards[0];
+    return !t || (isRed(t.s) !== isRed(c.s) && c.r === t.r - 1);
+  },
+  after() { },
+  won(st) { return this.found.every(f => st.piles[f].length === 13); },
+  canAutoFinish(st) { return this.tab.every(t => st.piles[t].every((c, i, a) => i === 0 || a[i - 1].r >= c.r)) ; },
+  pickPiles() { return [...this.cells, ...this.tab, ...this.found]; },
+  targets() { return [...this.found, ...this.tab, ...this.cells]; },
+};
+
+/* ---------- PYRAMIDE ---------- */
+const PYRAMID = {
+  id: 'pyramide', name: 'Pyramide', select: true,
+  pyr: range(28, i => 'p' + i),
+  rowOf(i) { let r = 0, n = 0; while (n + r + 1 <= i) { n += r + 1; r++; } return [r, i - n]; },
+  idx(r, k) { return r * (r + 1) / 2 + k; },
+  deal(rng) {
+    const d = shuffle(makeDeck(), rng); const piles = { stock: [], waste: [], done: [] };
+    this.pyr.forEach(p => { const c = d.pop(); c.up = true; piles[p] = [c]; });
+    piles.stock = d; return { piles, passes: 0, sel: null };
+  },
+  layout(W, H) {
+    const cw = Math.min(W / 10.4, H / (CH_RATIO * 4.5), 120), ch = cw * CH_RATIO, g = cw * 0.25;
+    const P = { stock: { x: g, y: g, fan: 'none', label: '↻' }, waste: { x: g, y: g * 2 + ch, fan: 'none' }, done: { x: W - g - cw, y: g, fan: 'none', label: '✓' } };
+    const step = cw * 1.08;
+    this.pyr.forEach((p, i) => { const [r, k] = this.rowOf(i); P[p] = { x: W / 2 - (r + 1) * step / 2 + k * step + (step - cw) / 2, y: g + r * ch * 0.5, fan: 'none', noSlot: true }; });
+    return { cw, ch, g, P };
+  },
+  stockId: 'stock',
+  isFree(st, p) {
+    if (p === 'waste') return st.piles.waste.length > 0;
+    if (p[0] !== 'p') return false;
+    const [r, k] = this.rowOf(+p.slice(1));
+    if (r === 6) return true;
+    return !st.piles['p' + this.idx(r + 1, k)].length && !st.piles['p' + this.idx(r + 1, k + 1)].length;
+  },
+  value: c => c.r,
+  onStock(st, ui) {
+    if (st.piles.stock.length) { const c = st.piles.stock.pop(); c.up = true; st.piles.waste.push(c); st.sel = null; return true; }
+    if (st.passes >= 2) { ui && ui.toast('Bunken kan bare snus to ganger.'); return false; }
+    if (!st.piles.waste.length) return false;
+    st.piles.stock = st.piles.waste.reverse().map(c => (c.up = false, c)); st.piles.waste = []; st.passes++; st.sel = null;
+    return true;
+  },
+  after() { },
+  won(st) { return this.pyr.every(p => !st.piles[p].length); },
+  freeCards(st) { return [...this.pyr, 'waste'].filter(p => st.piles[p].length && this.isFree(st, p)); },
+};
+
+/* ---------- Felles brett/motor ---------- */
+class SolGame {
+  constructor(def, mount, hud) {
+    this.def = def; this.mount = mount; this.hud = hud;
+    this.board = document.createElement('div'); this.board.className = 'board sol ' + def.id;
+    mount.appendChild(this.board);
+    this.els = {}; this.where = {}; this.undoStack = []; this.moves = 0; this.t0 = Date.now(); this.over = false;
+    this.ui = { toast, sfx };
+    this.board.addEventListener('pointerdown', e => this.down(e));
+    this._mv = e => this.move(e); this._up = e => this.up(e);
+    this.ro = new ResizeObserver(() => { this.relayout(); this.render(false); });
+    this.ro.observe(this.board);
+    this.timer = setInterval(() => this.updHud(), 1000);
+  }
+  destroy() { this.ro.disconnect(); clearInterval(this.timer); window.removeEventListener('pointermove', this._mv); window.removeEventListener('pointerup', this._up); this.board.remove(); }
+  start(seed) {
+    this.seed = seed || (Math.random() * 1e9) | 0;
+    this.st = this.def.deal(rngFrom(this.seed));
+    this.board.querySelectorAll('.card').forEach(e => e.remove()); this.els = {};
+    this.undoStack = []; this.moves = 0; this.t0 = Date.now(); this.over = false;
+    this.board.classList.toggle('show-vals', this.def.id === 'pyramide' && Settings.pyrValues);
+    // alle kort starter i bunken og deles ut med animasjon
+    this.relayout();
+    for (const id in this.st.piles) for (const c of this.st.piles[id]) {
+      const el = makeCardEl(c); this.els[c.id] = el; this.board.appendChild(el);
+      const S = this.L.P[this.def.stockId || 't0'] || { x: 0, y: 0 };
+      el.style.transform = `translate(${S.x}px,${S.y}px)`; el.classList.remove('up');
+    }
+    requestAnimationFrame(() => requestAnimationFrame(() => this.render(true, true)));
+    this.updHud();
+  }
+  relayout() {
+    const W = this.board.clientWidth, H = this.board.clientHeight;
+    if (!W || !H) return;
+    this.W = W; this.H = H; this.L = this.def.layout(W, H);
+    this.board.style.setProperty('--cw', this.L.cw + 'px'); this.board.style.setProperty('--ch', this.L.ch + 'px');
+    this.board.querySelectorAll('.slot').forEach(s => s.remove());
+    for (const id in this.L.P) {
+      const P = this.L.P[id]; if (P.noSlot) continue;
+      const s = document.createElement('div'); s.className = 'slot' + (P.ghost ? ' ghost' : '') + (P.cell ? ' cell' : ''); s.dataset.pile = id;
+      s.style.transform = `translate(${P.x}px,${P.y}px)`; s.textContent = P.label || '';
+      this.board.prepend(s);
+    }
+  }
+  offsets(id) {
+    const P = this.L.P[id], cards = this.st.piles[id], ch = this.L.ch, cw = this.L.cw;
+    const out = [];
+    if (P.fan === 'down') {
+      const dn = ch * 0.12, upo = ch * (Settings.big ? 0.3 : 0.26);
+      let tot = 0; for (let i = 0; i < cards.length - 1; i++) tot += cards[i].up ? upo : dn;
+      const avail = this.H - P.y - ch - 8; const f = tot > avail ? avail / tot : 1;
+      let y = 0; for (let i = 0; i < cards.length; i++) { out.push([0, y]); y += (cards[i].up ? upo : dn) * f; }
+    } else if (P.fan === 'right3') {
+      const n = cards.length; for (let i = 0; i < n; i++) out.push([Math.max(0, i - (n - 3)) * cw * 0.3, 0]);
+    } else for (let i = 0; i < cards.length; i++) out.push([0, -Math.min(i, 30) * 0.15 * (P.fan === 'none' && id === 'stock' ? 1 : 0)]);
+    return out;
+  }
+  render(anim = true, dealing = false) {
+    if (!this.L) return;
+    this.board.classList.toggle('noanim', !anim);
+    let z = 1, k = 0; this.where = {};
+    const order = Object.keys(this.L.P);
+    for (const id of order) {
+      const P = this.L.P[id], cards = this.st.piles[id] || [], offs = this.offsets(id);
+      cards.forEach((c, i) => {
+        const el = this.els[c.id]; if (!el) return;
+        el._c = c; this.where[c.id] = { pile: id, idx: i };
+        const [dx, dy] = offs[i];
+        el.style.zIndex = z++;
+        el.classList.toggle('up', !!c.up);
+        el.classList.toggle('sel', !!(this.st.sel && this.st.sel.id === c.id));
+        el.classList.toggle('free', this.def.select ? (c.up && this.def.isFree(this.st, id) && (id[0] === 'p' || i === cards.length - 1)) : false);
+        el.querySelector('.val').textContent = c.r;
+        el.classList.toggle('canflip', !c.up && id[0] === 't' && i === cards.length - 1);
+        const tr = `translate(${P.x + dx}px,${P.y + dy}px)`;
+        if (dealing) { el.style.transitionDelay = (k++ * 18) + 'ms'; } else el.style.transitionDelay = '0ms';
+        el.style.transform = tr;
+      });
+    }
+    if (dealing) setTimeout(() => this.board.querySelectorAll('.card').forEach(e => e.style.transitionDelay = '0ms'), 1500);
+    this.updHud();
+  }
+  updHud() {
+    if (!this.hud) return;
+    const s = Math.floor((Date.now() - this.t0) / 1000);
+    const extra = this.def.id === 'edderkopp' ? ` · Rekker: ${this.st ? this.st.nDone : 0}/8` : this.def.id === 'pyramide' && this.st ? ` · Igjen: ${this.def.pyr.filter(p => this.st.piles[p].length).length}` : '';
+    this.hud.textContent = `Trekk: ${this.moves} · Tid: ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}${extra}`;
+    const af = document.getElementById('btnAuto');
+    if (af) af.hidden = !(this.def.canAutoFinish && this.st && !this.over && this.def.canAutoFinish(this.st) && !this.def.won(this.st));
+  }
+  snapshot() { this.undoStack.push(JSON.stringify({ st: this.st, moves: this.moves })); if (this.undoStack.length > 300) this.undoStack.shift(); }
+  undo() {
+    if (!this.undoStack.length || this.over) { toast('Ingenting å angre.'); return; }
+    const o = JSON.parse(this.undoStack.pop()); this.st = o.st; this.moves = o.moves; sfx('flip'); this.render();
+  }
+  /* ---- pekeren ---- */
+  down(e) {
+    if (this.over || this.drag) return;
+    const el = e.target.closest('.card'); const slot = e.target.closest('.slot');
+    const stockId = this.def.stockId;
+    if (!el) { if (slot && slot.dataset.pile === stockId) this.stock(); return; }
+    const w = this.where[el._c.id]; if (!w) return;
+    if (w.pile === stockId) { this.stock(); return; }
+    if (this.def.select) { this.selectTap(w.pile, w.idx); return; }
+    if (!el._c.up && w.pile[0] === 't' && w.idx === this.st.piles[w.pile].length - 1) { // trykk for å snu
+      this.snapshot(); el._c.up = true; this.st.piles[w.pile][w.idx].up = true; this.moves++; sfx('flip'); this.render(); return;
+    }
+    if (!this.def.canPick(this.st, w.pile, w.idx)) { shake(el); return; }
+    e.preventDefault();
+    const ids = this.st.piles[w.pile].slice(w.idx).map(c => c.id);
+    this.drag = { ...w, ids, x0: e.clientX, y0: e.clientY, moved: false, base: ids.map(id => this.posOf(this.els[id])) };
+    window.addEventListener('pointermove', this._mv); window.addEventListener('pointerup', this._up);
+  }
+  posOf(el) { const m = /translate\(([-\d.]+)px,\s*([-\d.]+)px/.exec(el.style.transform); return m ? [+m[1], +m[2]] : [0, 0]; }
+  move(e) {
+    const d = this.drag; if (!d) return;
+    const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+    if (!d.moved && Math.hypot(dx, dy) < 8) return;
+    if (!d.moved) { d.moved = true; d.ids.forEach((id, i) => { const el = this.els[id]; el.classList.add('dragging'); el.style.zIndex = 1000 + i; }); }
+    d.ids.forEach((id, i) => { this.els[id].style.transform = `translate(${d.base[i][0] + dx}px,${d.base[i][1] + dy}px)`; });
+    d.dx = dx; d.dy = dy;
+  }
+  up(e) {
+    window.removeEventListener('pointermove', this._mv); window.removeEventListener('pointerup', this._up);
+    const d = this.drag; this.drag = null; if (!d) return;
+    d.ids.forEach(id => this.els[id].classList.remove('dragging'));
+    const cards = this.st.piles[d.pile].slice(d.idx);
+    if (!d.moved) { // trykk = flytt automatisk
+      const t = this.autoTarget(d.pile, d.idx);
+      if (t) this.doMove(d.pile, d.idx, t); else { shake(this.els[d.ids[0]]); sfx('nope'); }
+      return;
+    }
+    // finn mål under midten av kortet
+    const cx = d.base[0][0] + d.dx + this.L.cw / 2, cy = d.base[0][1] + d.dy + this.L.ch / 2;
+    let best = null, bestD = 1e9;
+    for (const id of this.def.targets()) {
+      if (id === d.pile) continue;
+      const P = this.L.P[id], pile = this.st.piles[id];
+      const offs = this.offsets(id); const last = offs.length ? offs[offs.length - 1] : [0, 0];
+      const tx = P.x + last[0] + this.L.cw / 2, ty = P.y + last[1] + this.L.ch / 2;
+      const inX = Math.abs(cx - tx) < this.L.cw * 0.9, inY = cy > P.y - this.L.ch * 0.6 && cy < P.y + last[1] + this.L.ch * 1.3;
+      if (!inX || !inY) continue;
+      const dist = Math.hypot(cx - tx, cy - ty);
+      if (dist < bestD && this.def.canDrop(this.st, cards, d.pile, id)) { best = id; bestD = dist; }
+    }
+    if (best) this.doMove(d.pile, d.idx, best); else { sfx('nope'); this.render(); }
+  }
+  autoTarget(from, idx) {
+    const cards = this.st.piles[from].slice(idx);
+    const ts = this.def.targets().filter(t => t !== from && this.def.canDrop(this.st, cards, from, t));
+    if (!ts.length) return null;
+    // foretrekk grunnbunke, så kolonne med kort, så tom kolonne, så fri celle
+    const score = t => t[0] === 'f' ? 0 : (t[0] === 't' && this.st.piles[t].length) ? 1 : t[0] === 't' ? 2 : 3;
+    if (from[0] === 'f') ts.sort((a, b) => (a[0] === 'f') - (b[0] === 'f')); else ts.sort((a, b) => score(a) - score(b));
+    // ikke flytt en konge fra tom kolonne til tom kolonne
+    if (idx === 0 && from[0] === 't' && ts[0][0] === 't' && !this.st.piles[ts[0]].length) return ts.find(t => t[0] === 'f') || null;
+    // Edderkopp: foretrekk samme sort
+    if (this.def.id === 'edderkopp') { const same = ts.find(t => { const tp = topOf(this.st.piles[t]); return tp && tp.s === cards[0].s; }); if (same) return same; }
+    return ts[0];
+  }
+  doMove(from, idx, to) {
+    this.snapshot();
+    const cards = this.st.piles[from].splice(idx);
+    this.st.piles[to].push(...cards);
+    this.moves++; sfx(to[0] === 'f' ? 'found' : 'place');
+    this.def.after(this.st, this.ui);
+    this.render(); this.checkWin();
+  }
+  stock() {
+    this.snapshot();
+    if (this.def.onStock(this.st, this.ui)) { this.moves++; sfx('flip'); this.def.after(this.st, this.ui); this.render(); this.checkWin(); }
+    else this.undoStack.pop();
+  }
+  selectTap(p, i) {
+    const def = this.def, st = this.st, c = st.piles[p][i];
+    if (!(def.isFree(st, p) && i === st.piles[p].length - 1)) { shake(this.els[c.id]); sfx('nope'); return; }
+    const remove = cs => { this.snapshot(); cs.forEach(x => { const w = this.where[x.id]; st.piles[w.pile].splice(w.idx, 1); st.piles.done.push(x); }); st.sel = null; this.moves++; sfx('found'); this.render(); this.checkWin(); };
+    if (c.r === 13) { remove([c]); return; }
+    if (st.sel && st.sel.id === c.id) { st.sel = null; this.render(); hideBubble(); return; }
+    if (st.sel) {
+      const w = this.where[st.sel.id]; const s = w && st.piles[w.pile][w.idx];
+      if (s && s.r + c.r === 13) { bubble(`${s.r} + ${c.r} = 13 ✓`, true); remove([s, c]); return; }
+      bubble(`${s.r} + ${c.r} = ${s.r + c.r} – ikke 13`); sfx('nope');
+    } else bubble(`${c.r} + ? = 13 → du trenger ${13 - c.r}`);
+    st.sel = { id: c.id }; sfx('tick'); this.render();
+  }
+  /* ---- hint ---- */
+  hint() {
+    const def = this.def, st = this.st;
+    const hidden = (def.tab || []).map(t => topOf(st.piles[t])).find(c => c && !c.up);
+    if (hidden) { toast('Trykk på kortet som ligger med baksiden opp, så snur du det!'); return this.flash([hidden.id]); }
+    if (def.select) {
+      const fr = def.freeCards(st).map(p => topOf(st.piles[p]));
+      const k = fr.find(c => c.r === 13); if (k) return this.flash([k.id]);
+      for (const a of fr) for (const b of fr) if (a !== b && a.r + b.r === 13) return this.flash([a.id, b.id]);
+      return this.flashStock();
+    }
+    const moves = [];
+    for (const p of def.pickPiles()) {
+      const pile = st.piles[p];
+      for (let i = 0; i < pile.length; i++) {
+        if (!def.canPick(st, p, i)) continue;
+        for (const t of def.targets()) {
+          if (t === p || !def.canDrop(st, pile.slice(i), p, t)) continue;
+          let sc = 0;
+          if (t[0] === 'f') sc += 50;
+          if (p[0] === 'f') continue;
+          if (p[0] === 't' && i > 0 && !pile[i - 1].up) sc += 40;
+          if (t[0] === 't' && !st.piles[t].length) { if (i === 0) continue; sc += 5; }
+          if (t[0] === 'c') sc -= 10;
+          if (p[0] === 't' && t[0] === 't' && i > 0 && pile[i - 1].up && def.id !== 'edderkopp') { const tp = topOf(st.piles[t]); if (tp && pile[i - 1].r === tp.r && isRed(pile[i - 1].s) === isRed(tp.s)) continue; }
+          if (def.id === 'edderkopp') { const tp = topOf(st.piles[t]); if (tp && tp.s === pile[i].s) sc += 20; if (i > 0 && pile[i - 1].up && pile[i - 1].r === pile[i].r + 1 && (!tp || pile[i - 1].s === pile[i].s)) continue; }
+          if (p === 'waste') sc += 15;
+          moves.push({ p, i, t, sc });
+        }
+      }
+    }
+    moves.sort((a, b) => b.sc - a.sc);
+    if (!moves.length) return this.flashStock();
+    const m = moves[0];
+    this.flash(st.piles[m.p].slice(m.i).map(c => c.id), m.t);
+  }
+  flash(ids, target) {
+    ids.forEach(id => { const el = this.els[id]; el.classList.add('hint'); setTimeout(() => el.classList.remove('hint'), 1600); });
+    if (target) { const tp = topOf(this.st.piles[target]); const el = tp ? this.els[tp.id] : this.board.querySelector(`.slot[data-pile="${target}"]`); if (el) { el.classList.add('hint2'); setTimeout(() => el.classList.remove('hint2'), 1600); } }
+  }
+  flashStock() {
+    const sid = this.def.stockId;
+    if (sid && (this.st.piles[sid].length || (this.st.piles.waste && this.st.piles.waste.length))) {
+      const tp = topOf(this.st.piles[sid]); const el = tp ? this.els[tp.id] : this.board.querySelector(`.slot[data-pile="${sid}"]`);
+      if (el) { el.classList.add('hint'); setTimeout(() => el.classList.remove('hint'), 1600); }
+      toast('Prøv å trekke fra bunken.');
+    } else toast('Jeg finner ingen trekk. Prøv angre-knappen eller start på nytt.');
+  }
+  autoFinish() {
+    const step = () => {
+      for (const p of this.def.pickPiles()) {
+        if (p[0] === 'f') continue;
+        const pile = this.st.piles[p]; if (!pile.length) continue;
+        const i = pile.length - 1;
+        const f = this.def.found.find(f => this.def.canDrop(this.st, [pile[i]], p, f));
+        if (f) { this.doMove(p, i, f); if (!this.over) setTimeout(step, 110); return; }
+      }
+    };
+    step();
+  }
+  checkWin() {
+    if (!this.def.won(this.st) || this.over) return;
+    this.over = true; hideBubble();
+    const secs = Math.floor((Date.now() - this.t0) / 1000);
+    const stats = getStats(); const s = stats[this.def.id] || (stats[this.def.id] = { wins: 0, best: null });
+    s.wins++; if (!s.best || secs < s.best) s.best = secs; setStats(stats);
+    setTimeout(() => { celebrate(this.board, Object.values(this.els)); sfx('win'); }, 350);
+    setTimeout(() => showWin(this.def.name, this.moves, secs, s), 1700);
+  }
+}
+const SOL_DEFS = { klondike: KLONDIKE, edderkopp: SPIDER, freecell: FREECELL, pyramide: PYRAMID };
+function getStats() { try { return JSON.parse(localStorage.getItem('mykjekort-stat') || '{}'); } catch (e) { return {}; } }
+function setStats(s) { try { localStorage.setItem('mykjekort-stat', JSON.stringify(s)); } catch (e) { } }
+
+/* ============ FLERSPILLER-MOTORER (rene funksjoner på tilstand) ============
+   Tilstanden er ren JSON slik at den kan sendes over nettet.
+   Kort lagres som koder: 'H7' = hjerter 7, 'S13' = spar konge. */
+const deckCodes = () => { const d = []; for (const s of SUITS) for (let r = 1; r <= 13; r++) d.push(s + r); return d; };
+const cS = cd => cd[0], cR = cd => +cd.slice(1);
+const sortHand = h => h.slice().sort((a, b) => (SUITS.indexOf(cS(a)) - SUITS.indexOf(cS(b))) || (cR(a) - cR(b)));
+const sortByRank = h => h.slice().sort((a, b) => (cR(a) - cR(b)) || (SUITS.indexOf(cS(a)) - SUITS.indexOf(cS(b))));
+function logPush(st, text, priv) { st.log.push({ t: text, p: priv || null, n: (st.logN = (st.logN || 0) + 1) }); if (st.log.length > 30) st.log.shift(); }
+const pname = (st, i) => st.players[i].name;
+
+/* ---------- VRI ÅTTER ---------- */
+const VRI8 = {
+  id: 'vri8', name: 'Vri åtter', min: 2, max: 4,
+  init(players) {
+    const d = shuffle(deckCodes()); const n = players.length === 2 ? 7 : 5;
+    const st = { game: 'vri8', players, hands: players.map(() => d.splice(0, n)), stock: d, pile: [], turn: 0, draws: 0, phase: 'play', log: [], winner: null };
+    let first = st.stock.pop(); while (cR(first) === 8) { st.stock.unshift(first); first = st.stock.pop(); }
+    st.pile.push(first); st.suit = cS(first);
+    st.turn = Math.floor(Math.random() * players.length);
+    logPush(st, `Første kort er ${niceName(first)}. ${pname(st, st.turn)} begynner!`);
+    return st;
+  },
+  canPlay(st, cd) { const t = st.pile[st.pile.length - 1]; return cR(cd) === 8 || cS(cd) === st.suit || cR(cd) === cR(t); },
+  act(st, pi, a) {
+    if (st.phase !== 'play') return 'Spillet er ferdig.';
+    if (pi !== st.turn) return 'Det er ikke din tur.';
+    const hand = st.hands[pi];
+    if (a.t === 'play') {
+      const k = hand.indexOf(a.c); if (k < 0) return 'Du har ikke det kortet.';
+      if (!this.canPlay(st, a.c)) return `Du må legge ${SUIT_NAME[st.suit]}, samme tall/bilde, eller en åtter.`;
+      if (cR(a.c) === 8 && !SUITS.includes(a.suit)) return 'Velg sort.';
+      hand.splice(k, 1); st.pile.push(a.c);
+      st.suit = cR(a.c) === 8 ? a.suit : cS(a.c); st.draws = 0;
+      logPush(st, cR(a.c) === 8 ? `${pname(st, pi)} vrir åtteren til ${SUIT_NAME[a.suit]}!` : `${pname(st, pi)} la ${niceName(a.c)}.`);
+      st.last = { pi, t: 'play', c: a.c };
+      if (!hand.length) { st.phase = 'over'; st.winner = pi; logPush(st, `${pname(st, pi)} er tom for kort og vinner! 🏆`); return null; }
+      if (hand.length === 1) logPush(st, `${pname(st, pi)} har bare ett kort igjen!`);
+      st.turn = (st.turn + 1) % st.players.length; return null;
+    }
+    if (a.t === 'draw') {
+      if (st.draws >= 3) return 'Du har trukket tre kort. Nå må du stå over.';
+      if (!st.stock.length) { const t = st.pile.pop(); st.stock = shuffle(st.pile); st.pile = [t]; }
+      if (!st.stock.length) return 'Bunken er tom. Du må stå over.';
+      const c = st.stock.pop(); hand.push(c); st.draws++;
+      logPush(st, `${pname(st, pi)} trekker et kort.`, { pi, t: `Du trakk ${niceName(c)}.` });
+      st.last = { pi, t: 'draw', c };
+      return null;
+    }
+    if (a.t === 'pass') {
+      if (st.draws < 3 && st.stock.length + st.pile.length > 1) return 'Du må trekke tre kort før du kan stå over.';
+      st.draws = 0; logPush(st, `${pname(st, pi)} står over.`); st.turn = (st.turn + 1) % st.players.length; st.last = { pi, t: 'pass' }; return null;
+    }
+    return 'Ukjent trekk.';
+  },
+  bot(st, pi) {
+    const hand = st.hands[pi];
+    const ok = hand.filter(c => this.canPlay(st, c));
+    const non8 = ok.filter(c => cR(c) !== 8);
+    if (non8.length) { // legg kortet fra sorten vi har flest av
+      const cnt = s => hand.filter(c => cS(c) === s).length;
+      non8.sort((a, b) => cnt(cS(b)) - cnt(cS(a))); return { t: 'play', c: non8[0] };
+    }
+    if (ok.length) {
+      const counts = SUITS.map(s => [s, hand.filter(c => cS(c) === s && cR(c) !== 8).length]).sort((a, b) => b[1] - a[1]);
+      return { t: 'play', c: ok[0], suit: counts[0][0] };
+    }
+    if (st.draws < 3 && (st.stock.length + st.pile.length > 1)) return { t: 'draw' };
+    return { t: 'pass' };
+  },
+  ranking(st) { return st.players.map((p, i) => [i, st.hands[i].length]).sort((a, b) => a[1] - b[1]).map(x => ({ i: x[0], score: x[1] + ' kort igjen' })); },
+};
+
+/* ---------- FISK ---------- */
+const FISK = {
+  id: 'fisk', name: 'Fisk', min: 2, max: 4,
+  init(players) {
+    const d = shuffle(deckCodes()); const n = players.length === 2 ? 7 : 5;
+    const st = { game: 'fisk', players, hands: players.map(() => d.splice(0, n)), pond: d, books: players.map(() => []), turn: 0, phase: 'play', log: [], asked: players.map(() => []) };
+    st.turn = Math.floor(Math.random() * players.length);
+    players.forEach((p, i) => this.checkBooks(st, i));
+    logPush(st, `${pname(st, st.turn)} begynner. Spør etter et kort du selv har!`);
+    return st;
+  },
+  checkBooks(st, i) {
+    const h = st.hands[i];
+    for (let r = 1; r <= 13; r++) {
+      const same = h.filter(c => cR(c) === r);
+      if (same.length === 4) { st.hands[i] = h.filter(c => cR(c) !== r); st.books[i].push(r); logPush(st, `${pname(st, i)} fikk fire ${RANK_PLURAL[r]} – et stikk! 🐟`); return this.checkBooks(st, i); }
+    }
+  },
+  totalBooks(st) { return st.books.reduce((a, b) => a + b.length, 0); },
+  refill(st, i) { if (!st.hands[i].length && st.pond.length) { const c = st.pond.pop(); st.hands[i].push(c); logPush(st, `${pname(st, i)} var tom og trekker fra dammen.`, { pi: i, t: `Du trakk ${niceName(c)}.` }); this.checkBooks(st, i); } },
+  nextTurn(st) {
+    const n = st.players.length;
+    for (let k = 1; k <= n; k++) {
+      const j = (st.turn + k) % n; this.refill(st, j);
+      if (st.hands[j].length) { st.turn = j; return; }
+    }
+    this.end(st);
+  },
+  end(st) { st.phase = 'over'; const best = Math.max(...st.books.map(b => b.length)); const w = st.books.map((b, i) => b.length === best ? i : -1).filter(i => i >= 0); st.winner = w[0]; st.winners = w; logPush(st, w.length > 1 ? `Uavgjort mellom ${w.map(i => pname(st, i)).join(' og ')}!` : `${pname(st, w[0])} vinner med ${best} stikk! 🏆`); },
+  act(st, pi, a) {
+    if (st.phase !== 'play') return 'Spillet er ferdig.';
+    if (pi !== st.turn) return 'Det er ikke din tur.';
+    if (a.t !== 'ask') return 'Ukjent trekk.';
+    const tg = a.target, r = a.rank;
+    if (tg === pi || !st.players[tg]) return 'Velg en annen spiller.';
+    if (!st.hands[tg].length) return `${pname(st, tg)} har ingen kort.`;
+    if (!st.hands[pi].some(c => cR(c) === r)) return 'Du kan bare spørre etter kort du selv har.';
+    st.asked[pi] = [...st.asked[pi].filter(x => x !== r), r];
+    const got = st.hands[tg].filter(c => cR(c) === r);
+    let again = false;
+    logPush(st, `${pname(st, pi)}: «${pname(st, tg)}, har du noen ${RANK_PLURAL[r]}?»`);
+    if (got.length) {
+      st.hands[tg] = st.hands[tg].filter(c => cR(c) !== r); st.hands[pi].push(...got);
+      st.asked[tg] = st.asked[tg].filter(x => x !== r);
+      logPush(st, `Ja! ${pname(st, pi)} får ${got.length} ${got.length > 1 ? RANK_PLURAL[r] : RANK_NAME[r]} og spør igjen.`);
+      st.last = { pi, t: 'got', tg, n: got.length, r };
+      again = true;
+    } else if (st.pond.length) {
+      const c = st.pond.pop(); st.hands[pi].push(c);
+      if (cR(c) === r) { again = true; logPush(st, `«Fisk!» – og ${pname(st, pi)} fisket akkurat det kortet! Spør igjen.`, { pi, t: `Du fisket ${niceName(c)}!` }); }
+      else logPush(st, `«Fisk!» ${pname(st, pi)} trekker fra dammen.`, { pi, t: `Du fisket ${niceName(c)}.` });
+      st.last = { pi, t: 'fish', tg, r, hit: cR(c) === r };
+    } else { logPush(st, `«Fisk!» Men dammen er tom.`); st.last = { pi, t: 'fish', tg, r }; }
+    this.checkBooks(st, pi);
+    if (this.totalBooks(st) === 13) { this.end(st); return null; }
+    this.refill(st, tg);
+    if (again && st.hands[pi].length) return null;
+    this.refill(st, pi);
+    if (again && st.hands[pi].length) return null;
+    this.nextTurn(st); return null;
+  },
+  bot(st, pi) {
+    const h = st.hands[pi]; const others = st.players.map((p, i) => i).filter(i => i !== pi && st.hands[i].length);
+    // husker hva andre har spurt om
+    for (const r of [...new Set(h.map(cR))]) for (const o of others) if (st.asked[o].includes(r)) return { t: 'ask', target: o, rank: r };
+    const cnt = {}; h.forEach(c => cnt[cR(c)] = (cnt[cR(c)] || 0) + 1);
+    const ranks = Object.keys(cnt).map(Number).sort((a, b) => cnt[b] - cnt[a] || Math.random() - .5);
+    return { t: 'ask', target: others[Math.floor(Math.random() * others.length)], rank: ranks[0] };
+  },
+  ranking(st) { return st.players.map((p, i) => [i, st.books[i].length]).sort((a, b) => b[1] - a[1]).map(x => ({ i: x[0], score: x[1] + ' stikk' })); },
+};
+
+/* ---------- SVARTEPER ---------- */
+const SVARTEPER = {
+  id: 'svarteper', name: 'Svarteper', min: 2, max: 4, PETER: 'S11',
+  init(players) {
+    const d = shuffle(deckCodes().filter(c => c !== 'C11'));
+    const st = { game: 'svarteper', players, hands: players.map(() => []), turn: 0, phase: 'play', log: [], out: [], pairs: players.map(() => 0) };
+    d.forEach((c, i) => st.hands[i % players.length].push(c));
+    players.forEach((p, i) => this.dropPairs(st, i, true));
+    logPush(st, `Alle har lagt ned parene sine. Kløver knekt er tatt ut – spar knekt er Svarteper!`);
+    st.turn = Math.floor(Math.random() * players.length);
+    this.fixTurn(st, 0);
+    if (st.phase === 'play') logPush(st, `${pname(st, st.turn)} begynner og trekker fra ${pname(st, this.target(st))}.`);
+    return st;
+  },
+  // et par = samme tall/bilde OG samme farge (rød/svart). Da kan spar knekt aldri få par.
+  key: cd => cR(cd) + (isRed(cS(cd)) ? 'r' : 's'),
+  dropPairs(st, i, quiet) {
+    const h = st.hands[i]; const byK = {};
+    h.forEach(c => (byK[this.key(c)] = byK[this.key(c)] || []).push(c));
+    const keep = [];
+    for (const k in byK) { const cs = byK[k]; const n = Math.floor(cs.length / 2) * 2; st.pairs[i] += n / 2; keep.push(...cs.slice(n)); }
+    st.hands[i] = shuffle(keep);
+  },
+  active(st) { return st.players.map((p, i) => i).filter(i => st.hands[i].length); },
+  target(st) { const n = st.players.length; for (let k = 1; k < n; k++) { const j = (st.turn + k) % n; if (st.hands[j].length) return j; } return -1; },
+  fixTurn(st, step) {
+    const n = st.players.length;
+    st.players.forEach((p, i) => { if (!st.hands[i].length && !st.out.includes(i)) { st.out.push(i); logPush(st, `${pname(st, i)} er tom for kort og er trygg! 😊`); } });
+    if (this.active(st).length <= 1) { st.phase = 'over'; st.loser = this.active(st)[0]; if (st.loser != null) logPush(st, `${pname(st, st.loser)} sitter igjen med spar knekt – og er Svarteper! 🃏`); st.winner = st.out[0]; return; }
+    for (let k = step; k <= n; k++) { const j = (st.turn + k) % n; if (st.hands[j].length) { st.turn = j; return; } }
+  },
+  act(st, pi, a) {
+    if (st.phase !== 'play') return 'Spillet er ferdig.';
+    if (pi !== st.turn) return 'Det er ikke din tur.';
+    if (a.t !== 'pick') return 'Ukjent trekk.';
+    const tg = this.target(st); const th = st.hands[tg];
+    const k = Math.max(0, Math.min(th.length - 1, a.idx | 0));
+    const c = th.splice(k, 1)[0];
+    const mine = st.hands[pi]; const mate = mine.findIndex(x => this.key(x) === this.key(c));
+    if (mate >= 0) {
+      const m = mine.splice(mate, 1)[0]; st.pairs[pi]++;
+      logPush(st, `${pname(st, pi)} trakk et kort fra ${pname(st, tg)} og fikk et par: ${RANK_PLURAL[cR(c)]}!`, { pi, t: `Du trakk ${niceName(c)} og fikk par med ${niceName(m)}!` });
+      st.last = { pi, t: 'pair', tg, c, m };
+    } else {
+      mine.push(c);
+      logPush(st, `${pname(st, pi)} trakk et kort fra ${pname(st, tg)}.`, { pi, t: c === this.PETER ? 'Å nei! Du trakk Svarteper! 🃏' : `Du trakk ${niceName(c)}.` });
+      st.last = { pi, t: 'take', tg, c };
+    }
+    st.hands[pi] = shuffle(mine); st.hands[tg] = shuffle(th);
+    this.fixTurn(st, 1);
+    return null;
+  },
+  bot(st, pi) { const tg = this.target(st); return { t: 'pick', idx: Math.floor(Math.random() * st.hands[tg].length) }; },
+  ranking(st) {
+    const order = [...st.out]; if (st.loser != null) order.push(st.loser);
+    st.players.forEach((p, i) => { if (!order.includes(i)) order.push(i); });
+    return order.map((i, k) => ({ i, score: i === st.loser ? 'Svarteper 🃏' : (k === 0 ? 'Først ute!' : 'Trygg') }));
+  },
+};
+/* ---------- IDIOT ---------- */
+const IDIOT = {
+  id: 'idiot', name: 'Idiot', min: 2, max: 4,
+  val: cd => { const r = cR(cd); return r === 1 ? 14 : r; },
+  init(players, opts) {
+    const d = shuffle(deckCodes());
+    const st = { game: 'idiot', players, opts: { three: !!(opts && opts.three), seven: !!(opts && opts.seven) },
+      down: players.map(() => d.splice(0, 3)), up: players.map(() => d.splice(0, 3)), hands: players.map(() => d.splice(0, 3)),
+      stock: d, pile: [], burned: 0, turn: 0, phase: 'swap', ready: players.map(() => false), out: [], log: [] };
+    logPush(st, 'Bytt kort: legg gode kort (som 2, 10, ess og konger) som åpne kort på bordet. Trykk «Klar» når du er ferdig.');
+    return st;
+  },
+  topVal(st) { // verdien som gjelder (3 er usynlig hvis regelen er på)
+    for (let i = st.pile.length - 1; i >= 0; i--) { const v = this.val(st.pile[i]); if (st.opts.three && v === 3) continue; return v; }
+    return 0;
+  },
+  canPlay(st, cd) {
+    const v = this.val(cd);
+    if (v === 2 || v === 10 || (st.opts.three && v === 3)) return true;
+    const t = this.topVal(st); if (!t) return true;
+    if (st.opts.seven && t === 7) return v <= 7;
+    return v >= t;
+  },
+  source(st, pi) { if (st.hands[pi].length) return 'hand'; if (st.up[pi].length) return 'up'; if (st.down[pi].length) return 'down'; return null; },
+  playable(st, pi) { const s = this.source(st, pi); if (s === 'hand') return st.hands[pi].filter(c => this.canPlay(st, c)); if (s === 'up') return st.up[pi].filter(c => this.canPlay(st, c)); return []; },
+  needText(st) {
+    const t = this.topVal(st); if (!t) return 'Bunken er tom – du kan legge hva du vil.';
+    const n = t === 14 ? 'ess' : t === 13 ? 'konge' : t === 12 ? 'dame' : t === 11 ? 'knekt' : t;
+    if (st.opts.seven && t === 7) return 'Legg 7 eller lavere (eller 2 / 10).';
+    return `Legg ${n} eller høyere (eller 2 / 10${st.opts.three ? ' / 3' : ''}).`;
+  },
+  refill(st, pi) { while (st.hands[pi].length < 3 && st.stock.length) st.hands[pi].push(st.stock.pop()); },
+  isOut(st, pi) { return !st.hands[pi].length && !st.up[pi].length && !st.down[pi].length; },
+  nextTurn(st) {
+    const n = st.players.length;
+    for (let k = 1; k <= n; k++) { const j = (st.turn + k) % n; if (!st.out.includes(j)) { st.turn = j; return; } }
+  },
+  checkOut(st, pi) {
+    if (this.isOut(st, pi) && !st.out.includes(pi)) {
+      st.out.push(pi); logPush(st, `${pname(st, pi)} er tom for kort og er ute! 🎉`);
+      const left = st.players.map((p, i) => i).filter(i => !st.out.includes(i));
+      if (left.length <= 1) { st.phase = 'over'; st.loser = left[0]; st.winner = st.out[0]; if (st.loser != null) logPush(st, `${pname(st, st.loser)} er Idioten! 🤪`); return true; }
+    }
+    return false;
+  },
+  afterPlay(st, pi, cards) {
+    const v = this.val(cards[0]);
+    const last4 = st.pile.slice(-4);
+    const four = last4.length === 4 && last4.every(c => cR(c) === cR(cards[0]));
+    this.refill(st, pi);
+    if (v === 10 || four) {
+      st.burned += st.pile.length; st.pile = [];
+      logPush(st, v === 10 ? `🔥 Tieren brenner bunken! ${pname(st, pi)} legger igjen.` : `🔥 Fire like brenner bunken! ${pname(st, pi)} legger igjen.`);
+      st.last = { pi, t: 'burn' };
+      if (this.checkOut(st, pi)) return; if (st.out.includes(pi)) this.nextTurn(st);
+      return;
+    }
+    if (this.checkOut(st, pi)) return;
+    this.nextTurn(st);
+  },
+  act(st, pi, a) {
+    if (st.phase === 'over') return 'Spillet er ferdig.';
+    if (st.phase === 'swap') {
+      if (a.t === 'swap') {
+        if (st.ready[pi]) return 'Du har allerede trykket Klar.';
+        const h = st.hands[pi].indexOf(a.h), u = st.up[pi].indexOf(a.u);
+        if (h < 0 || u < 0) return 'Velg ett kort på hånda og ett åpent kort.';
+        st.hands[pi][h] = a.u; st.up[pi][u] = a.h; return null;
+      }
+      if (a.t === 'ready') {
+        st.ready[pi] = true; logPush(st, `${pname(st, pi)} er klar.`);
+        if (st.ready.every(Boolean)) { st.phase = 'play'; st.turn = Math.floor(Math.random() * st.players.length); logPush(st, `Alle er klare! ${pname(st, st.turn)} begynner.`); }
+        return null;
+      }
+      return 'Vent til alle har byttet kort.';
+    }
+    if (pi !== st.turn) return 'Det er ikke din tur.';
+    st.moves = (st.moves || 0) + 1;
+    const src = this.source(st, pi);
+    if (a.t === 'play') {
+      if (src !== 'hand' && src !== 'up') return 'Nå må du snu et av de skjulte kortene.';
+      const from = src === 'hand' ? st.hands[pi] : st.up[pi];
+      const cs = a.cards || []; if (!cs.length) return 'Velg et kort.';
+      if (!cs.every(c => from.includes(c))) return src === 'up' ? 'Spill hånda tom før du bruker bordkortene.' : 'Du har ikke det kortet.';
+      if (!cs.every(c => cR(c) === cR(cs[0]))) return 'Du kan bare legge flere kort hvis de er like.';
+      if (!this.canPlay(st, cs[0])) return this.needText(st);
+      cs.forEach(c => from.splice(from.indexOf(c), 1)); st.pile.push(...cs);
+      logPush(st, cs.length > 1 ? `${pname(st, pi)} la ${cs.length} ${RANK_PLURAL[cR(cs[0])]} samtidig.` : `${pname(st, pi)} la ${niceName(cs[0])}.`);
+      st.last = { pi, t: 'play', c: cs[0] };
+      this.afterPlay(st, pi, cs); return null;
+    }
+    if (a.t === 'blind') {
+      if (src !== 'down') return 'Du har fortsatt andre kort å spille.';
+      const k = a.idx | 0; const cd = st.down[pi][k]; if (!cd) return 'Velg et skjult kort.';
+      st.down[pi].splice(k, 1);
+      if (this.canPlay(st, cd)) {
+        st.pile.push(cd); logPush(st, `${pname(st, pi)} snudde ${niceName(cd)} – og det passet! 😮`); st.last = { pi, t: 'play', c: cd };
+        this.afterPlay(st, pi, [cd]);
+      } else {
+        st.hands[pi].push(cd, ...st.pile); const n = st.pile.length; st.pile = [];
+        logPush(st, `${pname(st, pi)} snudde ${niceName(cd)} – det passet ikke, så ${pname(st, pi)} tar opp bunken (${n + 1} kort).`); st.last = { pi, t: 'take' };
+        this.nextTurn(st);
+      }
+      return null;
+    }
+    if (a.t === 'take') {
+      if (!st.pile.length) return 'Bunken er tom – legg et kort.';
+      if (src === 'down') return 'Snu et skjult kort.';
+      if (this.playable(st, pi).length) return 'Du har et kort du kan legge!';
+      const n = st.pile.length; st.hands[pi].push(...st.pile); st.pile = [];
+      logPush(st, `${pname(st, pi)} kunne ikke legge og tar opp bunken (${n} kort).`); st.last = { pi, t: 'take' };
+      this.nextTurn(st); return null;
+    }
+    return 'Ukjent trekk.';
+  },
+  bot(st, pi) {
+    if (st.phase === 'swap') {
+      // bytt slik at de beste kortene ligger åpne
+      const score = c => { const v = this.val(c); return v === 2 ? 20 : v === 10 ? 19 : (st.opts.three && v === 3) ? 18 : v; };
+      const worstUp = st.up[pi].slice().sort((a, b) => score(a) - score(b))[0];
+      const bestHand = st.hands[pi].slice().sort((a, b) => score(b) - score(a))[0];
+      if (bestHand && worstUp && score(bestHand) > score(worstUp)) return { t: 'swap', h: bestHand, u: worstUp };
+      return { t: 'ready' };
+    }
+    const src = this.source(st, pi);
+    if (src === 'down') return { t: 'blind', idx: Math.floor(Math.random() * st.down[pi].length) };
+    const ok = this.playable(st, pi);
+    if (!ok.length) return { t: 'take' };
+    const special = v => v === 2 || v === 10 || (st.opts.three && v === 3);
+    const sorted = ok.slice().sort((a, b) => (special(this.val(a)) - special(this.val(b))) || (this.val(a) - this.val(b)));
+    let pick = sorted[0];
+    const ten = ok.find(c => this.val(c) === 10);
+    if (ten && st.pile.length >= 6) pick = ten; // brenn en stor bunke
+    else if ((st.moves || 0) > 300) pick = ok[Math.floor(Math.random() * ok.length)]; // bryt evige løkker
+    else if (st.opts.seven && this.val(pick) === 7 && sorted.length > 1 && Math.random() < .5) pick = sorted[1]; // ikke alltid låse med 7
+    const r = cR(pick); const from = src === 'hand' ? st.hands[pi] : st.up[pi];
+    return { t: 'play', cards: from.filter(c => cR(c) === r) };
+  },
+  botReady(st) { return st.phase === 'swap' ? st.players.findIndex((p, i) => p.bot && !st.ready[i]) : -1; },
+  ranking(st) {
+    const order = [...st.out]; if (st.loser != null) order.push(st.loser);
+    st.players.forEach((p, i) => { if (!order.includes(i)) order.push(i); });
+    return order.map((i, k) => ({ i, score: i === st.loser ? 'Idiot 🤪' : (k === 0 ? 'Først ute!' : 'Ute') }));
+  },
+};
+const ENGINES = { vri8: VRI8, fisk: FISK, svarteper: SVARTEPER, idiot: IDIOT };
+
+
+/* ============ NETTVERK: Firebase (ekte) eller BroadcastChannel (test på samme maskin) ============
+   Firebase: samme prosjekt som Slagskip og de andre spillene for to (mykje-spill), egen sti «mykjekort».
+   Står den som null, virker flerspiller bare mellom faner i samme nettleser (fint for testing). */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCGa-sqmEBetgY4qJIpzJDf92rMSFn3cwc",
+  authDomain: "mykje-spill.firebaseapp.com",
+  databaseURL: "https://mykje-spill-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mykje-spill",
+  appId: "1:248771795084:web:9839ce54c5bb4d5cfc03a9"
+};
+const DB_ROOT = 'mykjekort';
+
+const Net = {
+  mode: FIREBASE_CONFIG ? 'firebase' : 'local',
+  db: null, ref: null, bc: null, code: null, isHost: false, handlers: [],
+  async ready() {
+    if (this.mode !== 'firebase' || this.db) return;
+    const load = src => new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+    await load('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+    await load('https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js');
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    this.db = firebase.database();
+  },
+  /* Verten åpner et rom og får alle meldinger fra deltakerne */
+  async host(code, onMsg) {
+    await this.ready(); this.code = code; this.isHost = true;
+    if (this.mode === 'firebase') {
+      this.ref = this.db.ref(DB_ROOT + '/' + code);
+      await this.ref.set({ created: Date.now(), state: '' });
+      this.ref.onDisconnect().remove();
+      const inbox = this.ref.child('inbox');
+      const h = inbox.on('child_added', snap => { const m = snap.val(); snap.ref.remove(); onMsg(m); });
+      this.handlers.push(() => inbox.off('child_added', h));
+    } else {
+      this.bc = new BroadcastChannel('mykjekort-' + code);
+      this.bc.onmessage = e => { const m = e.data; if (m.k === 'in') onMsg(m.m); if (m.k === 'hello' && this._last) this.bc.postMessage({ k: 'state', s: this._last }); };
+    }
+  },
+  publish(state) {
+    const s = JSON.stringify(state); this._last = s;
+    if (this.mode === 'firebase') this.ref && this.ref.child('state').set(s);
+    else this.bc && this.bc.postMessage({ k: 'state', s });
+  },
+  /* En deltaker blir med og får tilstanden hver gang den endres */
+  async join(code, onState) {
+    await this.ready(); this.code = code; this.isHost = false;
+    if (this.mode === 'firebase') {
+      this.ref = this.db.ref(DB_ROOT + '/' + code);
+      const snap = await this.ref.child('created').get();
+      if (!snap.exists()) throw new Error('Fant ikke rommet. Sjekk koden.');
+      const st = this.ref.child('state');
+      const h = st.on('value', s => { const v = s.val(); if (v) onState(JSON.parse(v)); else if (v === null) onState(null); });
+      this.handlers.push(() => st.off('value', h));
+    } else {
+      this.bc = new BroadcastChannel('mykjekort-' + code);
+      let got = false;
+      this.bc.onmessage = e => { if (e.data.k === 'state') { got = true; onState(JSON.parse(e.data.s)); } };
+      this.bc.postMessage({ k: 'hello' });
+      await new Promise(r => setTimeout(r, 700));
+      if (!got) { this.leave(); throw new Error('Fant ikke rommet. (Uten Firebase virker det bare i samme nettleser.)'); }
+    }
+  },
+  send(m) {
+    if (this.mode === 'firebase') this.ref && this.ref.child('inbox').push(m);
+    else this.bc && this.bc.postMessage({ k: 'in', m });
+  },
+  leave() {
+    this.handlers.forEach(f => f()); this.handlers = [];
+    if (this.mode === 'firebase' && this.ref && this.isHost) { this.ref.remove(); this.ref.onDisconnect().cancel(); }
+    if (this.bc) { this.bc.close(); this.bc = null; }
+    this.ref = null; this.code = null; this._last = null;
+  },
+};
+
+/* ============ FLERSPILLER: rom, bots og bordet ============ */
+const myId = (() => { let id; try { id = sessionStorage.getItem('mykjekort-id'); } catch (e) { } if (!id) { id = 'u' + Math.random().toString(36).slice(2, 9); try { sessionStorage.setItem('mykjekort-id', id); } catch (e) { } } return id; })();
+const BOT_NAMES = ['Robo-Rita', 'Bot-Bjarne', 'Kalkula', 'Pixel-Per', 'Data-Dina', 'Brikke-Bo'];
+const AVATAR_COLORS = ['#ef6f6c', '#4f9dde', '#f2b134', '#5cbf8a', '#a77bd8', '#ef8fb8'];
+
+const Room = {
+  st: null, isHost: false, offline: false, code: null, botTimer: null, lastLogN: 0, sel: null, isel: [],
+  get eng() { return this.st && ENGINES[this.st.game]; },
+  get me() { return this.st ? this.st.players.findIndex(p => p.id === myId) : -1; },
+  reset() { this.isel = []; this.prevHand = null; clearTimeout(this.botTimer); Net.leave(); this.st = null; this.isHost = false; this.offline = false; this.code = null; this.lastLogN = 0; this.sel = null; },
+
+  startOffline(game, nBots, opts) {
+    this.reset(); this.offline = true; this.isHost = true;
+    const players = [{ id: myId, name: Settings.name || 'Meg', bot: false }];
+    shuffle(BOT_NAMES.slice()).slice(0, nBots).forEach((n, i) => players.push({ id: 'bot' + i, name: n, bot: true }));
+    this.st = { ...ENGINES[game].init(players, opts), hostId: myId };
+    showScreen('table'); this.render(); this.after();
+  },
+  async create(game, opts) {
+    this.reset(); this.isHost = true;
+    this.code = Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPRSTUVWXYZ'[Math.floor(Math.random() * 23)]).join('');
+    this.st = { phase: 'lobby', game, opts: opts || {}, code: this.code, hostId: myId, players: [{ id: myId, name: Settings.name || 'Vert', bot: false }] };
+    try { await Net.host(this.code, m => this.onMsg(m)); } catch (e) { toast(/permission/i.test(e.message) ? '«Spill med klassen» er ikke slått på i Firebase ennå. Spill mot datamaskinen så lenge!' : 'Klarte ikke å lage rom: ' + e.message); this.reset(); showScreen('home'); return; }
+    this.publish(); showScreen('lobby'); renderLobby();
+  },
+  async join(code) {
+    this.reset(); this.code = code.toUpperCase().trim();
+    try {
+      await Net.join(this.code, s => this.onState(s));
+      Net.send({ type: 'join', id: myId, name: Settings.name || 'Elev' });
+    } catch (e) { toast(/permission/i.test(e.message) ? '«Spill med klassen» er ikke slått på i Firebase ennå.' : e.message); this.reset(); showScreen('home'); return; }
+  },
+  onState(s) {
+    if (!s) { toast('Verten har avsluttet rommet.'); this.reset(); showScreen('home'); return; }
+    this.st = s;
+    if (s.phase === 'lobby') { if (s.players.some(p => p.id === myId)) { showScreen('lobby'); renderLobby(); } else if (s.full) { } }
+    else { if (this.me < 0) { toast('Spillet har startet uten deg.'); this.reset(); showScreen('home'); return; } showScreen('table'); this.render(); }
+  },
+  /* ---- vert ---- */
+  onMsg(m) {
+    const st = this.st; if (!st) return;
+    if (m.type === 'join') {
+      if (st.phase !== 'lobby') return;
+      const ex = st.players.find(p => p.id === m.id);
+      if (ex) ex.name = m.name; else if (st.players.length < ENGINES[st.game].max) st.players.push({ id: m.id, name: (m.name || 'Elev').slice(0, 14), bot: false });
+      sfx('tick'); this.publish(); renderLobby();
+    } else if (m.type === 'leave') {
+      if (st.phase === 'lobby') { st.players = st.players.filter(p => p.id !== m.id); this.publish(); renderLobby(); }
+      else { const p = st.players.find(p => p.id === m.id); if (p) { p.bot = true; p.name += ' 🤖'; logPush(st, `${p.name} gikk ut – en datamaskin tar over.`); this.publish(); this.render(); this.after(); } }
+    } else if (m.type === 'act') {
+      const pi = st.players.findIndex(p => p.id === m.id); if (pi < 0) return;
+      this.apply(pi, m.a);
+    }
+  },
+  addBot() { const st = this.st; if (st.players.length >= ENGINES[st.game].max) return; const used = st.players.map(p => p.name); const n = BOT_NAMES.find(b => !used.includes(b)) || 'Bot'; st.players.push({ id: 'bot' + Math.random().toString(36).slice(2, 6), name: n, bot: true }); this.publish(); renderLobby(); },
+  kick(id) { this.st.players = this.st.players.filter(p => p.id !== id); this.publish(); renderLobby(); },
+  begin() {
+    const st = this.st, E = ENGINES[st.game];
+    if (st.players.length < E.min) { toast('Dere må være minst to. Legg til en datamaskin-spiller!'); return; }
+    this.st = { ...E.init(st.players, st.opts), code: st.code, hostId: myId };
+    this.publish(); showScreen('table'); this.render(); this.after();
+  },
+  rematch() {
+    if (!this.isHost) return;
+    const players = this.st.players.map(p => ({ ...p }));
+    this.st = { ...this.eng.init(players, this.st.opts), code: this.code, hostId: myId };
+    this.lastLogN = 0; this.isel = []; hideModal(); this.publish(); this.render(); this.after();
+  },
+  apply(pi, a) {
+    const err = this.eng.act(this.st, pi, a);
+    if (err) { if (this.st.players[pi].id === myId) { toast(err); sfx('nope'); } return; }
+    this.publish(); this.render(); this.after();
+  },
+  publish() { if (!this.offline) Net.publish(this.st); },
+  after() {
+    clearTimeout(this.botTimer);
+    const st = this.st; if (!st || !this.isHost) return;
+    if (st.phase === 'swap') { const b = IDIOT.botReady(st); if (b >= 0) this.botTimer = setTimeout(() => { if (this.st === st) this.apply(b, IDIOT.bot(st, b)); }, 450); return; }
+    if (st.phase !== 'play') return;
+    if (st.players[st.turn].bot) this.botTimer = setTimeout(() => { if (this.st === st) this.apply(st.turn, this.eng.bot(st, st.turn)); }, st.game === 'vri8' && st.draws ? 650 : 1200);
+  },
+  /* ---- fra brukergrensesnittet ---- */
+  act(a) {
+    if (this.isHost) this.apply(this.me, a);
+    else Net.send({ type: 'act', id: myId, a });
+  },
+  leave() {
+    if (!this.isHost && !this.offline && this.code) Net.send({ type: 'leave', id: myId });
+    this.reset(); showScreen('home');
+  },
+  render() { renderTable(); },
+};
+
+/* ---------- Lobby ---------- */
+function renderLobby() {
+  const st = Room.st; if (!st) return;
+  const E = ENGINES[st.game];
+  $('#lobbyGame').textContent = E.name;
+  $('#lobbyCode').textContent = st.code;
+  const url = location.origin + location.pathname + '?rom=' + st.code;
+  $('#lobbyUrl').textContent = url.replace(/^https?:\/\//, '');
+  makeQR($('#lobbyQR'), url);
+  $('#lobbyPlayers').innerHTML = st.players.map((p, i) => `<li><span class="av" style="background:${AVATAR_COLORS[i % 6]}">${p.bot ? '🤖' : esc(p.name[0] || '?')}</span><b>${esc(p.name)}</b>${p.id === st.hostId ? ' <small>(vert)</small>' : ''}${p.id === myId ? ' <small>(deg)</small>' : ''}${Room.isHost && p.id !== myId ? `<button class="mini" data-kick="${p.id}">Fjern</button>` : ''}</li>`).join('') +
+    Array.from({ length: E.max - st.players.length }, () => `<li class="empty"><span class="av">?</span>Ledig plass</li>`).join('');
+  $('#lobbyHost').hidden = !Room.isHost; $('#lobbyWait').hidden = Room.isHost;
+  $('#btnAddBot').disabled = st.players.length >= E.max;
+  $('#btnBegin').disabled = st.players.length < E.min;
+  $('#lobbyLocalNote').hidden = Net.mode !== 'local';
+}
+function makeQR(el, url) {
+  el.innerHTML = '';
+  const draw = () => { try { const q = qrcode(0, 'M'); q.addData(url); q.make(); el.innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); } catch (e) { } };
+  if (window.qrcode) draw();
+  else { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = draw; document.head.appendChild(s); }
+}
+
+/* ---------- Bordet ---------- */
+function seatClass(n, k) { // k = 1..n-1 plasser etter meg (med klokka)
+  if (n === 2) return 'top';
+  if (n === 3) return k === 1 ? 'left' : 'right';
+  return ['left', 'top', 'right'][k - 1];
+}
+function smallBacks(n, max = 9) { let s = ''; for (let i = 0; i < Math.min(n, max); i++) s += `<i style="${backStyle()}"></i>`; return s; }
+function cardEl(cd, extra) { const el = makeCardEl({ ...parse(cd), up: true, id: cd }); if (extra) el.classList.add(...extra.split(' ')); el.dataset.c = cd; return el; }
+
+function renderTable() {
+  const st = Room.st; if (!st || st.phase === 'lobby') return;
+  const E = ENGINES[st.game], me = Room.me, n = st.players.length, myTurn = st.turn === me && st.phase === 'play';
+  const tbl = $('#table'); tbl.dataset.game = st.game; tbl.style.background = (THEMES[Settings.theme] || THEMES.klassisk).table;
+  const tcw = Math.max(54, Math.min(innerWidth / 8.5, innerHeight / (st.game === 'idiot' ? (innerHeight < 760 ? 8.2 : 7.4) : 6.2), 118));
+  tbl.style.setProperty('--cw', tcw + 'px'); tbl.style.setProperty('--ch', tcw * CH_RATIO + 'px');
+  const ccw = st.game === 'idiot' ? tcw * 0.78 : tcw; $('#center').style.setProperty('--cw', ccw + 'px'); $('#center').style.setProperty('--ch', ccw * CH_RATIO + 'px');
+  $('#tblTitle').textContent = E.name + (st.code ? ' · rom ' + st.code : '');
+  // motstandere
+  const opps = $('#opps'); opps.innerHTML = '';
+  for (let k = 1; k < n; k++) {
+    const i = (me + k) % n, p = st.players[i], cnt = st.hands[i].length;
+    const d = document.createElement('div');
+    d.className = `opp ${seatClass(n, k)}${st.turn === i && st.phase === 'play' ? ' turn' : ''}${st.game === 'idiot' ? ' idiotopp' : ''}${Room.sel != null && st.game === 'fisk' && cnt ? ' askable' : ''}`;
+    d.dataset.pi = i;
+    let extra = '';
+    if (st.game === 'fisk') extra = `<div class="books">${st.books[i].map(r => `<span>${RANK_LABEL[r]}</span>`).join('') || '<em>ingen stikk ennå</em>'}</div>`;
+    if (st.game === 'svarteper' && !cnt) extra = `<div class="safe">Trygg! 😊</div>`;
+    if (st.game === 'idiot') extra = (st.out.includes(i) ? `<div class="safe">Ute! 🎉</div>` : tableCardsHTML(st, i, false)) + (st.phase === 'swap' ? `<div class="safe">${st.ready[i] ? 'Klar ✓' : 'Bytter kort …'}</div>` : '');
+    d.innerHTML = `<div class="who"><span class="av" style="background:${AVATAR_COLORS[i % 6]}">${p.bot ? '🤖' : esc(p.name[0] || '?')}</span><b>${esc(p.name)}</b><span class="cnt">${cnt} kort</span>${Room.isHost && !p.bot && !Room.offline ? `<button class="mini" data-bot="${i}" title="La datamaskinen ta over">🤖</button>` : ''}</div><div class="fan">${smallBacks(cnt)}</div>${extra}`;
+    opps.appendChild(d);
+  }
+  // midten
+  const c = $('#center'); c.innerHTML = '';
+  if (st.game === 'vri8') {
+    const stock = document.createElement('div'); stock.className = 'pilebox';
+    stock.innerHTML = `<div class="stackback ${myTurn && st.draws < 3 ? 'can' : ''}" id="stockPile" style="${backStyle()}"><span>${st.stock.length}</span></div><label>Trekk</label>`;
+    const disc = document.createElement('div'); disc.className = 'pilebox';
+    const t = st.pile[st.pile.length - 1];
+    const ce = cardEl(t, 'drop-in'); disc.appendChild(ce);
+    disc.insertAdjacentHTML('beforeend', `<label>Bunken</label>`);
+    c.append(stock, disc);
+    if (cR(t) === 8 || st.suit !== cS(t)) c.insertAdjacentHTML('beforeend', `<div class="suitbadge" style="color:${suitColor(st.suit, THEMES[Settings.theme])}">Sort: <svg viewBox="0 0 100 100">${SUIT_SVG[st.suit]}</svg> ${SUIT_NAME[st.suit]}</div>`);
+  } else if (st.game === 'fisk') {
+    c.innerHTML = `<div class="pilebox wide"><div class="pond">${smallBacks(Math.min(st.pond.length, 14), 14)}</div><label>Dammen · ${st.pond.length} kort</label></div><div class="mybooks"><b>Dine stikk:</b> ${st.books[me].map(r => `<span>${RANK_LABEL[r]}</span>`).join('') || '<em>ingen ennå</em>'}</div>`;
+  } else if (st.game === 'idiot') {
+    const t = st.pile[st.pile.length - 1];
+    c.innerHTML = `<div class="pilebox"><div class="stackback" style="${backStyle()}"><span>${st.stock.length}</span></div><label>Trekkbunke</label></div>`;
+    const disc = document.createElement('div'); disc.className = 'pilebox';
+    if (t) { if (st.pile.length > 1) disc.appendChild(cardEl(st.pile[st.pile.length - 2], 'under')); disc.appendChild(cardEl(t, 'drop-in')); } else disc.innerHTML = `<div class="emptypile">Tom</div>`;
+    disc.insertAdjacentHTML('beforeend', `<label>Bunken · ${st.pile.length}</label>`);
+    c.appendChild(disc);
+    const tv = IDIOT.topVal(st);
+    let info = st.phase === 'play' ? `<div class="suitbadge idneed">${IDIOT.needText(st).replace(/^Legg /, 'Neste: ')}</div>` : '';
+    if (t && st.opts.three && cR(t) === 3 && tv) info = `<div class="suitbadge idneed">3 er usynlig – kortet under gjelder</div>` + info;
+    if (st.burned) info += `<div class="burned">🔥 ${st.burned} brent</div>`;
+    c.insertAdjacentHTML('beforeend', `<div class="idinfo">${info}</div>`);
+  } else if (st.game === 'svarteper') {
+    const tg = SVARTEPER.target(st);
+    if (st.phase === 'play' && tg >= 0) {
+      const fan = document.createElement('div'); fan.className = 'pickfan' + (myTurn ? ' can' : '');
+      st.hands[tg].forEach((_, k) => { const b = document.createElement('div'); b.className = 'pickcard'; b.style.cssText = backStyle(); b.dataset.idx = k; fan.appendChild(b); });
+      c.innerHTML = `<label class="picklabel">${myTurn ? `Trekk et kort fra ${esc(st.players[tg].name)}!` : `${esc(st.players[st.turn].name)} trekker fra ${tg === me ? 'deg' : esc(st.players[tg].name)}`}</label>`;
+      c.appendChild(fan);
+    }
+  }
+  // banner og logg
+  const banner = $('#banner');
+  if (st.phase === 'over') banner.textContent = 'Spillet er ferdig!';
+  else if (st.game === 'idiot' && st.phase === 'swap') banner.textContent = st.ready[me] ? 'Venter på at de andre blir klare …' : 'Bytt kort: trykk et kort på hånda, så et åpent kort på bordet.';
+  else if (myTurn && st.game === 'idiot') { const src = IDIOT.source(st, me); banner.textContent = src === 'down' ? 'Din tur! Snu et av de skjulte kortene dine.' : src === 'up' ? 'Hånda er tom – spill fra de åpne kortene på bordet!' : (IDIOT.playable(st, me).length ? 'Din tur! Legg et kort.' : 'Du kan ikke legge noe – ta opp bunken.'); }
+  else if (myTurn) banner.textContent = st.game === 'vri8' ? (st.draws ? `Din tur – du har trukket ${st.draws} av 3` : 'Din tur! Legg et kort eller trekk.') : st.game === 'fisk' ? (Room.sel != null ? `Trykk på en spiller for å spørre etter ${RANK_PLURAL[Room.sel]}` : 'Din tur! Trykk på et kort i hånda di.') : 'Din tur! Trekk et kort.';
+  else banner.textContent = `${st.players[st.turn].name} sin tur …`;
+  banner.classList.toggle('mine', myTurn || (st.game === 'idiot' && st.phase === 'swap' && !st.ready[me]));
+  const log = $('#log');
+  log.innerHTML = st.log.slice(-3).map(l => `<div>${esc(l.p && l.p.pi === me ? l.p.t + ' ' : '')}${esc(l.t)}</div>`).join('');
+  // private meldinger som toast
+  for (const l of st.log) if (l.n > Room.lastLogN) { if (l.p && l.p.pi === me) toast(l.p.t); }
+  const lastN = st.log.length ? st.log[st.log.length - 1].n : 0;
+  if (lastN > Room.lastLogN) { if (Room.lastLogN) sfx(myTurn ? 'tick' : 'place'); Room.lastLogN = lastN; }
+  // min hånd
+  const hand = $('#hand'); hand.innerHTML = '';
+  const mine = st.game === 'idiot' ? st.hands[me].slice().sort((a, b) => IDIOT.val(a) - IDIOT.val(b) || SUITS.indexOf(cS(a)) - SUITS.indexOf(cS(b))) : st.game === 'fisk' || st.game === 'svarteper' ? sortByRank(st.hands[me]) : sortHand(st.hands[me]);
+  mine.forEach((cd, k) => {
+    let cls = '';
+    if (st.game === 'vri8' && myTurn && Settings.hints && VRI8.canPlay(st, cd)) cls = 'playable';
+    if (st.game === 'fisk' && Room.sel === cR(cd)) cls = 'picked';
+    if (st.game === 'idiot') { if (Room.isel.includes(cd)) cls = 'picked'; else if (myTurn && Settings.hints && IDIOT.source(st, me) === 'hand' && IDIOT.canPlay(st, cd)) cls = 'playable'; }
+    const el = cardEl(cd, cls); el.style.setProperty('--k', k); el.style.setProperty('--n', mine.length);
+    if (!Room.prevHand || !Room.prevHand.includes(cd)) el.classList.add('new');
+    hand.appendChild(el);
+  });
+  hand.style.setProperty('--n', mine.length); Room.prevHand = mine.slice();
+  const hw = hand.clientWidth || innerWidth, cw = parseFloat(getComputedStyle(tbl).getPropertyValue('--cw')) || 80;
+  hand.style.setProperty('--step', Math.min(cw * 0.66, (hw - cw - 20) / Math.max(1, mine.length - 1)) + 'px');
+  hand.style.setProperty('--rot', (mine.length > 12 ? 1 : 2) + 'deg');
+  $('#myName').innerHTML = `<span class="av" style="background:${AVATAR_COLORS[me % 6]}">${esc((st.players[me].name || '?')[0])}</span> ${esc(st.players[me].name)} · ${st.hands[me].length} kort${st.game === 'svarteper' && !st.hands[me].length ? ' · Trygg! 😊' : ''}${st.game === 'idiot' && st.out.includes(me) ? ' · Ute! 🎉' : ''}`;
+  $('#myName').classList.toggle('turn', myTurn);
+  const mt = $('#mytable');
+  mt.hidden = st.game !== 'idiot';
+  if (st.game === 'idiot') mt.innerHTML = tableCardsHTML(st, me, true);
+  if (st.game === 'idiot') {
+    const src = IDIOT.source(st, me);
+    $('#btnReady').hidden = !(st.phase === 'swap' && !st.ready[me]);
+    $('#btnTake').hidden = !(myTurn && st.pile.length && src !== 'down' && !IDIOT.playable(st, me).length);
+    $('#btnPlaySel').hidden = !(myTurn && Room.isel.length > 1);
+    $('#btnPlaySel').textContent = `Legg ${Room.isel.length} like kort`;
+  } else ['#btnReady', '#btnTake', '#btnPlaySel'].forEach(b => $(b).hidden = true);
+  $('#btnPass').hidden = !(st.game === 'vri8' && myTurn && (st.draws >= 3 || st.stock.length + st.pile.length <= 1));
+  const askBtn = $('#btnAsk');
+  const others = st.players.map((p, i) => i).filter(i => i !== me && st.hands[i].length);
+  askBtn.hidden = !(st.game === 'fisk' && myTurn && Room.sel != null && others.length === 1);
+  if (!askBtn.hidden) askBtn.textContent = `Spør ${st.players[others[0]].name} om ${RANK_PLURAL[Room.sel]}`;
+  if (st.phase === 'over' && !$('#modal').classList.contains('open')) setTimeout(() => showResults(), 900);
+}
+
+function showResults() {
+  const st = Room.st; if (!st || st.phase !== 'over') return;
+  const E = ENGINES[st.game], rk = E.ranking(st), me = Room.me;
+  const loserGame = st.game === 'svarteper' || st.game === 'idiot';
+  const iWon = loserGame ? st.loser !== me : (st.winners || [st.winner]).includes(me);
+  if (iWon) { sfx('win'); confetti(); }
+  const medals = ['🥇', '🥈', '🥉', '🎖️'];
+  showModal(`<h2>${iWon ? (st.game === 'svarteper' ? 'Du slapp unna Svarteper!' : st.game === 'idiot' ? (st.out[0] === me ? 'Du ble først ute! 🎉' : 'Du slapp unna! 😅') : 'Du vant! 🎉') : (st.game === 'svarteper' && st.loser === me ? 'Du ble Svarteper! 🃏' : st.game === 'idiot' && st.loser === me ? 'Du ble Idioten! 🤪' : 'Godt spilt!')}</h2>
+    <ol class="rank">${rk.map((r, k) => `<li><span>${loserGame && r.i === st.loser ? (st.game === 'idiot' ? '🤪' : '🃏') : medals[k]}</span><b>${esc(st.players[r.i].name)}</b><em>${r.score}</em></li>`).join('')}</ol>
+    <div class="row">${Room.isHost ? '<button class="btn primary" id="btnRematch">Spill igjen</button>' : '<p class="muted">Verten kan starte et nytt spill.</p>'}<button class="btn" id="btnToMenu">Til menyen</button></div>`);
+  $('#btnRematch') && ($('#btnRematch').onclick = () => Room.rematch());
+  $('#btnToMenu').onclick = () => { hideModal(); Room.leave(); };
+}
+
+/* trykk på bordet */
+function tableClick(e) {
+  const st = Room.st; if (!st || (st.phase !== 'play' && st.phase !== 'swap')) return;
+  const me = Room.me, myTurn = st.turn === me && st.phase === 'play';
+  const bt = e.target.closest('[data-bot]');
+  if (bt && Room.isHost) { const p = st.players[+bt.dataset.bot]; p.bot = true; p.name += ' 🤖'; Room.publish(); Room.render(); Room.after(); return; }
+  const handCard = e.target.closest('#hand .card');
+  if (st.game === 'vri8') {
+    if (e.target.closest('#stockPile')) { if (!myTurn) return toast('Vent på tur din.'); Room.act({ t: 'draw' }); return; }
+    if (handCard) {
+      if (!myTurn) { shake(handCard); return toast('Det er ikke din tur ennå.'); }
+      const cd = handCard.dataset.c;
+      if (!VRI8.canPlay(st, cd)) { shake(handCard); sfx('nope'); return toast(`Du må legge ${SUIT_NAME[st.suit]}, samme tall/bilde, eller en åtter.`); }
+      if (cR(cd) === 8) return pickSuit(s => Room.act({ t: 'play', c: cd, suit: s }));
+      handCard.classList.add('fly'); setTimeout(() => Room.act({ t: 'play', c: cd }), 120);
+    }
+  } else if (st.game === 'fisk') {
+    if (handCard) { if (!myTurn) return toast('Vent på tur din.'); const r = cR(handCard.dataset.c); Room.sel = Room.sel === r ? null : r; sfx('tick'); renderTable(); return; }
+    const opp = e.target.closest('.opp');
+    if (opp && myTurn) {
+      if (Room.sel == null) return toast('Velg først et kort i hånda di.');
+      const tg = +opp.dataset.pi; const r = Room.sel; Room.sel = null; Room.act({ t: 'ask', target: tg, rank: r });
+    }
+  } else if (st.game === 'idiot') idiotClick(e, st, me, myTurn, handCard);
+  else if (st.game === 'svarteper') {
+    const pc = e.target.closest('.pickcard');
+    if (pc) { if (!myTurn) return toast('Vent på tur din.'); pc.classList.add('pulled'); setTimeout(() => Room.act({ t: 'pick', idx: +pc.dataset.idx }), 250); }
+  }
+}
+function pickSuit(cb) {
+  const th = THEMES[Settings.theme];
+  showModal(`<h2>Vri åtteren!</h2><p>Hvilken sort skal neste spiller legge?</p><div class="suits">${SUITS.map(s => `<button class="suitbtn" data-s="${s}" style="color:${suitColor(s, th)}"><svg viewBox="0 0 100 100">${SUIT_SVG[s]}</svg><span>${SUIT_NAME[s]}</span></button>`).join('')}</div>`);
+  $$('#modal .suitbtn').forEach(b => b.onclick = () => { hideModal(); cb(b.dataset.s); });
+}
+
+/* ---------- Idiot: bordkort og trykk ---------- */
+function tableCardsHTML(st, i, mine) {
+  const src = IDIOT.source(st, i), myTurn = mine && st.turn === i && st.phase === 'play';
+  let h = `<div class="tcards${mine ? ' mine' : ''}">`;
+  for (let j = 0; j < 3; j++) {
+    const dn = st.down[i][j], up = st.up[i][j];
+    if (!dn && !up) { h += `<div class="tslot empty"></div>`; continue; }
+    let cls = '';
+    h += `<div class="tslot">`;
+    if (dn) h += `<div class="tdown ${myTurn && src === 'down' ? 'can' : ''}" data-down="${j}" style="${backStyle()}"></div>`;
+    if (up) {
+      if (mine && st.phase === 'swap') cls = 'swappable';
+      else if (myTurn && src === 'up' && IDIOT.canPlay(st, up)) cls = Settings.hints ? 'can' : '';
+      if (mine && Room.isel.includes(up)) cls += ' picked';
+      h += `<div class="tup ${cls}" data-up="${up}">${faceSVG(parse(up))}</div>`;
+    }
+    h += `</div>`;
+  }
+  return h + `</div>`;
+}
+function idiotClick(e, st, me, myTurn, handCard) {
+  const upEl = e.target.closest('#mytable .tup'), dnEl = e.target.closest('#mytable .tdown');
+  if (st.phase === 'swap') {
+    if (st.ready[me]) return;
+    if (handCard) { const cd = handCard.dataset.c; Room.isel = Room.isel[0] === cd ? [] : [cd]; sfx('tick'); return renderTable(); }
+    if (upEl) {
+      if (!Room.isel.length) return toast('Trykk først på et kort i hånda di, så på kortet på bordet du vil bytte med.');
+      const h = Room.isel[0]; Room.isel = []; Room.act({ t: 'swap', h, u: upEl.dataset.up }); sfx('place'); return;
+    }
+    return;
+  }
+  if (!myTurn) { if (handCard || upEl || dnEl) toast('Vent på tur din.'); return; }
+  const src = IDIOT.source(st, me);
+  if (dnEl) { if (src !== 'down') return toast(src === 'hand' ? 'Spill hånda tom først.' : 'Spill de åpne bordkortene først.'); dnEl.classList.add('flipme'); setTimeout(() => Room.act({ t: 'blind', idx: +dnEl.dataset.down }), 200); return; }
+  let el = null, from = null;
+  if (handCard) { if (src !== 'hand') return; el = handCard; from = st.hands[me]; }
+  else if (upEl) { if (src !== 'up') return toast(src === 'hand' ? 'Spill hånda tom før du bruker bordkortene.' : 'Snu et skjult kort.'); el = upEl; from = st.up[me]; }
+  if (!el) return;
+  const cd = el.dataset.c || el.dataset.up;
+  if (!IDIOT.canPlay(st, cd)) { shake(el); sfx('nope'); return toast(IDIOT.needText(st)); }
+  const same = from.filter(c => cR(c) === cR(cd));
+  if (same.length === 1) { Room.isel = []; Room.act({ t: 'play', cards: [cd] }); return; }
+  // flere like: velg hvilke som skal legges
+  if (Room.isel.length && cR(Room.isel[0]) !== cR(cd)) Room.isel = [];
+  Room.isel = Room.isel.includes(cd) ? Room.isel.filter(c => c !== cd) : [...Room.isel, cd];
+  if (Room.isel.length === 1) toast(`Du har flere ${RANK_PLURAL[cR(cd)]}. Trykk på de andre for å legge dem samtidig, eller trykk «Legg».`);
+  sfx('tick'); renderTable();
+  $('#btnPlaySel').hidden = false; $('#btnPlaySel').textContent = `Legg ${Room.isel.length} ${Room.isel.length > 1 ? 'like kort' : 'kort'}`;
+}
+
+/* ============ OPPLÆRING: animerte gjennomganger ============
+   Scene-koordinater: brettet er 100 bredt og 62 høyt. Et kort er 12 bredt og 17,4 høyt.
+   cards: [kode, x, y, opp?]   ('X' = vilkårlig bakside)
+   anim:  [nr, x, y, snu?]  flytt kort nr (med finger) · ['flip', nr] · ['hide', nr...] · ['tap', nr]
+   marks: [x, y, b, h, tekst]  stiplede felter med tekst */
+const TUTS = {
+  klondike: [
+    { h: 'Målet', x: 'Flytt alle kortene opp til de fire bunkene øverst til høyre. Én bunke for hver sort – fra ess (A) og oppover til konge.',
+      marks: [[46, 4, 12, 17.4, ''], [60, 4, 12, 17.4, ''], [74, 4, 12, 17.4, ''], [88, 4, 12, 17.4, '']],
+      cards: [['H1', 46, 4], ['S1', 60, 4], ['H2', 30, 36], ['S2', 12, 36]], anim: [[2, 46, 4], [3, 60, 4]] },
+    { h: 'Bygg nedover med annenhver farge', x: 'Nede på bordet legger du kort nedover: en rød 7 kan ligge på en svart 8. Rød – svart – rød – svart.',
+      cards: [['S8', 20, 10], ['H7', 60, 10], ['C6', 80, 30]], anim: [[1, 20, 16], [2, 20, 22]] },
+    { h: 'Snu de skjulte kortene', x: 'Når du flytter vekk et åpent kort, ligger kortet under med baksiden opp. Trykk på det for å snu det – slik finner du kortene som er gjemt.',
+      cards: [['C4', 20, 8, false], ['D9', 20, 13], ['S10', 60, 8]], anim: [[1, 60, 14], ['tap', 0], ['flip', 0]] },
+    { h: 'Trekk fra bunken', x: 'Står du fast? Trykk på bunken øverst til venstre. Da snus et nytt kort som du kanskje kan bruke.',
+      marks: [[4, 4, 12, 17.4, '↻']],
+      cards: [['X', 4, 4, false], ['C5', 4, 4, false]], anim: [[1, 20, 4, true]] },
+    { h: 'Tomme plasser', x: 'Blir en plass på bordet tom, kan du bare legge en konge (K) der.',
+      marks: [[60, 10, 12, 17.4, 'K']],
+      cards: [['H13', 20, 10], ['D12', 20, 16]], anim: [[0, 60, 10]] },
+    { h: 'Slik spiller du', x: 'Trykk på et kort, så flytter det seg til beste plass. Du kan også dra det. 💡 gir deg et hint, og ↶ angrer siste trekk.',
+      cards: [['S2', 46, 4], ['S3', 30, 36]], anim: [['tap', 1], [1, 46, 4]] },
+  ],
+  edderkopp: [
+    { h: 'Målet', x: 'Lag hele rekker fra konge (K) ned til ess (A) i samme sort. En ferdig rekke flyttes bort av seg selv. Lag åtte rekker, så har du vunnet!',
+      cards: [['S13', 40, 4], ['S12', 40, 9], ['S11', 40, 14], ['S10', 40, 19], ['S9', 40, 24], ['S3', 40, 29], ['S2', 40, 34], ['S1', 40, 39]], anim: [['hide', 0, 1, 2, 3, 4, 5, 6, 7]] },
+    { h: 'Ett lavere', x: 'Du kan legge et kort på et som er ett høyere: en 6 på en 7. Sorten spiller ingen rolle – men samme sort er best!',
+      cards: [['H7', 20, 10], ['S6', 64, 10]], anim: [[1, 20, 16]] },
+    { h: 'Flytt flere sammen', x: 'Ligger kortene i rekke i samme sort, kan du flytte dem sammen. Her flyttes 5 og 4 sammen over på 6-eren.',
+      cards: [['S7', 20, 8], ['S6', 20, 14], ['S5', 64, 8], ['S4', 64, 14]], anim: [['tap', 2], [[2, 3], 20, 20]] },
+    { h: 'Nye kort', x: 'Trykk på bunken øverst til venstre for å dele ut ett nytt kort til hver kolonne. Men alle kolonnene må ha minst ett kort først.',
+      cards: [['X', 4, 4, false], ['H4', 4, 4, false], ['S9', 4, 4, false], ['S2', 4, 4, false], ['H11', 4, 4, false]],
+      anim: [[4, 24, 34, true], [3, 42, 34, true], [2, 60, 34, true], [1, 78, 34, true]] },
+    { h: 'Begynn lett', x: 'Velg «1 sort» når du begynner. Det er den letteste. Klarer du den, kan du prøve 2 eller 4 sorter.', cards: [['S1', 26, 18], ['S13', 44, 18], ['H13', 62, 18]], anim: [] },
+  ],
+  freecell: [
+    { h: 'Alle kortene er åpne', x: 'I FreeCell ser du alle kortene fra start. Målet er å flytte dem opp til de fire bunkene øverst til høyre, fra ess til konge.',
+      marks: [[52, 3, 11, 16, 'A'], [64, 3, 11, 16, 'A'], [76, 3, 11, 16, 'A'], [88, 3, 11, 16, 'A']],
+      cards: [['D1', 20, 30], ['C1', 34, 30]], anim: [[0, 52, 3], [1, 64, 3]] },
+    { h: 'Bygg nedover', x: 'Som i Klondike: annenhver farge, nedover. En svart 4 kan ligge på en rød 5.',
+      cards: [['D5', 20, 14], ['C4', 60, 14]], anim: [[1, 20, 20]] },
+    { h: 'De frie cellene', x: 'Øverst til venstre er fire frie celler. Hver celle kan parkere ett kort mens du rydder.',
+      marks: [[2, 3, 11, 16, ''], [14, 3, 11, 16, ''], [26, 3, 11, 16, ''], [38, 3, 11, 16, '']],
+      cards: [['H9', 40, 30], ['S2', 40, 36]], anim: [[1, 2, 3]] },
+    { h: 'Spar på cellene', x: 'Jo flere tomme celler du har, jo flere kort kan du flytte på én gang. Prøv å ikke fylle alle!',
+      cards: [['S10', 20, 14], ['H9', 64, 14], ['C8', 64, 20]], anim: [['tap', 1], [[1, 2], 20, 20]] },
+    { h: 'Godt nytt', x: 'Nesten alle FreeCell-spill kan løses. Tenk deg om og bruk ↶ angre hvis du går deg vill!', cards: [['H13', 44, 20]], anim: [] },
+  ],
+  pyramide: [
+    { h: 'Par som blir 13', x: 'Fjern to og to kort som blir 13 til sammen. 6 + 7 = 13!',
+      cards: [['H6', 30, 18], ['S7', 58, 18]], anim: [['tap', 0], ['tap', 1], ['hide', 0, 1]] },
+    { h: 'Bildekortene har tall', x: 'Ess = 1 · knekt (Kn) = 11 · dame (D) = 12 · konge (K) = 13. Så knekt + 2 = 13, og dame + ess = 13.',
+      cards: [['C11', 10, 18], ['D2', 26, 18], ['H12', 58, 18], ['S1', 74, 18]], anim: [['hide', 0, 1], ['hide', 2, 3]] },
+    { h: 'Kongen klarer seg alene', x: 'En konge er 13 helt alene. Trykk på den, så forsvinner den.',
+      cards: [['D13', 44, 18]], anim: [['tap', 0], ['hide', 0]] },
+    { h: 'Bare frie kort', x: 'Du kan bare bruke kort som ingen andre kort ligger over. De nederste kortene er frie først.',
+      cards: [['S4', 44, 4], ['H8', 37.5, 13], ['C5', 50.5, 13]], anim: [['tap', 1], ['tap', 2], ['hide', 1, 2], ['tap', 0]] },
+    { h: 'Bunken', x: 'Trykk på bunken til venstre for å snu et nytt kort. Det kan pares med et kort i pyramiden. Bunken kan snus to ganger.',
+      cards: [['X', 4, 4, false], ['H9', 4, 4, false], ['C4', 50, 30]], anim: [[1, 4, 26, true], ['tap', 1], ['tap', 2], ['hide', 1, 2]] },
+  ],
+  vri8: [
+    { h: 'Målet', x: 'Bli først til å bli kvitt alle kortene dine! Alle starter med 5 kort (7 kort når dere er to).',
+      cards: [['H3', 16, 40], ['S9', 30, 40], ['C4', 44, 40], ['D8', 58, 40], ['H12', 72, 40], ['H9', 52, 6], ['X', 32, 6, false]], anim: [] },
+    { h: 'Samme sort eller samme tall', x: 'Du kan legge et kort med samme sort (♥ på ♥) eller samme tall (9 på 9) som det øverste kortet i bunken.',
+      cards: [['H9', 52, 6], ['H3', 16, 40], ['S9', 30, 40], ['C4', 44, 40]], anim: [[1, 52, 6], [2, 52, 6]] },
+    { h: 'Åtteren er joker', x: 'En åtter kan du alltid legge! Da bestemmer du hvilken sort neste spiller må legge – du «vrir» åtteren.',
+      cards: [['C4', 52, 6], ['D8', 30, 40]], marks: [[70, 10, 26, 8, 'Sort: ♠ spar']], anim: [[1, 52, 6]] },
+    { h: 'Kan du ikke legge?', x: 'Trekk et kort fra bunken. Du kan trekke opptil tre kort. Har du fortsatt ingenting å legge, trykker du «Stå over».',
+      cards: [['X', 32, 6, false], ['C2', 32, 6, false], ['S5', 32, 6, false], ['D13', 52, 6]], anim: [[1, 30, 40, true], [2, 44, 40, true]] },
+    { h: 'Lysende kort', x: 'Kortene du kan legge, lyser opp i hånda di. Trykk på et kort for å legge det.', cards: [['S9', 52, 6], ['S3', 30, 40], ['H5', 44, 40]], anim: [['tap', 1], [1, 52, 6]] },
+  ],
+  fisk: [
+    { h: 'Målet', x: 'Samle flest stikk! Et stikk er fire like kort, for eksempel fire femmere.',
+      cards: [['H5', 14, 36], ['S5', 34, 36], ['D5', 54, 36], ['C5', 74, 36]], anim: [[1, 44, 8], [2, 46, 10], [3, 48, 12], [0, 42, 6]] },
+    { h: 'Spør etter et kort', x: 'Trykk på et kort i hånda di – for eksempel en femmer – og så på en annen spiller. Da spør du: «Har du noen femmere?»',
+      marks: [[60, 3, 34, 14, 'Kari']], cards: [['H5', 22, 40], ['S9', 36, 40]], anim: [['tap', 0]] },
+    { h: 'Ja? Da får du dem!', x: 'Har spilleren femmere, må hun gi deg alle. Og du får spørre igjen!',
+      marks: [[60, 3, 34, 14, 'Kari']], cards: [['H5', 22, 40], ['S9', 36, 40], ['C5', 70, 5], ['D5', 74, 5]], anim: [[2, 50, 40], [3, 64, 40]] },
+    { h: '«Fisk!»', x: 'Har spilleren ingen, sier hun «Fisk!». Da trekker du et kort fra dammen, og så er det neste spiller sin tur.',
+      marks: [[36, 3, 28, 20, 'Dammen']], cards: [['X', 44, 4, false], ['H11', 44, 4, false], ['H5', 22, 40]], anim: [[1, 40, 40, true]] },
+    { h: 'Hemmelig tips', x: 'Følg med på hva de andre spør om! Spør Ola etter sjuere, vet du at Ola har minst én sjuer.', cards: [['S7', 44, 20]], anim: [] },
+  ],
+  idiot: [
+    { h: 'Målet', x: 'Bli kvitt alle kortene dine! Den som sitter igjen med kort helt til slutt, er Idioten. 🤪',
+      cards: [['H4', 30, 36], ['S9', 44, 36], ['D12', 58, 36], ['X', 44, 6, false]], anim: [[0, 44, 6], [1, 44, 6], [2, 44, 6]] },
+    { h: 'Kortene du får', x: 'Du får 3 skjulte kort, 3 åpne kort oppå dem, og 3 kort på hånda. Før start kan du bytte: legg gode kort som åpne kort på bordet.',
+      cards: [['X', 22, 6, false], ['X', 44, 6, false], ['X', 66, 6, false], ['H5', 23, 4], ['C3', 45, 4], ['S6', 67, 4], ['D1', 30, 40], ['S2', 44, 40], ['H8', 58, 40]],
+      anim: [[6, 45, 4], [4, 44, 40]] },
+    { h: 'Likt eller høyere', x: 'Legg et kort som er likt eller høyere enn det øverste i bunken. Ess er høyest. Etterpå trekker du opp til 3 kort på hånda igjen.',
+      cards: [['C7', 50, 6], ['H5', 24, 40], ['S9', 38, 40], ['D13', 52, 40]], anim: [['tap', 0], [1, 50, 6]] },
+    { h: 'Flere like samtidig', x: 'Har du flere like kort, kan du legge dem på én gang. Trykk på dem og så «Legg». Fire like på rad brenner bunken! 🔥',
+      cards: [['C8', 50, 6], ['H11', 30, 40], ['S11', 44, 40]], anim: [['tap', 1], ['tap', 2], [[1, 2], 50, 6]] },
+    { h: '2 og 10 er spesielle', x: 'En 2-er kan legges på alt og starter bunken på nytt. En 10-er brenner hele bunken, og så legger du igjen!',
+      cards: [['D13', 50, 6], ['S2', 30, 40], ['H10', 44, 40]], anim: [[1, 52, 8], [2, 54, 10], ['hide', 0, 1, 2]] },
+    { h: 'Kan du ikke legge?', x: 'Har du ingen kort som passer, må du ta opp hele bunken på hånda. Ikke så gøy – men det skjer alle!',
+      cards: [['C9', 50, 4], ['S12', 52, 6], ['H1', 54, 8], ['D4', 30, 40]], anim: [[[0, 1, 2], 44, 40]] },
+    { h: 'Bordkortene til slutt', x: 'Er hånda og trekkbunken tom, spiller du de åpne bordkortene. Til slutt snur du de skjulte – uten å vite hva du får!',
+      cards: [['S1', 30, 30, false], ['X', 50, 30, false], ['H7', 50, 4]], anim: [['tap', 0], ['flip', 0], [0, 50, 4]] },
+  ],
+  svarteper: [
+    { h: 'Svarteper', x: 'Spar knekt er Svarteper! Den vil du IKKE sitte igjen med til slutt. Kløver knekt tas ut av kortstokken, så spar knekt kan aldri få et par.', cards: [['S11', 44, 12]], anim: [] },
+    { h: 'Par legges ned', x: 'Et par er to kort med samme tall eller bilde OG samme farge – for eksempel to røde sjuere, eller to svarte damer. Alle par legges ned av seg selv.',
+      cards: [['H7', 14, 36], ['D7', 28, 36], ['D3', 44, 36], ['S12', 58, 36], ['C12', 72, 36]], anim: [['hide', 0, 1], ['hide', 3, 4]] },
+    { h: 'Trekk uten å se', x: 'På din tur trekker du et kort fra spilleren ved siden av deg – uten å se hva det er!',
+      cards: [['X', 30, 4, false], ['D3', 44, 4, false], ['X', 58, 4, false], ['H3', 44, 38]], anim: [[1, 58, 38, true]] },
+    { h: 'Par? Ned med det!', x: 'Passer kortet med et kort du har, legges paret ned. Blir du tom for kort, er du trygg! 😊',
+      cards: [['D3', 58, 38], ['H3', 44, 38]], anim: [['hide', 0, 1]] },
+    { h: 'Hvem blir Svarteper?', x: 'Den som sitter igjen med spar knekt helt til slutt, blir Svarteper! 🃏', cards: [['S11', 44, 30], ['X', 30, 4, false], ['X', 58, 4, false]], anim: [[0, 44, 12]] },
+  ],
+};
+const TUT_NAMES = { klondike: 'Klondike', edderkopp: 'Edderkopp', freecell: 'FreeCell', pyramide: 'Pyramide', vri8: 'Vri åtter', fisk: 'Fisk', idiot: 'Idiot', svarteper: 'Svarteper' };
+
+const Tut = {
+  game: null, step: 0, timers: [], onDone: null,
+  open(game, onDone) {
+    this.game = game; this.step = 0; this.onDone = onDone;
+    $('#tutTitle').textContent = 'Lær ' + TUT_NAMES[game];
+    $('#tutSkip').hidden = !onDone;
+    $('#tut').classList.add('open'); this.show();
+  },
+  close(play) { this.clear(); $('#tut').classList.remove('open'); try { localStorage.setItem('mykjekort-lært-' + this.game, '1'); } catch (e) { } if (play && this.onDone) this.onDone(); },
+  clear() { this.timers.forEach(clearTimeout); this.timers = []; },
+  later(f, ms) { this.timers.push(setTimeout(f, ms)); },
+  show() {
+    this.clear();
+    const steps = TUTS[this.game], s = steps[this.step];
+    $('#tutH').textContent = s.h; $('#tutX').textContent = s.x;
+    $('#tutDots').innerHTML = steps.map((_, i) => `<i class="${i === this.step ? 'on' : ''}"></i>`).join('');
+    $('#tutPrev').disabled = this.step === 0;
+    const last = this.step === steps.length - 1;
+    $('#tutNext').textContent = last ? 'Spill nå! ▶' : 'Neste →';
+    this.run(s);
+  },
+  next() { const n = TUTS[this.game].length; if (this.step < n - 1) { this.step++; this.show(); } else this.close(true); },
+  prev() { if (this.step > 0) { this.step--; this.show(); } },
+  run(s) {
+    const stage = $('#tutStage'); stage.innerHTML = '';
+    stage.style.background = (THEMES[Settings.theme] || THEMES.klassisk).table;
+    const u = stage.clientWidth / 100;
+    stage.style.setProperty('--cw', 12 * u + 'px'); stage.style.setProperty('--ch', 12 * u * CH_RATIO + 'px');
+    (s.marks || []).forEach(([x, y, w, h, t]) => { const m = document.createElement('div'); m.className = 'tmark'; m.style.cssText = `left:${x * u}px;top:${y * u}px;width:${w * u}px;height:${h * u}px`; m.textContent = t; stage.appendChild(m); });
+    const els = s.cards.map(([cd, x, y, up], i) => {
+      const c = cd === 'X' ? { s: 'S', r: 1, up: false } : { ...parse(cd), up: up !== false };
+      const el = makeCardEl(c); el.style.zIndex = i + 1; stage.appendChild(el); el._home = [x, y, up !== false && cd !== 'X'];
+      return el;
+    });
+    const finger = document.createElement('div'); finger.className = 'finger'; finger.textContent = '👆'; stage.appendChild(finger);
+    const place = (el, x, y) => { el.style.transform = `translate(${x * u}px,${y * u}px)`; };
+    const fingerTo = (x, y) => { finger.style.opacity = 1; finger.style.transform = `translate(${(x + 5) * u}px,${(y + 11) * u}px)`; };
+    const reset = () => {
+      stage.classList.add('noanim');
+      els.forEach((el, i) => { place(el, el._home[0], el._home[1]); el._x = el._home[0]; el._y = el._home[1]; el.style.opacity = 1; el.style.zIndex = i + 1; el.classList.toggle('up', el._home[2]); el.classList.remove('sel'); });
+      finger.style.opacity = 0; finger.style.transform = `translate(${80 * u}px,${70 * u}px)`;
+      void stage.offsetWidth; stage.classList.remove('noanim');
+    };
+    const loop = () => {
+      reset(); let t = 900, z = 50;
+      for (const a of s.anim || []) {
+        if (a[0] === 'flip') { this.later(() => { els[a[1]].classList.add('up'); sfx('flip'); }, t); t += 800; }
+        else if (a[0] === 'hide') { const ids = a.slice(1); this.later(() => { ids.forEach(i => { els[i].style.opacity = 0; }); sfx('found'); finger.style.opacity = 0; }, t); t += 900; }
+        else if (a[0] === 'tap') { const el = els[a[1]]; this.later(() => fingerTo(el._x, el._y), t); this.later(() => { el.classList.add('sel'); sfx('tick'); }, t + 550); t += 1000; }
+        else {
+          const [i, x, y, flip] = a, group = (Array.isArray(i) ? i : [i]).map(k => els[k]), el = group[0];
+          this.later(() => fingerTo(el._x, el._y), t);
+          this.later(() => {
+            const dx = x - el._x, dy = y - el._y;
+            group.forEach(g => { g.style.zIndex = z++; g._x += dx; g._y += dy; place(g, g._x, g._y); g.classList.remove('sel'); if (flip) g.classList.add('up'); });
+            fingerTo(x, y); sfx('place');
+          }, t + 600);
+          t += 1500;
+        }
+      }
+      this.later(() => { finger.style.opacity = 0; }, t);
+      if ((s.anim || []).length) this.later(loop, t + 1800);
+    };
+    requestAnimationFrame(loop);
+  },
+};
+
+/* ============ APP: menyer, innstillinger, hjelpere ============ */
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let _toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(_toastT); _toastT = setTimeout(() => t.classList.remove('show'), 2600); }
+function shake(el) { if (!el) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 450); }
+function bubble(txt, good) { const b = $('#bubble'); b.textContent = txt; b.className = 'show' + (good ? ' good' : ''); clearTimeout(b._t); b._t = setTimeout(hideBubble, 3000); }
+function hideBubble() { $('#bubble').className = ''; }
+function showModal(html) { $('#modalBox').innerHTML = html; $('#modal').classList.add('open'); }
+function hideModal() { $('#modal').classList.remove('open'); }
+
+/* ---- lyd (lages i nettleseren, ingen filer) ---- */
+let actx;
+function sfx(name) {
+  if (!Settings.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = { flip: [[520, .05, 'triangle']], place: [[330, .07, 'sine']], found: [[660, .08, 'sine'], [880, .1, 'sine']], tick: [[760, .04, 'square']], nope: [[180, .12, 'sawtooth']], win1: [[523, .1], [659, .1], [784, .14]], win: [[523, .12], [659, .12], [784, .12], [1046, .25]] }[name] || [];
+    let t = actx.currentTime;
+    for (const [f, d, type] of notes) {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type || 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(name === 'nope' ? .05 : .12, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d + .02); t += d * .9;
+    }
+  } catch (e) { }
+}
+
+/* ---- feiring ---- */
+function confetti() {
+  const cv = $('#confetti'), ctx = cv.getContext('2d'); cv.width = innerWidth; cv.height = innerHeight; cv.style.display = 'block';
+  const cols = ['#ef6f6c', '#f2b134', '#5cbf8a', '#4f9dde', '#a77bd8', '#ef8fb8'];
+  const ps = Array.from({ length: 160 }, () => ({ x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * .5, vx: (Math.random() - .5) * 3, vy: 2 + Math.random() * 4, r: Math.random() * 6.28, vr: (Math.random() - .5) * .3, c: cols[Math.random() * 6 | 0], s: 6 + Math.random() * 6 }));
+  let f = 0;
+  (function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
+    if (++f < 220) requestAnimationFrame(draw); else cv.style.display = 'none';
+  })();
+}
+function celebrate(board, els) {
+  const W = board.clientWidth, H = board.clientHeight;
+  els.forEach((el, i) => { el.style.transitionDelay = (i * 12) + 'ms'; el.style.transform = `translate(${Math.random() * (W - 60)}px,${Math.random() * (H - 90)}px) rotate(${(Math.random() - .5) * 60}deg)`; });
+  confetti();
+}
+function showWin(name, moves, secs, s) {
+  const t = n => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
+  showModal(`<h2>Du klarte ${esc(name)}! 🎉</h2><p class="big">${moves} trekk · ${t(secs)}</p><p class="muted">Seire i ${esc(name)}: ${s.wins} · Beste tid: ${t(s.best)}</p><div class="row"><button class="btn primary" id="wAgain">Nytt spill</button><button class="btn" id="wMenu">Til menyen</button></div>`);
+  $('#wAgain').onclick = () => { hideModal(); Sol.game.start(); };
+  $('#wMenu').onclick = () => { hideModal(); Sol.quit(); };
+}
+
+/* ---- skjermer ---- */
+function showScreen(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+
+const GAMES = [
+  { id: 'klondike', solo: true, name: 'Klondike', sub: 'Den vanlige kabalen', lvl: 2, cards: ['H13', 'S12', 'D11'] },
+  { id: 'edderkopp', solo: true, name: 'Edderkopp', sub: 'Lag rekker fra K til A', lvl: 2, cards: ['S9', 'S8', 'S7'] },
+  { id: 'freecell', solo: true, name: 'FreeCell', sub: 'Alle kort åpne – tenk smart', lvl: 3, cards: ['C1', 'D2', 'S3'] },
+  { id: 'pyramide', solo: true, name: 'Pyramide', sub: 'Finn par som blir 13', lvl: 1, cards: ['H6', 'C7', 'S13'] },
+  { id: 'vri8', solo: false, name: 'Vri åtter', sub: 'Bli først kvitt kortene', lvl: 1, cards: ['D8', 'H8', 'S8'] },
+  { id: 'fisk', solo: false, name: 'Fisk', sub: '«Har du noen femmere?»', lvl: 1, cards: ['H5', 'S5', 'C5'] },
+  { id: 'idiot', solo: false, name: 'Idiot', sub: 'Ikke bli den siste med kort!', lvl: 2, cards: ['S2', 'H10', 'C1'] },
+  { id: 'svarteper', solo: false, name: 'Svarteper', sub: 'Ikke sitt igjen med spar knekt!', lvl: 1, cards: ['S11', 'H4', 'D4'] },
+];
+function miniFan(codes) {
+  return `<div class="minifan">${codes.map((cd, i) => `<div class="mc" style="--i:${i}">${faceSVG({ ...parse(cd) })}</div>`).join('')}</div>`;
+}
+function renderHome() {
+  document.body.style.setProperty('--table', (THEMES[Settings.theme] || THEMES.klassisk).table);
+  const tile = g => `<div class="tile" data-g="${g.id}">${miniFan(g.cards)}<h3>${g.name}</h3><p>${g.sub}</p><div class="meta"><span>${g.solo ? '👤 1 spiller' : '👥 2–4 spillere'}</span><span title="Vanskelighet">${'★'.repeat(g.lvl)}${'☆'.repeat(3 - g.lvl)}</span></div><div class="tbtns"><button class="btn primary" data-play="${g.id}">Spill</button><button class="btn ghost" data-learn="${g.id}">Lær spillet</button></div></div>`;
+  $('#soloTiles').innerHTML = GAMES.filter(g => g.solo).map(tile).join('');
+  $('#multiTiles').innerHTML = GAMES.filter(g => !g.solo).map(tile).join('');
+  $('#hello').textContent = Settings.name ? `Hei, ${Settings.name}!` : '';
+}
+function learned(id) { try { return !!localStorage.getItem('mykjekort-lært-' + id); } catch (e) { return true; } }
+
+/* ---- kabal-skjermen ---- */
+const Sol = {
+  game: null,
+  open(id) {
+    const def = SOL_DEFS[id];
+    const go = () => {
+      showScreen('sol'); $('#solTitle').textContent = def.name;
+      $('#sol').style.setProperty('--table', (THEMES[Settings.theme] || THEMES.klassisk).table);
+      if (this.game) this.game.destroy();
+      $('#solOpts').innerHTML = id === 'klondike' ? `<button class="chip ${Settings.draw3 ? '' : 'on'}" data-o="d1">Trekk 1</button><button class="chip ${Settings.draw3 ? 'on' : ''}" data-o="d3">Trekk 3</button>`
+        : id === 'edderkopp' ? [1, 2, 4].map(n => `<button class="chip ${Settings.spiderSuits === n ? 'on' : ''}" data-o="s${n}">${n} sort${n > 1 ? 'er' : ''}</button>`).join('')
+          : id === 'pyramide' ? `<button class="chip ${Settings.pyrValues ? 'on' : ''}" data-o="pv">Vis tallverdi</button>` : '';
+      this.game = new SolGame(def, $('#solBoard'), $('#solHud'));
+      requestAnimationFrame(() => this.game.start());
+    };
+    if (!learned(id)) Tut.open(id, go); else go();
+  },
+  quit() { if (this.game) { this.game.destroy(); this.game = null; } hideBubble(); showScreen('home'); },
+  opt(o) {
+    if (o === 'd1' || o === 'd3') Settings.draw3 = o === 'd3';
+    if (o[0] === 's') Settings.spiderSuits = +o.slice(1);
+    if (o === 'pv') { Settings.pyrValues = !Settings.pyrValues; saveSettings(); this.game.board.classList.toggle('show-vals', Settings.pyrValues); $$('#solOpts .chip').forEach(c => c.classList.toggle('on', Settings.pyrValues)); return; }
+    saveSettings(); this.open(this.game.def.id);
+  },
+};
+
+/* ---- flerspiller-start ---- */
+function multiDialog(id) {
+  const E = ENGINES[id];
+  const rules = id === 'idiot' ? `<div class="choice"><h4>🏠 Husregler</h4>
+      <label class="tog"><input type="checkbox" id="r3" ${Settings.idiot3 ? 'checked' : ''}> 3 er usynlig – kan legges på alt, og kortet under gjelder</label>
+      <label class="tog"><input type="checkbox" id="r7" ${Settings.idiot7 ? 'checked' : ''}> 7 betyr at neste må legge 7 eller lavere</label></div>` : '';
+  const go = () => showModal(`<h2>${E.name}</h2>${rules}
+    <div class="choice"><h4>🤖 Spill mot datamaskinen</h4><div class="row">${[1, 2, 3].map(n => `<button class="btn" data-bots="${n}">Mot ${n}</button>`).join('')}</div></div>
+    <div class="choice"><h4>📱 Spill med klassen – hver sin iPad</h4><div class="row"><button class="btn primary" id="mkRoom">Lag et rom</button><button class="btn" id="joinRoomBtn">Bli med i et rom</button></div></div>
+    <button class="btn ghost close" onclick="hideModal()">Avbryt</button>`);
+  const after = () => {
+    const opts = () => { if (id !== 'idiot') return {}; Settings.idiot3 = $('#r3').checked; Settings.idiot7 = $('#r7').checked; saveSettings(); return { three: Settings.idiot3, seven: Settings.idiot7 }; };
+    $$('#modal [data-bots]').forEach(b => b.onclick = () => { const o = opts(); hideModal(); ensureName(() => Room.startOffline(id, +b.dataset.bots, o)); });
+    $('#mkRoom').onclick = () => { const o = opts(); hideModal(); ensureName(() => Room.create(id, o)); };
+    $('#joinRoomBtn').onclick = () => { hideModal(); joinDialog(); };
+  };
+  if (!learned(id)) Tut.open(id, () => { go(); after(); }); else { go(); after(); }
+}
+function joinDialog(prefill) {
+  showModal(`<h2>Bli med i et rom</h2><p>Skriv inn koden som står på skjermen til verten.</p>
+    <input id="jCode" class="codein" maxlength="4" autocomplete="off" autocapitalize="characters" value="${esc(prefill || '')}" placeholder="ABCD">
+    <input id="jName" class="namein" maxlength="14" placeholder="Fornavn eller kallenavn" value="${esc(Settings.name)}">
+    <p class="muted small">Bruk bare fornavn eller et kallenavn.</p>
+    <div class="row"><button class="btn primary" id="jGo">Bli med</button><button class="btn ghost" onclick="hideModal()">Avbryt</button></div>`);
+  $('#jGo').onclick = () => {
+    const code = $('#jCode').value.trim().toUpperCase(), name = $('#jName').value.trim();
+    if (code.length !== 4) return toast('Koden har fire bokstaver.');
+    if (!name) return toast('Skriv navnet ditt.');
+    Settings.name = name; saveSettings(); hideModal(); Room.join(code);
+  };
+}
+function ensureName(cb) {
+  if (Settings.name) return cb();
+  showModal(`<h2>Hva heter du?</h2><input id="nName" class="namein" maxlength="14" placeholder="Fornavn eller kallenavn"><p class="muted small">Bruk bare fornavn eller et kallenavn.</p><div class="row"><button class="btn primary" id="nGo">OK</button></div>`);
+  $('#nName').focus();
+  $('#nGo').onclick = () => { const v = $('#nName').value.trim(); if (!v) return toast('Skriv et navn.'); Settings.name = v; saveSettings(); hideModal(); renderHome(); cb(); };
+}
+
+/* ---- innstillinger ---- */
+function openSettings() {
+  const ex = { s: 'H', r: 12, up: true };
+  showModal(`<h2>Innstillinger</h2>
+    <h4>Kortdesign</h4>
+    <div class="themes">${Object.entries(THEMES).map(([k, t]) => `<button class="theme ${Settings.theme === k ? 'on' : ''}" data-th="${k}"><div class="tprev" style="background:${t.table}"><div class="tb" style="${backStyle(k)}"></div><div class="tf">${(() => { const o = Settings.theme; Settings.theme = k; const s = faceSVG(ex); Settings.theme = o; return s; })()}</div></div><span>${t.name}</span></button>`).join('')}</div>
+    <label class="tog"><input type="checkbox" id="setFour" ${Settings.four ? 'checked' : ''}> Fire farger (♠ svart, ♥ rød, ♦ blå, ♣ grønn) – lettere å skille sortene</label>
+    <label class="tog"><input type="checkbox" id="setFlip" ${Settings.autoFlip ? 'checked' : ''}> Snu kort automatisk i kabal (ellers må eleven trykke på kortet for å snu det)</label>
+    <label class="tog"><input type="checkbox" id="setBig" ${Settings.big ? 'checked' : ''}> Mer avstand mellom kortene i kabal</label>
+    <label class="tog"><input type="checkbox" id="setHints" ${Settings.hints ? 'checked' : ''}> Vis hvilke kort jeg kan legge (Vri åtter)</label>
+    <label class="tog"><input type="checkbox" id="setSound" ${Settings.sound ? 'checked' : ''}> Lyd</label>
+    <h4>Navn</h4><input id="setName" class="namein" maxlength="14" value="${esc(Settings.name)}" placeholder="Fornavn eller kallenavn">
+    <div class="row"><button class="btn primary" id="setOk">Lagre</button></div>`);
+  $$('#modal .theme').forEach(b => b.onclick = () => { $$('#modal .theme').forEach(x => x.classList.remove('on')); b.classList.add('on'); });
+  $('#setOk').onclick = () => {
+    Settings.theme = ($('#modal .theme.on') || {}).dataset?.th || Settings.theme;
+    Settings.four = $('#setFour').checked; Settings.autoFlip = $('#setFlip').checked; Settings.big = $('#setBig').checked; Settings.hints = $('#setHints').checked; Settings.sound = $('#setSound').checked;
+    Settings.name = $('#setName').value.trim(); saveSettings(); hideModal(); renderHome();
+    if (Sol.game) { Object.values(Sol.game.els).forEach(paintCard); $('#sol').style.setProperty('--table', THEMES[Settings.theme].table); Sol.game.render(false); }
+    if (Room.st) renderTable();
+  };
+}
+
+/* ---- oppstart ---- */
+function init() {
+  loadSettings(); renderHome();
+  // forhåndslast baksider
+  Object.values(THEMES).forEach(t => { if (t.back.img) { const i = new Image(); i.src = t.back.img; } });
+  document.addEventListener('click', e => {
+    const p = e.target.closest('[data-play]'), l = e.target.closest('[data-learn]');
+    if (p) { const g = GAMES.find(x => x.id === p.dataset.play); g.solo ? Sol.open(g.id) : multiDialog(g.id); }
+    if (l) { const id = l.dataset.learn; Tut.open(id, () => (SOL_DEFS[id] ? Sol.open(id) : multiDialog(id))); }
+    const o = e.target.closest('#solOpts .chip'); if (o) Sol.opt(o.dataset.o);
+    const k = e.target.closest('[data-kick]'); if (k) Room.kick(k.dataset.kick);
+  });
+  $('#btnSettings').onclick = openSettings;
+  $('#btnJoin').onclick = () => joinDialog();
+  $('#solBack').onclick = () => Sol.quit();
+  $('#solNew').onclick = () => Sol.game.start();
+  $('#solUndo').onclick = () => Sol.game.undo();
+  $('#solHint').onclick = () => Sol.game.hint();
+  $('#solHelp').onclick = () => Tut.open(Sol.game.def.id, null);
+  $('#btnAuto').onclick = () => Sol.game.autoFinish();
+  $('#tutNext').onclick = () => Tut.next(); $('#tutPrev').onclick = () => Tut.prev(); $('#tutClose').onclick = () => Tut.close(false); $('#tutSkip').onclick = () => Tut.close(true);
+  $('#lobbyBack').onclick = () => Room.leave();
+  $('#btnAddBot').onclick = () => Room.addBot();
+  $('#btnBegin').onclick = () => Room.begin();
+  $('#tblBack').onclick = () => { if (!Room.st || Room.st.phase !== 'play' || Room.offline) return Room.leave(); showModal(`<h2>Gå ut av spillet?</h2><p>En datamaskin tar over plassen din.</p><div class="row"><button class="btn primary" id="lvYes">Gå ut</button><button class="btn" onclick="hideModal()">Bli</button></div>`); $('#lvYes').onclick = () => { hideModal(); Room.leave(); }; };
+  $('#tblHelp').onclick = () => Room.st && Tut.open(Room.st.game, null);
+  $('#table').addEventListener('click', tableClick);
+  $('#btnPass').onclick = () => Room.act({ t: 'pass' });
+  $('#btnReady').onclick = () => { Room.isel = []; Room.act({ t: 'ready' }); };
+  $('#btnTake').onclick = () => Room.act({ t: 'take' });
+  $('#btnPlaySel').onclick = () => { const cs = Room.isel.slice(); Room.isel = []; if (cs.length) Room.act({ t: 'play', cards: cs }); };
+  $('#btnAsk').onclick = () => { const st = Room.st, me = Room.me; const tg = st.players.findIndex((p, i) => i !== me && st.hands[i].length); const r = Room.sel; Room.sel = null; Room.act({ t: 'ask', target: tg, rank: r }); };
+  const q = new URLSearchParams(location.search).get('rom');
+  if (q) joinDialog(q.toUpperCase());
+  window.addEventListener('beforeunload', () => { if (Room.code && !Room.isHost) Net.send({ type: 'leave', id: myId }); });
+}
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
