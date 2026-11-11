@@ -376,7 +376,7 @@ svg.i{width:1em;height:1em;vertical-align:-.12em;flex:none}
   <div class="kort">
     <div class="topprad">
       <div class="poeng"><span class="mynt">★</span><b class="poengtall">0</b></div>
-      <span class="merke">Mykje Spill</span>
+      <span class="merke">Mykje Spill · <span id="versjon"></span></span>
       <button class="ikon lydknapp" aria-label="Lyd av/på"></button>
     </div>
     <div class="meny">
@@ -416,7 +416,6 @@ svg.i{width:1em;height:1em;vertical-align:-.12em;flex:none}
         <h3>Lag et spill</h3>
         <p>Velg kamp. Du får en kode som vennen din skriver inn på sin iPad.</p>
         <div class="chips" id="vennType" role="group" aria-label="Hva slags kamp">
-          <button class="chip" data-type="vanlig">⚽ Vanlig</button>
           <button class="chip" data-type="pm">➕ Pluss og minus</button>
           <button class="chip" data-type="gd">✖️ Gange og dele</button>
           <button class="chip" data-type="quiz">🧠 Fotballquiz</button>
@@ -445,7 +444,7 @@ svg.i{width:1em;height:1em;vertical-align:-.12em;flex:none}
       <p class="ventepuls">Venter på at vennen din skal bli med …</p>
     </div>
     <p class="vennstatus" id="vennStatus" role="status"></p>
-    <p class="liten">Dere skyter fem straffer hver og bytter på å stå i mål. <b>Vanlig:</b> keeperen velger hvor den vil kaste seg før skuddet går. <b>Oppgavekamp:</b> begge får samme oppgave – den som svarer riktig raskest, scorer eller redder. Bare draktfarger og nummer sendes til den andre iPaden, ikke navn.</p>
+    <p class="liten">Dere skyter fem straffer hver og bytter på å stå i mål. Begge får samme oppgave – den som svarer riktig raskest, scorer eller redder. Bare draktfarger og nummer sendes til den andre iPaden, ikke navn.</p>
   </div>
 </div>
 
@@ -599,7 +598,7 @@ const HARSTIL = [['kort','Kort'],['langt','Langt'],['hestehale','Hestehale'],['k
 const STANDARD = {
   poeng:0, sko:['gym'], valgtSko:'gym', baller:['klassisk'], valgtBall:'klassisk', keeper:'lett', lyd:true,
   drakt:{monster:'striper', farge:'#dc2626', farge2:'#ffffff', shorts:'#111827', sokker:'#dc2626', nummer:10, navn:'', hud:'#e8b48a', har:'#3b2a1a', harstil:'kort'},
-  venn:{type:'vanlig', niva:1},
+  venn:{type:'pm', niva:1},
   stat:{mal:0, skudd:0, kamper:0, seire:0, redninger:0, kskudd:0, vennekamper:0}
 };
 let S = lastInn();
@@ -1519,6 +1518,7 @@ const Nett = {
 };
 
 /* ---------- oppgaver til oppgavekamp ---------- */
+const VERSJON = 3;   // øk når «Mot en venn» endres, så to iPader med ulik versjon får beskjed
 const KAMPTYPER = {vanlig:'Vanlig', pm:'Pluss og minus', gd:'Gange og dele', quiz:'Fotballquiz'};
 const QUIZTID = 20000;   // millisekunder
 // Fotballquiz: [spørsmål, riktig svar, feil, feil, feil]. Legg gjerne til flere – riktig svar står alltid først.
@@ -1614,7 +1614,7 @@ function vaskSvar(a){ return (a && Number.isInteger(a.i) && typeof a.ms === 'num
 function minProfil(){
   const d = S.drakt;
   return {drakt:{monster:d.monster, farge:d.farge, farge2:d.farge2, shorts:d.shorts, sokker:d.sokker, nummer:d.nummer, hud:d.hud, har:d.har, harstil:d.harstil},
-          sko:S.valgtSko, ball:S.valgtBall};
+          sko:S.valgtSko, ball:S.valgtBall, v:VERSJON};
 }
 // Alt som kommer fra den andre iPaden sjekkes før det brukes.
 function vaskProfil(p){
@@ -1656,7 +1656,7 @@ const Duell = {
       let kode;
       for (let i=0;i<6;i++){ kode = Array.from({length:4}, () => 'ABCDEFGHJKLMNPRSTUVWXYZ'[Math.floor(Math.random()*23)]).join(''); if (!(await medFrist(Nett.finnes(kode)))) break; }
       this.nullstill(); this.aktiv = true; this.vert = true; this.kode = kode;
-      const type = KAMPTYPER[S.venn.type] ? S.venn.type : 'vanlig', niva = [0,1,2].includes(S.venn.niva) ? S.venn.niva : 1;
+      const type = (KAMPTYPER[S.venn.type] && S.venn.type !== 'vanlig') ? S.venn.type : 'pm', niva = [0,1,2].includes(S.venn.niva) ? S.venn.niva : 1;
       await medFrist(Nett.lag(kode, {t:Date.now(), vert:minProfil(), nr:0, type, niva}, r => this.vedRom(r)));
       if (!this.aktiv) return;
       this.status(''); $('vennKodeVis').textContent = kode; $('venn').classList.add('venter');
@@ -1688,7 +1688,16 @@ const Duell = {
     if (!this.aktiv) return;
     if (!rom || !rom.vert) { if (this.startet || !this.vert) this.avbrutt(); return; }
     this.rom = rom;
-    if (!this.startet) { if (rom.gjest) { this.startet = true; this.nr = rom.nr || 0; this.startKamp(); } return; }
+    if (!this.startet) {
+      if (!rom.gjest) return;
+      // Oppgavekamp krever at begge har ny nok versjon. En iPad kan ha en gammel utgave liggende i minnet.
+      if (rom.type && rom.type !== 'vanlig' && !(rom.vert.v >= 3 && rom.gjest.v >= 3)) {
+        this.forlat(); $('venn').classList.remove('venter'); visSkjerm('venn');
+        this.status('Vennen din har en gammel versjon av spillet. Be vennen laste siden på nytt, og lag et nytt spill.');
+        return;
+      }
+      this.startet = true; this.nr = rom.nr || 0; this.startKamp(); return;
+    }
     if (!rom.gjest) { this.avbrutt(); return; }
     if ((rom.nr || 0) > this.nr) { this.nr = rom.nr; this.startKamp(); return; }
     this.sjekk();
@@ -2414,6 +2423,7 @@ $('startTrening').onclick = () => { lyd(); startSpill('trening'); };
 $('startKeeper').onclick = () => { lyd(); startSpill('keeper'); };
 $('tilVenn').onclick = () => { LYD.klikk(); Duell.status(''); $('venn').classList.remove('venter'); byggVennValg(); visSkjerm('venn'); };
 function byggVennValg(){
+  if (!KAMPTYPER[S.venn.type] || S.venn.type === 'vanlig') S.venn.type = 'pm';
   document.querySelectorAll('#vennType .chip').forEach(b => {
     b.classList.toggle('valgt', b.dataset.type === S.venn.type); b.setAttribute('aria-pressed', b.dataset.type === S.venn.type);
     b.onclick = () => { S.venn.type = b.dataset.type; lagre(); LYD.klikk(); byggVennValg(); };
@@ -2450,6 +2460,7 @@ window.addEventListener('resize', storrelse);
 window.addEventListener('orientationchange', () => setTimeout(storrelse, 200));
 document.addEventListener('gesturestart', e => e.preventDefault());
 
+$('versjon').textContent = 'v' + VERSJON;
 storrelse();
 oppdaterLydknapper();
 visSkjerm('meny');
