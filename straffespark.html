@@ -166,6 +166,14 @@ svg.i{width:1em;height:1em;vertical-align:-.12em;flex:none}
 .stolpe i{height:9px;border-radius:3px;background:rgba(255,255,255,.12)}
 .stolpe i.p{background:linear-gradient(90deg,var(--lime),#facc15);box-shadow:0 0 6px rgba(163,230,53,.5)}
 .vare .knapp{font-size:18px;padding:10px;min-height:50px;margin-top:auto}
+.vare .krav{display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;font-size:14px;font-weight:700;color:#fecdd3;
+  background:rgba(0,0,0,.28);border:1px dashed rgba(255,255,255,.25);border-radius:12px;padding:7px 9px}
+.vare .krav.ok{color:var(--limeL);border-color:var(--lime)}
+.vare .krav em{font-style:normal;color:#fff;font-family:var(--tittel);font-size:15px}
+.vare .kravbar{grid-column:1 / -1;height:7px;border-radius:4px;background:rgba(255,255,255,.14);overflow:hidden}
+.vare .kravbar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#fb7185,#fbbf24)}
+.vare .krav.ok .kravbar i{background:var(--lime)}
+.faner{flex-wrap:wrap}
 .vare.valgt{border-color:var(--lime)}
 .vare.valgt .knapp{background:rgba(163,230,53,.15);color:var(--limeL);box-shadow:inset 0 0 0 2px var(--lime);filter:none;text-shadow:none}
 
@@ -459,6 +467,8 @@ svg.i{width:1em;height:1em;vertical-align:-.12em;flex:none}
     <div class="faner">
       <button data-fane="sko" class="aktiv">👟 Fotballsko</button>
       <button data-fane="baller">⚽ Baller</button>
+      <button data-fane="hansker">🧤 Hansker</button>
+      <button data-fane="spor">✨ Skuddspor</button>
     </div>
     <div class="vareliste" id="vareliste"></div>
   </div>
@@ -574,8 +584,15 @@ const SKO = [
   {id:'kanon', navn:'Kanonen',       pris:150, kraft:4, skru:1, pres:2, farge:'#ef4444', aksent:'#fde047', saale:'#1f2937', dekor:'flamme',  tekst:'Skyter knallhardt – keeperen rekker mindre.'},
   {id:'skru',  navn:'Skrumesteren',  pris:150, kraft:2, skru:4, pres:2, farge:'#8b5cf6', aksent:'#f0abfc', saale:'#1e1b4b', dekor:'spiral',  tekst:'Bøy fingeren – ballen svinger masse.'},
   {id:'snik',  navn:'Snikskytteren', pris:150, kraft:2, skru:2, pres:4, farge:'#0ea5e9', aksent:'#ffffff', saale:'#0c4a6e', dekor:'sikte',   tekst:'Ballen havner nesten nøyaktig der du sikter.'},
-  {id:'lyn',   navn:'Lynstøvelen',   pris:350, kraft:4, skru:4, pres:3, farge:'#facc15', aksent:'#1d4ed8', saale:'#111827', dekor:'lyn',     tekst:'Rask, hard og skrudd.'},
-  {id:'gull',  navn:'Gullstøvelen',  pris:700, kraft:5, skru:5, pres:5, farge:'#fbbf24', aksent:'#fff7ed', saale:'#78350f', dekor:'stjerne', gull:true, tekst:'Den beste skoen som finnes!'},
+  {id:'lyn',   navn:'Lynstøvelen',   pris:900, kraft:4, skru:4, pres:3, farge:'#facc15', aksent:'#1d4ed8', saale:'#111827', dekor:'lyn',     tekst:'Rask, hard og skrudd.'},
+  {id:'gull',  navn:'Gullstøvelen',  pris:2500, kraft:5, skru:5, pres:5, farge:'#fbbf24', aksent:'#fff7ed', saale:'#78350f', dekor:'stjerne', gull:true, tekst:'Like god på alt. Koster skjorta!'},
+  // Sko som må låses opp med et oppdrag (krav: [statistikk, antall]) før de kan kjøpes
+  {id:'is',     navn:'Isbryteren',       pris:1000, kraft:5, skru:2, pres:4, farge:'#e0f2fe', aksent:'#38bdf8', saale:'#0c4a6e', dekor:'krystall', krav:['mal',50], tekst:'Iskaldt og knallhardt.'},
+  {id:'jeger',  navn:'Edderkoppjegeren', pris:1800, kraft:4, skru:5, pres:4, farge:'#1f2937', aksent:'#c084fc', saale:'#581c87', dekor:'nett', krav:['seireV',10], tekst:'For dem som har slått Edderkoppen mange ganger.'},
+  {id:'kryss',  navn:'Kryssmesteren',    pris:2500, kraft:4, skru:4, pres:5, farge:'#f8fafc', aksent:'#dc2626', saale:'#7f1d1d', dekor:'kryss', krav:['kryss',25], tekst:'Laget for skudd helt oppe i hjørnet.'},
+  {id:'matte',  navn:'Mattegeniet',      pris:3000, kraft:5, skru:5, pres:4, farge:'#0d9488', aksent:'#fef08a', saale:'#134e4a', dekor:'pluss', krav:['vennseire',10], tekst:'Bare for dem som vinner oppgavekamper mot venner.'},
+  {id:'galakse',navn:'Galaksestøvelen',  pris:5000, kraft:5, skru:5, pres:5, farge:'#312e81', aksent:'#f0abfc', saale:'#1e1b4b', dekor:'galakse', grad:['#1e1b4b','#7c3aed','#db2777'], krav:['mal',300], tekst:'Fra en annen verden.'},
+  {id:'diamant',navn:'Diamantstøvelen',  pris:9000, kraft:5, skru:5, pres:5, farge:'#a5f3fc', aksent:'#ffffff', saale:'#155e75', dekor:'krystall', grad:['#ecfeff','#67e8f9','#818cf8'], krav:['seireV',40], tekst:'Den sjeldneste skoen i hele spillet.'},
 ];
 
 const BALLER = [
@@ -586,8 +603,40 @@ const BALLER = [
   {id:'stjerne',  navn:'Stjernehimmel', pris:90},
   {id:'jorda',    navn:'Jordkloden',    pris:120},
   {id:'regnbue',  navn:'Regnbue',       pris:150},
-  {id:'gull',     navn:'Gullball',      pris:300},
+  {id:'gull',     navn:'Gullball',      pris:1200},
+  {id:'smil',     navn:'Smilefjes',     pris:200},
+  {id:'basket',   navn:'Basketball',    pris:300},
+  {id:'is',       navn:'Iskule',        pris:600},
+  {id:'lava',     navn:'Lavaball',      pris:1000, krav:['mal',100]},
+  {id:'disko',    navn:'Diskokule',     pris:1600, krav:['vennseire',5]},
+  {id:'galakse',  navn:'Galakse',       pris:2500, krav:['kryss',15]},
+  {id:'diamant',  navn:'Diamantball',   pris:5000, krav:['seireV',20]},
 ];
+// Keeperhansker: virker når du står i mål mot datamaskinen. rekk = lengre rekkevidde (meter), vk = raskere kast.
+const HANSKER = [
+  {id:'std',     navn:'Vanlige hansker', pris:0,    rekk:0,    vk:0,   r:1, f:1, farge:'#fde047', aksent:'#ca8a04', tekst:'Helt vanlige keeperhansker.'},
+  {id:'klister', navn:'Klisterhanskene', pris:400,  rekk:0.06, vk:0,   r:3, f:1, farge:'#4ade80', aksent:'#166534', tekst:'Ballen sitter fast – du rekker litt lenger.'},
+  {id:'lyn',     navn:'Lynhanskene',     pris:900,  rekk:0,    vk:0.9, r:1, f:4, farge:'#38bdf8', aksent:'#fde047', tekst:'Du kaster deg mye raskere.'},
+  {id:'kjempe',  navn:'Kjempehanskene',  pris:2000, rekk:0.14, vk:0.3, r:4, f:2, farge:'#fb923c', aksent:'#7c2d12', krav:['redninger',30], tekst:'Svære hansker som dekker masse.'},
+  {id:'gull',    navn:'Gullhanskene',    pris:4500, rekk:0.18, vk:1.2, r:5, f:5, farge:'#fbbf24', aksent:'#fff7ed', krav:['redninger',150], tekst:'De beste hanskene som finnes!'},
+];
+// Skuddspor: pynt som følger ballen når du skyter.
+const SPOR = [
+  {id:'ingen',    navn:'Uten spor',     pris:0,    tekst:'Bare ballen.'},
+  {id:'stov',     navn:'Støvsky',       pris:400,  tekst:'Det støver etter ballen.'},
+  {id:'flamme',   navn:'Flammer',       pris:1000, tekst:'Ballen brenner!'},
+  {id:'stjerner', navn:'Stjernedryss',  pris:2000, krav:['skrumal',20], tekst:'Stjerner drysser bak ballen.'},
+  {id:'regnbue',  navn:'Regnbue',       pris:3000, krav:['kryss',30], tekst:'En regnbue etter hvert skudd.'},
+  {id:'lyn',      navn:'Lynnedslag',    pris:5000, krav:['seireV',25], tekst:'Det knitrer rundt ballen.'},
+];
+const KRAV = {
+  mal:       n => `Scor ${n} mål`,
+  seireV:    n => `Vinn ${n} kamper mot Edderkoppen`,
+  kryss:     n => `Scor ${n} mål i krysset`,
+  skrumal:   n => `Scor ${n} skrudde mål`,
+  redninger: n => `Gjør ${n} redninger`,
+  vennseire: n => `Vinn ${n} kamper mot en venn`,
+};
 
 const FARGER = ['#dc2626','#f97316','#facc15','#a3e635','#22c55e','#15803d','#06b6d4','#2563eb','#1e3a8a','#7c3aed','#db2777','#7c2d12','#ffffff','#9ca3af','#111827'];
 const HUD = ['#f5d0b0','#e8b48a','#c68a5e','#8d5a3b','#5c3a24'];
@@ -597,9 +646,10 @@ const HARSTIL = [['kort','Kort'],['langt','Langt'],['hestehale','Hestehale'],['k
 
 const STANDARD = {
   poeng:0, sko:['gym'], valgtSko:'gym', baller:['klassisk'], valgtBall:'klassisk', keeper:'lett', lyd:true,
+  hansker:['std'], valgtHanske:'std', spor:['ingen'], valgtSpor:'ingen',
   drakt:{monster:'striper', farge:'#dc2626', farge2:'#ffffff', shorts:'#111827', sokker:'#dc2626', nummer:10, navn:'', hud:'#e8b48a', har:'#3b2a1a', harstil:'kort'},
   venn:{type:'pm', niva:1},
-  stat:{mal:0, skudd:0, kamper:0, seire:0, redninger:0, kskudd:0, vennekamper:0}
+  stat:{mal:0, skudd:0, kamper:0, seire:0, redninger:0, kskudd:0, vennekamper:0, seireV:0, kryss:0, skrumal:0, vennseire:0}
 };
 let S = lastInn();
 function lastInn(){
@@ -611,6 +661,7 @@ function lastInn(){
     s.drakt = Object.assign({}, STANDARD.drakt, d.drakt || {});
     s.stat = Object.assign({}, STANDARD.stat, d.stat || {});
     s.venn = Object.assign({}, STANDARD.venn, d.venn || {});
+    for (const n of ['sko','baller','hansker','spor']) if (!Array.isArray(s[n]) || !s[n].length) s[n] = STANDARD[n].slice();
   }
   return s;
 }
@@ -626,6 +677,7 @@ function segDist(px,py,ax,ay,bx,by){ const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy; let 
 function lys(hex){ const n=parseInt(hex.slice(1),16); const r=(n>>16)&255,g=(n>>8)&255,b=n&255; return (0.299*r+0.587*g+0.114*b)/255; }
 function skoStat(){ return SKO.find(s=>s.id===S.valgtSko) || SKO[0]; }
 function keeperStat(){ return KEEPERE.find(k=>k.id===S.keeper) || KEEPERE[0]; }
+function hanskeStat(){ return HANSKER.find(h=>h.id===S.valgtHanske) || HANSKER[0]; }
 
 /* =====================================================================
    LYD (lages i nettleseren – ingen lydfiler)
@@ -1064,6 +1116,50 @@ function tegnBall(c, x, y, r, id, rot=0){
       c.strokeStyle='rgba(120,53,15,.6)'; c.lineWidth=Math.max(0.6,r*0.05);
       femkant(c,0,0,r*0.36,0); c.stroke(); for(let i=0;i<5;i++){ const a=i*Math.PI*2/5-Math.PI/2+Math.PI/5; femkant(c,Math.cos(a)*r*0.92,Math.sin(a)*r*0.92,r*0.33,a+Math.PI/2); c.stroke(); }
       break; }
+    case 'smil': {
+      c.fillStyle='#fde047'; c.fillRect(-r,-r,2*r,2*r);
+      c.fillStyle='#422006'; c.beginPath(); c.arc(-r*0.32,-r*0.22,r*0.13,0,7); c.arc(r*0.32,-r*0.22,r*0.13,0,7); c.fill();
+      c.strokeStyle='#422006'; c.lineWidth=Math.max(0.8,r*0.1); c.lineCap='round'; c.beginPath(); c.arc(0,r*0.05,r*0.5,0.25,Math.PI-0.25); c.stroke();
+      break; }
+    case 'basket': {
+      c.fillStyle='#ea580c'; c.fillRect(-r,-r,2*r,2*r);
+      c.strokeStyle='#1c1917'; c.lineWidth=Math.max(0.7,r*0.07);
+      c.beginPath(); c.moveTo(-r,0); c.lineTo(r,0); c.moveTo(0,-r); c.lineTo(0,r); c.stroke();
+      c.beginPath(); c.arc(-r*1.15,0,r*0.75,-1.1,1.1); c.stroke(); c.beginPath(); c.arc(r*1.15,0,r*0.75,Math.PI-1.1,Math.PI+1.1); c.stroke();
+      break; }
+    case 'is': {
+      const g=c.createRadialGradient(-r*0.2,-r*0.3,r*0.1,0,0,r); g.addColorStop(0,'#ffffff'); g.addColorStop(0.6,'#bae6fd'); g.addColorStop(1,'#38bdf8'); c.fillStyle=g; c.fillRect(-r,-r,2*r,2*r);
+      c.strokeStyle='#ffffff'; c.lineWidth=Math.max(0.6,r*0.06); c.lineCap='round';
+      for(let i=0;i<6;i++){ const a=i*Math.PI/3; c.beginPath(); c.moveTo(0,0); c.lineTo(Math.cos(a)*r*0.8,Math.sin(a)*r*0.8); c.stroke();
+        const mx=Math.cos(a)*r*0.5, my=Math.sin(a)*r*0.5; c.beginPath(); c.moveTo(mx,my); c.lineTo(mx+Math.cos(a+0.9)*r*0.22,my+Math.sin(a+0.9)*r*0.22); c.moveTo(mx,my); c.lineTo(mx+Math.cos(a-0.9)*r*0.22,my+Math.sin(a-0.9)*r*0.22); c.stroke(); }
+      break; }
+    case 'lava': {
+      c.fillStyle='#1c1917'; c.fillRect(-r,-r,2*r,2*r);
+      c.strokeStyle='#f97316'; c.lineWidth=Math.max(0.8,r*0.1); c.lineJoin='round'; c.shadowColor='#fbbf24'; c.shadowBlur=r*0.3;
+      const sprekker=[[[-0.9,-0.2],[-0.4,-0.35],[-0.1,0.05],[0.3,-0.1],[0.9,0.25]],[[-0.1,0.05],[-0.3,0.5],[0,0.95]],[[0.3,-0.1],[0.4,-0.6],[0.15,-0.95]],[[-0.4,-0.35],[-0.55,-0.8]]];
+      for (const s of sprekker){ c.beginPath(); s.forEach(([px,py],i)=> i?c.lineTo(px*r,py*r):c.moveTo(px*r,py*r)); c.stroke(); }
+      c.shadowBlur=0; c.strokeStyle='#fde047'; c.lineWidth=Math.max(0.4,r*0.035);
+      for (const s of sprekker){ c.beginPath(); s.forEach(([px,py],i)=> i?c.lineTo(px*r,py*r):c.moveTo(px*r,py*r)); c.stroke(); }
+      break; }
+    case 'disko': {
+      const n=6, w=2*r/n; const gr=['#e2e8f0','#94a3b8','#cbd5e1','#f8fafc','#64748b','#a5b4fc','#f0abfc','#67e8f9'];
+      for(let i=0;i<n;i++) for(let j=0;j<n;j++){ c.fillStyle=gr[(i*3+j*5+((i*j)%3))%gr.length]; c.fillRect(-r+i*w,-r+j*w,w+0.5,w+0.5); }
+      c.strokeStyle='rgba(15,23,42,.55)'; c.lineWidth=Math.max(0.4,r*0.03);
+      for(let i=1;i<n;i++){ c.beginPath(); c.moveTo(-r+i*w,-r); c.lineTo(-r+i*w,r); c.moveTo(-r,-r+i*w); c.lineTo(r,-r+i*w); c.stroke(); }
+      c.fillStyle='#ffffff'; stjerne(c,-r*0.35,-r*0.4,r*0.22,0.3); c.fill(); stjerne(c,r*0.45,r*0.3,r*0.14,0); c.fill();
+      break; }
+    case 'galakse': {
+      const g=c.createRadialGradient(r*0.2,-r*0.1,r*0.05,0,0,r*1.1); g.addColorStop(0,'#f0abfc'); g.addColorStop(0.35,'#7c3aed'); g.addColorStop(1,'#0f172a'); c.fillStyle=g; c.fillRect(-r,-r,2*r,2*r);
+      c.strokeStyle='rgba(253,224,71,.8)'; c.lineWidth=Math.max(0.5,r*0.05); c.beginPath(); c.ellipse(0,0,r*0.95,r*0.28,-0.5,0,7); c.stroke();
+      c.fillStyle='#ffffff'; for (const [px,py,s] of [[-0.6,-0.5,0.07],[0.5,-0.6,0.05],[0.65,0.4,0.08],[-0.4,0.6,0.05],[-0.75,0.1,0.04],[0.1,0.75,0.06],[0.2,-0.3,0.04]]) { c.beginPath(); c.arc(px*r,py*r,Math.max(0.5,s*r),0,7); c.fill(); }
+      break; }
+    case 'diamant': {
+      const fr=['#ecfeff','#a5f3fc','#67e8f9','#22d3ee','#c7d2fe','#e0e7ff','#a5f3fc','#ffffff'];
+      for(let i=0;i<8;i++){ c.fillStyle=fr[i]; c.beginPath(); c.moveTo(0,0); c.arc(0,0,r*1.1,i*Math.PI/4,(i+1)*Math.PI/4); c.fill(); }
+      c.fillStyle='rgba(255,255,255,.75)'; c.beginPath(); for(let i=0;i<8;i++){ const a=i*Math.PI/4+Math.PI/8; i?c.lineTo(Math.cos(a)*r*0.45,Math.sin(a)*r*0.45):c.moveTo(Math.cos(a)*r*0.45,Math.sin(a)*r*0.45); } c.closePath(); c.fill();
+      c.strokeStyle='rgba(8,145,178,.7)'; c.lineWidth=Math.max(0.4,r*0.03); c.stroke();
+      for(let i=0;i<8;i++){ const a=i*Math.PI/4+Math.PI/8; c.beginPath(); c.moveTo(Math.cos(a)*r*0.45,Math.sin(a)*r*0.45); c.lineTo(Math.cos(a)*r,Math.sin(a)*r); c.stroke(); }
+      break; }
     default: c.fillStyle='#ffffff'; c.fillRect(-r,-r,2*r,2*r); ring('#111827','#111827');
   }
   c.restore();
@@ -1085,7 +1181,9 @@ function tegnSko(c, x, y, w, sk){
   for (const sx of [0.14,0.26,0.55,0.7,0.85]) { c.beginPath(); c.moveTo(w*(sx-0.04),h*0.88); c.lineTo(w*(sx+0.04),h*0.88); c.lineTo(w*(sx+0.025),h*1.0); c.lineTo(w*(sx-0.025),h*1.0); c.fill(); }
   c.fillRect(w*0.05,h*0.78,w*0.92,h*0.11);
   form();
-  if (sk.gull) { const g=c.createLinearGradient(0,0,w,h); g.addColorStop(0,'#fff3b0'); g.addColorStop(0.5,'#fbbf24'); g.addColorStop(1,'#b45309'); c.fillStyle=g; } else c.fillStyle = sk.farge;
+  if (sk.gull) { const g=c.createLinearGradient(0,0,w,h); g.addColorStop(0,'#fff3b0'); g.addColorStop(0.5,'#fbbf24'); g.addColorStop(1,'#b45309'); c.fillStyle=g; }
+  else if (sk.grad) { const g=c.createLinearGradient(0,0,w,h); sk.grad.forEach((f,i) => g.addColorStop(i/(sk.grad.length-1), f)); c.fillStyle=g; }
+  else c.fillStyle = sk.farge;
   c.fill();
   c.save(); form(); c.clip();
   c.fillStyle = sk.aksent; c.strokeStyle = sk.aksent; c.lineWidth = w*0.035;
@@ -1096,6 +1194,14 @@ function tegnSko(c, x, y, w, sk){
     case 'sikte': c.beginPath(); c.arc(w*0.3,h*0.5,h*0.2,0,7); c.stroke(); c.beginPath(); c.moveTo(w*0.3,h*0.22); c.lineTo(w*0.3,h*0.78); c.moveTo(w*0.18,h*0.5); c.lineTo(w*0.42,h*0.5); c.lineWidth=w*0.02; c.stroke(); break;
     case 'lyn': c.beginPath(); c.moveTo(w*0.2,h*0.25); c.lineTo(w*0.45,h*0.45); c.lineTo(w*0.4,h*0.5); c.lineTo(w*0.75,h*0.7); c.lineTo(w*0.5,h*0.55); c.lineTo(w*0.55,h*0.5); c.closePath(); c.fill(); break;
     case 'stjerne': c.fillStyle='#fff'; stjerne(c,w*0.3,h*0.5,h*0.22,0); c.fill(); stjerne(c,w*0.62,h*0.6,h*0.12,0.3); c.fill(); break;
+    case 'krystall': for (const [px,py,s] of [[0.26,0.5,0.2],[0.52,0.58,0.13],[0.74,0.62,0.1]]) { c.beginPath(); c.moveTo(w*px,h*(py-s)); c.lineTo(w*(px+s*0.3),h*py); c.lineTo(w*px,h*(py+s)); c.lineTo(w*(px-s*0.3),h*py); c.closePath(); c.fill(); } break;
+    case 'nett': c.lineWidth=w*0.012; for (let i=0;i<7;i++){ const a=-0.2+i*0.32; c.beginPath(); c.moveTo(w*0.3,h*0.55); c.lineTo(w*0.3+Math.cos(a)*w,h*0.55+Math.sin(a)*w); c.stroke(); }
+      for (const rr of [0.1,0.2,0.32,0.46]) { c.beginPath(); c.arc(w*0.3,h*0.55,w*rr,-0.3,1.8); c.stroke(); } break;
+    case 'kryss': c.lineWidth=w*0.04; c.lineCap='round'; for (const [px,py,s] of [[0.28,0.5,0.1],[0.58,0.58,0.07]]) { c.beginPath(); c.moveTo(w*(px-s),h*(py-s*2)); c.lineTo(w*(px+s),h*(py+s*2)); c.moveTo(w*(px+s),h*(py-s*2)); c.lineTo(w*(px-s),h*(py+s*2)); c.stroke(); } break;
+    case 'pluss': c.lineWidth=w*0.035; c.lineCap='round'; c.beginPath(); c.moveTo(w*0.2,h*0.5); c.lineTo(w*0.36,h*0.5); c.moveTo(w*0.28,h*0.34); c.lineTo(w*0.28,h*0.66);
+      c.moveTo(w*0.5,h*0.6); c.lineTo(w*0.64,h*0.6); c.moveTo(w*0.74,h*0.55); c.lineTo(w*0.86,h*0.67); c.moveTo(w*0.86,h*0.55); c.lineTo(w*0.74,h*0.67); c.stroke(); break;
+    case 'galakse': c.fillStyle='#fff'; for (const [px,py,s] of [[0.18,0.4,0.03],[0.3,0.62,0.05],[0.46,0.45,0.025],[0.6,0.62,0.04],[0.78,0.58,0.03],[0.88,0.7,0.02]]) { stjerne(c,w*px,h*py,w*s,px*9); c.fill(); }
+      c.strokeStyle=sk.aksent; c.lineWidth=w*0.015; c.beginPath(); c.ellipse(w*0.3,h*0.55,w*0.16,h*0.1,-0.4,0,7); c.stroke(); break;
   }
   c.restore();
   // lisser
@@ -1103,6 +1209,64 @@ function tegnSko(c, x, y, w, sk){
   for (let i=0;i<4;i++){ const lx=w*(0.4+i*0.07), ly=h*(0.18+i*0.06); c.beginPath(); c.moveTo(lx-w*0.03,ly-h*0.03); c.lineTo(lx+w*0.03,ly+h*0.05); c.stroke(); }
   form(); c.strokeStyle = 'rgba(0,0,0,.55)'; c.lineWidth = Math.max(1,w*0.015); c.stroke();
   c.restore();
+}
+
+// Keeperhanske til butikken. x,y = midten, s = høyde.
+function tegnHanske(c, x, y, s, h){
+  c.save(); c.translate(x, y); c.lineJoin = 'round'; c.lineCap = 'round';
+  const rr = (px,py,pw,ph,r) => { c.beginPath(); c.roundRect ? c.roundRect(px,py,pw,ph,r) : c.rect(px,py,pw,ph); };
+  const kant = 'rgba(0,0,0,.5)'; c.lineWidth = Math.max(1, s*0.02); c.strokeStyle = kant;
+  c.fillStyle = h.farge;
+  // tommel
+  c.save(); c.translate(-s*0.2, s*0.12); c.rotate(-0.75); rr(-s*0.075, -s*0.3, s*0.15, s*0.34, s*0.07); c.fill(); c.stroke(); c.restore();
+  // fingre
+  [[-0.21,0.36],[-0.07,0.43],[0.07,0.41],[0.21,0.33]].forEach(([fx,fl]) => { rr(s*(fx-0.062), -s*fl, s*0.124, s*fl, s*0.06); c.fill(); c.stroke(); });
+  // håndflate
+  rr(-s*0.28, -s*0.1, s*0.56, s*0.42, s*0.1); c.fill(); c.stroke();
+  // pute og mansjett
+  c.fillStyle = h.aksent; rr(-s*0.18, s*0.0, s*0.36, s*0.2, s*0.06); c.fill();
+  rr(-s*0.24, s*0.33, s*0.48, s*0.14, s*0.04); c.fill(); c.stroke();
+  if (h.id === 'gull') { c.fillStyle = '#fff'; stjerne(c, 0, s*0.1, s*0.08, 0); c.fill(); }
+  if (h.id === 'lyn') { c.fillStyle = h.aksent; c.beginPath(); c.moveTo(-s*0.03,-s*0.02); c.lineTo(s*0.07,-s*0.02); c.lineTo(s*0.0,s*0.09); c.lineTo(s*0.08,s*0.09); c.lineTo(-s*0.06,s*0.26); c.lineTo(-s*0.01,s*0.13); c.lineTo(-s*0.08,s*0.13); c.closePath(); c.fillStyle='#fff'; c.fill(); }
+  c.restore();
+}
+
+/* ---------- skuddspor: pynt som følger ballen ---------- */
+const sporbiter = [];
+function nyBit(type, x, y, st){
+  const u = (a, b) => a + Math.random()*(b-a);
+  const b = {type, x:x+u(-st,st)*0.4, y:y+u(-st,st)*0.4, vx:u(-18,18), vy:u(-18,18), liv:0, maks:0.5, r:st, rot:u(0,6), c:'#fff'};
+  if (type === 'stov') { b.maks = u(0.45,0.8); b.r = st*u(0.6,1.1); b.c = '#f1f5f9'; }
+  else if (type === 'flamme') { b.maks = u(0.3,0.6); b.r = st*u(0.7,1.3); b.vy = u(-70,-20); b.c = ['#fde047','#fb923c','#ef4444'][Math.floor(u(0,3))]; }
+  else if (type === 'stjerner') { b.maks = u(0.5,0.9); b.r = st*u(0.5,1.0); b.vy = u(10,60); b.c = ['#fde047','#ffffff','#fbbf24'][Math.floor(u(0,3))]; }
+  else if (type === 'regnbue') { b.maks = 0.7; b.r = st*1.1; b.x = x; b.y = y; b.vx = b.vy = 0; b.c = `hsl(${(performance.now()*1.1)%360},95%,60%)`; }
+  else if (type === 'lyn') { b.maks = u(0.12,0.28); b.r = st*u(1.2,2.4); b.c = Math.random() < 0.5 ? '#67e8f9' : '#ffffff'; }
+  return b;
+}
+function tegnBit(c, b){
+  const q = 1 - b.liv/b.maks; if (q <= 0) return;
+  c.save(); c.translate(b.x, b.y);
+  if (b.type === 'stov') { c.globalAlpha = 0.5*q; c.fillStyle = b.c; c.beginPath(); c.arc(0,0,b.r*(1.6-q*0.8),0,7); c.fill(); }
+  else if (b.type === 'flamme') { c.globalAlpha = 0.85*q; c.fillStyle = b.c; c.beginPath(); c.arc(0,0,b.r*q,0,7); c.fill(); }
+  else if (b.type === 'stjerner') { c.globalAlpha = Math.min(1, q*1.5); c.fillStyle = b.c; stjerne(c,0,0,b.r*(0.5+0.5*q),b.rot+b.liv*4); c.fill(); }
+  else if (b.type === 'regnbue') { c.globalAlpha = 0.8*q; c.fillStyle = b.c; c.beginPath(); c.arc(0,0,b.r*(0.4+0.6*q),0,7); c.fill(); }
+  else if (b.type === 'lyn') { c.globalAlpha = q; c.strokeStyle = b.c; c.lineWidth = Math.max(1.5, b.r*0.14); c.lineJoin = 'round'; c.rotate(b.rot);
+    c.beginPath(); c.moveTo(-b.r,0); c.lineTo(-b.r*0.3,-b.r*0.35); c.lineTo(b.r*0.1,b.r*0.25); c.lineTo(b.r,-b.r*0.1); c.stroke(); }
+  c.restore();
+}
+function oppdaterSpor(dt){
+  for (let i=sporbiter.length-1;i>=0;i--){ const b = sporbiter[i]; b.liv += dt; if (b.liv >= b.maks) { sporbiter.splice(i,1); continue; } b.x += b.vx*dt; b.y += b.vy*dt; }
+  if (skjerm !== 'spill' || !sh || rolle !== 'skytter' || S.valgtSpor === 'ingen') return;
+  if (sh.res && sh.t > sh.T + 0.35) return;
+  const q = P(sh.b.x, sh.b.y, sh.b.z), st = Math.max(3, BR*q.k);
+  const antall = S.valgtSpor === 'regnbue' ? 2 : S.valgtSpor === 'lyn' ? 1 : 2;
+  for (let i=0;i<antall;i++) sporbiter.push(nyBit(S.valgtSpor, q.x, q.y, st));
+  if (sporbiter.length > 400) sporbiter.splice(0, sporbiter.length-400);
+}
+function tegnSporProve(c, id){   // forhåndsvisning i butikken (440 x 220)
+  c.fillStyle='rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(330,200,60,12,0,0,7); c.fill();
+  if (id !== 'ingen') for (let i=0;i<26;i++){ const t = i/25, b = nyBit(id, 60+t*230, 150-70*Math.sin(t*1.5), 26); b.liv = b.maks*(1-t)*0.85; if (id === 'regnbue') b.c = `hsl(${t*300},95%,60%)`; tegnBit(c, b); }
+  tegnBall(c, 330, 110, 70, S.valgtBall, 0.3);
 }
 
 function fyllMonster(c, d, x, y, w, h){
@@ -1334,7 +1498,7 @@ function skytBot(){
   sh = lagSkudd(botSikte, kp.bot);
   sh.T *= kp.bot.treg;
   sh.k = K;                                   // keeperen står stille til du trykker
-  if (dykkValg) settDykk(K, dykkValg.x, dykkValg.y, 0, KEEPER_VK, KEEPER_REKK);
+  if (dykkValg) settDykk(K, dykkValg.x, dykkValg.y, 0, KEEPER_VK + hanskeStat().vk, KEEPER_REKK + hanskeStat().rekk);
   sh.cb = vedKeeperResultat;
   fase = 'flukt'; spiller.spark = 0; LYD.spark();
 }
@@ -1347,7 +1511,7 @@ function keeperTrykk(e){
     const iFlukt = fase === 'flukt' && sh && !sh.sjekket && !sh.res;
     if (fase !== 'tilop' && !iFlukt) return;
     dykkValg = trykkTilVerden(e);
-    if (iFlukt) settDykk(K, dykkValg.x, dykkValg.y, sh.t, KEEPER_VK, KEEPER_REKK);
+    if (iFlukt) settDykk(K, dykkValg.x, dykkValg.y, sh.t, KEEPER_VK + hanskeStat().vk, KEEPER_REKK + hanskeStat().rekk);
     $('hint').classList.remove('vis'); LYD.klikk();
   } else if (modus === 'duell' && fase === 'kvalg') {
     dykkValg = trykkTilVerden(e);
@@ -1518,7 +1682,7 @@ const Nett = {
 };
 
 /* ---------- oppgaver til oppgavekamp ---------- */
-const VERSJON = 3;   // øk når «Mot en venn» endres, så to iPader med ulik versjon får beskjed
+const VERSJON = 4;   // øk når «Mot en venn» endres, så to iPader med ulik versjon får beskjed
 const KAMPTYPER = {vanlig:'Vanlig', pm:'Pluss og minus', gd:'Gange og dele', quiz:'Fotballquiz'};
 const QUIZTID = 20000;   // millisekunder
 // Fotballquiz: [spørsmål, riktig svar, feil, feil, feil]. Legg gjerne til flere – riktig svar står alltid først.
@@ -1872,7 +2036,7 @@ const Duell = {
     fase = 'slutt';
     const a = kamp.du.filter(Boolean).length, b = kamp.dem.filter(Boolean).length, sd = Math.max(kamp.du.length, kamp.dem.length) > 5;
     let bonus = 0;
-    if (r === 'seier') { bonus = 20; giPoeng(bonus, false); }
+    if (r === 'seier') { bonus = 20; S.stat.vennseire++; giPoeng(bonus, false); }
     lagre();
     planlegg(0.6, () => visResultat({
       tittel: r === 'seier' ? 'DU VANT!' : 'Vennen din vant',
@@ -1979,8 +2143,8 @@ function vedResultat(r){
   if (mal) {
     S.stat.mal++;
     let p = 10*kp.gange; const ekstra = [];
-    if (r.kryss) { p += 5*kp.gange; ekstra.push('I krysset!'); }
-    if (r.skru) { p += 3*kp.gange; ekstra.push('Skrudd inn!'); }
+    if (r.kryss) { p += 5*kp.gange; ekstra.push('I krysset!'); S.stat.kryss++; }
+    if (r.skru) { p += 3*kp.gange; ekstra.push('Skrudd inn!'); S.stat.skrumal++; }
     giPoeng(p, false);
     banner('MÅÅÅL!', (ekstra.length ? ekstra.join(' · ')+'  ' : '') + '+' + p + ' ⭐', 'mal');
     nett.amp = 0.45; nett.x = r.x; nett.y = r.y; nett.t = 0; publikumHopp = 1;
@@ -2038,7 +2202,7 @@ function sjekkSlutt(){
   const a = kamp.du.filter(Boolean).length, b = kamp.dem.filter(Boolean).length;
   S.stat.kamper++;
   let bonus = 0;
-  if (r === 'seier') { S.stat.seire++; bonus = 30*kp.gange; giPoeng(bonus, false); }
+  if (r === 'seier') { S.stat.seire++; if (kp.id === 'vanskelig') S.stat.seireV++; bonus = 30*kp.gange; giPoeng(bonus, false); }
   lagre();
   planlegg(0.6, () => {
     skjulBanner(); skjulMelding();
@@ -2076,6 +2240,7 @@ function oppdater(dt){
   tid += dt;
   for (let i=timere.length-1;i>=0;i--) if (tid >= timere[i].t) { const t = timere.splice(i,1)[0]; t.fn(); }
   nett.t += dt; nett.amp *= Math.pow(0.12, dt);
+  oppdaterSpor(dt);
   publikumHopp = Math.max(0, publikumHopp - dt*0.45);
   if (fase === 'sikt' || fase === 'tilop' || fase === 'vent' || fase === 'kvalg' || fase === 'kklar' || skjerm !== 'spill') {
     K.hx = (modus === 'duell' && skjerm === 'spill') ? 0 : 0.3*Math.sin(tid*1.7);
@@ -2114,8 +2279,8 @@ function tegn(){
   const iSpill = skjerm === 'spill' || skjerm === 'resultat';
   const jegKeeper = iSpill && rolle === 'keeper';
   const ballId = jegKeeper ? motBall : S.valgtBall, rot = sh ? sh.rot : 0;
-  const kUt = jegKeeper ? draktTilKeeper(S.drakt) : (iSpill && modus === 'duell' && motDrakt ? draktTilKeeper(motDrakt) : kp);
-  ting.push({d: b.z - CAMZ, fn: () => {
+  const kUt = jegKeeper ? Object.assign(draktTilKeeper(S.drakt), {hanske: hanskeStat().farge}) : (iSpill && modus === 'duell' && motDrakt ? draktTilKeeper(motDrakt) : kp);
+  ting.push({d: b.z - CAMZ, erBall: true, fn: () => {
     if (b.z > 14.4) return;
     const sk = P(b.x, 0, b.z), q = P(b.x, b.y, b.z);
     ctx.fillStyle = `rgba(0,0,0,${clamp(0.35-b.y*0.06,0.08,0.35)})`;
@@ -2135,6 +2300,7 @@ function tegn(){
     else tegnSpiller(ctx, q.x, q.y, q.k, S.drakt, skoStat(), {lop: spiller.lop, spark: spiller.spark});
   }});
   ting.sort((a,b) => b.d - a.d);
+  ting.splice(ting.findIndex(t => t.erBall), 0, {fn: () => { for (const bit of sporbiter) tegnBit(ctx, bit); }});
   for (const t of ting) t.fn();
 
   if (skjerm === 'spill' && rolle === 'skytter' && (fase === 'sikt' || fase === 'tilop' || fase === 'vent') && sikte) tegnSikte();
@@ -2320,38 +2486,55 @@ document.querySelectorAll('.faner button').forEach(b => b.onclick = () => {
 });
 function pips(n){ let s = '<span class="stolpe" aria-label="' + n + ' av 5">'; for (let i=0;i<5;i++) s += `<i class="${i<n?'p':''}"></i>`; return s + '</span>'; }
 function sjeldenhet(pris){
-  if (pris >= 300) return {navn:'Legendarisk', farge:'#fbbf24', kl:'r-legend'};
-  if (pris >= 120) return {navn:'Episk', farge:'#c084fc', kl:''};
+  if (pris >= 2500) return {navn:'Mytisk', farge:'#f472b6', kl:'r-legend'};
+  if (pris >= 900) return {navn:'Legendarisk', farge:'#fbbf24', kl:'r-legend'};
+  if (pris >= 150) return {navn:'Episk', farge:'#c084fc', kl:''};
   if (pris > 0)    return {navn:'Sjelden', farge:'#38bdf8', kl:''};
   return {navn:'Vanlig', farge:'#94a3b8', kl:''};
 }
 let butikkAnimert = false;
+const BUTIKK = {
+  sko:     {liste:SKO,     eid:'sko',     valgt:'valgtSko'},
+  baller:  {liste:BALLER,  eid:'baller',  valgt:'valgtBall'},
+  hansker: {liste:HANSKER, eid:'hansker', valgt:'valgtHanske'},
+  spor:    {liste:SPOR,    eid:'spor',    valgt:'valgtSpor'},
+};
+function kravStatus(v){
+  if (!v.krav) return null;
+  const [stat, n] = v.krav, har = S.stat[stat] || 0;
+  return {ok: har >= n, har: Math.min(har, n), n, tekst: KRAV[stat](n)};
+}
 function byggButikk(){
   const liste = $('vareliste'); liste.innerHTML = '';
-  const varer = fane === 'sko' ? SKO : BALLER;
-  varer.forEach((v, idx) => {
-    const eier = (fane === 'sko' ? S.sko : S.baller).includes(v.id);
-    const valgt = fane === 'sko' ? S.valgtSko === v.id : S.valgtBall === v.id;
-    const sj = sjeldenhet(v.pris);
+  const B = BUTIKK[fane] || BUTIKK.sko;
+  B.liste.forEach((v, idx) => {
+    const eier = S[B.eid].includes(v.id), valgt = S[B.valgt] === v.id;
+    const sj = sjeldenhet(v.pris), krav = eier ? null : kravStatus(v);
     const el = document.createElement('div'); el.className = 'vare ' + sj.kl + (valgt ? ' valgt' : '') + (butikkAnimert ? '' : ' inn');
-    el.style.setProperty('--r', sj.farge); el.style.setProperty('--i', idx);
+    el.style.setProperty('--r', sj.farge); el.style.setProperty('--i', Math.min(idx, 10));
+    let midt = '';
+    if (fane === 'sko') midt = `<p>${v.tekst}</p><div class="stolper"><span>Kraft</span>${pips(v.kraft)}<span>Skru</span>${pips(v.skru)}<span>Presisjon</span>${pips(v.pres)}</div>`;
+    else if (fane === 'hansker') midt = `<p>${v.tekst}</p><div class="stolper"><span>Rekkevidde</span>${pips(v.r)}<span>Fart</span>${pips(v.f)}</div>`;
+    else if (v.tekst) midt = `<p>${v.tekst}</p>`;
+    if (krav) midt += `<div class="krav ${krav.ok ? 'ok' : ''}"><span>${krav.ok ? '✓' : '🔒'} ${krav.tekst}</span><em>${krav.har}/${krav.n}</em><span class="kravbar"><i style="width:${Math.round(100*krav.har/krav.n)}%"></i></span></div>`;
     el.innerHTML = `<span class="sjelden">${sj.navn}</span>` + (eier ? '<span class="eid">✓ Din</span>' : '') +
-      `<canvas width="440" height="220"></canvas><h3>${v.navn}</h3>` +
-      (fane === 'sko' ? `<p>${v.tekst}</p><div class="stolper"><span>Kraft</span>${pips(v.kraft)}<span>Skru</span>${pips(v.skru)}<span>Presisjon</span>${pips(v.pres)}</div>` : '') +
-      `<button class="knapp ${valgt ? 'gra' : eier ? '' : 'gronn'}"></button>`;
+      `<canvas width="440" height="220"></canvas><h3>${v.navn}</h3>` + midt + `<button class="knapp ${valgt ? 'gra' : eier ? '' : 'gronn'}"></button>`;
     const c = el.querySelector('canvas').getContext('2d');
     if (fane === 'sko') tegnSko(c, 70, 20, 300, v);
+    else if (fane === 'hansker') tegnHanske(c, 220, 118, 190, v);
+    else if (fane === 'spor') tegnSporProve(c, v.id);
     else { c.fillStyle='rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(220,200,70,14,0,0,7); c.fill(); tegnBall(c, 220, 110, 86, v.id, 0.3); }
     const k = el.querySelector('button');
     if (valgt) { k.textContent = 'Valgt ✓'; k.disabled = true; }
     else if (eier) { k.textContent = 'Bruk'; k.onclick = () => { velg(v.id); }; }
+    else if (krav && !krav.ok) { k.disabled = true; k.classList.replace('gronn','gra'); k.textContent = `🔒 Låst · ${v.pris} ⭐`; }
     else {
       k.textContent = `Kjøp · ${v.pris} ⭐`;
       if (S.poeng < v.pris) { k.disabled = true; k.classList.replace('gronn','gra'); k.textContent = `🔒 ${v.pris} ⭐ · mangler ${v.pris - S.poeng}`; }
       k.onclick = () => {
         if (!k.dataset.sikker) { k.dataset.sikker = '1'; k.textContent = 'Trykk igjen for å kjøpe!'; k.classList.replace('gronn','gul'); setTimeout(() => { if (k.isConnected) byggButikk(); }, 2500); return; }
         if (S.poeng < v.pris) return;
-        S.poeng -= v.pris; (fane === 'sko' ? S.sko : S.baller).push(v.id); LYD.pling();
+        S.poeng -= v.pris; S[B.eid].push(v.id); LYD.pling();
         const rr = el.getBoundingClientRect(); konfetti(rr.left + rr.width/2, rr.top + rr.height*0.4, 90);
         velg(v.id);
       };
@@ -2359,7 +2542,7 @@ function byggButikk(){
     liste.appendChild(el);
   });
   butikkAnimert = true;
-  function velg(id){ if (fane === 'sko') S.valgtSko = id; else S.valgtBall = id; lagre(); LYD.klikk(); oppdaterPoeng(); byggButikk(); }
+  function velg(id){ S[B.valgt] = id; lagre(); LYD.klikk(); oppdaterPoeng(); byggButikk(); }
 }
 
 /* ---------- drakt ---------- */
