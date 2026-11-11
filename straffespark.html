@@ -312,6 +312,35 @@ svg.i{width:1em;height:1em;vertical-align:-.12em;flex:none}
 .vennstatus{min-height:26px;margin:14px 0 0;text-align:center;font-size:19px;font-weight:700;color:#fda4af;position:relative;z-index:1}
 #venn .liten{text-align:center;font-size:15px;position:relative;z-index:1}
 #melding{max-width:94vw}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:100%}
+.chip{font-family:var(--tittel);font-size:17px;padding:9px 12px;border-radius:13px;color:#e2e8f0;border:3px solid transparent;
+  background:linear-gradient(180deg,#22316a,#18234d);box-shadow:0 4px 0 #0a1130}
+.chip.valgt{border-color:var(--lime);color:#fff;box-shadow:0 4px 0 #0a1130,0 0 14px rgba(163,230,53,.45)}
+.chipetikett{font-size:14px;color:var(--dempet);margin:2px 0 -4px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+#vennNivaBoks{display:none;flex-direction:column;align-items:center;gap:10px;width:100%}
+#vennNivaBoks.vis{display:flex}
+#quiz{position:fixed;left:0;right:0;bottom:0;z-index:6;display:none;justify-content:center;pointer-events:none;
+  padding:0 12px max(14px,env(safe-area-inset-bottom))}
+#quiz.vis{display:flex;animation:quizInn .35s var(--sprett)}
+@keyframes quizInn{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+.qkort{pointer-events:auto;width:100%;max-width:720px;border-radius:26px;padding:14px 16px 16px;text-align:center;
+  background:linear-gradient(170deg,rgba(23,36,90,.97),rgba(10,17,48,.97));border:3px solid var(--gull);
+  box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 30px rgba(251,191,36,.25)}
+.qrolle{font-family:var(--tittel);font-size:17px;letter-spacing:.5px;color:var(--gullL)}
+.qsporsmal{font-family:var(--tittel);font-size:clamp(26px,5vw,46px);line-height:1.1;color:#fff;margin:6px 0 12px;text-shadow:0 4px 0 #0b1a4a}
+.qsporsmal.lang{font-size:clamp(20px,3.2vw,28px);text-shadow:0 2px 0 #0b1a4a}
+.qsvar{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qsvar button{font-family:var(--tittel);font-size:clamp(20px,3.4vw,30px);min-height:64px;padding:8px 10px;border-radius:18px;color:#fff;
+  background:linear-gradient(180deg,#60a5fa,#2563eb);box-shadow:0 6px 0 var(--blaM),inset 0 2px 0 rgba(255,255,255,.4);transition:transform .08s}
+.qsvar.tekst button{font-size:clamp(17px,2.6vw,23px)}
+.qsvar button:active{transform:translateY(4px);box-shadow:0 2px 0 var(--blaM)}
+.qsvar button:disabled{filter:grayscale(.7) brightness(.7)}
+.qsvar button.min{filter:none;background:linear-gradient(180deg,#fde68a,#f59e0b);color:#451a03;box-shadow:0 6px 0 var(--gullM)}
+.qsvar button.riktig{filter:none;background:linear-gradient(180deg,#d9f99d,#65a30d);color:#1a2e05;box-shadow:0 6px 0 var(--limeM)}
+.qsvar button.feil{filter:none;background:linear-gradient(180deg,#fb7185,#be123c);color:#fff;box-shadow:0 6px 0 #881337}
+.qtid{height:8px;border-radius:5px;background:rgba(255,255,255,.12);margin-top:12px;overflow:hidden}
+.qtid i{display:block;height:100%;width:100%;border-radius:5px;background:linear-gradient(90deg,var(--lime),#facc15)}
+.qstatus{min-height:22px;margin-top:8px;font-size:16px;font-weight:700;color:var(--dempet)}
 #hint.trykk .finger{animation:ventepuls 1.2s ease-in-out infinite}
 
 @media (max-width:760px){
@@ -385,7 +414,21 @@ svg.i{width:1em;height:1em;vertical-align:-.12em;flex:none}
       <div class="vennboks">
         <div class="stor">🏟️</div>
         <h3>Lag et spill</h3>
-        <p>Du får en kode som vennen din skriver inn på sin iPad.</p>
+        <p>Velg kamp. Du får en kode som vennen din skriver inn på sin iPad.</p>
+        <div class="chips" id="vennType" role="group" aria-label="Hva slags kamp">
+          <button class="chip" data-type="vanlig">⚽ Vanlig</button>
+          <button class="chip" data-type="pm">➕ Pluss og minus</button>
+          <button class="chip" data-type="gd">✖️ Gange og dele</button>
+          <button class="chip" data-type="quiz">🧠 Fotballquiz</button>
+        </div>
+        <div id="vennNivaBoks">
+          <div class="chipetikett">Hvor vanskelig?</div>
+          <div class="chips" id="vennNiva" role="group" aria-label="Vanskelighetsgrad">
+            <button class="chip" data-niva="0">Lett</button>
+            <button class="chip" data-niva="1">Middels</button>
+            <button class="chip" data-niva="2">Vanskelig</button>
+          </div>
+        </div>
         <button class="knapp gronn" id="vennLag">Lag spill</button>
       </div>
       <div class="vennboks">
@@ -402,7 +445,7 @@ svg.i{width:1em;height:1em;vertical-align:-.12em;flex:none}
       <p class="ventepuls">Venter på at vennen din skal bli med …</p>
     </div>
     <p class="vennstatus" id="vennStatus" role="status"></p>
-    <p class="liten">Dere skyter fem straffer hver og bytter på å stå i mål. Keeperen velger hvor den vil kaste seg <b>før</b> skuddet går – akkurat som i en ekte straffekonkurranse. Bare draktfarger og nummer sendes til den andre iPaden, ikke navn.</p>
+    <p class="liten">Dere skyter fem straffer hver og bytter på å stå i mål. <b>Vanlig:</b> keeperen velger hvor den vil kaste seg før skuddet går. <b>Oppgavekamp:</b> begge får samme oppgave – den som svarer riktig raskest, scorer eller redder. Bare draktfarger og nummer sendes til den andre iPaden, ikke navn.</p>
   </div>
 </div>
 
@@ -485,6 +528,15 @@ svg.i{width:1em;height:1em;vertical-align:-.12em;flex:none}
 <div id="banner"><div class="straaler"></div><div class="stor"></div><div class="under"></div></div>
 <div id="melding"></div>
 <div id="hint"><div class="finger">👆</div><div class="boble" id="hintTekst">Dra fra ballen mot målet – og slipp!</div></div>
+<div id="quiz" aria-live="polite">
+  <div class="qkort">
+    <div class="qrolle" id="quizRolle"></div>
+    <div class="qsporsmal" id="quizTekst"></div>
+    <div class="qsvar" id="quizSvar"></div>
+    <div class="qtid"><i id="quizTid"></i></div>
+    <div class="qstatus" id="quizStatus"></div>
+  </div>
+</div>
 <canvas id="konfetti"></canvas>
 
 <script>
@@ -547,6 +599,7 @@ const HARSTIL = [['kort','Kort'],['langt','Langt'],['hestehale','Hestehale'],['k
 const STANDARD = {
   poeng:0, sko:['gym'], valgtSko:'gym', baller:['klassisk'], valgtBall:'klassisk', keeper:'lett', lyd:true,
   drakt:{monster:'striper', farge:'#dc2626', farge2:'#ffffff', shorts:'#111827', sokker:'#dc2626', nummer:10, navn:'', hud:'#e8b48a', har:'#3b2a1a', harstil:'kort'},
+  venn:{type:'vanlig', niva:1},
   stat:{mal:0, skudd:0, kamper:0, seire:0, redninger:0, kskudd:0, vennekamper:0}
 };
 let S = lastInn();
@@ -558,6 +611,7 @@ function lastInn(){
     Object.assign(s, d);
     s.drakt = Object.assign({}, STANDARD.drakt, d.drakt || {});
     s.stat = Object.assign({}, STANDARD.stat, d.stat || {});
+    s.venn = Object.assign({}, STANDARD.venn, d.venn || {});
   }
   return s;
 }
@@ -788,6 +842,7 @@ window.__simKeeper = function(n, keeperId, reaksjon, stoy){   // menneske-keeper
   }
   return {redd: redd/n, mal: mal/n};
 };
+window.__oppgaver = function(type, niva, n){ const b = []; const ut = []; for (let i=0;i<n;i++) ut.push(lagOppgave(type, niva, b)); return ut; };
 window.__simDuell = function(n, maks){   // gjette-keeper: maks = hvor langt unna ballen keeperen gjetter (m). Uendelig = helt tilfeldig.
   let redd = 0, pa = 0;
   for (let i=0;i<n;i++){
@@ -1323,6 +1378,7 @@ function vedKeeperResultat(r){
   kamp.du.push(!mal); kamp.dem.push(mal); oppdaterTavle();
   planlegg(1.9, () => { if (kamp.du.length >= 5) sluttKeeper(); else nyttKeeperSkudd(); });
 }
+function skjulQuiz(){ $('quiz').classList.remove('vis'); }
 function resEtiketter(a, b){ $('resLagDu').textContent = a; $('resLagDem').textContent = b; }
 function visResultat(o){
   skjulBanner(); skjulMelding();
@@ -1462,6 +1518,99 @@ const Nett = {
   }
 };
 
+/* ---------- oppgaver til oppgavekamp ---------- */
+const KAMPTYPER = {vanlig:'Vanlig', pm:'Pluss og minus', gd:'Gange og dele', quiz:'Fotballquiz'};
+const QUIZTID = 20000;   // millisekunder
+// Fotballquiz: [spørsmål, riktig svar, feil, feil, feil]. Legg gjerne til flere – riktig svar står alltid først.
+const FOTBALLQUIZ = [
+  ['Hvor mange spillere har hvert lag på banen i 11er-fotball?', '11', '9', '10', '12'],
+  ['Hvor langt fra mållinja ligger straffemerket?', '11 meter', '9 meter', '16 meter', '7 meter'],
+  ['Hvor lenge varer en vanlig fotballkamp for voksne?', '90 minutter', '60 minutter', '80 minutter', '100 minutter'],
+  ['Hvor mange minutter varer én omgang i voksenfotball?', '45', '30', '40', '50'],
+  ['Hvilken farge har kortet som betyr utvisning?', 'Rødt', 'Gult', 'Blått', 'Grønt'],
+  ['Hva betyr et gult kort?', 'Advarsel', 'Utvisning', 'Straffespark', 'Bytte'],
+  ['Hvor mange gule kort i samme kamp gir rødt kort?', '2', '1', '3', '4'],
+  ['Hva får laget når ballen går over sidelinja?', 'Innkast', 'Hjørnespark', 'Avspark', 'Straffespark'],
+  ['Hvem kan ta ballen med hendene inne i sitt eget straffefelt?', 'Keeperen', 'Kapteinen', 'Forsvarerne', 'Ingen'],
+  ['Hva kalles det når én spiller scorer tre mål i samme kamp?', 'Hat trick', 'Trippelspark', 'Tre på rad', 'Full pott'],
+  ['Hvor på banen tas avspark?', 'Midt på banen', 'Fra straffemerket', 'Fra hjørnet', 'Fra mållinja'],
+  ['Forsvareren sender ballen over sin egen mållinje, utenfor målet. Hva blir det?', 'Hjørnespark', 'Innkast', 'Målspark', 'Straffespark'],
+  ['Angriperen skyter ballen over mållinja, utenfor målet. Hva blir det?', 'Målspark', 'Hjørnespark', 'Innkast', 'Avspark'],
+  ['Hvor høyt er et vanlig fotballmål (11er)?', '2,44 meter', '2 meter', '3 meter', '1,80 meter'],
+  ['Hvor bredt er et vanlig fotballmål (11er)?', '7,32 meter', '5 meter', '6 meter', '9 meter'],
+  ['Hvor ofte arrangeres VM i fotball?', 'Hvert fjerde år', 'Hvert år', 'Annethvert år', 'Hvert femte år'],
+  ['Hvilket land vant VM for menn i 2022?', 'Argentina', 'Frankrike', 'Brasil', 'Kroatia'],
+  ['I hvilket land ble VM for menn spilt i 2022?', 'Qatar', 'Russland', 'Brasil', 'Tyskland'],
+  ['Hvilket land har vunnet VM for menn flest ganger?', 'Brasil', 'Tyskland', 'Italia', 'Argentina'],
+  ['Hvilket land vant det aller første VM i 1930?', 'Uruguay', 'Brasil', 'Italia', 'England'],
+  ['Hvilket land vant VM for kvinner i 2023?', 'Spania', 'England', 'USA', 'Sverige'],
+  ['Hvilket år vant Norge VM for kvinner?', '1995', '1987', '2003', '2011'],
+  ['Hva heter den øverste ligaen for menn i Norge?', 'Eliteserien', 'Toppserien', 'Premier League', 'Allsvenskan'],
+  ['Hva heter den øverste ligaen for kvinner i Norge?', 'Toppserien', 'Eliteserien', 'Damallsvenskan', 'Superligaen'],
+  ['Hva heter Norges nasjonalarena for fotball?', 'Ullevaal stadion', 'Lerkendal', 'Brann stadion', 'Wembley'],
+  ['Hvilken klubb spiller hjemmekampene sine på Lerkendal?', 'Rosenborg', 'Brann', 'Molde', 'Viking'],
+  ['Hvilken by kommer Brann fra?', 'Bergen', 'Oslo', 'Stavanger', 'Trondheim'],
+  ['Hvilken by kommer Viking fra?', 'Stavanger', 'Haugesund', 'Bergen', 'Kristiansand'],
+  ['Hvilken by kommer Bodø/Glimt fra?', 'Bodø', 'Tromsø', 'Narvik', 'Ålesund'],
+  ['Hva kalles regelen som stopper angripere fra å stå og vente bak forsvarerne?', 'Offside', 'Innkast', 'Obstruksjon', 'Avspark'],
+  ['Kan man score direkte fra et innkast?', 'Nei', 'Ja, alltid', 'Bare i andre omgang', 'Bare keeperen'],
+  ['Hva heter organisasjonen som styrer fotballen i hele verden?', 'FIFA', 'UEFA', 'NFF', 'IOC'],
+  ['Hva heter fotballforbundet for Europa?', 'UEFA', 'FIFA', 'NFF', 'NBA'],
+  ['Hva heter turneringen for de beste klubblagene i Europa?', 'Champions League', 'Premier League', 'Eliteserien', 'Verdenscupen'],
+  ['Hvilket nummer har keeperen vanligvis på drakta?', '1', '9', '10', '99'],
+  ['Hvor mange hjørneflagg er det på en fotballbane?', '4', '2', '6', '8'],
+  ['Hvilket lag tar avspark etter en scoring?', 'Laget som slapp inn målet', 'Laget som scoret', 'Hjemmelaget', 'Dommeren bestemmer'],
+  ['Hvor mange spillere er det på banen til sammen når en 11er-kamp starter?', '22', '11', '20', '24'],
+  ['Hvor må keeperen stå når en straffe tas?', 'På mållinja', 'På straffemerket', 'Utenfor feltet', 'Bak målet'],
+  ['Hva hjelper videodommeren (VAR) dommeren med?', 'Å se situasjoner på video', 'Å blåse i fløyta', 'Å bytte spillere', 'Å måle banen'],
+  ['Hva kalles den ekstra tida som spilles når en cupkamp står uavgjort?', 'Ekstraomganger', 'Pausespill', 'Tilleggskamp', 'Omkamp'],
+  ['En utespiller slår ballen bort med hånda med vilje. Hva dømmer dommeren?', 'Frispark (hands)', 'Innkast', 'Hjørnespark', 'Avspark'],
+];
+function blandet(a){ a = a.slice(); for (let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
+// Lager én oppgave: {t: tekst, a: [fire svar], r: nummeret på det riktige}
+function lagOppgave(type, niva, brukt){
+  const u = (a, b) => a + Math.floor(Math.random()*(b-a+1));
+  if (type === 'quiz') {
+    let ledig = FOTBALLQUIZ.map((_, i) => i).filter(i => !brukt.includes('q'+i));
+    if (!ledig.length) { brukt.length = 0; ledig = FOTBALLQUIZ.map((_, i) => i); }
+    const i = ledig[u(0, ledig.length-1)], q = FOTBALLQUIZ[i]; brukt.push('q'+i);
+    const svar = blandet(q.slice(1));
+    return {t:q[0], a:svar, r:svar.indexOf(q[1])};
+  }
+  let t, fasit, feil;
+  for (let forsok=0; forsok<40; forsok++) {
+    if (type === 'pm') {
+      const pluss = Math.random() < 0.5;
+      const maks = [20, 100, 1000][niva], min = [1, 11, 101][niva];
+      let a, b;
+      if (pluss) { a = u(min, maks-min); b = u(min, Math.max(min, maks-a)); fasit = a+b; t = `${a} + ${b}`; }
+      else { a = u(min+1, maks); b = u(min, a-1); if (niva === 0) b = u(1, a-1); fasit = a-b; t = `${a} − ${b}`; }
+      feil = [fasit+1, fasit-1, fasit+10, fasit-10, fasit+2, fasit-2, pluss ? Math.abs(a-b) : a+b];
+      if (niva === 2) feil.push(fasit+100, fasit-100, fasit+20, fasit-20);
+    } else {
+      const gange = Math.random() < 0.5;
+      let a, b;
+      if (niva === 0) { a = [1,2,3,4,5,10][u(0,5)]; b = u(1,10); }
+      else if (niva === 1) { a = u(2,10); b = u(2,10); }
+      else if (Math.random() < 0.5) { a = u(11,19); b = u(3,9); } else { a = u(6,12); b = u(6,12); }
+      if (gange) { if (Math.random() < 0.5) [a,b] = [b,a]; fasit = a*b; t = `${a} · ${b}`; feil = [fasit+a, fasit-a, fasit+b, fasit-b, fasit+1, fasit-1, fasit+10, a+b]; }
+      else { fasit = b; t = `${a*b} : ${a}`; feil = [fasit+1, fasit-1, fasit+2, fasit-2, a, fasit+10, fasit*2]; }
+    }
+    if (!brukt.includes(t)) break;
+  }
+  brukt.push(t);
+  const valg = [];
+  for (const v of blandet(feil)) { if (valg.length === 3) break; if (v >= 0 && v !== fasit && !valg.includes(v)) valg.push(v); }
+  for (let x = fasit+3; valg.length < 3; x++) if (!valg.includes(x)) valg.push(x);
+  const svar = blandet([fasit, ...valg]).map(String);
+  return {t: t + ' = ?', a: svar, r: svar.indexOf(String(fasit))};
+}
+function vaskOppgave(q){
+  if (!q || typeof q.t !== 'string' || !Array.isArray(q.a) || q.a.length !== 4 || !Number.isInteger(q.r) || q.r < 0 || q.r > 3) return null;
+  return {t: q.t.slice(0, 140), a: q.a.map(x => String(x).slice(0, 40)), r: q.r};
+}
+function vaskSvar(a){ return (a && Number.isInteger(a.i) && typeof a.ms === 'number' && isFinite(a.ms)) ? {i:a.i, ms:clamp(a.ms, 0, QUIZTID)} : null; }
+
 function minProfil(){
   const d = S.drakt;
   return {drakt:{monster:d.monster, farge:d.farge, farge2:d.farge2, shorts:d.shorts, sokker:d.sokker, nummer:d.nummer, hud:d.hud, har:d.har, harstil:d.harstil},
@@ -1484,6 +1633,10 @@ function vaskProfil(p){
 
 const Duell = {
   aktiv:false, vert:false, kode:null, rom:null, nr:0, n:0, startet:false, spillerAv:false, sendt:false, frist:0, skudd:null,
+  type:'vanlig', niva:1, q:null, qVist:false, qStart:0, qBrukt:[], minI:-2,
+  oppgavekamp(){ return this.type !== 'vanlig'; },
+  motpart(){ return this.vert ? 'gjest' : 'vert'; },
+  skytterNavn(){ return ((this.n + this.nr) % 2 === 0) ? 'vert' : 'gjest'; },
   meg(){ return this.vert ? 'vert' : 'gjest'; },
   nokkel(){ return this.nr + '_' + this.n; },
   minTur(){ return ((this.n + this.nr) % 2 === 0) === this.vert; },   // verten skyter først i første kamp, så bytter det
@@ -1503,7 +1656,8 @@ const Duell = {
       let kode;
       for (let i=0;i<6;i++){ kode = Array.from({length:4}, () => 'ABCDEFGHJKLMNPRSTUVWXYZ'[Math.floor(Math.random()*23)]).join(''); if (!(await medFrist(Nett.finnes(kode)))) break; }
       this.nullstill(); this.aktiv = true; this.vert = true; this.kode = kode;
-      await medFrist(Nett.lag(kode, {t:Date.now(), vert:minProfil(), nr:0}, r => this.vedRom(r)));
+      const type = KAMPTYPER[S.venn.type] ? S.venn.type : 'vanlig', niva = [0,1,2].includes(S.venn.niva) ? S.venn.niva : 1;
+      await medFrist(Nett.lag(kode, {t:Date.now(), vert:minProfil(), nr:0, type, niva}, r => this.vedRom(r)));
       if (!this.aktiv) return;
       this.status(''); $('vennKodeVis').textContent = kode; $('venn').classList.add('venter');
     } catch(e) { this.forlat(); $('venn').classList.remove('venter'); this.status(this.feil(e)); }
@@ -1522,7 +1676,8 @@ const Duell = {
     } catch(e) { this.forlat(); this.status(this.feil(e)); }
     $('vennBliMed').disabled = false;
   },
-  nullstill(){ this.rom = null; this.nr = 0; this.n = 0; this.startet = false; this.spillerAv = false; this.sendt = false; this.skudd = null; },
+  nullstill(){ this.rom = null; this.nr = 0; this.n = 0; this.startet = false; this.spillerAv = false; this.sendt = false; this.skudd = null;
+    this.q = null; this.qVist = false; this.qBrukt = []; this.minI = -2; skjulQuiz(); },
   forlat(){ if (!this.aktiv) return; this.aktiv = false; Nett.forlat(); this.nullstill(); },
   avbrutt(){
     this.forlat(); timere.length = 0; sh = null; rolle = 'skytter';
@@ -1541,6 +1696,7 @@ const Duell = {
   startKamp(){
     const mot = vaskProfil(this.rom[this.vert ? 'gjest' : 'vert']);
     motDrakt = mot.drakt; motSko = mot.sko; motBall = mot.ball;
+    this.type = KAMPTYPER[this.rom.type] ? this.rom.type : 'vanlig'; this.niva = [0,1,2].includes(this.rom.niva) ? this.rom.niva : 1;
     modus = 'duell'; kamp = {du:[], dem:[], tjent:0}; timere.length = 0;
     this.n = 0; this.spillerAv = false;
     S.stat.vennekamper++; lagre();
@@ -1552,7 +1708,13 @@ const Duell = {
     nullstillBane();
     this.sendt = false; this.skudd = null; this.frist = tid + 30;
     rolle = this.minTur() ? 'skytter' : 'keeper';
-    if (rolle === 'skytter') { fase = 'sikt'; melding('⚽ Din tur – skyt!'); }
+    this.q = null; this.qVist = false; this.minI = -2; skjulQuiz();
+    if (this.oppgavekamp()) {
+      fase = 'quiz';
+      melding(rolle === 'skytter' ? '⚽ Du skyter – svar raskest for å score!' : '🧤 Du står i mål – svar raskest for å redde!');
+      if (this.vert) Nett.sett('q/' + this.nokkel(), lagOppgave(this.type, this.niva, this.qBrukt));
+    }
+    else if (rolle === 'skytter') { fase = 'sikt'; melding('⚽ Din tur – skyt!'); }
     else { fase = 'kvalg'; melding('🧤 Du står i mål – trykk der du vil kaste deg!'); }
     plasserHint();
     this.sjekk();
@@ -1572,19 +1734,80 @@ const Duell = {
   // kalles hver gang rommet endrer seg, og når vi går videre til neste straffe
   sjekk(){
     const rom = this.rom; if (!rom || !this.startet) return;
-    if (rom.igjen && rom.igjen.vert && rom.igjen.gjest) { if (this.vert) Nett.oppdater({s:null, d:null, r:null, igjen:null, nr:this.nr+1}); return; }
+    if (rom.igjen && rom.igjen.vert && rom.igjen.gjest) { if (this.vert) Nett.oppdater({s:null, d:null, r:null, q:null, a:null, igjen:null, nr:this.nr+1}); return; }
     if (fase === 'slutt') return;
     const k = this.nokkel(), s = rom.s && rom.s[k], d = rom.d && rom.d[k], r = rom.r && rom.r[k];
+    if (this.oppgavekamp()) {
+      const q = vaskOppgave(rom.q && rom.q[k]), a = (rom.a && rom.a[k]) || {};
+      if (q && fase === 'quiz' && !this.qVist && !this.spillerAv) this.visOppgave(q);
+      if (this.vert && q && !r && vaskSvar(a.vert) && vaskSvar(a.gjest)) { this.avgjorOppgave(k, q, a); return; }
+    }
     if (this.vert && s && d && !r) {
       const dd = {x: (typeof d.x === 'number' && isFinite(d.x)) ? d.x : 0, y: (typeof d.y === 'number' && isFinite(d.y)) ? d.y : 1};
       Nett.sett('r/' + k, {type: regnUt(s, dd, DUELL_VK, DUELL_REKK), tx: dd.x, ty: dd.y});
       return;
     }
-    if (r && s && !this.spillerAv && (fase === 'sikt' || fase === 'vent' || fase === 'kvalg')) {
+    if (r && s && !this.spillerAv && (fase === 'sikt' || fase === 'vent' || fase === 'kvalg' || fase === 'quiz')) {
       this.spillerAv = true; this.skudd = {s, r};
+      if (this.oppgavekamp()) this.visFasit();
       skjulMelding(); $('hint').classList.remove('vis'); drag = null; sikte = null;
       fase = 'tilop'; spiller.tl = 0; LYD.floyte();
     }
+  },
+  // Oppgaven er kommet: vis den om et lite øyeblikk, og start klokka når den vises.
+  visOppgave(q){
+    this.qVist = true; this.q = q; this.sendt = false;
+    const k = this.nokkel();
+    planlegg(1.7, () => {
+      if (!this.startet || this.spillerAv || this.nokkel() !== k || fase !== 'quiz') return;
+      skjulMelding();
+      $('quizRolle').textContent = rolle === 'skytter' ? '⚽ Svar raskest – da scorer du!' : '🧤 Svar raskest – da redder du!';
+      const tekst = $('quizTekst'); tekst.textContent = q.t; tekst.classList.toggle('lang', q.t.length > 18);
+      const boks = $('quizSvar'); boks.innerHTML = ''; boks.classList.toggle('tekst', q.a.some(x => x.length > 6));
+      q.a.forEach((svar, i) => { const b = document.createElement('button'); b.textContent = svar; b.onclick = () => this.svar(i); boks.appendChild(b); });
+      $('quizStatus').textContent = ''; $('quizTid').style.width = '100%';
+      $('quiz').classList.add('vis');
+      this.qStart = performance.now(); LYD.pling();
+    });
+  },
+  svar(i, ms){
+    if (this.sendt || !this.q || !$('quiz').classList.contains('vis')) return;
+    this.sendt = true; this.minI = i;
+    if (ms == null) ms = Math.round(performance.now() - this.qStart);
+    const knapper = $('quizSvar').children;
+    for (let j=0;j<knapper.length;j++) { knapper[j].disabled = true; if (j === i) knapper[j].classList.add('min'); }
+    $('quizStatus').textContent = i < 0 ? 'Tida er ute!' : 'Svaret ditt er sendt …';
+    if (i >= 0) LYD.klikk();
+    Nett.sett('a/' + this.nokkel() + '/' + this.meg(), {i, ms: clamp(ms, 0, QUIZTID)});
+  },
+  // Verten: begge har svart. Riktig og raskest vinner. Tida måles på hver sin iPad, så tregt nett spiller ingen rolle.
+  avgjorOppgave(k, q, a){
+    const sn = this.skytterNavn(), kn = sn === 'vert' ? 'gjest' : 'vert';
+    const as = vaskSvar(a[sn]), ak = vaskSvar(a[kn]), okS = as.i === q.r, okK = ak.i === q.r;
+    const u = (x, y) => x + Math.random()*(y-x), side = Math.random() < 0.5 ? -1 : 1;
+    let hvem, xt, p, d;
+    if (okS && (!okK || as.ms <= ak.ms)) { hvem = 's'; xt = side*u(1.7,3.0); p = u(0.25,0.7); d = {x:-side*u(1.5,2.8), y:u(0.5,1.6)}; }
+    else if (okK) { hvem = 'k'; xt = side*u(1.2,2.8); p = u(0.25,0.7); d = {x:xt, y:hoydeFraKraft(p)}; }
+    else if (Math.random() < 0.5) { hvem = 'ingen'; xt = u(-2,2); p = 1.08; d = {x:side*u(1,2.5), y:1.2}; }
+    else { hvem = 'ingen'; xt = side*u(4.5,5.2); p = u(0.3,0.6); d = {x:-side*u(0.5,2), y:1}; }
+    const a4 = v => Math.round(v*10000)/10000;
+    const s = {xt:a4(xt), h:a4(hoydeFraKraft(p)), B:0, loft:a4(0.15+0.35*p), T:a4(MAL.z/(18.9+9*Math.min(p,1.1))), p:a4(p)};
+    const type = hvem === 'k' ? 'redning' : regnUt(s, d, DUELL_VK, DUELL_REKK);
+    Nett.oppdater({['s/' + k]: s, ['r/' + k]: {type: (hvem === 's' && type !== 'mal') ? 'mal' : type, tx:a4(d.x), ty:a4(d.y), hvem}});
+  },
+  visFasit(){
+    const q = this.q, knapper = $('quizSvar').children;
+    if (!q || !$('quiz').classList.contains('vis')) { skjulQuiz(); return; }
+    for (let j=0;j<knapper.length;j++) { knapper[j].disabled = true; if (j === q.r) knapper[j].classList.add('riktig'); else if (j === this.minI) knapper[j].classList.add('feil'); }
+    $('quizStatus').textContent = this.minI === q.r ? 'Riktig!' : 'Riktig svar: ' + q.a[q.r];
+    planlegg(1.5, skjulQuiz);
+  },
+  oppgaveTekst(r){
+    const jegVant = (r.hvem === 's' && rolle === 'skytter') || (r.hvem === 'k' && rolle === 'keeper');
+    const riktig = this.q && this.minI === this.q.r;
+    if (r.hvem === 'ingen') return 'Ingen svarte riktig – da ble det bom!';
+    if (jegVant) return 'Du svarte riktig og raskest!  +8 ⭐';
+    return riktig ? 'Riktig – men vennen din var raskere.' : 'Vennen din svarte riktig.';
   },
   skyt(){
     const {s, r} = this.skudd;
@@ -1627,6 +1850,7 @@ const Duell = {
         if (r.type === 'stolpe' || r.type === 'tverrligger') { LYD.stolpe(); ristSkjerm(8); } else LYD.jubel();
       }
     }
+    if (this.oppgavekamp() && this.skudd && this.skudd.r.hvem) { const un = $('banner').querySelector('.under'); un.textContent = this.oppgaveTekst(this.skudd.r); un.style.display = 'inline-block'; }
     lagre(); oppdaterTavle();
     planlegg(2.1, () => {
       this.spillerAv = false;
@@ -1656,6 +1880,14 @@ const Duell = {
   },
   // hvis noen bruker veldig lang tid, velger spillet for dem, så ikke den andre blir sittende og vente
   tikk(){
+    if (this.startet && fase === 'quiz' && !this.sendt && !this.spillerAv && this.q && $('quiz').classList.contains('vis')) {
+      const brukt = performance.now() - this.qStart;
+      $('quizTid').style.width = Math.max(0, 100*(1 - brukt/QUIZTID)) + '%';
+      const andre = vaskSvar(this.rom && this.rom.a && this.rom.a[this.nokkel()] && this.rom.a[this.nokkel()][this.motpart()]);
+      if (brukt >= QUIZTID) this.svar(-1, QUIZTID);
+      else if (andre && andre.i === this.q.r && brukt > andre.ms) { this.svar(-1, Math.round(brukt)); $('quizStatus').textContent = 'Vennen din var raskere!'; }
+      return;
+    }
     if (!this.startet || this.sendt || this.spillerAv || drag) return;
     const igjen = this.frist - tid;
     if (rolle === 'skytter' && fase === 'sikt') {
@@ -1984,6 +2216,7 @@ function visSkjerm(navn){
   skjerm = navn;
   for (const id of ['meny','butikk','drakt','resultat','venn']) $(id).classList.toggle('vis', id === navn);
   if (navn === 'meny') rolle = 'skytter';
+  if (navn !== 'spill') skjulQuiz();
   $('hud').classList.toggle('vis', navn === 'spill');
   $('dialog').classList.remove('vis');
   if (navn !== 'spill') { if (navn !== 'resultat') timere.length = 0; $('hint').classList.remove('vis'); skjulBanner(); skjulMelding(); }
@@ -2179,7 +2412,18 @@ $('tilfeldig').onclick = () => {
 $('startKamp').onclick = () => { lyd(); startSpill('kamp'); };
 $('startTrening').onclick = () => { lyd(); startSpill('trening'); };
 $('startKeeper').onclick = () => { lyd(); startSpill('keeper'); };
-$('tilVenn').onclick = () => { LYD.klikk(); Duell.status(''); $('venn').classList.remove('venter'); visSkjerm('venn'); };
+$('tilVenn').onclick = () => { LYD.klikk(); Duell.status(''); $('venn').classList.remove('venter'); byggVennValg(); visSkjerm('venn'); };
+function byggVennValg(){
+  document.querySelectorAll('#vennType .chip').forEach(b => {
+    b.classList.toggle('valgt', b.dataset.type === S.venn.type); b.setAttribute('aria-pressed', b.dataset.type === S.venn.type);
+    b.onclick = () => { S.venn.type = b.dataset.type; lagre(); LYD.klikk(); byggVennValg(); };
+  });
+  document.querySelectorAll('#vennNiva .chip').forEach(b => {
+    b.classList.toggle('valgt', +b.dataset.niva === S.venn.niva); b.setAttribute('aria-pressed', +b.dataset.niva === S.venn.niva);
+    b.onclick = () => { S.venn.niva = +b.dataset.niva; lagre(); LYD.klikk(); byggVennValg(); };
+  });
+  $('vennNivaBoks').classList.toggle('vis', S.venn.type === 'pm' || S.venn.type === 'gd');
+}
 $('vennTilbake').onclick = () => { LYD.klikk(); Duell.forlat(); $('venn').classList.remove('venter'); visSkjerm('meny'); };
 $('vennLag').onclick = () => { lyd(); LYD.klikk(); Duell.lag(); };
 $('vennBliMed').onclick = () => { lyd(); LYD.klikk(); Duell.blimed(); };
