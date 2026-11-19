@@ -339,6 +339,8 @@ footer b{color:var(--gul);}
                     "Kommer snart" automatisk)
      lagaAv      – hvem som laget det (elev, gruppe …). Tom = vises ikke.
      farge       – fargen på kortet: teal, lilla, oransje, gul, rosa, gronn
+     lagtTil     – datoen spillet ble lagt ut, skrevet "ÅÅÅÅ-MM-DD". De fire
+                   med nyeste dato vises automatisk under «Nyeste spill».
      kategori    – en av nøklene i KATEGORIER under (okonomi, hjernetrim,
                    utforsk, strategi)
    Husk komma mellom hver blokk { ... }
@@ -357,12 +359,18 @@ const KATEGORIER = [
    i tillegg til sin vanlige kategori. */
 const FOR_TO = { id:"fortwo", navn:"1–2 spillere", emoji:"👥" };
 
+/* «Nyeste spill»: de spillene som har nyest  lagtTil-dato. Står to spill på
+   samme dato, regnes det som står lengst ned i lista som nyest. */
+const ANTALL_NYESTE = 4;
+const NYE = { id:"nyeste", navn:"Nyeste spill", emoji:"🆕", tekst:"De siste spillene som er lagt ut på Mykje spill." };
+
 const SPILL = [
   {
     tittel: "Flygeleder",
     beskrivelse: "Los flyene trygt ned på rullebanen – uten at de krasjer!",
     emoji: "✈️",
     url: "flygeleder.html",
+    lagtTil: "2026-06-15",
     lagaAv: "",
     farge: "teal",
     kategori: "strategi"
@@ -372,6 +380,7 @@ const SPILL = [
     beskrivelse: "Balanser økonomi og hygge gjennom et år.",
     emoji: "🔑",
     url: "myntland-livet-pa-egne-bein.html",
+    lagtTil: "2026-06-15",
     lagaAv: "",
     farge: "lilla",
     kategori: "okonomi"
@@ -381,6 +390,7 @@ const SPILL = [
     beskrivelse: "Dyrk planter i koselig voxelart – velg riktig potte, jord og lys, og selg dem videre.",
     emoji: "🌱",
     url: "Drivhuset/drivhuset-voxel.html",
+    lagtTil: "2026-07-22",
     lagaAv: "",
     farge: "gronn",
     kategori: "okonomi"
@@ -390,6 +400,7 @@ const SPILL = [
     beskrivelse: "Tøm det fulle brettet – ut gjennom riktig farge!",
     emoji: "🎨",
     url: "fargeflukt.html",
+    lagtTil: "2026-07-07",
     lagaAv: "",
     farge: "gul",
     kategori: "hjernetrim"
@@ -399,6 +410,7 @@ const SPILL = [
     beskrivelse: "Del opp brettet i riktige former – tren blikket ditt!",
     emoji: "🔷",
     url: "formjakt.html",
+    lagtTil: "2026-07-13",
     lagaAv: "",
     farge: "rosa",
     kategori: "hjernetrim"
@@ -408,6 +420,7 @@ const SPILL = [
     beskrivelse: "To bildeserier med ti myldrebilder hver – finn fem skjulte ting i hvert bilde.",
     emoji: "🔍",
     url: "myldrejakt.html",
+    lagtTil: "2026-07-24",
     lagaAv: "",
     farge: "lilla",
     kategori: "utforsk"
@@ -417,6 +430,7 @@ const SPILL = [
     beskrivelse: "Skyv brikkene på plass og få myldrebildet helt igjen – 60 bilder og tre vanskegrader.",
     emoji: "🧩",
     url: "skyvepuslespill.html",
+    lagtTil: "2026-08-06",
     lagaAv: "",
     farge: "oransje",
     kategori: "hjernetrim"
@@ -426,6 +440,7 @@ const SPILL = [
     beskrivelse: "Gjett det skjulte ordet på seks forsøk – tre nivåer fra 4 til 7 bokstaver.",
     emoji: "🔤",
     url: "ordjakt.html",
+    lagtTil: "2026-07-30",
     lagaAv: "",
     farge: "teal",
     kategori: "hjernetrim"
@@ -435,6 +450,7 @@ const SPILL = [
     beskrivelse: "Kappløp over brettet mot boten eller en venn – flytt kula eller bygg en mur i veien!",
     emoji: "🧱",
     url: "murlopet.html",
+    lagtTil: "2026-07-26",
     lagaAv: "",
     farge: "oransje",
     kategori: "strategi",
@@ -445,6 +461,7 @@ const SPILL = [
     beskrivelse: "Så, høst og foredle på din egen gård – og kjøp deg mer jord utenfor muren.",
     emoji: "🚜",
     url: "akerland.html",
+    lagtTil: "2026-08-06",
     lagaAv: "",
     farge: "gul",
     kategori: "okonomi"
@@ -454,6 +471,7 @@ const SPILL = [
     beskrivelse: "Finn nøkkelen og veien ut av 3D-labyrinten – 30 labyrinter i hagen, slottet og natten.",
     emoji: "🗝️",
     url: "labyrint.html",
+    lagtTil: "2026-09-01",
     lagaAv: "",
     farge: "gronn",
     kategori: "utforsk"
@@ -463,6 +481,7 @@ const SPILL = [
     beskrivelse: "Driv din egen pizzeria – kjøp inn, sett priser, ansett folk og bygg et pizzaimperium.",
     emoji: "🍕",
     url: "pizzabutikken.html",
+    lagtTil: "2026-09-30",
     lagaAv: "",
     farge: "rosa",
     kategori: "okonomi"
@@ -472,8 +491,19 @@ const SPILL = [
     beskrivelse: "Driv din egen kafé – lag kakao, kaffe og vafler, sett priser og inviter opptil 3 venner til å jobbe sammen med deg.",
     emoji: "☕",
     url: "kafeen.html",
+    lagtTil: "2026-11-19",
     lagaAv: "",
     farge: "gronn",
+    kategori: "okonomi"
+  },
+  {
+    tittel: "Vaskemester",
+    beskrivelse: "Gjør rent fra hybel til stort hus – lær lure vasketips og hold hjemmet skinnende rent.",
+    emoji: "🧽",
+    url: "vaskemester.html",
+    lagtTil: "2026-11-19",
+    lagaAv: "",
+    farge: "teal",
     kategori: "okonomi"
   },
   {
@@ -481,6 +511,7 @@ const SPILL = [
     beskrivelse: "Bygg din egen hestegård – stell hestene, hold ridetimer og bli den beste gården i fjorden.",
     emoji: "🐎",
     url: "mykjehester.html",
+    lagtTil: "2026-11-04",
     lagaAv: "",
     farge: "oransje",
     kategori: "okonomi"
@@ -490,6 +521,7 @@ const SPILL = [
     beskrivelse: "Skyt med koordinater og senk flåten – mot boten eller en venn på en annen skjerm.",
     emoji: "🚢",
     url: "slagskip.html",
+    lagtTil: "2026-10-09",
     lagaAv: "",
     farge: "teal",
     kategori: "strategi",
@@ -500,6 +532,7 @@ const SPILL = [
     beskrivelse: "Slipp brikkene og få fire på rad før motstanderen – mot boten, på én skjerm eller mot en venn.",
     emoji: "🔴",
     url: "firepaarad.html",
+    lagtTil: "2026-10-10",
     lagaAv: "",
     farge: "lilla",
     kategori: "strategi",
@@ -510,6 +543,7 @@ const SPILL = [
     beskrivelse: "Tegn streker mellom prikkene og lukk flest ruter – mot boten, på én skjerm eller mot en venn.",
     emoji: "✏️",
     url: "prikkogstrek.html",
+    lagtTil: "2026-10-10",
     lagaAv: "",
     farge: "gul",
     kategori: "strategi",
@@ -520,6 +554,7 @@ const SPILL = [
     beskrivelse: "Ta 1, 2 eller 3 fyrstikker – den som tar den siste, taper. Finner du systemet?",
     emoji: "🧮",
     url: "fyrstikkspillet.html",
+    lagtTil: "2026-10-10",
     lagaAv: "",
     farge: "oransje",
     kategori: "hjernetrim",
@@ -530,6 +565,7 @@ const SPILL = [
     beskrivelse: "Trekk en hemmelig person, still ja/nei-spørsmål og vipp ned kortene – gjett hvem motstanderen har først!",
     emoji: "🕵️",
     url: "gjetthvem.html",
+    lagtTil: "2026-10-10",
     lagaAv: "",
     farge: "rosa",
     kategori: "hjernetrim",
@@ -540,6 +576,7 @@ const SPILL = [
     beskrivelse: "Sikt, velg kraft og lur keeperen – eller stå i mål selv! Spill alene eller mot en venn på hver sin iPad.",
     emoji: "⚽",
     url: "straffespark.html",
+    lagtTil: "2026-11-04",
     lagaAv: "",
     farge: "gronn",
     kategori: "strategi",
@@ -550,6 +587,7 @@ const SPILL = [
     beskrivelse: "Fire kabaler og fire kortspill for 2–4 – mot datamaskinen eller med klassen på hver sin iPad.",
     emoji: "🃏",
     url: "mykjekort.html",
+    lagtTil: "2026-11-08",
     lagaAv: "",
     farge: "rosa",
     kategori: "kort"
@@ -590,14 +628,19 @@ function lagKort(spel, i){
   return el;
 }
 
+const NYESTE = SPILL.map((s, i) => ({s, i}))
+  .filter(x => x.s.url && x.s.lagtTil)
+  .sort((a, b) => b.s.lagtTil.localeCompare(a.s.lagtTil) || b.i - a.i)
+  .slice(0, ANTALL_NYESTE).map(x => x.s);
+
 let aktivKat = "alle";
-const passarKat = (s, id) => id === "alle" || (id === FOR_TO.id ? !!s.forTo : s.kategori === id);
+const passarKat = (s, id) => id === "alle" || (id === NYE.id ? NYESTE.includes(s) : id === FOR_TO.id ? !!s.forTo : s.kategori === id);
 const katNav = document.getElementById('kategorier');
 const finnKat = id => KATEGORIER.find(k => k.id === id);
 
 function lagKnappar(){
   const ferdige = SPILL;
-  const knappar = [{id:"alle", navn:"Alle", emoji:"🦉"}, FOR_TO, ...KATEGORIER];
+  const knappar = [{id:"alle", navn:"Alle", emoji:"🦉"}, NYE, FOR_TO, ...KATEGORIER];
   katNav.innerHTML = "";
   knappar.forEach(k => {
     const ant = k.id === "alle" ? ferdige.length : ferdige.filter(s => passarKat(s, k.id)).length;
@@ -646,7 +689,13 @@ function tegn(filter = ""){
   let i = 0;
   const gruppert = aktivKat === "alle" && !sok;
   rutenett.classList.toggle('gruppert', gruppert);
+  if(aktivKat === NYE.id) treff.sort((a, b) => NYESTE.indexOf(a) - NYESTE.indexOf(b));
   if(gruppert){
+    // nyeste spill øverst
+    if(NYESTE.length){
+      rutenett.appendChild(katTittel(NYE));
+      NYESTE.forEach(s => rutenett.appendChild(lagKort(s, i++)));
+    }
     // grupper etter kategori
     KATEGORIER.forEach(k => {
       const iKat = treff.filter(s => s.kategori === k.id);
@@ -665,7 +714,7 @@ function tegn(filter = ""){
 }
 
 const fraLenke = location.hash.slice(1);
-if(finnKat(fraLenke) || fraLenke === FOR_TO.id) aktivKat = fraLenke;
+if(finnKat(fraLenke) || fraLenke === FOR_TO.id || fraLenke === NYE.id) aktivKat = fraLenke;
 lagKnappar();
 
 talFelt.textContent = SPILL.filter(s => s.url && s.url.trim() !== "").length;
