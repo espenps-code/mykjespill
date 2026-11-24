@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Mykje Sjakk – turneringsleder</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#241a52;--natt:#150f38;--natt2:#2a1f66;--cream:#fff7ed;--gul:#fbbf24;--strek:#eadfce;--gra:#5b557a}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;color:var(--ink);background:var(--natt)}
+body{background:radial-gradient(ellipse at 50% 0%,var(--natt2) 0%,var(--natt) 70%) fixed}
+h1,h2,h3,.btn,.fane,.fred{font-family:'Fredoka','Atkinson Hyperlegible',sans-serif}
+button,input,select{font:inherit}
+[hidden]{display:none!important}
+.topp{display:flex;align-items:center;gap:12px;padding:14px clamp(12px,3vw,28px);color:#fff;flex-wrap:wrap}
+.topp h1{margin:0;font-size:1.6rem;flex:1}
+.topp a{color:#fff;opacity:.85}
+.faner{display:flex;gap:8px;padding:0 clamp(12px,3vw,28px) 12px;flex-wrap:wrap}
+.fane{border:2px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:999px;padding:.45em 1.1em;font-weight:600;cursor:pointer}
+.fane.on{background:#fff;color:var(--ink);border-color:#fff}
+main{padding:0 clamp(12px,3vw,28px) 40px;display:grid;gap:16px;max-width:1300px;margin:0 auto}
+.kort{background:var(--cream);border-radius:18px;padding:18px 20px;box-shadow:0 6px 0 rgba(0,0,0,.3)}
+.kort h2{margin:0 0 6px;font-size:1.4rem}
+.kort h3{margin:14px 0 6px;font-size:1.05rem}
+.kort p{margin:4px 0 10px;color:var(--gra)}
+.btn{border:0;border-radius:999px;padding:.55em 1.2em;font-weight:600;background:var(--ink);color:#fff;cursor:pointer;min-height:42px}
+.btn.gul{background:var(--gul);color:#3a2500}
+.btn.lys{background:#fff;color:var(--ink);border:2px solid #d9d2e8}
+.btn.liten{min-height:0;padding:.25em .7em;font-size:.9rem}
+.btn:disabled{opacity:.4;cursor:default}
+.rad{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:grid;gap:3px;font-size:.9rem;color:var(--gra)}
+input[type=text],input[type=number],select{border:2px solid #d9d2e8;border-radius:10px;padding:.45em .6em;background:#fff;color:var(--ink);min-width:0}
+input:focus,select:focus{outline:0;border-color:var(--ink)}
+.msg{color:#b91c1c;font-weight:700;min-height:1.3em}
+table{width:100%;border-collapse:collapse}
+td,th{padding:6px 8px;border-bottom:1px solid var(--strek);text-align:left}
+th{font-size:.85rem;color:var(--gra);font-weight:400}
+td.t,th.t{text-align:right;font-family:'Fredoka';font-weight:600}
+td input[type=text]{width:100%;border-color:transparent;background:transparent;padding:.2em .3em}
+td input[type=text]:hover,td input[type=text]:focus{border-color:#d9d2e8;background:#fff}
+.kode{font-family:'Fredoka';font-weight:600;letter-spacing:.12em}
+.forslag{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin:10px 0}
+.forslag input{width:100%}
+.to{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));align-items:start}
+.stor{font-family:'Fredoka';font-weight:700;font-size:clamp(1.6rem,3.4vw,2.6rem);margin:0}
+.under{font-size:1.1rem;color:var(--gra);margin:2px 0 12px}
+.med{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.med button{border:2px solid #d9d2e8;background:#fff;border-radius:999px;padding:.2em .8em;cursor:pointer;color:var(--gra)}
+.med button.inne{background:#d1fae5;border-color:#34d399;color:#064e3b;font-weight:700}
+.res button{border:2px solid #d9d2e8;background:#fff;border-radius:8px;padding:.1em .45em;cursor:pointer;font-size:.9rem;color:var(--gra)}
+.res button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.paagaar{color:#b45309}
+.nokkel{font-family:'Fredoka';font-weight:700;font-size:1.3rem;letter-spacing:.12em;background:#fff;border:2px dashed #d9d2e8;border-radius:10px;padding:.2em .6em;display:inline-block}
+#utskrift{display:none}
+@media print{
+  body{background:#fff}
+  .topp,.faner,main{display:none!important}
+  #utskrift{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+  .lapp{border:1px dashed #999;padding:10px 12px;break-inside:avoid;display:flex;gap:10px;align-items:center;min-height:38mm}
+  .lapp .q{width:26mm;height:26mm;flex:none}
+  .lapp .q svg{width:100%;height:100%}
+  .lapp b{font:700 15pt 'Fredoka',sans-serif;display:block}
+  .lapp .k{font:700 17pt 'Fredoka',sans-serif;letter-spacing:.12em}
+  .lapp small{display:block;font-size:8pt;color:#444}
+}
+</style>
+</head>
+<body>
+<div class="topp"><h1 id="tittel">Mykje Sjakk · turneringsleder</h1><a href="sjakk.html">Til elevsiden</a><button class="btn lys liten" id="bytt" hidden>Bytt serie</button></div>
+<div class="faner" id="faner" hidden>
+  <button class="fane on" data-f="turn">Turnering</button><button class="fane" data-f="spillere">Spillere</button><button class="fane" data-f="sml">Sammenlagt</button><button class="fane" data-f="inst">Innstillinger</button>
+</div>
+<main id="inn"></main>
+<div id="utskrift"></div>
+<script>
+/* Mykje Sjakk – felles for elevsiden og lærersiden: databasekobling (Firebase med anonym pålogging) og sjakklokke. */
+var Nett=(function(){
+"use strict";
+var KONF={apiKey:"AIzaSyCGa-sqmEBetgY4qJIpzJDf92rMSFn3cwc",authDomain:"mykje-spill.firebaseapp.com",
+  databaseURL:"https://mykje-spill-default-rtdb.europe-west1.firebasedatabase.app",projectId:"mykje-spill",appId:"1:248771795084:web:9839ce54c5bb4d5cfc03a9"};
+var V="10.12.2",db=null,uid=null,forskyv=0,venter=null,T=null;
+function last(src){return new Promise(function(ok,feil){var s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=function(){feil(new Error("Kunne ikke laste "+src));};document.head.appendChild(s);});}
+function klar(){
+  if(venter)return venter;
+  if(window.SJAKK_TEST_DB){T=window.SJAKK_TEST_DB;uid=T.uid;return venter=Promise.resolve();}
+  var g="https://www.gstatic.com/firebasejs/"+V+"/firebase-";
+  venter=(window.firebase&&window.firebase.database?Promise.resolve():last(g+"app-compat.js").then(function(){return last(g+"database-compat.js");}))
+    .then(function(){return window.firebase.auth?null:last(g+"auth-compat.js");})
+    .then(function(){var fb=window.firebase;if(!fb.apps.length)fb.initializeApp(KONF);return fb.auth().signInAnonymously();})
+    .then(function(c){uid=c.user.uid;db=window.firebase.database();
+      db.ref(".info/serverTimeOffset").on("value",function(s){forskyv=s.val()||0;});});
+  venter.catch(function(){venter=null;});
+  return venter;
+}
+return {
+  klar:klar,
+  uid:function(){return uid;},
+  naa:function(){return T?Date.now():Date.now()+forskyv;},
+  TS:function(){return T?{".sv":"timestamp"}:window.firebase.database.ServerValue.TIMESTAMP;},
+  get:function(p){return T?T.get(p):db.ref(p).get().then(function(s){return s.val();});},
+  set:function(p,v){return T?T.set(p,v):db.ref(p).set(v);},
+  update:function(p,v){return T?T.update(p,v):db.ref(p).update(v);},
+  remove:function(p){return T?T.set(p,null):db.ref(p).remove();},
+  on:function(p,cb){
+    if(T)return T.on(p,cb);
+    var r=db.ref(p),h=function(s){cb(s.val());};r.on("value",h,function(){cb(null,true);});
+    return function(){r.off("value",h);};
+  }
+};
+})();
+var Felles={
+  TEGN:"ABDEFGHJKLMNPRSTUVXYZ",
+  kode:function(n){var o="";for(var i=0;i<n;i++)o+=this.TEGN[Math.floor(Math.random()*this.TEGN.length)];return o;},
+  /* Tid igjen for hvit [0] og svart [1]. Hvert trekk har et tidsstempel fra serveren, så alle regner likt. */
+  klokke:function(parti,tidMs){
+    var mv=parti.moves||{},n=0,rest=[tidMs,tidMs],forr=parti.st;
+    while(mv[n]!=null){rest[n%2]-=Math.max(0,mv[n].t-forr);forr=Math.max(forr,mv[n].t);n++;}
+    return {rest:rest,n:n,forr:forr};
+  },
+  mmss:function(ms){ms=Math.max(0,ms);var s=Math.ceil(ms/1000);return Math.floor(s/60)+":"+("0"+s%60).slice(-2);},
+  poeng:function(x){var h=Math.floor(x),t=(x-h)?"½":"";return (h||!t?h:"")+t;}
+};
+
+</script>
+<script>
+/* Mykje Sjakk – regelmotor og bot. Ingen avhengigheter, kjører både på siden og i en Web Worker.
+   Ruter: 0 = a8 … 63 = h1.  Brikker: 1 bonde, 2 springer, 3 løper, 4 tårn, 5 dronning, 6 konge (+8 = svart). */
+var Sjakk=(function(){
+"use strict";
+var VAL=[0,100,320,330,500,900,0],MATE=100000,INF=1e9;
+var KN=[],KG=[],RAY=[],CM=[];
+(function(){
+  var kn=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+  var D=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]];
+  for(var s=0;s<64;s++){
+    var r=s>>3,f=s&7;KN[s]=[];KG[s]=[];RAY[s]=[];CM[s]=15;
+    kn.forEach(function(d){var a=r+d[0],b=f+d[1];if(a>=0&&a<8&&b>=0&&b<8)KN[s].push(a*8+b);});
+    D.forEach(function(d,i){var a=r+d[0],b=f+d[1];RAY[s][i]=[];
+      if(a>=0&&a<8&&b>=0&&b<8)KG[s].push(a*8+b);
+      while(a>=0&&a<8&&b>=0&&b<8){RAY[s][i].push(a*8+b);a+=d[0];b+=d[1];}});
+  }
+  CM[56]=13;CM[63]=14;CM[60]=12;CM[0]=7;CM[7]=11;CM[4]=3;
+})();
+
+var VARIANTS={
+  standard:{navn:"Vanlig sjakk",fen:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"},
+  bonde:{navn:"Bondekappløp",fen:"8/pppppppp/8/8/8/8/PPPPPPPP/8 w - - 0 1",race:true},
+  dronning:{navn:"Dronningkaos",fen:"qqqqkqqq/8/8/8/8/8/8/QQQQKQQQ w - - 0 1"},
+  kongebonde:{navn:"Konge og bønder",fen:"4k3/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1"}
+};
+
+function sqName(s){return "abcdefgh"[s&7]+(8-(s>>3));}
+function sqOf(n){return (8-(+n[1]))*8+"abcdefgh".indexOf(n[0]);}
+function key(s){var o="";for(var i=0;i<64;i++)o+=String.fromCharCode(65+s.b[i]);return o+s.turn+"."+s.cast+"."+s.ep;}
+
+function fromFEN(fen,variant){
+  var s={b:[],turn:0,cast:0,ep:-1,half:0,full:1,undo:[],keys:[],k:[-1,-1],variant:variant||"standard",race:false};
+  var v=VARIANTS[s.variant];s.race=!!(v&&v.race);
+  var p=fen.split(/\s+/),i=0,map={p:1,n:2,b:3,r:4,q:5,k:6};
+  for(var j=0;j<64;j++)s.b[j]=0;
+  p[0].split("").forEach(function(c){
+    if(c==="/")return;if(c>="1"&&c<="8"){i+=+c;return;}
+    var l=c.toLowerCase(),bl=c===l;s.b[i]=map[l]|(bl?8:0);if(map[l]===6)s.k[bl?1:0]=i;i++;});
+  s.turn=p[1]==="b"?1:0;
+  var c=p[2]||"-";
+  if(c.indexOf("K")>=0)s.cast|=1;if(c.indexOf("Q")>=0)s.cast|=2;if(c.indexOf("k")>=0)s.cast|=4;if(c.indexOf("q")>=0)s.cast|=8;
+  s.ep=(p[3]&&p[3]!=="-")?sqOf(p[3]):-1;
+  s.half=+(p[4]||0);s.full=+(p[5]||1);
+  s.keys.push(key(s));
+  return s;
+}
+function toFEN(s){
+  var o="",L=" PNBRQK";
+  for(var r=0;r<8;r++){var e=0;
+    for(var f=0;f<8;f++){var pc=s.b[r*8+f];
+      if(!pc){e++;continue;}if(e){o+=e;e=0;}
+      var ch=L[pc&7];o+=(pc&8)?ch.toLowerCase():ch;}
+    if(e)o+=e;if(r<7)o+="/";}
+  var c=(s.cast&1?"K":"")+(s.cast&2?"Q":"")+(s.cast&4?"k":"")+(s.cast&8?"q":"");
+  return o+" "+(s.turn?"b":"w")+" "+(c||"-")+" "+(s.ep>=0?sqName(s.ep):"-")+" "+s.half+" "+s.full;
+}
+function newGame(variant){return fromFEN(VARIANTS[variant].fen,variant);}
+
+function attacked(s,sq,by){
+  var b=s.b,r=sq>>3,f=sq&7,i,j,ray,pc,a;
+  var pr=by?r-1:r+1;
+  if(pr>=0&&pr<8){
+    if(f>0&&b[pr*8+f-1]===(1|by))return true;
+    if(f<7&&b[pr*8+f+1]===(1|by))return true;}
+  a=KN[sq];for(i=0;i<a.length;i++)if(b[a[i]]===(2|by))return true;
+  a=KG[sq];for(i=0;i<a.length;i++)if(b[a[i]]===(6|by))return true;
+  for(i=0;i<8;i++){ray=RAY[sq][i];
+    for(j=0;j<ray.length;j++){pc=b[ray[j]];if(!pc)continue;
+      if((pc&8)===by){var ty=pc&7;if(ty===5||(i<4?ty===4:ty===3))return true;}
+      break;}}
+  return false;
+}
+
+function gen(s,caps){
+  var out=[],b=s.b,us=s.turn?8:0,sq,pc,ty,to,tp,j,i,a,ray;
+  function mv(f,t,p,c,pr,fl){out.push({f:f,t:t,p:p,c:c,pr:pr,fl:fl});}
+  for(sq=0;sq<64;sq++){
+    pc=b[sq];if(!pc||(pc&8)!==us)continue;ty=pc&7;
+    if(ty===1){
+      var d=us?8:-8,r=sq>>3,f=sq&7,prow=us?7:0,st=us?1:6;to=sq+d;
+      if(to<0||to>63)continue;
+      var last=(to>>3)===prow;
+      if(!b[to]){
+        if(last){
+          if(s.race)mv(sq,to,pc,0,0,0);
+          else{mv(sq,to,pc,0,5,0);mv(sq,to,pc,0,2,0);mv(sq,to,pc,0,4,0);mv(sq,to,pc,0,3,0);}
+        }else if(!caps){
+          mv(sq,to,pc,0,0,0);
+          if(r===st&&!b[to+d])mv(sq,to+d,pc,0,0,4);
+        }
+      }
+      for(j=-1;j<=1;j+=2){
+        if(f+j<0||f+j>7)continue;
+        var t=to+j;tp=b[t];
+        if(tp&&(tp&8)!==us){
+          if(last&&!s.race){mv(sq,t,pc,tp,5,0);mv(sq,t,pc,tp,2,0);mv(sq,t,pc,tp,4,0);mv(sq,t,pc,tp,3,0);}
+          else mv(sq,t,pc,tp,0,0);
+        }else if(!tp&&t===s.ep)mv(sq,t,pc,us?1:9,0,1);
+      }
+      continue;
+    }
+    if(ty===2||ty===6){
+      a=ty===2?KN[sq]:KG[sq];
+      for(i=0;i<a.length;i++){to=a[i];tp=b[to];
+        if(!tp){if(!caps)mv(sq,to,pc,0,0,0);}
+        else if((tp&8)!==us)mv(sq,to,pc,tp,0,0);}
+      if(ty===6&&!caps&&s.cast&&!s.race){
+        var opp=us?0:8;
+        if(!us&&sq===60){
+          if((s.cast&1)&&!b[61]&&!b[62]&&b[63]===4&&!attacked(s,60,opp)&&!attacked(s,61,opp)&&!attacked(s,62,opp))mv(60,62,pc,0,0,2);
+          if((s.cast&2)&&!b[59]&&!b[58]&&!b[57]&&b[56]===4&&!attacked(s,60,opp)&&!attacked(s,59,opp)&&!attacked(s,58,opp))mv(60,58,pc,0,0,3);
+        }else if(us&&sq===4){
+          if((s.cast&4)&&!b[5]&&!b[6]&&b[7]===12&&!attacked(s,4,opp)&&!attacked(s,5,opp)&&!attacked(s,6,opp))mv(4,6,pc,0,0,2);
+          if((s.cast&8)&&!b[3]&&!b[2]&&!b[1]&&b[0]===12&&!attacked(s,4,opp)&&!attacked(s,3,opp)&&!attacked(s,2,opp))mv(4,2,pc,0,0,3);
+        }
+      }
+      continue;
+    }
+    var d0=ty===3?4:0,d1=ty===4?4:8;
+    for(i=d0;i<d1;i++){ray=RAY[sq][i];
+      for(j=0;j<ray.length;j++){to=ray[j];tp=b[to];
+        if(!tp){if(!caps)mv(sq,to,pc,0,0,0);}
+        else{if((tp&8)!==us)mv(sq,to,pc,tp,0,0);break;}}}
+  }
+  return out;
+}
+
+function make(s,m){
+  var b=s.b,us=s.turn?8:0,ty=m.p&7;
+  s.undo.push({m:m,cast:s.cast,ep:s.ep,half:s.half});
+  b[m.f]=0;
+  if(m.fl===1)b[m.t+(us?-8:8)]=0;
+  b[m.t]=m.pr?(m.pr|us):m.p;
+  if(m.fl===2){b[m.t+1]=0;b[m.t-1]=4|us;}
+  else if(m.fl===3){b[m.t-2]=0;b[m.t+1]=4|us;}
+  if(ty===6)s.k[s.turn]=m.t;
+  s.cast&=CM[m.f]&CM[m.t];
+  s.ep=m.fl===4?((m.f+m.t)>>1):-1;
+  s.half=(ty===1||m.c)?0:s.half+1;
+  if(s.turn)s.full++;
+  s.turn^=1;
+}
+function unmake(s){
+  var u=s.undo.pop(),m=u.m,b=s.b;
+  s.turn^=1;var us=s.turn?8:0;
+  if(s.turn)s.full--;
+  s.cast=u.cast;s.ep=u.ep;s.half=u.half;
+  b[m.f]=m.p;
+  if(m.fl===1){b[m.t]=0;b[m.t+(us?-8:8)]=m.c;}else b[m.t]=m.c;
+  if(m.fl===2){b[m.t-1]=0;b[m.t+1]=4|us;}
+  else if(m.fl===3){b[m.t+1]=0;b[m.t-2]=4|us;}
+  if((m.p&7)===6)s.k[s.turn]=m.f;
+  return m;
+}
+/* Lovlig? Kalles rett etter make(): står kongen til den som nettopp flyttet i sjakk? */
+function leftInCheck(s){
+  if(s.race)return false;var me=s.turn^1,k=s.k[me];
+  return k>=0&&attacked(s,k,s.turn?8:0);
+}
+function legal(s){
+  var ps=gen(s,false),out=[];
+  for(var i=0;i<ps.length;i++){make(s,ps[i]);if(!leftInCheck(s))out.push(ps[i]);unmake(s);}
+  return out;
+}
+function inCheck(s){
+  if(s.race)return false;var k=s.k[s.turn];
+  return k>=0&&attacked(s,k,s.turn?0:8);
+}
+function play(s,m){make(s,m);s.keys.push(key(s));}
+function takeBack(s){if(!s.undo.length)return null;s.keys.pop();return unmake(s);}
+
+/* Bondekappløp: 0 = hvit har vunnet, 1 = svart, -1 = ikke avgjort */
+function raceWin(s){
+  var b=s.b,i,w=0,bl=0;
+  for(i=0;i<8;i++){if(b[i]===1)return 0;if(b[56+i]===9)return 1;}
+  for(i=8;i<56;i++){if(b[i]===1)w++;else if(b[i]===9)bl++;}
+  if(!w)return 1;if(!bl)return 0;return -1;
+}
+/* result: "w", "b" eller "draw" */
+function status(s){
+  var st={over:false,result:null,reason:"",check:false};
+  if(s.race){
+    var w=raceWin(s);
+    if(w>=0){st.over=true;st.result=w?"b":"w";st.reason="maal";return st;}
+    if(!legal(s).length){st.over=true;st.result="draw";st.reason="laast";}
+    return st;
+  }
+  st.check=inCheck(s);
+  if(!legal(s).length){st.over=true;
+    if(st.check){st.result=s.turn?"w":"b";st.reason="matt";}
+    else{st.result="draw";st.reason="patt";}
+    return st;}
+  if(s.half>=100){st.over=true;st.result="draw";st.reason="50";return st;}
+  var k=s.keys[s.keys.length-1],n=0;
+  for(var i=0;i<s.keys.length;i++)if(s.keys[i]===k)n++;
+  if(n>=3){st.over=true;st.result="draw";st.reason="gjentakelse";return st;}
+  var rest=[];
+  for(i=0;i<64;i++){var ty=s.b[i]&7;if(ty&&ty!==6)rest.push(ty);}
+  if(!rest.length||(rest.length===1&&(rest[0]===2||rest[0]===3))){st.over=true;st.result="draw";st.reason="materiell";}
+  return st;
+}
+
+/* ---------- boten ---------- */
+function evalPos(s){
+  var b=s.b,sc=0,mat=0,i,pc,ty;
+  for(i=0;i<64;i++){ty=b[i]&7;if(ty>1&&ty<6)mat+=VAL[ty];}
+  var eg=mat<=2600;
+  for(i=0;i<64;i++){
+    pc=b[i];if(!pc)continue;
+    ty=pc&7;var bl=pc&8,r=i>>3,f=i&7,rr=bl?r:7-r;
+    var cd=3.5-Math.max(Math.abs(r-3.5),Math.abs(f-3.5)),v=VAL[ty];
+    switch(ty){
+      case 1:v+=s.race?rr*rr*12:(rr-1)*6+((f===3||f===4)&&rr>=3?14:0)+(eg?(rr-1)*8:0);break;
+      case 2:v+=cd*12-18;break;
+      case 3:v+=cd*6-6;break;
+      case 4:v+=rr===6?20:0;break;
+      case 5:v+=cd*3;break;
+      case 6:v+=eg?cd*14:(rr===0?12:-10)-cd*10;break;
+    }
+    sc+=bl?-v:v;
+  }
+  return s.turn?-sc:sc;
+}
+var nodes=0,stopT=false,deadline=0;
+function tick(){nodes++;if((nodes&2047)===0&&Date.now()>deadline)stopT=true;return stopT;}
+function order(ms){
+  for(var i=0;i<ms.length;i++){var m=ms[i];
+    m.o=(m.c?10000+10*VAL[m.c&7]-VAL[m.p&7]:0)+(m.pr?9000+m.pr:0);}
+  ms.sort(function(a,b){return b.o-a.o;});
+}
+function quiesce(s,alpha,beta,ply,qd){
+  if(tick())return 0;
+  if(s.race){var w=raceWin(s);if(w>=0)return w===s.turn?MATE-ply:-(MATE-ply);}
+  var sp=evalPos(s);
+  if(sp>=beta)return sp;if(sp>alpha)alpha=sp;
+  if(qd>=8)return sp;
+  var ms=gen(s,true);order(ms);
+  for(var i=0;i<ms.length;i++){
+    make(s,ms[i]);
+    if(leftInCheck(s)){unmake(s);continue;}
+    var sc=-quiesce(s,-beta,-alpha,ply+1,qd+1);
+    unmake(s);
+    if(stopT)return 0;
+    if(sc>=beta)return sc;if(sc>alpha)alpha=sc;
+  }
+  return alpha;
+}
+function search(s,depth,alpha,beta,ply){
+  if(depth<=0)return quiesce(s,alpha,beta,ply,0);
+  if(tick())return 0;
+  if(s.race){var w=raceWin(s);if(w>=0)return w===s.turn?MATE-ply:-(MATE-ply);}
+  var ms=gen(s,false),n=0,best=-INF;order(ms);
+  for(var i=0;i<ms.length;i++){
+    make(s,ms[i]);
+    if(leftInCheck(s)){unmake(s);continue;}
+    n++;
+    var sc=-search(s,depth-1,-beta,-alpha,ply+1);
+    unmake(s);
+    if(stopT)return 0;
+    if(sc>best){best=sc;if(sc>alpha){alpha=sc;if(alpha>=beta)break;}}
+  }
+  if(!n)return (!s.race&&inCheck(s))?-(MATE-ply):0;
+  return best;
+}
+/* nivå 1–5. d = dybde, n = støy (gjør boten upresis), t = maks tenketid i ms, r = sjanse for et helt tilfeldig trekk */
+var LEVELS=[null,{r:1},{d:1,n:70,t:800,r:.3},{d:2,n:25,t:1500,r:0},{d:4,n:0,t:1800,r:0},{d:7,n:0,t:3200,r:0}];
+function bestMove(s,level){
+  var ms=legal(s);if(!ms.length||status(s).over)return null;
+  var cfg=LEVELS[level]||LEVELS[3];
+  if(cfg.r&&Math.random()<cfg.r)return ms[Math.floor(Math.random()*ms.length)];
+  nodes=0;stopT=false;deadline=Date.now()+cfg.t;
+  order(ms);var best=ms[0],i;
+  for(i=0;i<ms.length;i++)ms[i].sc=-INF;
+  for(var d=1;d<=cfg.d;d++){
+    var alpha=-INF,bm=null,bs=-INF;
+    for(i=0;i<ms.length;i++){
+      var m=ms[i];make(s,m);
+      var sc=-search(s,d-1,-INF,cfg.n?INF:-alpha,1);
+      unmake(s);
+      if(stopT)break;
+      if(cfg.n&&d===cfg.d)sc+=(Math.random()*2-1)*cfg.n;
+      m.sc=sc;
+      if(sc>bs){bs=sc;bm=m;}
+      if(!cfg.n&&sc>alpha)alpha=sc;
+    }
+    if(bm)best=bm;
+    if(stopT||bs>MATE-200)break;
+    ms.sort(function(a,b){return b.sc-a.sc;});
+  }
+  return best;
+}
+function perft(s,d){
+  if(!d)return 1;var ms=gen(s,false),n=0;
+  for(var i=0;i<ms.length;i++){make(s,ms[i]);if(!leftInCheck(s))n+=perft(s,d-1);unmake(s);}
+  return n;
+}
+return {VARIANTS:VARIANTS,newGame:newGame,fromFEN:fromFEN,toFEN:toFEN,legal:legal,play:play,takeBack:takeBack,
+  status:status,inCheck:inCheck,bestMove:bestMove,perft:perft,sqName:sqName};
+})();
+
+</script>
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function lagre(k,v){try{localStorage.setItem("mykjesjakk."+k,JSON.stringify(v));}catch(e){}}
+function hent(k,d){try{var v=JSON.parse(localStorage.getItem("mykjesjakk."+k));return v==null?d:v;}catch(e){return d;}}
+var ELEVSIDE=location.href.split(/[?#]/)[0].replace(/[^\/]*$/,"sjakk.html");
+var QRLIB="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js";
+
+var L={sid:null,rot:null,nokkel:null,info:null,sp:{},koder:{},aktiv:null,meta:null,par:{},med:{},parti:{},partiR:0,
+  av:[],avT:[],avP:null,cache:{},sender:{},avsl:{},starter:false,fane:"turn",forslag:null,sml:null,smlT:[],msg:""};
+
+/* ---------- kallenavn ---------- */
+var ADJ="Rask Lur Modig Glad Stille Sterk Kvikk Klok Tøff Smart Snill Stolt Rolig Ivrig Blid Kul Sprek Tapper Listig Gyllen Blå Rød Grønn Vill Lynrask Mektig Flink Lilla Oransje Våken".split(" ");
+var DYR="Rev Ugle Ørn Ulv Bjørn Gaupe Elg Hjort Oter Sel Hval Falk Hauk Ravn Måke Laks Ørret Krabbe Hare Mår Bever Grevling Jerv Kråke Skjære Svane Trane Hegre Lundefugl Spurv Meis Stær Trost Humle Maur Sommerfugl Løve Tiger Panda Koala Sjiraff Sebra Delfin Pingvin Papegøye Kenguru Drage Enhjørning Isbjørn Gepard".split(" ");
+function kallenavn(n){
+  var brukt={},ut=[];Object.keys(L.sp).forEach(function(p){brukt[L.sp[p].navn]=1;});
+  for(var i=0;i<n;i++){var x,f=0;do{x=ADJ[Math.floor(Math.random()*ADJ.length)]+" "+DYR[Math.floor(Math.random()*DYR.length)];}while(brukt[x]&&++f<500);brukt[x]=1;ut.push(x);}
+  return ut;
+}
+
+/* ---------- start: velg eller lag serie ---------- */
+function feil(e){L.msg=/permission/i.test(String(e&&e.message||e))?"Databasen sa nei. Er du logget inn som eier av serien?":"Fikk ikke kontakt med databasen. Sjekk nettet og prøv igjen.";tegn();}
+function visStart(){
+  stopp();L.sid=null;$("faner").hidden=true;$("bytt").hidden=true;$("tittel").textContent="Mykje Sjakk · turneringsleder";
+  var s=hent("serier",[]);
+  $("inn").innerHTML='<div class="to"><div class="kort"><h2>Dine serier</h2>'+(s.length?s.map(function(x,i){return '<p><button class="btn" data-apne="'+i+'">'+esc(x.navn)+'</button></p>';}).join(""):"<p>Du har ingen serier på denne enheten ennå.</p>")+
+    '<h3>Åpne med lærernøkkel</h3><p>Bruk nøkkelen for å styre en serie fra en annen PC.</p><div class="rad"><input type="text" id="nk" placeholder="Lærernøkkel" style="text-transform:uppercase"><button class="btn lys" id="nkApne">Åpne</button></div></div>'+
+    '<div class="kort"><h2>Ny serie</h2><p>En serie er en gruppe spillere som kan spille flere turneringer, med en sammenlagtliste. For eksempel «Mykje Sjakk 2026–2027».</p><div class="rad"><label>Navn på serien<input type="text" id="nyNavn" maxlength="60"></label><button class="btn gul" id="nyLag">Lag serie</button></div></div></div><p class="msg" id="smsg" style="color:#fecaca">'+esc(L.msg)+'</p>';
+  L.msg="";
+}
+function huskSerie(sid,nokkel,navn){var s=hent("serier",[]).filter(function(x){return x.sid!==sid;});s.unshift({sid:sid,nokkel:nokkel,navn:navn});lagre("serier",s);}
+function nySerie(navn){
+  navn=navn.trim();if(!navn){$("smsg").textContent="Skriv et navn på serien.";return;}
+  var sid=Felles.kode(6),nokkel=Felles.kode(10),rot="sjakkserie/"+sid;
+  Nett.set("sjakknokkel/"+nokkel,{sid:sid,uid:Nett.uid()})
+    .then(function(){return Nett.set(rot+"/eier/"+Nett.uid(),nokkel);})
+    .then(function(){return Nett.set(rot+"/info",{navn:navn,t:Nett.TS()});})
+    .then(function(){huskSerie(sid,nokkel,navn);aapne(sid,nokkel);})
+    .catch(function(e){L.msg="";feil(e);visStart();});
+}
+function aapneNokkel(nokkel){
+  nokkel=String(nokkel).toUpperCase().replace(/[^A-Z]/g,"");
+  Nett.get("sjakknokkel/"+nokkel).then(function(n){
+    if(!n){$("smsg").textContent="Fant ingen serie med den nøkkelen.";return;}
+    aapne(n.sid,nokkel);
+  }).catch(function(){$("smsg").textContent="Fikk ikke kontakt med databasen.";});
+}
+function stopp(){L.av.forEach(function(f){f();});L.av=[];stoppT();}
+function stoppT(){L.avT.forEach(function(f){f();});L.avT=[];if(L.avP){L.avP();L.avP=null;}L.partiR=0;L.meta=null;L.par={};L.med={};L.parti={};L.cache={};L.sender={};L.avsl={};}
+function aapne(sid,nokkel){
+  stopp();L.sid=sid;L.nokkel=nokkel;L.rot="sjakkserie/"+sid;L.sp={};L.koder={};L.info=null;L.aktiv=null;
+  /* denne enheten meldes inn som eier (trengs når serien åpnes fra en ny PC) */
+  Nett.set(L.rot+"/eier/"+Nett.uid(),nokkel).then(function(){
+    $("faner").hidden=false;$("bytt").hidden=false;
+    L.av.push(Nett.on(L.rot+"/info",function(v){L.info=v||{};if(v&&v.navn){$("tittel").textContent=v.navn;huskSerie(sid,nokkel,v.navn);}tegn();}));
+    L.av.push(Nett.on(L.rot+"/spillere",function(v){L.sp=v||{};tegn();}));
+    L.av.push(Nett.on(L.rot+"/koder",function(v){L.koder=v||{};tegn();}));
+    L.av.push(Nett.on(L.rot+"/aktiv",function(tid){
+      stoppT();L.aktiv=tid;
+      if(tid){var b=base();
+        L.avT.push(Nett.on(b+"/meta",function(m){L.meta=m;lyttParti();tegn();}));
+        L.avT.push(Nett.on(b+"/med",function(v){L.med=v||{};tegn();}));
+        L.avT.push(Nett.on(b+"/par",function(v){var forr=JSON.stringify(L.par);L.par=v||{};
+          if(L.meta&&L.meta.status!=="runde"&&L.meta.status!=="lobby"&&forr!=="{}"&&forr!==JSON.stringify(L.par))skrivTabell();
+          tegn();}));
+      }
+      tegn();
+    }));
+  }).catch(function(e){feil(e);visStart();});
+}
+function base(){return L.rot+"/turn/"+L.aktiv;}
+function lyttParti(){
+  var m=L.meta,r=m&&m.status==="runde"?m.runde:0;
+  if(r===L.partiR)return;
+  if(L.avP){L.avP();L.avP=null;}
+  L.partiR=r;L.parti={};
+  if(r)L.avP=Nett.on(base()+"/parti/r"+r,function(v){L.parti=v||{};dom();});
+}
+
+/* ---------- stilling og paring (Monrad) ---------- */
+function stilling(){
+  var S={};
+  function f(p,n){return S[p]||(S[p]={p:p,n:(L.sp[p]&&L.sp[p].navn)||n||"?",po:0,bh:0,hv:0,sv:0,mot:{},bye:false});}
+  Object.keys(L.med).forEach(function(p){if(L.med[p])f(p);});
+  Object.keys(L.par).forEach(function(rk){var R=L.par[rk]||{};
+    Object.keys(R).forEach(function(b){var x=R[b];if(!x)return;
+      if(x.bye){var a=f(x.h,x.hn);a.po+=1;a.bye=true;return;}
+      var h=f(x.h,x.hn),s=f(x.s,x.sn);h.mot[x.s]=1;s.mot[x.h]=1;h.hv++;s.sv++;
+      if(x.res==="1-0")h.po+=1;else if(x.res==="0-1")s.po+=1;else if(x.res==="r"){h.po+=.5;s.po+=.5;}});});
+  var arr=Object.keys(S).map(function(p){return S[p];});
+  arr.forEach(function(a){Object.keys(a.mot).forEach(function(m){a.bh+=S[m]?S[m].po:0;});});
+  arr.sort(function(a,b){return b.po-a.po||b.bh-a.bh||a.n.localeCompare(b.n,"nb");});
+  return arr;
+}
+function parOpp(liste){
+  var l=liste.map(function(x){return {x:x,z:Math.random()};});
+  l.sort(function(a,b){return b.x.po-a.x.po||b.x.bh-a.x.bh||a.z-b.z;});
+  l=l.map(function(o){return o.x;});
+  var bye=null;
+  if(l.length%2){for(var i=l.length-1;i>=0;i--)if(!l[i].bye){bye=l.splice(i,1)[0];break;}if(!bye)bye=l.pop();}
+  var budsjett=20000;
+  function f(rest){
+    if(!rest.length)return [];
+    var a=rest[0];
+    for(var j=1;j<rest.length;j++){
+      var b=rest[j];if(a.mot[b.p])continue;
+      var r=f(rest.slice(1,j).concat(rest.slice(j+1)));
+      if(r)return [[a,b]].concat(r);
+      if(--budsjett<0)return null;
+    }
+    return null;
+  }
+  var par=f(l);
+  if(!par){par=[];for(var k=0;k<l.length;k+=2)par.push([l[k],l[k+1]]);} /* alle har møtt alle: da må noen møtes igjen */
+  par=par.map(function(p){var a=p[0],b=p[1],da=a.hv-a.sv,db=b.hv-b.sv;
+    return (da<db||(da===db&&Math.random()<.5))?[a,b]:[b,a];});
+  return {par:par,bye:bye};
+}
+function startRunde(){
+  var m=L.meta;if(L.starter||!m)return;
+  var r=(m.runde||0)+1,aktive=stilling().filter(function(x){return L.med[x.p];});
+  if(aktive.length<2){L.msg="Det må være minst to spillere inne før runden kan starte.";tegn();return;}
+  L.starter=true;L.msg="";
+  var res=parOpp(aktive),par={},parti={},naa=Nett.naa(),b=1;
+  res.par.forEach(function(p){par["b"+b]={h:p[0].p,s:p[1].p,hn:p[0].n,sn:p[1].n};parti["b"+b]={h:p[0].p,s:p[1].p,st:naa+10000};b++;});
+  if(res.bye)par["b"+b]={h:res.bye.p,hn:res.bye.n,bye:true,res:"1-0"};
+  Nett.set(base()+"/parti/r"+r,parti).then(function(){return Nett.set(base()+"/par/r"+r,par);})
+    .then(function(){return Nett.update(base()+"/meta",{status:"runde",runde:r,neste:null,rstart:naa});})
+    .catch(feil).then(function(){L.starter=false;});
+}
+var UPR=["","","n","b","r","q"];
+function uci(m){return Sjakk.sqName(m.f)+Sjakk.sqName(m.t)+(m.pr?UPR[m.pr]:"");}
+/* Dommeren: spiller gjennom trekkene i hvert parti og setter resultatet (matt, patt, oppgitt, tid). */
+function dom(){
+  var m=L.meta;if(!m||m.status!=="runde"||L.partiR!==m.runde)return;
+  var rk="r"+m.runde,par=L.par[rk]||{},naa=Nett.naa(),alle=true,T=m.tid*60000,nokler=Object.keys(par);
+  nokler.forEach(function(b){
+    var x=par[b];if(!x||x.res)return;alle=false;
+    var p=L.parti[b];if(!p)return;
+    var id=L.aktiv+rk+b,c=L.cache[id]||(L.cache[id]={s:Sjakk.newGame(m.variant||"standard"),n:0,st:null}),mv=p.moves||{},u,res=null,gr="";
+    while(!c.st&&(u=mv[c.n])!=null){
+      var lm=Sjakk.legal(c.s).filter(function(z){return uci(z)===u.u;})[0];
+      if(!lm){c.st={result:(c.n%2)?"w":"b",reason:"ulovlig"};break;}
+      Sjakk.play(c.s,lm);c.n++;var s2=Sjakk.status(c.s);if(s2.over)c.st=s2;
+    }
+    if(c.st){res=c.st.result==="w"?"1-0":c.st.result==="b"?"0-1":"r";gr=c.st.reason;}
+    else if(p.gi&&(p.gi[x.h]||p.gi[x.s])){res=p.gi[x.h]?"0-1":"1-0";gr="oppgitt";}
+    else if(naa>=p.st){
+      var k=Felles.klokke(p,T),tur=k.n%2,rest=k.rest.slice();rest[tur]-=naa-k.forr;
+      if(rest[0]<-1500){res="0-1";gr="tid";}else if(rest[1]<-1500){res="1-0";gr="tid";}
+    }
+    if(res)settRes(rk,b,res,gr);
+  });
+  if(alle&&nokler.length&&!L.avsl[L.aktiv+rk]){L.avsl[L.aktiv+rk]=1;avsluttRunde();}
+}
+function settRes(rk,b,res,gr,tving){
+  var id=L.aktiv+rk+b;if(L.sender[id]&&!tving)return;L.sender[id]=1;
+  var o={};o["par/"+rk+"/"+b+"/res"]=res;o["par/"+rk+"/"+b+"/gr"]=gr;o["parti/"+rk+"/"+b+"/res"]=res;o["parti/"+rk+"/"+b+"/grunn"]=gr;
+  Nett.update(base(),o).catch(function(){L.sender[id]=0;});
+}
+function tabell(){return stilling().map(function(x){return {p:x.p,n:x.n,po:x.po,bh:x.bh};});}
+var tabTid=0;
+function skrivTabell(){clearTimeout(tabTid);tabTid=setTimeout(function(){if(L.aktiv)Nett.set(base()+"/tabell",tabell()).then(function(){if(L.meta&&L.meta.status==="ferdig")regnSammenlagt();});},400);}
+function avsluttRunde(){
+  var m=L.meta,siste=m.runde>=m.runder;
+  Nett.set(base()+"/tabell",tabell()).then(function(){
+    if(siste)return ferdig();
+    return Nett.update(base()+"/meta",{status:"pause",neste:m.auto?Nett.naa()+(m.pause||60)*1000:null});
+  }).catch(feil);
+}
+function ferdig(){
+  return Nett.set(base()+"/tabell",tabell())
+    .then(function(){return Nett.update(base()+"/meta",{status:"ferdig",neste:null});})
+    .then(function(){return Nett.set(L.rot+"/info/turneringer/"+L.aktiv+"/ferdig",true);})
+    .then(regnSammenlagt).catch(feil);
+}
+function regnSammenlagt(){
+  var T=(L.info&&L.info.turneringer)||{},ts=Object.keys(T).sort(function(a,b){return (T[a].t||0)-(T[b].t||0);});
+  return Promise.all(ts.map(function(t){return Nett.get(L.rot+"/turn/"+t+"/tabell");})).then(function(tabs){
+    var S={};
+    tabs.forEach(function(tab,i){(tab||[]).forEach(function(x){
+      var a=S[x.p]||(S[x.p]={p:x.p,n:(L.sp[x.p]&&L.sp[x.p].navn)||x.n,po:0,ant:0,pr:{}});a.po+=x.po;a.ant++;a.pr[ts[i]]=x.po;});});
+    var arr=Object.keys(S).map(function(p){return S[p];});
+    arr.sort(function(a,b){return b.po-a.po||a.n.localeCompare(b.n,"nb");});
+    L.sml=arr;L.smlT=ts;
+    return Nett.set(L.rot+"/sammenlagt",arr.map(function(x){return {p:x.p,n:x.n,po:x.po,ant:x.ant};}));
+  }).then(tegn);
+}
+setInterval(function(){
+  if(!L.sid||!L.meta)return;
+  dom();
+  var m=L.meta;
+  if(m.status==="pause"&&m.auto&&m.neste&&Nett.naa()>=m.neste)startRunde();
+  if(L.fane==="turn"&&(m.status==="runde"||m.status==="pause"))tegnKlokke();
+},1000);
+
+/* ---------- tegning ---------- */
+function tegn(){
+  if(!L.sid)return;
+  if(document.activeElement&&/^(INPUT|SELECT)$/.test(document.activeElement.tagName)&&$("inn").contains(document.activeElement))return; /* ikke tegn om mens læreren skriver */
+  [].forEach.call($("faner").children,function(f){f.classList.toggle("on",f.dataset.f===L.fane);});
+  $("inn").innerHTML=({turn:tegnTurn,spillere:tegnSpillere,sml:tegnSml,inst:tegnInst})[L.fane]();
+  if(L.fane==="turn")tegnKlokke();
+}
+function nyTurnSkjema(){
+  var n=Object.keys((L.info&&L.info.turneringer)||{}).length+1;
+  return '<div class="kort"><h2>Ny turnering</h2><p>Alle spiller alle rundene (Monrad). Systemet setter opp hvem som møter hvem, og regner poeng.</p><div class="rad">'+
+    '<label>Navn<input type="text" id="tNavn" value="Turnering '+n+'" maxlength="40"></label>'+
+    '<label>Antall runder<select id="tRunder">'+[3,4,5,6,7,8,9].map(function(x){return '<option'+(x===5?" selected":"")+'>'+x+'</option>';}).join("")+'</select></label>'+
+    '<label>Minutter per spiller<select id="tTid">'+[3,5,7,10,15,20].map(function(x){return '<option'+(x===5?" selected":"")+'>'+x+'</option>';}).join("")+'</select></label>'+
+    '<label>Neste runde<select id="tAuto"><option value="60">starter selv etter 1 min</option><option value="30">starter selv etter 30 s</option><option value="120">starter selv etter 2 min</option><option value="0">når jeg trykker</option></select></label>'+
+    '<button class="btn gul" id="tLag">Lag turnering</button></div><p class="msg">'+esc(L.msg)+'</p></div>';
+}
+function tegnTurn(){
+  var m=L.meta,ant=Object.keys(L.sp).length;
+  if(!ant)return '<div class="kort"><h2>Start med spillerne</h2><p>Lag kallenavn og koder under «Spillere» før du lager en turnering.</p></div>';
+  if(!L.aktiv||!m)return nyTurnSkjema();
+  var st=stilling(),h="";
+  var inne=Object.keys(L.med).filter(function(p){return L.med[p];}).length;
+  if(m.status==="lobby"){
+    h+='<div class="kort"><p class="stor">'+esc(m.navn)+'</p><p class="under">'+m.runder+' runder · '+m.tid+' minutter per spiller</p>'+
+      '<h3>Slik kommer elevene inn</h3><p>Åpne <b>'+esc(ELEVSIDE.replace(/^https?:\/\//,""))+'</b>, trykk «Turnering» og skriv koden fra lappen. De kan også skanne QR-koden på lappen.</p>'+
+      '<h3>Inne nå: '+inne+' av '+ant+'</h3><p>Grønne er logget inn. Trykk på et navn for å melde en spiller inn eller ut for hånd.</p>'+medListe()+
+      '<div class="rad"><button class="btn gul" id="start">Start runde 1</button><button class="btn lys" data-avbryt="1">Avbryt turneringen</button></div><p class="msg">'+esc(L.msg)+'</p></div>';
+    return h;
+  }
+  var rk="r"+m.runde,par=L.par[rk]||{},nok=Object.keys(par).sort(function(a,b){return +a.slice(1)- +b.slice(1);});
+  var igjen=nok.filter(function(b){return par[b]&&!par[b].res;}).length;
+  h+='<div class="kort"><p class="stor">'+esc(m.navn)+' · '+(m.status==="ferdig"?"ferdig":"runde "+m.runde+" av "+m.runder)+'</p><p class="under" id="klokke"></p><div class="rad">';
+  if(m.status==="pause")h+='<button class="btn gul" id="start">Start runde '+(m.runde+1)+' nå</button>'+(m.neste?'<button class="btn lys" id="vent">Stopp nedtellingen</button>':"");
+  if(m.status!=="ferdig")h+='<button class="btn lys" data-avslutt="1">Avslutt turneringen nå</button>';
+  h+='</div><p class="msg">'+esc(L.msg)+'</p>'+(m.status!=="ferdig"?'<p>La denne siden stå åpen. Det er den som setter opp runder og fører resultater.</p>':"")+'</div>';
+  h+='<div class="to"><div class="kort"><h2>'+(m.status==="runde"?"Bord i runde "+m.runde+(igjen?" · "+igjen+" pågår":""):"Resultater runde "+m.runde)+'</h2><table><tr><th>Bord</th><th>Hvit</th><th>Svart</th><th>Resultat</th></tr>';
+  nok.forEach(function(b){var x=par[b];if(!x)return;
+    if(x.bye){h+='<tr><td>–</td><td>'+esc(x.hn)+'</td><td colspan="2">står over (1 poeng)</td></tr>';return;}
+    h+='<tr><td>'+b.slice(1)+'</td><td>'+esc(x.hn)+'</td><td>'+esc(x.sn)+'</td><td class="res">'+
+      [["1-0","1–0"],["r","½"],["0-1","0–1"]].map(function(o){return '<button data-res="'+b+","+o[0]+'"'+(x.res===o[0]?' class="on"':"")+'>'+o[1]+'</button>';}).join(" ")+
+      (x.res?"":' <span class="paagaar">pågår</span>')+'</td></tr>';});
+  h+='</table><p>Trykk på et resultat hvis du må rette eller avgjøre et parti selv.</p></div>';
+  h+='<div class="kort"><h2>Stilling</h2>'+stillingTab(st)+'</div></div>';
+  if(m.status==="pause")h+='<div class="kort"><h2>Hvem er med i neste runde?</h2><p>Trykk på et navn for å ta en spiller ut (for eksempel en som har gått) eller inn igjen.</p>'+medListe()+'</div>';
+  if(m.status==="ferdig")h+=nyTurnSkjema();
+  return h;
+}
+function stillingTab(st){
+  return '<table><tr><th></th><th>Spiller</th><th class="t">Poeng</th><th class="t">Motstand</th></tr>'+st.map(function(x,i){
+    return '<tr><td>'+(i+1)+'.</td><td>'+esc(x.n)+'</td><td class="t">'+Felles.poeng(x.po)+'</td><td class="t">'+Felles.poeng(x.bh)+'</td></tr>';}).join("")+'</table><p>«Motstand» er poengene til dem du har møtt. Den skiller spillere som står likt.</p>';
+}
+function medListe(){
+  var ps=Object.keys(L.sp).sort(function(a,b){return L.sp[a].navn.localeCompare(L.sp[b].navn,"nb");});
+  return '<div class="med">'+ps.map(function(p){return '<button data-med="'+p+'"'+(L.med[p]?' class="inne"':"")+'>'+esc(L.sp[p].navn)+'</button>';}).join("")+'</div>';
+}
+function tegnKlokke(){
+  var el=$("klokke"),m=L.meta;if(!el||!m)return;var naa=Nett.naa(),t="";
+  if(m.status==="runde")t="Runden har vart i "+Felles.mmss(Math.max(0,naa-(m.rstart||naa)))+" · lengst mulig "+(2*m.tid)+" minutter";
+  else if(m.status==="pause")t=m.neste?"Neste runde starter om "+Felles.mmss(m.neste-naa):"Pause. Trykk for å starte neste runde.";
+  else if(m.status==="ferdig")t="Sluttstillingen står under, og sammenlagtlista er oppdatert.";
+  el.textContent=t;
+}
+function tegnSpillere(){
+  var ps=Object.keys(L.sp),h='<div class="kort"><h2>Legg til spillere</h2><p>Elevene spiller under kallenavn, så ingen ekte navn lagres. Skriv for eksempel klassen og hvor mange du trenger. Du kan rette navnene før du lagrer.</p><div class="rad">'+
+    '<label>Gruppe eller klasse<input type="text" id="sKl" maxlength="20" placeholder="7A" value="'+esc(L.forslag?L.forslag.kl:"")+'"></label><label>Antall<input type="number" id="sAnt" min="1" max="60" value="'+(L.forslag?L.forslag.navn.length:25)+'" style="width:6em"></label>'+
+    '<button class="btn lys" id="sLag">Lag forslag</button></div>';
+  if(L.forslag)h+='<div class="forslag">'+L.forslag.navn.map(function(n,i){return '<input type="text" data-fi="'+i+'" value="'+esc(n)+'" maxlength="24">';}).join("")+'</div><button class="btn gul" id="sLagre">Lagre '+L.forslag.navn.length+' spillere</button>';
+  h+='<p class="msg">'+esc(L.msg)+'</p></div>';
+  if(ps.length){
+    ps.sort(function(a,b){return (L.sp[a].kl||"").localeCompare(L.sp[b].kl||"","nb")||L.sp[a].navn.localeCompare(L.sp[b].navn,"nb");});
+    h+='<div class="kort"><div class="rad"><h2 style="flex:1">'+ps.length+' spillere</h2><button class="btn" id="skriv">Skriv ut lapper med koder</button></div><p>Skriv ut, klipp opp og del ut. Skriv gjerne elevens navn på din egen liste, så du vet hvem som er hvem.</p><table><tr><th>Gruppe</th><th>Kallenavn</th><th>Kode</th><th></th></tr>'+
+      ps.map(function(p){return '<tr><td>'+esc(L.sp[p].kl||"")+'</td><td><input type="text" data-navn="'+p+'" value="'+esc(L.sp[p].navn)+'" maxlength="24"></td><td class="kode">'+esc(L.koder[p]||"")+'</td><td><button class="btn lys liten" data-slett="'+p+'">Slett</button></td></tr>';}).join("")+'</table></div>';
+  }
+  return h;
+}
+function tegnSml(){
+  if(!L.sml)return '<div class="kort"><h2>Sammenlagt</h2><p>Regner …</p></div>';
+  var T=(L.info&&L.info.turneringer)||{},ts=L.smlT;
+  if(!ts.length)return '<div class="kort"><h2>Sammenlagt</h2><p>Her kommer poengene fra alle turneringene i serien, lagt sammen.</p></div>';
+  return '<div class="kort"><h2>Sammenlagt</h2><p>Alle poeng fra alle turneringene i serien er lagt sammen. Elevene ser den samme lista når en turnering er ferdig.</p><table><tr><th></th><th>Spiller</th>'+ts.map(function(t){return '<th class="t">'+esc(T[t].navn||"")+'</th>';}).join("")+'<th class="t">Sum</th></tr>'+
+    L.sml.map(function(x,i){return '<tr><td>'+(i+1)+'.</td><td>'+esc(x.n)+'</td>'+ts.map(function(t){return '<td class="t" style="font-weight:400">'+(x.pr[t]==null?"–":Felles.poeng(x.pr[t]))+'</td>';}).join("")+'<td class="t">'+Felles.poeng(x.po)+'</td></tr>';}).join("")+'</table></div>';
+}
+function tegnInst(){
+  return '<div class="kort"><h2>Lærernøkkel</h2><p>Med denne nøkkelen kan du (eller en kollega) styre serien fra en annen PC. Ta vare på den, og ikke vis den til elevene.</p><p><span class="nokkel">'+esc(L.nokkel)+'</span></p></div>'+
+    '<div class="kort"><h2>Slett serien</h2><p>Sletter alle spillere, koder, turneringer og resultater i denne serien. Det kan ikke angres. Skriv SLETT for å bekrefte.</p><div class="rad"><input type="text" id="slettOrd" placeholder="SLETT"><button class="btn lys" id="slettSerie">Slett alt</button></div><p class="msg">'+esc(L.msg)+'</p></div>';
+}
+
+/* ---------- handlinger ---------- */
+function lagreSpillere(){
+  var f=L.forslag;if(!f)return;
+  var navn=f.navn.map(function(n){return n.trim();}).filter(Boolean),kl=f.kl.trim();
+  L.forslag=null;L.msg="Lagrer …";tegnTving();
+  var kjede=Promise.resolve();
+  navn.forEach(function(n){kjede=kjede.then(function(){
+    var pid=Felles.kode(5).toLowerCase(),kode=Felles.kode(6),o={};
+    o["spillere/"+pid]={navn:n,kl:kl};o["koder/"+pid]=kode;
+    return Nett.set("sjakkkode/"+kode,{sid:L.sid,pid:pid}).then(function(){return Nett.update(L.rot,o);});});});
+  kjede.then(function(){L.msg="";tegnTving();}).catch(feil);
+}
+function tegnTving(){if(document.activeElement)document.activeElement.blur();tegn();}
+var slettTid={};
+function skrivUt(){
+  var ps=Object.keys(L.sp).sort(function(a,b){return (L.sp[a].kl||"").localeCompare(L.sp[b].kl||"","nb")||L.sp[a].navn.localeCompare(L.sp[b].navn,"nb");});
+  function bygg(){
+    $("utskrift").innerHTML=ps.map(function(p){var k=L.koder[p]||"",q="";
+      if(window.qrcode){var c=window.qrcode(0,"M");c.addData(ELEVSIDE+"?kode="+k);c.make();q=c.createSvgTag({cellSize:2,margin:0,scalable:true});}
+      return '<div class="lapp"><div class="q">'+q+'</div><div><small>'+esc((L.info&&L.info.navn)||"")+" "+esc(L.sp[p].kl||"")+'</small><b>'+esc(L.sp[p].navn)+'</b><span class="k">'+esc(k)+'</span><small>'+esc(ELEVSIDE.replace(/^https?:\/\//,""))+' → Turnering</small></div></div>';}).join("");
+    window.print();
+  }
+  if(window.qrcode)bygg();
+  else{var s=document.createElement("script");s.src=QRLIB;s.onload=bygg;s.onerror=bygg;document.head.appendChild(s);}
+}
+document.addEventListener("click",function(e){
+  var t=e.target.closest("button");if(!t)return;var d=t.dataset;
+  var ae=document.activeElement;if(ae&&ae!==t&&/^(INPUT|SELECT)$/.test(ae.tagName))ae.blur(); /* iPad gir ikke knapper fokus selv */
+  if(t.classList.contains("fane")){L.fane=d.f;L.msg="";if(L.fane==="sml"){L.sml=null;regnSammenlagt().catch(feil);}tegnTving();return;}
+  if(t.id==="bytt"){visStart();return;}
+  if(d.apne!=null){var s=hent("serier",[])[+d.apne];if(s)aapne(s.sid,s.nokkel);return;}
+  if(t.id==="nkApne"){aapneNokkel($("nk").value);return;}
+  if(t.id==="nyLag"){nySerie($("nyNavn").value);return;}
+  if(t.id==="sLag"){var n=Math.max(1,Math.min(60,+$("sAnt").value||1));L.forslag={kl:$("sKl").value,navn:kallenavn(n)};L.msg="";tegnTving();return;}
+  if(t.id==="sLagre"){L.forslag.kl=$("sKl").value;lagreSpillere();return;}
+  if(t.id==="skriv"){skrivUt();return;}
+  if(d.slett){
+    var p=d.slett;if(Date.now()-(slettTid[p]||0)>3000){slettTid[p]=Date.now();t.textContent="Sikker?";setTimeout(function(){if(t.isConnected)t.textContent="Slett";},3000);return;}
+    var kode=L.koder[p],o={};o["spillere/"+p]=null;o["koder/"+p]=null;o["krav/"+p]=null;
+    (kode?Nett.remove("sjakkkode/"+kode):Promise.resolve()).then(function(){return Nett.update(L.rot,o);}).catch(feil);return;
+  }
+  if(t.id==="tLag"){
+    var navn=$("tNavn").value.trim()||"Turnering",pause=+$("tAuto").value,tid="t"+Date.now().toString(36);
+    var meta={navn:navn,runder:+$("tRunder").value,tid:window.SJAKK_TEST_TID||+$("tTid").value,variant:"standard",auto:pause>0,pause:pause||60,status:"lobby",runde:0};
+    if(window.SJAKK_TEST_PAUSE)meta.pause=window.SJAKK_TEST_PAUSE;
+    Nett.set(L.rot+"/turn/"+tid+"/meta",meta).then(function(){return Nett.set(L.rot+"/info/turneringer/"+tid,{navn:navn,t:Nett.TS()});})
+      .then(function(){return Nett.set(L.rot+"/aktiv",tid);}).catch(feil);return;
+  }
+  if(t.id==="start"){startRunde();return;}
+  if(t.id==="vent"){Nett.update(base()+"/meta",{neste:null}).catch(feil);return;}
+  if(d.med){Nett.set(base()+"/med/"+d.med,L.med[d.med]?null:true).catch(feil);return;}
+  if(d.res){var x=d.res.split(",");settRes("r"+L.meta.runde,x[0],x[1],"dommer",true);return;}
+  if(d.avslutt||d.avbryt){
+    if(Date.now()-(slettTid.avsl||0)>3000){slettTid.avsl=Date.now();var gml=t.textContent;t.textContent="Sikker? Trykk en gang til";setTimeout(function(){if(t.isConnected)t.textContent=gml;},3000);return;}
+    if(d.avbryt){var tid2=L.aktiv;Nett.set(L.rot+"/aktiv",null).then(function(){return Nett.remove(L.rot+"/info/turneringer/"+tid2);}).catch(feil);}
+    else ferdig();
+    return;
+  }
+  if(t.id==="slettSerie"){
+    if($("slettOrd").value.trim()!=="SLETT"){L.msg="Skriv SLETT med store bokstaver for å bekrefte.";tegnTving();return;}
+    var koder=Object.keys(L.koder).map(function(p){return L.koder[p];}),sid=L.sid,nokkel=L.nokkel,rot=L.rot;
+    stopp();
+    Promise.all(koder.map(function(k){return Nett.remove("sjakkkode/"+k);}))
+      .then(function(){return Promise.all(["turn","sammenlagt","aktiv","spillere","koder","krav","info"].map(function(d){return Nett.remove(rot+"/"+d);}));})
+      .then(function(){return Nett.remove("sjakknokkel/"+nokkel);})
+      .then(function(){return Nett.remove(rot+"/eier/"+Nett.uid());})
+      .then(function(){lagre("serier",hent("serier",[]).filter(function(x){return x.sid!==sid;}));L.msg="Serien er slettet.";visStart();})
+      .catch(function(e){feil(e);visStart();});
+    return;
+  }
+});
+document.addEventListener("change",function(e){
+  var d=e.target.dataset;
+  if(d.navn){var v=e.target.value.trim();if(v)Nett.set(L.rot+"/spillere/"+d.navn+"/navn",v).catch(feil);}
+  if(d.fi!=null&&L.forslag)L.forslag.navn[+d.fi]=e.target.value;
+});
+Nett.klar().then(visStart).catch(function(){$("inn").innerHTML='<div class="kort"><h2>Fikk ikke kontakt</h2><p>Sjekk at du er på nett, og last siden på nytt.</p></div>';});
+window.__laerer={L:L,startRunde:startRunde,stilling:stilling,parOpp:parOpp};
+})();
+
+</script>
+</body>
+</html>
