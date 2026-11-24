@@ -68,7 +68,7 @@ button{font:inherit;cursor:pointer}
 .sw i{display:block}
 
 /* spill */
-#game .body,#tour .body{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 10px 12px;min-height:0;overflow-y:auto}
+#game .body,#tour .body,#ov .body{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 10px 12px;min-height:0;overflow-y:auto}
 .boardwrap{width:min(calc(96vw - 26px),calc(100dvh - 330px));flex:none;position:relative;margin:13px}
 .board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(var(--n,8),1fr);border-radius:10px;overflow:hidden;box-shadow:0 0 0 3px var(--ramme2,#5a3d22),0 0 0 11px var(--ramme,#7a5430),0 0 0 13px rgba(0,0,0,.35),0 16px 34px rgba(0,0,0,.55);touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .sq{position:relative;aspect-ratio:1;background:var(--lys) linear-gradient(140deg,rgba(255,255,255,.16),rgba(0,0,0,.05))}
@@ -106,7 +106,7 @@ button{font:inherit;cursor:pointer}
 .trekk span{margin-right:10px;white-space:nowrap}
 .regel{background:rgba(255,255,255,.1);border-radius:12px;padding:8px 12px;font-size:.95rem}
 @media (min-aspect-ratio:11/10) and (min-width:760px){
-  #game .body,#tour .body{flex-direction:row;justify-content:center;align-items:flex-start;gap:22px;padding-top:4px}
+  #game .body,#tour .body,#ov .body{flex-direction:row;justify-content:center;align-items:flex-start;gap:22px;padding-top:4px}
   .boardwrap{width:min(calc(100vw - 400px),calc(100dvh - 122px))}
   .side{width:320px;align-self:stretch;justify-content:center}
   .trekk{display:block;max-height:30dvh}
@@ -174,6 +174,7 @@ button{font:inherit;cursor:pointer}
 .teller .t1 b{color:#5ec8ff}
 .teller .t2{opacity:.8}
 .teller .t2 b{color:var(--gul)}
+.ovt .t1{font-size:1.7rem}
 #tboard .sq{background:#3a2a8c}
 #tboard .sq.d{background:#33247c}
 #tboard .sq{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
@@ -216,7 +217,15 @@ button{font:inherit;cursor:pointer}
       <button class="tile" style="--c:#f59e0b" id="tilNotter"><span class="ic w"><svg><use href="#p3"/></svg></span><h3>Sjakknøtter</h3><p>Finn det beste trekket. 750 nøtter i fire nivåer.</p></button>
       <button class="tile" style="--c:#14b8a6" id="tilNett"><span class="ic w"><svg><use href="#p4"/></svg></span><h3>Mot en medelev</h3><p>Hver sin iPad. Den ene lager spillet og deler en kode.</p></button>
       <button class="tile" style="--c:#ec4899" id="tilTurn"><span class="ic w"><svg><use href="#p5"/></svg></span><h3>Turnering</h3><p>Logg inn med koden du har fått av læreren.</p></button>
+      <button class="tile" style="--c:#0ea5e9" data-start="fischer,bot"><span class="ic w"><svg><use href="#p2"/></svg></span><h3>Fischer-sjakk</h3><p>Bakerste rad står hulter til bulter. Ingen kan pugge åpninger!</p></button>
       <button class="tile" style="--c:#3b82f6" data-start="standard,to"><span class="ic w"><svg><use href="#p1"/></svg></span><h3>To på samme brett</h3><p>Spill mot en venn på én skjerm.</p></button>
+    </div>
+    <h2>Treningsøvelser</h2>
+    <div class="tiles">
+      <button class="tile" style="--c:#e11d48" id="tilMatt"><span class="ic w"><svg><use href="#p6"/></svg></span><h3>Matt-skolen</h3><p>Lær å sette matt med dronning, to tårn og ett tårn.</p></button>
+      <button class="tile" style="--c:#f97316" data-ov="jakt"><span class="ic w"><svg><use href="#p4"/></svg></span><h3>Slå alle bøndene</h3><p>Én brikke, mange bønder. Bruk færrest mulig trekk.</p></button>
+      <button class="tile" style="--c:#10b981" data-ov="trygg"><span class="ic w"><svg><use href="#p3"/></svg></span><h3>Trygg rute</h3><p>Finn ruta der brikken din ikke kan bli slått.</p></button>
+      <button class="tile" style="--c:#6366f1" data-ov="rute"><span class="ic w"><svg><use href="#p1"/></svg></span><h3>Rutejakt</h3><p>Finn e4 før tiden går ut. Lær navnet på rutene.</p></button>
     </div>
     <h2>Minispill</h2>
     <div class="tiles">
@@ -278,6 +287,32 @@ button{font:inherit;cursor:pointer}
     </div>
   </div>
 </section>
+
+<!-- ================= ØVELSER ================= -->
+<section class="screen" id="ov">
+  <div class="top">
+    <button class="lnk" id="oHjem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Meny</button>
+    <h1 id="oTittel">Øvelse</h1>
+  </div>
+  <div class="body">
+    <div class="boardwrap"><div class="board" id="oboard"></div></div>
+    <div class="side">
+      <div class="teller ovt" id="oTeller"></div>
+      <div class="snakk"><div class="msk"><img id="oMsk" alt=""></div><div class="status" id="oStatus"></div></div>
+      <div class="regel" id="oRegel"></div>
+      <div class="knapper" id="oKn"></div>
+    </div>
+  </div>
+</section>
+<div class="modal" id="mMatt"><div class="card">
+  <h2>Matt-skolen</h2><p>Du har hvit og skal sette den svarte kongen matt. Datamaskinen prøver å slippe unna. Start med dronningen, den er lettest.</p>
+  <div class="nivaa" id="mValg">
+    <button data-v="mattD"><span><b>Dronning</b>Konge og dronning mot konge.</span><em>lettest</em></button>
+    <button data-v="matt2T"><span><b>To tårn</b>Lær «trappa».</span><em>middels</em></button>
+    <button data-v="mattT"><span><b>Ett tårn</b>Kongen må hjelpe til.</span><em>vanskeligst</em></button>
+  </div>
+  <div class="bunn"><button class="btn ghost" id="mAvbryt">Tilbake</button></div>
+</div></div>
 
 <!-- ================= TURNERING (elev) ================= -->
 <section class="screen" id="tn">
@@ -414,32 +449,70 @@ var Felles={
 var Sjakk=(function(){
 "use strict";
 var VAL=[0,100,320,330,500,900,0],MATE=100000,INF=1e9;
-var KN=[],KG=[],RAY=[],CM=[];
+var KN=[],KG=[],RAY=[];
 (function(){
   var kn=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
   var D=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]];
   for(var s=0;s<64;s++){
-    var r=s>>3,f=s&7;KN[s]=[];KG[s]=[];RAY[s]=[];CM[s]=15;
+    var r=s>>3,f=s&7;KN[s]=[];KG[s]=[];RAY[s]=[];
     kn.forEach(function(d){var a=r+d[0],b=f+d[1];if(a>=0&&a<8&&b>=0&&b<8)KN[s].push(a*8+b);});
     D.forEach(function(d,i){var a=r+d[0],b=f+d[1];RAY[s][i]=[];
       if(a>=0&&a<8&&b>=0&&b<8)KG[s].push(a*8+b);
       while(a>=0&&a<8&&b>=0&&b<8){RAY[s][i].push(a*8+b);a+=d[0];b+=d[1];}});
   }
-  CM[56]=13;CM[63]=14;CM[60]=12;CM[0]=7;CM[7]=11;CM[4]=3;
 })();
 
 var VARIANTS={
   standard:{navn:"Vanlig sjakk",fen:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"},
   bonde:{navn:"Bondekappløp",fen:"8/pppppppp/8/8/8/8/PPPPPPPP/8 w - - 0 1",race:true},
-  kongebonde:{navn:"Konge og bønder",fen:"4k3/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1"}
+  kongebonde:{navn:"Konge og bønder",fen:"4k3/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1"},
+  fischer:{navn:"Fischer-sjakk"},
+  mattD:{navn:"Matt med dronning",ovelse:"KQ"},
+  matt2T:{navn:"Matt med to tårn",ovelse:"KRR"},
+  mattT:{navn:"Matt med ett tårn",ovelse:"KR"}
 };
+/* Fischer-sjakk: tilfeldig bakrekke. Løperne på hver sin farge, kongen mellom tårnene. */
+function fischerRad(){
+  var r=[null,null,null,null,null,null,null,null],ledig=function(){var o=[];for(var i=0;i<8;i++)if(!r[i])o.push(i);return o;},t=function(n){return Math.floor(Math.random()*n);};
+  r[t(4)*2]="B";r[t(4)*2+1]="B";
+  var l=ledig();r[l[t(l.length)]]="Q";
+  l=ledig();r[l[t(l.length)]]="N";l=ledig();r[l[t(l.length)]]="N";
+  l=ledig();r[l[0]]="R";r[l[1]]="K";r[l[2]]="R";
+  return r.join("");
+}
+/* Matt-skolen: hvit konge + brikker mot svart konge, tilfeldig og lovlig oppstilt. */
+function ovelseFen(brikker){
+  for(var f=0;f<500;f++){
+    var b=[],brukt={},i,ok=true;for(i=0;i<64;i++)b[i]="";
+    var alle=(brikker+"k").split("");
+    for(i=0;i<alle.length;i++){var q;do{q=Math.floor(Math.random()*64);}while(brukt[q]);brukt[q]=1;b[q]=alle[i];}
+    var fen="";for(var r=0;r<8;r++){var e=0;for(var c=0;c<8;c++){var x=b[r*8+c];if(!x){e++;}else{if(e){fen+=e;e=0;}fen+=x;}}if(e)fen+=e;if(r<7)fen+="/";}
+    var s=fromFEN(fen+" w - - 0 1","standard");
+    if(attacked(s,s.k[1],0))continue;                      /* svart står i sjakk mens hvit skal trekke */
+    if(KG[s.k[0]].indexOf(s.k[1])>=0)continue;             /* kongene står inntil hverandre */
+    for(i=0;i<64;i++){var ty=s.b[i]&7;if(ty&&ty!==6&&!(s.b[i]&8)&&attacked(s,i,8)&&!attacked(s,i,0))ok=false;} /* en brikke kan slås gratis */
+    if(!ok||status(s).over)continue;
+    return fen+" w - - 0 1";
+  }
+  return "7k/8/8/8/8/8/8/KQ6 w - - 0 1";
+}
 
 function sqName(s){return "abcdefgh"[s&7]+(8-(s>>3));}
 function sqOf(n){return (8-(+n[1]))*8+"abcdefgh".indexOf(n[0]);}
 function key(s){var o="";for(var i=0;i<64;i++)o+=String.fromCharCode(65+s.b[i]);return o+s.turn+"."+s.cast+"."+s.ep;}
+/* hvilke brikker av fargen «by» angriper ruta? (brukes i øvelsene) */
+function attackers(s,sq,by){
+  var b=s.b,ut=[],r=sq>>3,f=sq&7,i,j,ray,pc,a,pr=by?r-1:r+1;
+  if(pr>=0&&pr<8){if(f>0&&b[pr*8+f-1]===(1|by))ut.push(pr*8+f-1);if(f<7&&b[pr*8+f+1]===(1|by))ut.push(pr*8+f+1);}
+  a=KN[sq];for(i=0;i<a.length;i++)if(b[a[i]]===(2|by))ut.push(a[i]);
+  a=KG[sq];for(i=0;i<a.length;i++)if(b[a[i]]===(6|by))ut.push(a[i]);
+  for(i=0;i<8;i++){ray=RAY[sq][i];for(j=0;j<ray.length;j++){pc=b[ray[j]];if(!pc)continue;
+    if((pc&8)===by){var ty=pc&7;if(ty===5||(i<4?ty===4:ty===3))ut.push(ray[j]);}break;}}
+  return ut;
+}
 
-function fromFEN(fen,variant){
-  var s={b:[],turn:0,cast:0,ep:-1,half:0,full:1,undo:[],keys:[],k:[-1,-1],variant:variant||"standard",race:false};
+function fromFEN(fen,variant,cf){
+  var s={b:[],turn:0,cast:0,ep:-1,half:0,full:1,undo:[],keys:[],k:[-1,-1],variant:variant||"standard",race:false,cf:cf||[4,7,0],cm:[]};
   var v=VARIANTS[s.variant];s.race=!!(v&&v.race);
   var p=fen.split(/\s+/),i=0,map={p:1,n:2,b:3,r:4,q:5,k:6};
   for(var j=0;j<64;j++)s.b[j]=0;
@@ -447,8 +520,17 @@ function fromFEN(fen,variant){
     if(c==="/")return;if(c>="1"&&c<="8"){i+=+c;return;}
     var l=c.toLowerCase(),bl=c===l;s.b[i]=map[l]|(bl?8:0);if(map[l]===6)s.k[bl?1:0]=i;i++;});
   s.turn=p[1]==="b"?1:0;
-  var c=p[2]||"-";
-  if(c.indexOf("K")>=0)s.cast|=1;if(c.indexOf("Q")>=0)s.cast|=2;if(c.indexOf("k")>=0)s.cast|=4;if(c.indexOf("q")>=0)s.cast|=8;
+  var c=p[2]||"-",ch,x;
+  /* rokaderetter: KQkq, eller linjebokstaver (HAha) slik Fischer-sjakk skrives */
+  if(!cf&&/[A-Ha-h]/.test(c.replace(/[KQkq]/g,""))){
+    var kf=s.k[0]>=0?s.k[0]&7:s.k[1]&7;s.cf=[kf,7,0];
+    for(x=0;x<c.length;x++){ch=c[x];var fi="abcdefgh".indexOf(ch.toLowerCase());if(fi<0)continue;if(fi>kf)s.cf[1]=fi;else s.cf[2]=fi;}
+  }
+  for(x=0;x<c.length;x++){ch=c[x];if(ch==="-")continue;
+    var hvit=ch===ch.toUpperCase(),l=ch.toLowerCase(),kside=l==="k"||(l!=="q"&&"abcdefgh".indexOf(l)>s.cf[0]);
+    s.cast|=hvit?(kside?1:2):(kside?4:8);}
+  for(x=0;x<64;x++)s.cm[x]=15;
+  s.cm[56+s.cf[1]]&=14;s.cm[56+s.cf[2]]&=13;s.cm[56+s.cf[0]]&=12;s.cm[s.cf[1]]&=11;s.cm[s.cf[2]]&=7;s.cm[s.cf[0]]&=3;
   s.ep=(p[3]&&p[3]!=="-")?sqOf(p[3]):-1;
   s.half=+(p[4]||0);s.full=+(p[5]||1);
   s.keys.push(key(s));
@@ -464,7 +546,15 @@ function toFEN(s){
   var c=(s.cast&1?"K":"")+(s.cast&2?"Q":"")+(s.cast&4?"k":"")+(s.cast&8?"q":"");
   return o+" "+(s.turn?"b":"w")+" "+(c||"-")+" "+(s.ep>=0?sqName(s.ep):"-")+" "+s.half+" "+s.full;
 }
-function newGame(variant){return fromFEN(VARIANTS[variant].fen,variant);}
+function newGame(variant,pos){
+  var v=VARIANTS[variant];
+  if(variant==="fischer"){
+    var rad=pos||fischerRad(),k=rad.indexOf("K"),s=fromFEN(rad.toLowerCase()+"/pppppppp/8/8/8/8/PPPPPPPP/"+rad+" w KQkq - 0 1",variant,[k,rad.indexOf("R",k),rad.indexOf("R")]);
+    s.rad=rad;return s;
+  }
+  if(v.ovelse)return fromFEN(ovelseFen(v.ovelse),variant);
+  return fromFEN(v.fen,variant);
+}
 
 function attacked(s,sq,by){
   var b=s.b,r=sq>>3,f=sq&7,i,j,ray,pc,a;
@@ -514,14 +604,18 @@ function gen(s,caps){
       for(i=0;i<a.length;i++){to=a[i];tp=b[to];
         if(!tp){if(!caps)mv(sq,to,pc,0,0,0);}
         else if((tp&8)!==us)mv(sq,to,pc,tp,0,0);}
-      if(ty===6&&!caps&&s.cast&&!s.race){
-        var opp=us?0:8;
-        if(!us&&sq===60){
-          if((s.cast&1)&&!b[61]&&!b[62]&&b[63]===4&&!attacked(s,60,opp)&&!attacked(s,61,opp)&&!attacked(s,62,opp))mv(60,62,pc,0,0,2);
-          if((s.cast&2)&&!b[59]&&!b[58]&&!b[57]&&b[56]===4&&!attacked(s,60,opp)&&!attacked(s,59,opp)&&!attacked(s,58,opp))mv(60,58,pc,0,0,3);
-        }else if(us&&sq===4){
-          if((s.cast&4)&&!b[5]&&!b[6]&&b[7]===12&&!attacked(s,4,opp)&&!attacked(s,5,opp)&&!attacked(s,6,opp))mv(4,6,pc,0,0,2);
-          if((s.cast&8)&&!b[3]&&!b[2]&&!b[1]&&b[0]===12&&!attacked(s,4,opp)&&!attacked(s,3,opp)&&!attacked(s,2,opp))mv(4,2,pc,0,0,3);
+      if(ty===6&&!caps&&s.cast&&!s.race&&(sq&7)===s.cf[0]&&(sq>>3)===(us?0:7)){
+        /* rokade, også for Fischer-sjakk: kongen ender på g- eller c-linja, tårnet på f- eller d-linja */
+        var opp=us?0:8,rad0=sq&56;
+        for(var side=0;side<2;side++){
+          if(!(s.cast&((us?4:1)<<side)))continue;
+          var rs=rad0+s.cf[1+side],kd=rad0+(side?2:6),rd=rad0+(side?3:5);
+          if(b[rs]!==(4|us))continue;
+          var lo=Math.min(sq,rs,kd,rd),hi=Math.max(sq,rs,kd,rd),fri=true,q;
+          for(q=lo;q<=hi;q++)if(q!==sq&&q!==rs&&b[q]){fri=false;break;}
+          if(!fri)continue;
+          for(q=Math.min(sq,kd);q<=Math.max(sq,kd);q++)if(attacked(s,q,opp)){fri=false;break;}
+          if(fri)out.push({f:sq,t:kd,p:pc,c:0,pr:0,fl:2+side,rf:rs,rt:rd});
         }
       }
       continue;
@@ -539,12 +633,13 @@ function make(s,m){
   var b=s.b,us=s.turn?8:0,ty=m.p&7;
   s.undo.push({m:m,cast:s.cast,ep:s.ep,half:s.half});
   b[m.f]=0;
-  if(m.fl===1)b[m.t+(us?-8:8)]=0;
-  b[m.t]=m.pr?(m.pr|us):m.p;
-  if(m.fl===2){b[m.t+1]=0;b[m.t-1]=4|us;}
-  else if(m.fl===3){b[m.t-2]=0;b[m.t+1]=4|us;}
+  if(m.fl===2||m.fl===3){b[m.rf]=0;b[m.t]=m.p;b[m.rt]=4|us;}
+  else{
+    if(m.fl===1)b[m.t+(us?-8:8)]=0;
+    b[m.t]=m.pr?(m.pr|us):m.p;
+  }
   if(ty===6)s.k[s.turn]=m.t;
-  s.cast&=CM[m.f]&CM[m.t];
+  s.cast&=s.cm[m.f]&s.cm[m.t];
   s.ep=m.fl===4?((m.f+m.t)>>1):-1;
   s.half=(ty===1||m.c)?0:s.half+1;
   if(s.turn)s.full++;
@@ -555,10 +650,11 @@ function unmake(s){
   s.turn^=1;var us=s.turn?8:0;
   if(s.turn)s.full--;
   s.cast=u.cast;s.ep=u.ep;s.half=u.half;
-  b[m.f]=m.p;
-  if(m.fl===1){b[m.t]=0;b[m.t+(us?-8:8)]=m.c;}else b[m.t]=m.c;
-  if(m.fl===2){b[m.t-1]=0;b[m.t+1]=4|us;}
-  else if(m.fl===3){b[m.t+1]=0;b[m.t-2]=4|us;}
+  if(m.fl===2||m.fl===3){b[m.t]=0;b[m.rt]=0;b[m.f]=m.p;b[m.rf]=4|us;}
+  else{
+    b[m.f]=m.p;
+    if(m.fl===1){b[m.t]=0;b[m.t+(us?-8:8)]=m.c;}else b[m.t]=m.c;
+  }
   if((m.p&7)===6)s.k[s.turn]=m.f;
   return m;
 }
@@ -705,7 +801,7 @@ function perft(s,d){
   return n;
 }
 return {VARIANTS:VARIANTS,newGame:newGame,fromFEN:fromFEN,toFEN:toFEN,legal:legal,play:play,takeBack:takeBack,
-  status:status,inCheck:inCheck,bestMove:bestMove,perft:perft,sqName:sqName};
+  status:status,inCheck:inCheck,bestMove:bestMove,perft:perft,sqName:sqName,gen:gen,make:make,unmake:unmake,attackers:attackers,KN:KN,RAY:RAY};
 })();
 
 </script>
@@ -715,7 +811,7 @@ return {VARIANTS:VARIANTS,newGame:newGame,fromFEN:fromFEN,toFEN:toFEN,legal:lega
 var $=function(id){return document.getElementById(id);};
 function lagre(k,v){try{localStorage.setItem("mykjesjakk."+k,v);}catch(e){}}
 function hent(k,d){try{var v=localStorage.getItem("mykjesjakk."+k);return v===null?d:v;}catch(e){return d;}}
-function vis(id){["home","game","tour","tn"].forEach(function(s){$(s).classList.toggle("active",s===id);});}
+function vis(id){["home","game","tour","tn","ov"].forEach(function(s){$(s).classList.toggle("active",s===id);});}
 var MSK="sjakk/",HUMOR=["hei","tenker","jubler","lei","oi","tips","sover","heia"];
 HUMOR.forEach(function(h){var i=new Image();i.src=MSK+h+".webp";});
 function maskot(id,h){var el=$(id),src=MSK+h+".webp";if(el.getAttribute("src")!==src)el.setAttribute("src",src);}
@@ -733,22 +829,26 @@ settBrett(hent("brett","tre"));
 /* ---------- boten i egen tråd, så siden ikke fryser mens den tenker ---------- */
 var worker=null,ventar={},reqId=0;
 try{
-  var src=$("eng").textContent+"\nonmessage=function(e){var d=e.data,s=Sjakk.fromFEN(d.fen,d.variant),m=Sjakk.bestMove(s,d.level);postMessage({id:d.id,m:m?{f:m.f,t:m.t,pr:m.pr}:null});};";
+  var src=$("eng").textContent+"\nonmessage=function(e){var d=e.data,s=Sjakk.fromFEN(d.fen,d.variant,d.cf),m=Sjakk.bestMove(s,d.level);postMessage({id:d.id,m:m?{f:m.f,t:m.t,pr:m.pr,fl:m.fl}:null});};";
   worker=new Worker(URL.createObjectURL(new Blob([src],{type:"text/javascript"})));
   worker.onmessage=function(e){var cb=ventar[e.data.id];delete ventar[e.data.id];if(cb)cb(e.data.m);};
   worker.onerror=function(){worker=null;};
 }catch(e){worker=null;}
 function spor(level,cb){
-  var fen=Sjakk.toFEN(G.s),variant=G.variant;
-  if(worker){var id=++reqId;ventar[id]=cb;worker.postMessage({id:id,fen:fen,variant:variant,level:level});}
-  else setTimeout(function(){cb(Sjakk.bestMove(Sjakk.fromFEN(fen,variant),level));},40);
+  var fen=Sjakk.toFEN(G.s),variant=G.variant,cf=G.s.cf;
+  if(worker){var id=++reqId;ventar[id]=cb;worker.postMessage({id:id,fen:fen,variant:variant,cf:cf,level:level});}
+  else setTimeout(function(){cb(Sjakk.bestMove(Sjakk.fromFEN(fen,variant,cf),level));},40);
 }
 
 /* ---------- oppsett ---------- */
 var NIVA=[[1,"Kyllingen","flytter på måfå"],[2,"Katten","lett"],[3,"Reven","middels"],[4,"Ugla","vanskelig"],[5,"Dragen","veldig vanskelig"]];
 var REGEL={
   bonde:"Bøndene går som i vanlig sjakk. Den første som får en bonde helt over til andre siden, vinner. Du vinner også hvis du slår alle bøndene til motstanderen.",
-  kongebonde:"Vanlige sjakkregler, men bare konge og bønder. Få en bonde helt over, så blir den en ny brikke."
+  kongebonde:"Vanlige sjakkregler, men bare konge og bønder. Få en bonde helt over, så blir den en ny brikke.",
+  fischer:"Brikkene på bakerste rad står i tilfeldig rekkefølge, likt for begge. Ellers er alt som i vanlig sjakk. Rokade: trykk på kongen og så på tårnet. Kongen og tårnet havner på de samme rutene som i vanlig sjakk.",
+  mattD:"Sett matt med konge og dronning. Bruk dronningen til å stenge kongen inne i en mindre og mindre boks, og hent så kongen din. Pass på patt: den svarte kongen må alltid ha en rute å gå til, helt til du setter matt.",
+  matt2T:"Sett matt med to tårn. Bruk «trappa»: det ene tårnet sperrer en rad, det andre gir sjakk på neste rad. Så bytter de på, helt til kongen er på kanten.",
+  mattT:"Sett matt med konge og ett tårn. Tårnet lager en boks rundt den svarte kongen. Kongen din må hjelpe til. Gjør boksen mindre hver gang du kan."
 };
 var O={variant:"standard",mot:"bot",niva:+hent("niva",2),farge:2};
 $("oNiva").innerHTML=NIVA.map(function(n){return '<button class="chip" data-v="'+n[0]+'">'+n[1]+'<small>'+n[2]+'</small></button>';}).join("");
@@ -795,9 +895,11 @@ function humor(){
   return "hei";
 }
 function minTur(){return !G.ferdig&&!G.tenker&&((!G.bot&&!G.net&&!G.tn)||G.s.turn===G.meg);}
+/* I Fischer-sjakk rokerer du ved å trykke på tårnet, fordi kongens rute kan være et vanlig kongetrekk også. */
+function maalrute(m){return (G.variant==="fischer"&&(m.fl===2||m.fl===3))?m.rf:m.t;}
 function tegnBrett(){
   var h="",s=G.s,st=Sjakk.status(s),kSj=st.check?s.k[s.turn]:-1,mal={};
-  G.lov.forEach(function(m){if(m.f===G.valgt)mal[m.t]=m.c?"cap":"mv";});
+  G.lov.forEach(function(m){if(m.f===G.valgt)mal[maalrute(m)]=(m.c||maalrute(m)!==m.t)?"cap":"mv";});
   for(var i=0;i<64;i++){
     var sq=G.snu?63-i:i,r=sq>>3,f=sq&7,pc=s.b[sq],kl="sq"+(((r+f)&1)?" d":"");
     if(G.siste&&(G.siste.f===sq||G.siste.t===sq))kl+=" last";
@@ -828,6 +930,7 @@ function oppdater(){
   else if(G.ferdig)t=sluttTekst(G.ferdig)[0];
   else if(G.tenker)t=NIVA[G.niva-1][1]+" tenker";
   else if(G.net)t=(s.turn===G.meg?"Din tur ("+farge.toLowerCase()+")":"Venter på vennen din")+(G.net.borte?" · vennen din er ikke koblet til":"");
+  else if(G.ovelse)t="Din tur. Sett svart matt!";
   else if(G.bot)t="Din tur ("+farge.toLowerCase()+")";
   else t=farge+" sin tur";
   if(!G.ferdig&&st.check&&!G.puz)t="Sjakk! "+t;
@@ -873,7 +976,7 @@ function botTrekk(){
     setTimeout(function(){
       if(!G||G.nr!==nr||!G.tenker)return;
       G.tenker=false;G.lov=Sjakk.legal(G.s);
-      var m=mm&&G.lov.filter(function(x){return x.f===mm.f&&x.t===mm.t&&x.pr===mm.pr;})[0];
+      var m=mm&&G.lov.filter(function(x){return x.f===mm.f&&x.t===mm.t&&x.pr===mm.pr&&x.fl===mm.fl;})[0];
       if(!m)m=G.lov[0];
       if(m)utfor(m);else oppdater();
     },Math.max(0,600-(Date.now()-start)));
@@ -883,7 +986,7 @@ $("board").addEventListener("click",function(e){
   var el=e.target.closest(".sq");if(!el||!minTur())return;
   var sq=+el.dataset.sq,pc=G.s.b[sq],us=G.s.turn?8:0;
   if(G.valgt>=0){
-    var ms=G.lov.filter(function(m){return m.f===G.valgt&&m.t===sq;});
+    var ms=G.lov.filter(function(m){return m.f===G.valgt&&maalrute(m)===sq;});
     if(ms.length===1){trekk(ms[0]);return;}
     if(ms.length>1){velgPromo(ms);return;}
   }
@@ -906,9 +1009,10 @@ function sluttTekst(st){
     var hv={patt:"Patt! Den som skal flytte, har ingen lovlige trekk, og kongen står ikke i sjakk.",
       laast:"Ingen kan flytte. Bøndene står fast.","50":"Femti trekk uten at noen har slått en brikke eller flyttet en bonde.",
       gjentakelse:"Samme stilling har kommet tre ganger.",materiell:"Det er for få brikker igjen til å sette matt."}[st.reason];
-    return ["Uavgjort",hv];}
+    return ["Uavgjort",hv+(G.ovelse?" Prøv en gang til!":"")];}
   if(st.reason==="oppgitt")return [v+" vinner!",(st.result==="w"?"Svart":"Hvit")+" ga opp."];
   if(st.reason==="maal")return [v+" vinner!",v+" kom først over med bøndene sine."];
+  if(G.ovelse)return ["Sjakkmatt!","Du satte matt på "+Math.ceil(G.s.undo.length/2)+" trekk. Klarer du det på færre?"];
   return ["Sjakkmatt! "+v+" vinner",G.bot?((st.result==="w")===(G.meg===0)?"Du slo "+NIVA[G.niva-1][1]+". Prøv et vanskeligere nivå?":NIVA[G.niva-1][1]+" vant denne gangen. Prøv igjen!"):G.net?((st.result==="w")===(G.meg===0)?"Du vant! Godt spilt.":"Vennen din vant denne gangen."):"Godt spilt, begge to!"];
 }
 function visSlutt(){
@@ -918,8 +1022,8 @@ function visSlutt(){
   $("mSlutt").classList.add("open");
 }
 $("sSe").onclick=function(){$("mSlutt").classList.remove("open");};
-$("sIgjen").onclick=function(){$("mSlutt").classList.remove("open");if(G.net){forlat();vis("home");aapneNett();}else startSpill();};
-$("gNy").onclick=function(){aapneOppsett(G.variant,G.bot?"bot":"to");};
+$("sIgjen").onclick=function(){$("mSlutt").classList.remove("open");if(G.net){forlat();vis("home");aapneNett();}else if(G.ovelse)startOvelse(G.variant);else startSpill();};
+$("gNy").onclick=function(){if(G.ovelse)startOvelse(G.variant);else aapneOppsett(G.variant,G.bot?"bot":"to");};
 $("gSnu").onclick=function(){G.snu=!G.snu;tegnBrett();};
 $("gHjem").onclick=function(){if(G.tn){vis("tn");tnVis();return;}forlat();G.nr++;G.tenker=false;vis("home");};
 $("gAngre").onclick=function(){
@@ -947,7 +1051,7 @@ var TEMA={mateIn1:"Det finnes en matt i ett trekk.",mateIn2:"Det finnes en matt 
   hangingPiece:"En av motstanderens brikker står ubeskyttet.",promotion:"Få en bonde helt over.",sacrifice:"Gi bort en brikke for å vinne noe større.",
   deflection:"Lokk bort brikken som passer på.",attraction:"Lokk en brikke til en dårlig rute.",annet:"Se etter et trekk som vinner brikker."};
 var UPR=["","","n","b","r","q"];
-function uci(m){return Sjakk.sqName(m.f)+Sjakk.sqName(m.t)+(m.pr?UPR[m.pr]:"");}
+function uci(m){return Sjakk.sqName(m.f)+Sjakk.sqName(G?maalrute(m):m.t)+(m.pr?UPR[m.pr]:"");}
 function nProg(lv){try{var p=JSON.parse(hent("n."+lv,"null"));if(p&&p.i>=0)return p;}catch(e){}return {i:0,l:0,s:0};}
 function aapneNotter(){
   $("nNiva").innerHTML=NIV.map(function(n){var p=nProg(n[0]);
@@ -1042,7 +1146,7 @@ function xMsg(t){$("xMsg").textContent=t||"";}
 function xFeil(e){xMsg(e&&/permission/i.test(String(e.message||e))?"«Mot en medelev» er ikke slått på i databasen ennå.":"Fikk ikke kontakt. Sjekk at iPad-en er på nett, og prøv igjen.");}
 function lagretRom(){try{var r=JSON.parse(hent("rom","null"));if(r&&r.code)return r;}catch(e){}return null;}
 function aapneNett(){
-  $("xVar").innerHTML=Object.keys(Sjakk.VARIANTS).map(function(k){return '<button class="chip'+(k===X.variant?" on":"")+'" data-v="'+k+'">'+Sjakk.VARIANTS[k].navn+'</button>';}).join("");
+  $("xVar").innerHTML=Object.keys(Sjakk.VARIANTS).filter(function(k){return !Sjakk.VARIANTS[k].ovelse;}).map(function(k){return '<button class="chip'+(k===X.variant?" on":"")+'" data-v="'+k+'">'+Sjakk.VARIANTS[k].navn+'</button>';}).join("");
   $("xStart").hidden=false;$("xLobby").hidden=true;xMsg("");$("xKode").value="";
   var r=lagretRom();$("xFortsett").hidden=!r;if(r)$("xFortsett").textContent="Fortsett spillet med koden "+r.code;
   $("mNett").classList.add("open");
@@ -1061,7 +1165,7 @@ function lagRom(){
     var forsok=0,hc=Math.random()<.5?0:1;
     function prov(){
       var code="";for(var i=0;i<4;i++)code+=TEGN[Math.floor(Math.random()*TEGN.length)];
-      return net.create(code,{v:X.variant,hc:hc,state:"lobby",t:net.now()}).then(function(ok){
+      return net.create(code,{v:X.variant,hc:hc,state:"lobby",t:net.now(),rad:X.variant==="fischer"?Sjakk.newGame("fischer").rad:null}).then(function(ok){
         if(ok)return code;if(++forsok>8)throw new Error("opptatt");return prov();});
     }
     return prov().then(function(code){
@@ -1094,7 +1198,7 @@ function bliMed(raa){
 function startNett(code,role,room){
   forlat();lukkNett();
   var meg=role==="host"?room.hc:1-room.hc;
-  G={s:Sjakk.newGame(room.v),variant:room.v,bot:false,niva:1,meg:meg,snu:meg===1,valgt:-1,lov:[],siste:null,tips:null,san:[],tenker:false,ferdig:null,nr:(G?G.nr:0)+1,
+  G={s:Sjakk.newGame(room.v,room.rad),variant:room.v,bot:false,niva:1,meg:meg,snu:meg===1,valgt:-1,lov:[],siste:null,tips:null,san:[],tenker:false,ferdig:null,nr:(G?G.nr:0)+1,
      net:{code:code,role:role,hc:room.hc,borte:false,av:null,pres:null}};
   $("gTittel").textContent=Sjakk.VARIANTS[G.variant].navn+" · kode "+code;
   $("gStatus").classList.remove("bra","feil");
@@ -1283,6 +1387,163 @@ $("tnUt").onclick=function(){forlat();tnStopp();TN.inn=null;TN.meta=null;TN.tid=
 (function(){var q=location.search.match(/[?&]kode=([A-Za-z]{6})/);if(!q)return;
   try{history.replaceState(null,"",location.pathname);}catch(e){}
   $("mTurn").classList.add("open");tnLogin(q[1]);})();
+
+/* ---------- treningsøvelser: matt-skolen, slå alle bøndene, trygg rute, rutejakt ---------- */
+function startOvelse(v){
+  forlat();
+  G={s:Sjakk.newGame(v),variant:v,bot:true,niva:4,meg:0,snu:false,valgt:-1,lov:[],siste:null,tips:null,san:[],tenker:false,ferdig:null,nr:(G?G.nr:0)+1,ovelse:true};
+  $("gTittel").textContent=Sjakk.VARIANTS[v].navn;
+  $("gStatus").classList.remove("bra","feil");
+  $("gRegel").hidden=false;$("gRegel").textContent=REGEL[v];
+  vis("game");oppdater();
+}
+$("tilMatt").onclick=function(){$("mMatt").classList.add("open");};
+$("mAvbryt").onclick=function(){$("mMatt").classList.remove("open");};
+$("mValg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;$("mMatt").classList.remove("open");startOvelse(b.dataset.v);});
+
+var OV={m:null},BN={1:"bonden",2:"springeren",3:"løperen",4:"tårnet",5:"dronningen"},BNAVN={4:"Tårn",3:"Løper",5:"Dronning",2:"Springer"};
+function rnd(n){return Math.floor(Math.random()*n);}
+function tomStilling(){return Sjakk.fromFEN("8/8/8/8/8/8/8/8 w - - 0 1","standard");}
+function trekkFor(s,sq){s.turn=(s.b[sq]&8)?1:0;s.ep=-1;return Sjakk.gen(s,false).filter(function(m){return m.f===sq;});}
+function ovBrett(celler,opt){
+  var h="",snu=opt&&opt.snu,koord=!opt||opt.koord!==false;
+  for(var i=0;i<64;i++){var sq=snu?63-i:i,r=sq>>3,f=sq&7,c=celler[sq]||{};
+    h+='<div class="sq'+(((r+f)&1)?" d":"")+(c.kl?" "+c.kl:"")+'" data-sq="'+sq+'">';
+    if(koord&&(i&7)===0)h+='<span class="co r">'+(8-r)+'</span>';
+    if(koord&&i>=56)h+='<span class="co f">'+"abcdefgh"[f]+'</span>';
+    if(c.pc)h+=brikke(c.pc);h+='</div>';}
+  $("oboard").innerHTML=h;
+}
+function ovSett(tittel,status,teller,regel,hum){$("oTittel").textContent=tittel;$("oStatus").textContent=status;$("oTeller").innerHTML=teller;$("oRegel").textContent=regel;maskot("oMsk",hum);}
+function ovAapne(type){vis("ov");({jakt:function(){jaktNy(4);},trygg:function(){OV.m=null;tryggNy();},rute:ruteKlar})[type]();}
+[].forEach.call(document.querySelectorAll("[data-ov]"),function(t){t.onclick=function(){ovAapne(t.dataset.ov);};});
+$("oHjem").onclick=function(){OV.m=null;vis("home");};
+
+/* --- slå alle bøndene: én brikke skal ta alle bøndene på færrest mulig trekk --- */
+function jaktPar(pos,bonder,ty){
+  var full=(1<<bonder.length)-1,sett={},ko=[[pos,full,0]],ix={},s=tomStilling(),i;
+  bonder.forEach(function(q,j){ix[q]=j;});sett[pos*64+full]=1;
+  while(ko.length){
+    var x=ko.shift();if(!x[1])return x[2];
+    for(i=0;i<64;i++)s.b[i]=0;s.b[x[0]]=ty;bonder.forEach(function(q,j){if(x[1]&(1<<j))s.b[q]=9;});
+    trekkFor(s,x[0]).forEach(function(m){var mask=x[1];if(ix[m.t]!=null)mask&=~(1<<ix[m.t]);var k=m.t*64+mask;if(!sett[k]){sett[k]=1;ko.push([m.t,mask,x[2]+1]);}});
+  }
+  return -1;
+}
+function jaktNy(ty){
+  var J=null;
+  for(var f=0;f<300&&!J;f++){
+    var pos=rnd(64),ant=ty===2?5:6,bonder=[];
+    while(bonder.length<ant){var q=8+rnd(56);if(q===pos||bonder.indexOf(q)>=0)continue;
+      if(ty===3&&(((q>>3)+(q&7))&1)!==(((pos>>3)+(pos&7))&1))continue;bonder.push(q);}
+    var par=jaktPar(pos,bonder,ty);if(par>0)J={ty:ty,start:pos,bonder:bonder,par:par};
+  }
+  OV.m={type:"jakt",J:J};jaktStart();
+}
+function jaktStart(){var m=OV.m;m.pos=m.J.start;m.igjen=m.J.bonder.slice();m.trekk=0;m.hist=[];jaktTegn();}
+function jaktStilling(){var m=OV.m,s=tomStilling();s.b[m.pos]=m.J.ty;m.igjen.forEach(function(q){s.b[q]=9;});return s;}
+function jaktTegn(){
+  var m=OV.m,s=jaktStilling(),c={},ferdig=!m.igjen.length;
+  m.maal=ferdig?[]:trekkFor(s,m.pos).map(function(x){return x.t;});
+  for(var i=0;i<64;i++)if(s.b[i])c[i]={pc:s.b[i]};
+  m.maal.forEach(function(t){c[t]=c[t]||{};c[t].kl=c[t].pc?"cap":"mv";});
+  c[m.pos].kl="sel";ovBrett(c);
+  var perfekt=m.trekk===m.J.par;
+  ovSett("Slå alle bøndene",
+    ferdig?(perfekt?"Perfekt! "+m.trekk+" trekk er det beste som går an.":"Du brukte "+m.trekk+" trekk. Det går an på "+m.J.par+". Prøver du igjen?"):"Flytt "+BN[m.J.ty]+" og slå en bonde om gangen.",
+    '<div class="t1">Trekk: <b>'+m.trekk+'</b></div><div class="t2">bønder igjen: <b>'+m.igjen.length+'</b> · best mulig: <b>'+m.J.par+'</b></div>',
+    "Bøndene står stille. Tenk på rekkefølgen før du starter: hvilken bonde bør du ta først for å slippe omveier?",
+    ferdig?(perfekt?"jubler":"heia"):m.trekk?"tenker":"hei");
+  $("oKn").innerHTML='<button class="btn" data-o="angre"'+(m.hist.length?"":" disabled")+'>Angre</button><button class="btn" data-o="om">Prøv samme igjen</button><button class="btn primary" data-o="ny">Nytt brett</button>'+
+    [4,3,5,2].map(function(t){return '<button class="btn '+(t===m.J.ty?"":"ghost")+'" data-o="b'+t+'">'+BNAVN[t]+'</button>';}).join("");
+}
+function jaktKlikk(sq){var m=OV.m;if(m.maal.indexOf(sq)<0)return;
+  m.hist.push({pos:m.pos,igjen:m.igjen.slice()});m.pos=sq;m.trekk++;m.igjen=m.igjen.filter(function(q){return q!==sq;});jaktTegn();}
+
+/* --- trygg rute: flytt brikken dit den ikke kan bli slått --- */
+function tryggNy(){
+  var m=OV.m&&OV.m.type==="trygg"?OV.m:{type:"trygg",nr:0,riktig:0};OV.m=m;m.nr++;m.feil=false;m.las=false;m.merk=null;
+  for(var f=0;f<600;f++){
+    var s=tomStilling(),ty=[2,3,4,5][rnd(4)],pos=rnd(64),n=3+rnd(3),i=0;s.b[pos]=ty;
+    while(i<n){var q=rnd(64),bt=[1,2,3,4,5][rnd(5)];if(s.b[q]||(bt===1&&(q<8||q>55)))continue;s.b[q]=bt|8;i++;}
+    var trygge=[],utrygge=[];
+    trekkFor(s,pos).forEach(function(x){Sjakk.make(s,x);(Sjakk.attackers(s,x.t,8).length?utrygge:trygge).push(x.t);Sjakk.unmake(s);});
+    if(trygge.length>=1&&trygge.length<=3&&utrygge.length>=3){m.s=s;m.pos=pos;m.ty=ty;m.trygge=trygge;m.utrygge=utrygge;break;}
+  }
+  tryggTegn("Flytt "+BN[m.ty]+" til en rute der den ikke kan bli slått.","tenker");
+}
+function tryggTegn(status,hum){
+  var m=OV.m,c={},i;
+  for(i=0;i<64;i++)if(m.s.b[i])c[i]={pc:m.s.b[i]};
+  if(!m.las)m.trygge.concat(m.utrygge).forEach(function(t){c[t]=c[t]||{};c[t].kl=c[t].pc?"cap":"mv";});
+  c[m.pos].kl="sel";
+  if(m.merk){m.merk.fra.forEach(function(q){c[q].kl="chk";});c[m.merk.til]=c[m.merk.til]||{};c[m.merk.til].kl=(c[m.merk.til].kl||"")+" tip";}
+  ovBrett(c);
+  ovSett("Trygg rute",status,'<div class="t1">Oppgave <b>'+Math.min(m.nr,10)+'</b> av 10</div><div class="t2">riktige på første forsøk: <b>'+m.riktig+'</b></div>',
+    "Sjekk hver rute: Kan en av de svarte brikkene gå dit? Husk at bonden slår på skrå framover, mot deg.",hum);
+  $("oKn").innerHTML=m.ferdig?'<button class="btn primary" data-o="tny">En runde til</button>':"";
+}
+function tryggKlikk(sq){
+  var m=OV.m;if(m.las||m.ferdig)return;
+  if(m.trygge.indexOf(sq)>=0){
+    if(!m.feil)m.riktig++;m.las=true;m.merk=null;
+    m.s.b[sq]=m.s.b[m.pos];m.s.b[m.pos]=0;m.pos=sq;
+    var siste=m.nr>=10;if(siste)m.ferdig=true;
+    tryggTegn(siste?"Ferdig! Du fikk "+m.riktig+" av 10 på første forsøk.":"Riktig! Der står "+BN[m.ty]+" trygt.","jubler");
+    if(!siste)setTimeout(function(){if(OV.m===m)tryggNy();},1100);
+  }else if(m.utrygge.indexOf(sq)>=0){
+    m.feil=true;
+    var x=trekkFor(m.s,m.pos).filter(function(y){return y.t===sq;})[0];Sjakk.make(m.s,x);var fra=Sjakk.attackers(m.s,sq,8);Sjakk.unmake(m.s);
+    m.merk={fra:fra,til:sq};
+    tryggTegn("Der blir "+BN[m.ty]+" slått av "+BN[m.s.b[fra[0]]&7]+". Prøv en annen rute.","heia");
+  }
+}
+
+/* --- rutejakt: finn ruta på tid --- */
+function ruteKlar(){
+  var forr=OV.m&&OV.m.type==="rute"?OV.m:{koord:true,snu:false};
+  OV.m={type:"rute",koord:forr.koord,snu:forr.snu,aktiv:false,poeng:0,maal:null,feil:-1,ferdig:forr.ferdig||null};ruteTegn();
+}
+function ruteTegn(){
+  var m=OV.m,c={},best=+hent("rute"+(m.koord?1:0),0),naa=Date.now();
+  if(m.feil>=0)c[m.feil]={kl:"chk"};
+  if(m.rett>=0&&m.rettTil>naa)c[m.rett]={kl:"sel"};
+  ovBrett(c,{snu:m.snu,koord:m.koord});
+  var igjen=m.aktiv?Math.max(0,m.slutt-naa):30000;
+  ovSett("Rutejakt",
+    m.aktiv?"Trykk på "+Sjakk.sqName(m.maal)+"!":m.ferdig!=null?"Tiden er ute! Du fant "+m.ferdig+" ruter."+(m.ferdig>=best&&m.ferdig>0?" Ny rekord!":""):"Jeg sier en rute, du trykker på den. Hvor mange rekker du på 30 sekunder?",
+    '<div class="t1">'+(m.aktiv?'<b style="font-size:1.6em">'+Sjakk.sqName(m.maal)+'</b>':"Rutejakt")+'</div><div class="t2">tid: <b>'+Felles.mmss(igjen)+'</b> · poeng: <b>'+m.poeng+'</b> · rekord: <b>'+best+'</b></div>',
+    "Bokstaven sier hvilken linje (bortover), tallet hvilken rad (oppover). e4 er linje e, rad 4.",
+    m.aktiv?"tenker":m.ferdig!=null?(m.ferdig>=best&&m.ferdig>0?"jubler":"heia"):"hei");
+  $("oKn").innerHTML=m.aktiv?"":'<button class="btn primary" data-o="rstart">Start</button><button class="btn '+(m.koord?"":"ghost")+'" data-o="rk1">Med bokstaver og tall</button><button class="btn '+(m.koord?"ghost":"")+'" data-o="rk0">Uten hjelp</button><button class="btn ghost" data-o="rsnu">Snu brettet</button>';
+}
+function ruteNyttMaal(){var m=OV.m,q;do{q=rnd(64);}while(q===m.maal);m.maal=q;}
+function ruteKlikk(sq){
+  var m=OV.m;if(!m.aktiv)return;
+  if(sq===m.maal){m.poeng++;m.feil=-1;m.rett=sq;m.rettTil=Date.now()+250;ruteNyttMaal();}else m.feil=sq;
+  ruteTegn();
+}
+setInterval(function(){
+  var m=OV.m;if(!m||m.type!=="rute"||!m.aktiv)return;
+  if(Date.now()>=m.slutt){m.aktiv=false;m.ferdig=m.poeng;m.feil=-1;if(m.poeng>+hent("rute"+(m.koord?1:0),0))lagre("rute"+(m.koord?1:0),m.poeng);}
+  ruteTegn();
+},250);
+
+$("oboard").addEventListener("click",function(e){
+  var el=e.target.closest(".sq"),m=OV.m;if(!el||!m)return;var sq=+el.dataset.sq;
+  ({jakt:jaktKlikk,trygg:tryggKlikk,rute:ruteKlikk})[m.type](sq);
+});
+$("oKn").addEventListener("click",function(e){
+  var b=e.target.closest("button"),m=OV.m;if(!b||!m)return;var o=b.dataset.o;
+  if(o==="angre"){var h=m.hist.pop();if(h){m.pos=h.pos;m.igjen=h.igjen;m.trekk--;jaktTegn();}}
+  else if(o==="om")jaktStart();
+  else if(o==="ny")jaktNy(m.J.ty);
+  else if(o[0]==="b")jaktNy(+o[1]);
+  else if(o==="tny"){OV.m=null;tryggNy();}
+  else if(o==="rstart"){m.aktiv=true;m.poeng=0;m.ferdig=null;m.feil=-1;m.slutt=Date.now()+30000;ruteNyttMaal();ruteTegn();}
+  else if(o==="rk1"||o==="rk0"){m.koord=o==="rk1";m.ferdig=null;ruteTegn();}
+  else if(o==="rsnu"){m.snu=!m.snu;ruteTegn();}
+});
 
 
 /* ---------- springerløypa ---------- */

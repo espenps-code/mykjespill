@@ -137,32 +137,70 @@ var Felles={
 var Sjakk=(function(){
 "use strict";
 var VAL=[0,100,320,330,500,900,0],MATE=100000,INF=1e9;
-var KN=[],KG=[],RAY=[],CM=[];
+var KN=[],KG=[],RAY=[];
 (function(){
   var kn=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
   var D=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]];
   for(var s=0;s<64;s++){
-    var r=s>>3,f=s&7;KN[s]=[];KG[s]=[];RAY[s]=[];CM[s]=15;
+    var r=s>>3,f=s&7;KN[s]=[];KG[s]=[];RAY[s]=[];
     kn.forEach(function(d){var a=r+d[0],b=f+d[1];if(a>=0&&a<8&&b>=0&&b<8)KN[s].push(a*8+b);});
     D.forEach(function(d,i){var a=r+d[0],b=f+d[1];RAY[s][i]=[];
       if(a>=0&&a<8&&b>=0&&b<8)KG[s].push(a*8+b);
       while(a>=0&&a<8&&b>=0&&b<8){RAY[s][i].push(a*8+b);a+=d[0];b+=d[1];}});
   }
-  CM[56]=13;CM[63]=14;CM[60]=12;CM[0]=7;CM[7]=11;CM[4]=3;
 })();
 
 var VARIANTS={
   standard:{navn:"Vanlig sjakk",fen:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"},
   bonde:{navn:"Bondekappløp",fen:"8/pppppppp/8/8/8/8/PPPPPPPP/8 w - - 0 1",race:true},
-  kongebonde:{navn:"Konge og bønder",fen:"4k3/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1"}
+  kongebonde:{navn:"Konge og bønder",fen:"4k3/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1"},
+  fischer:{navn:"Fischer-sjakk"},
+  mattD:{navn:"Matt med dronning",ovelse:"KQ"},
+  matt2T:{navn:"Matt med to tårn",ovelse:"KRR"},
+  mattT:{navn:"Matt med ett tårn",ovelse:"KR"}
 };
+/* Fischer-sjakk: tilfeldig bakrekke. Løperne på hver sin farge, kongen mellom tårnene. */
+function fischerRad(){
+  var r=[null,null,null,null,null,null,null,null],ledig=function(){var o=[];for(var i=0;i<8;i++)if(!r[i])o.push(i);return o;},t=function(n){return Math.floor(Math.random()*n);};
+  r[t(4)*2]="B";r[t(4)*2+1]="B";
+  var l=ledig();r[l[t(l.length)]]="Q";
+  l=ledig();r[l[t(l.length)]]="N";l=ledig();r[l[t(l.length)]]="N";
+  l=ledig();r[l[0]]="R";r[l[1]]="K";r[l[2]]="R";
+  return r.join("");
+}
+/* Matt-skolen: hvit konge + brikker mot svart konge, tilfeldig og lovlig oppstilt. */
+function ovelseFen(brikker){
+  for(var f=0;f<500;f++){
+    var b=[],brukt={},i,ok=true;for(i=0;i<64;i++)b[i]="";
+    var alle=(brikker+"k").split("");
+    for(i=0;i<alle.length;i++){var q;do{q=Math.floor(Math.random()*64);}while(brukt[q]);brukt[q]=1;b[q]=alle[i];}
+    var fen="";for(var r=0;r<8;r++){var e=0;for(var c=0;c<8;c++){var x=b[r*8+c];if(!x){e++;}else{if(e){fen+=e;e=0;}fen+=x;}}if(e)fen+=e;if(r<7)fen+="/";}
+    var s=fromFEN(fen+" w - - 0 1","standard");
+    if(attacked(s,s.k[1],0))continue;                      /* svart står i sjakk mens hvit skal trekke */
+    if(KG[s.k[0]].indexOf(s.k[1])>=0)continue;             /* kongene står inntil hverandre */
+    for(i=0;i<64;i++){var ty=s.b[i]&7;if(ty&&ty!==6&&!(s.b[i]&8)&&attacked(s,i,8)&&!attacked(s,i,0))ok=false;} /* en brikke kan slås gratis */
+    if(!ok||status(s).over)continue;
+    return fen+" w - - 0 1";
+  }
+  return "7k/8/8/8/8/8/8/KQ6 w - - 0 1";
+}
 
 function sqName(s){return "abcdefgh"[s&7]+(8-(s>>3));}
 function sqOf(n){return (8-(+n[1]))*8+"abcdefgh".indexOf(n[0]);}
 function key(s){var o="";for(var i=0;i<64;i++)o+=String.fromCharCode(65+s.b[i]);return o+s.turn+"."+s.cast+"."+s.ep;}
+/* hvilke brikker av fargen «by» angriper ruta? (brukes i øvelsene) */
+function attackers(s,sq,by){
+  var b=s.b,ut=[],r=sq>>3,f=sq&7,i,j,ray,pc,a,pr=by?r-1:r+1;
+  if(pr>=0&&pr<8){if(f>0&&b[pr*8+f-1]===(1|by))ut.push(pr*8+f-1);if(f<7&&b[pr*8+f+1]===(1|by))ut.push(pr*8+f+1);}
+  a=KN[sq];for(i=0;i<a.length;i++)if(b[a[i]]===(2|by))ut.push(a[i]);
+  a=KG[sq];for(i=0;i<a.length;i++)if(b[a[i]]===(6|by))ut.push(a[i]);
+  for(i=0;i<8;i++){ray=RAY[sq][i];for(j=0;j<ray.length;j++){pc=b[ray[j]];if(!pc)continue;
+    if((pc&8)===by){var ty=pc&7;if(ty===5||(i<4?ty===4:ty===3))ut.push(ray[j]);}break;}}
+  return ut;
+}
 
-function fromFEN(fen,variant){
-  var s={b:[],turn:0,cast:0,ep:-1,half:0,full:1,undo:[],keys:[],k:[-1,-1],variant:variant||"standard",race:false};
+function fromFEN(fen,variant,cf){
+  var s={b:[],turn:0,cast:0,ep:-1,half:0,full:1,undo:[],keys:[],k:[-1,-1],variant:variant||"standard",race:false,cf:cf||[4,7,0],cm:[]};
   var v=VARIANTS[s.variant];s.race=!!(v&&v.race);
   var p=fen.split(/\s+/),i=0,map={p:1,n:2,b:3,r:4,q:5,k:6};
   for(var j=0;j<64;j++)s.b[j]=0;
@@ -170,8 +208,17 @@ function fromFEN(fen,variant){
     if(c==="/")return;if(c>="1"&&c<="8"){i+=+c;return;}
     var l=c.toLowerCase(),bl=c===l;s.b[i]=map[l]|(bl?8:0);if(map[l]===6)s.k[bl?1:0]=i;i++;});
   s.turn=p[1]==="b"?1:0;
-  var c=p[2]||"-";
-  if(c.indexOf("K")>=0)s.cast|=1;if(c.indexOf("Q")>=0)s.cast|=2;if(c.indexOf("k")>=0)s.cast|=4;if(c.indexOf("q")>=0)s.cast|=8;
+  var c=p[2]||"-",ch,x;
+  /* rokaderetter: KQkq, eller linjebokstaver (HAha) slik Fischer-sjakk skrives */
+  if(!cf&&/[A-Ha-h]/.test(c.replace(/[KQkq]/g,""))){
+    var kf=s.k[0]>=0?s.k[0]&7:s.k[1]&7;s.cf=[kf,7,0];
+    for(x=0;x<c.length;x++){ch=c[x];var fi="abcdefgh".indexOf(ch.toLowerCase());if(fi<0)continue;if(fi>kf)s.cf[1]=fi;else s.cf[2]=fi;}
+  }
+  for(x=0;x<c.length;x++){ch=c[x];if(ch==="-")continue;
+    var hvit=ch===ch.toUpperCase(),l=ch.toLowerCase(),kside=l==="k"||(l!=="q"&&"abcdefgh".indexOf(l)>s.cf[0]);
+    s.cast|=hvit?(kside?1:2):(kside?4:8);}
+  for(x=0;x<64;x++)s.cm[x]=15;
+  s.cm[56+s.cf[1]]&=14;s.cm[56+s.cf[2]]&=13;s.cm[56+s.cf[0]]&=12;s.cm[s.cf[1]]&=11;s.cm[s.cf[2]]&=7;s.cm[s.cf[0]]&=3;
   s.ep=(p[3]&&p[3]!=="-")?sqOf(p[3]):-1;
   s.half=+(p[4]||0);s.full=+(p[5]||1);
   s.keys.push(key(s));
@@ -187,7 +234,15 @@ function toFEN(s){
   var c=(s.cast&1?"K":"")+(s.cast&2?"Q":"")+(s.cast&4?"k":"")+(s.cast&8?"q":"");
   return o+" "+(s.turn?"b":"w")+" "+(c||"-")+" "+(s.ep>=0?sqName(s.ep):"-")+" "+s.half+" "+s.full;
 }
-function newGame(variant){return fromFEN(VARIANTS[variant].fen,variant);}
+function newGame(variant,pos){
+  var v=VARIANTS[variant];
+  if(variant==="fischer"){
+    var rad=pos||fischerRad(),k=rad.indexOf("K"),s=fromFEN(rad.toLowerCase()+"/pppppppp/8/8/8/8/PPPPPPPP/"+rad+" w KQkq - 0 1",variant,[k,rad.indexOf("R",k),rad.indexOf("R")]);
+    s.rad=rad;return s;
+  }
+  if(v.ovelse)return fromFEN(ovelseFen(v.ovelse),variant);
+  return fromFEN(v.fen,variant);
+}
 
 function attacked(s,sq,by){
   var b=s.b,r=sq>>3,f=sq&7,i,j,ray,pc,a;
@@ -237,14 +292,18 @@ function gen(s,caps){
       for(i=0;i<a.length;i++){to=a[i];tp=b[to];
         if(!tp){if(!caps)mv(sq,to,pc,0,0,0);}
         else if((tp&8)!==us)mv(sq,to,pc,tp,0,0);}
-      if(ty===6&&!caps&&s.cast&&!s.race){
-        var opp=us?0:8;
-        if(!us&&sq===60){
-          if((s.cast&1)&&!b[61]&&!b[62]&&b[63]===4&&!attacked(s,60,opp)&&!attacked(s,61,opp)&&!attacked(s,62,opp))mv(60,62,pc,0,0,2);
-          if((s.cast&2)&&!b[59]&&!b[58]&&!b[57]&&b[56]===4&&!attacked(s,60,opp)&&!attacked(s,59,opp)&&!attacked(s,58,opp))mv(60,58,pc,0,0,3);
-        }else if(us&&sq===4){
-          if((s.cast&4)&&!b[5]&&!b[6]&&b[7]===12&&!attacked(s,4,opp)&&!attacked(s,5,opp)&&!attacked(s,6,opp))mv(4,6,pc,0,0,2);
-          if((s.cast&8)&&!b[3]&&!b[2]&&!b[1]&&b[0]===12&&!attacked(s,4,opp)&&!attacked(s,3,opp)&&!attacked(s,2,opp))mv(4,2,pc,0,0,3);
+      if(ty===6&&!caps&&s.cast&&!s.race&&(sq&7)===s.cf[0]&&(sq>>3)===(us?0:7)){
+        /* rokade, også for Fischer-sjakk: kongen ender på g- eller c-linja, tårnet på f- eller d-linja */
+        var opp=us?0:8,rad0=sq&56;
+        for(var side=0;side<2;side++){
+          if(!(s.cast&((us?4:1)<<side)))continue;
+          var rs=rad0+s.cf[1+side],kd=rad0+(side?2:6),rd=rad0+(side?3:5);
+          if(b[rs]!==(4|us))continue;
+          var lo=Math.min(sq,rs,kd,rd),hi=Math.max(sq,rs,kd,rd),fri=true,q;
+          for(q=lo;q<=hi;q++)if(q!==sq&&q!==rs&&b[q]){fri=false;break;}
+          if(!fri)continue;
+          for(q=Math.min(sq,kd);q<=Math.max(sq,kd);q++)if(attacked(s,q,opp)){fri=false;break;}
+          if(fri)out.push({f:sq,t:kd,p:pc,c:0,pr:0,fl:2+side,rf:rs,rt:rd});
         }
       }
       continue;
@@ -262,12 +321,13 @@ function make(s,m){
   var b=s.b,us=s.turn?8:0,ty=m.p&7;
   s.undo.push({m:m,cast:s.cast,ep:s.ep,half:s.half});
   b[m.f]=0;
-  if(m.fl===1)b[m.t+(us?-8:8)]=0;
-  b[m.t]=m.pr?(m.pr|us):m.p;
-  if(m.fl===2){b[m.t+1]=0;b[m.t-1]=4|us;}
-  else if(m.fl===3){b[m.t-2]=0;b[m.t+1]=4|us;}
+  if(m.fl===2||m.fl===3){b[m.rf]=0;b[m.t]=m.p;b[m.rt]=4|us;}
+  else{
+    if(m.fl===1)b[m.t+(us?-8:8)]=0;
+    b[m.t]=m.pr?(m.pr|us):m.p;
+  }
   if(ty===6)s.k[s.turn]=m.t;
-  s.cast&=CM[m.f]&CM[m.t];
+  s.cast&=s.cm[m.f]&s.cm[m.t];
   s.ep=m.fl===4?((m.f+m.t)>>1):-1;
   s.half=(ty===1||m.c)?0:s.half+1;
   if(s.turn)s.full++;
@@ -278,10 +338,11 @@ function unmake(s){
   s.turn^=1;var us=s.turn?8:0;
   if(s.turn)s.full--;
   s.cast=u.cast;s.ep=u.ep;s.half=u.half;
-  b[m.f]=m.p;
-  if(m.fl===1){b[m.t]=0;b[m.t+(us?-8:8)]=m.c;}else b[m.t]=m.c;
-  if(m.fl===2){b[m.t-1]=0;b[m.t+1]=4|us;}
-  else if(m.fl===3){b[m.t+1]=0;b[m.t-2]=4|us;}
+  if(m.fl===2||m.fl===3){b[m.t]=0;b[m.rt]=0;b[m.f]=m.p;b[m.rf]=4|us;}
+  else{
+    b[m.f]=m.p;
+    if(m.fl===1){b[m.t]=0;b[m.t+(us?-8:8)]=m.c;}else b[m.t]=m.c;
+  }
   if((m.p&7)===6)s.k[s.turn]=m.f;
   return m;
 }
@@ -428,7 +489,7 @@ function perft(s,d){
   return n;
 }
 return {VARIANTS:VARIANTS,newGame:newGame,fromFEN:fromFEN,toFEN:toFEN,legal:legal,play:play,takeBack:takeBack,
-  status:status,inCheck:inCheck,bestMove:bestMove,perft:perft,sqName:sqName};
+  status:status,inCheck:inCheck,bestMove:bestMove,perft:perft,sqName:sqName,gen:gen,make:make,unmake:unmake,attackers:attackers,KN:KN,RAY:RAY};
 })();
 
 </script>
