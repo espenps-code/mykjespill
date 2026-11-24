@@ -84,7 +84,7 @@ var Nett=(function(){
 "use strict";
 var KONF={apiKey:"AIzaSyCGa-sqmEBetgY4qJIpzJDf92rMSFn3cwc",authDomain:"mykje-spill.firebaseapp.com",
   databaseURL:"https://mykje-spill-default-rtdb.europe-west1.firebasedatabase.app",projectId:"mykje-spill",appId:"1:248771795084:web:9839ce54c5bb4d5cfc03a9"};
-var V="10.12.2",db=null,uid=null,forskyv=0,venter=null,T=null;
+var V="10.12.2",db=null,app=null,uid=null,forskyv=0,venter=null,T=null;
 function last(src){return new Promise(function(ok,feil){var s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=function(){feil(new Error("Kunne ikke laste "+src));};document.head.appendChild(s);});}
 function klar(){
   if(venter)return venter;
@@ -92,8 +92,11 @@ function klar(){
   var g="https://www.gstatic.com/firebasejs/"+V+"/firebase-";
   venter=(window.firebase&&window.firebase.database?Promise.resolve():last(g+"app-compat.js").then(function(){return last(g+"database-compat.js");}))
     .then(function(){return window.firebase.auth?null:last(g+"auth-compat.js");})
-    .then(function(){var fb=window.firebase;if(!fb.apps.length)fb.initializeApp(KONF);return fb.auth().signInAnonymously();})
-    .then(function(c){uid=c.user.uid;db=window.firebase.database();
+    .then(function(){
+      /* Egen, navngitt app: den anonyme påloggingen her skal ikke blande seg med annen innlogging på samme nettsted. */
+      var fb=window.firebase;try{app=fb.app("sjakk");}catch(e){app=fb.initializeApp(KONF,"sjakk");}
+      return app.auth().signInAnonymously();})
+    .then(function(c){uid=c.user.uid;db=app.database();
       db.ref(".info/serverTimeOffset").on("value",function(s){forskyv=s.val()||0;});});
   venter.catch(function(){venter=null;});
   return venter;
