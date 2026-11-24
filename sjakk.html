@@ -13,8 +13,8 @@
 <style>
 :root{--ink:#241a52;--natt:#150f38;--natt2:#2a1f66;--cream:#fff7ed;--gul:#fbbf24;--teal:#2dd4bf;--rosa:#f472b6;--lilla:#a855f7;
   --lys:#f0d9b5;--mork:#b58863;--r:18px}
-body[data-brett="hav"]{--lys:#dceefb;--mork:#4f8fc4}
-body[data-brett="skog"]{--lys:#eef3d2;--mork:#6f9a54}
+body[data-brett="hav"]{--lys:#dceefb;--mork:#4f8fc4;--ramme:#2b5f8f;--ramme2:#1d456b}
+body[data-brett="skog"]{--lys:#eef3d2;--mork:#6f9a54;--ramme:#3f6b34;--ramme2:#2c4d24}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;color:#fff;background:var(--natt);overscroll-behavior:none}
 body{background:radial-gradient(ellipse at 50% 0%,var(--natt2) 0%,var(--natt) 70%) fixed}
@@ -40,13 +40,22 @@ button{font:inherit;cursor:pointer}
 
 /* hjem */
 #home{overflow-y:auto}
-.intro{padding:0 clamp(12px,3vw,28px);opacity:.85;max-width:60ch;margin:0 0 6px}
+.helt{display:flex;align-items:flex-end;gap:4px;padding:0 clamp(12px,3vw,28px);margin:2px 0 4px}
+.heltm{width:clamp(110px,22vw,190px);height:auto;flex:none;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45));animation:vugg 5s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes vugg{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+.boble{position:relative;background:var(--cream);color:var(--ink);border-radius:22px;padding:14px 20px 16px;margin:0 0 clamp(34px,7vw,70px) 6px;max-width:46ch;box-shadow:0 6px 0 rgba(0,0,0,.3)}
+.boble::before{content:"";position:absolute;left:-12px;bottom:18px;border:10px solid transparent;border-right-color:var(--cream);border-left:0}
+.boble h2{margin:0 0 2px;font-size:clamp(1.3rem,3vw,1.8rem)}
+.boble p{margin:0;color:#5b557a;font-size:1.05rem}
+@media (prefers-reduced-motion:reduce){.heltm{animation:none}}
 .sect{padding:4px clamp(12px,3vw,28px) 8px}
 .sect h2{font-size:1.2rem;margin:14px 0 10px;opacity:.9}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
-.tile{background:var(--cream);color:var(--ink);border:0;text-align:left;border-radius:var(--r);padding:14px 16px 16px;box-shadow:0 6px 0 rgba(0,0,0,.3);display:flex;flex-direction:column;gap:4px;min-height:150px}
+.tile{background:var(--cream);color:var(--ink);border:0;text-align:left;border-radius:22px;padding:16px 18px 18px;box-shadow:0 6px 0 rgba(0,0,0,.3),inset 0 -5px 0 color-mix(in srgb,var(--c,#7c5cff) 30%,transparent);display:flex;flex-direction:column;gap:4px;min-height:158px;position:relative;overflow:hidden;transition:transform .12s}
+.tile::after{content:"";position:absolute;right:-34px;top:-34px;width:120px;height:120px;border-radius:50%;background:color-mix(in srgb,var(--c,#7c5cff) 16%,transparent)}
+@media (hover:hover){.tile:hover{transform:translateY(-3px)}}
 .tile:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.3)}
-.tile .ic{width:54px;height:54px;border-radius:14px;background:var(--ink);display:grid;place-items:center;margin-bottom:6px}
+.tile .ic{width:60px;height:60px;border-radius:18px;background:linear-gradient(145deg,color-mix(in srgb,var(--c,#7c5cff) 78%,#fff),var(--c,#7c5cff));display:grid;place-items:center;margin-bottom:8px;box-shadow:0 4px 0 color-mix(in srgb,var(--c,#7c5cff) 60%,#000)}
 .tile .ic svg{width:42px;height:42px}
 .tile h3{margin:0;font-size:1.3rem}
 .tile p{margin:0;color:#5b557a;font-size:.95rem}
@@ -60,14 +69,14 @@ button{font:inherit;cursor:pointer}
 
 /* spill */
 #game .body,#tour .body{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 10px 12px;min-height:0;overflow-y:auto}
-.boardwrap{width:min(96vw,calc(100dvh - 250px));flex:none;position:relative}
-.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(var(--n,8),1fr);border-radius:10px;overflow:hidden;box-shadow:0 0 0 5px #0e0a28,0 10px 30px rgba(0,0,0,.5);touch-action:manipulation;user-select:none;-webkit-user-select:none}
-.sq{position:relative;aspect-ratio:1;background:var(--lys)}
-.sq.d{background:var(--mork)}
+.boardwrap{width:min(calc(96vw - 26px),calc(100dvh - 330px));flex:none;position:relative;margin:13px}
+.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(var(--n,8),1fr);border-radius:10px;overflow:hidden;box-shadow:0 0 0 3px var(--ramme2,#5a3d22),0 0 0 11px var(--ramme,#7a5430),0 0 0 13px rgba(0,0,0,.35),0 16px 34px rgba(0,0,0,.55);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.sq{position:relative;aspect-ratio:1;background:var(--lys) linear-gradient(140deg,rgba(255,255,255,.16),rgba(0,0,0,.05))}
+.sq.d{background:var(--mork) linear-gradient(140deg,rgba(255,255,255,.12),rgba(0,0,0,.08))}
 .sq .co{position:absolute;font-size:clamp(9px,1.5vmin,13px);font-weight:700;opacity:.6;color:#2b2140;pointer-events:none}
 .sq .co.f{right:4px;bottom:2px}.sq .co.r{left:4px;top:2px}
 .sq.last::before{content:"";position:absolute;inset:0;background:rgba(251,191,36,.45)}
-.sq.sel::before{content:"";position:absolute;inset:0;background:rgba(45,212,191,.6)}
+.sq.sel::before{content:"";position:absolute;inset:0;background:rgba(45,212,191,.6);box-shadow:inset 0 0 0 4px rgba(13,148,136,.9)}
 .sq.tip::before{content:"";position:absolute;inset:0;background:rgba(168,85,247,.55)}
 .sq.chk::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgba(239,68,68,.9) 0%,rgba(239,68,68,.25) 70%)}
 .sq.mv::after{content:"";position:absolute;left:50%;top:50%;width:30%;height:30%;margin:-15% 0 0 -15%;border-radius:50%;background:rgba(20,15,56,.32)}
@@ -75,13 +84,21 @@ button{font:inherit;cursor:pointer}
 .pc{position:absolute;inset:4%;width:92%;height:92%;pointer-events:none;filter:drop-shadow(0 2px 1px rgba(0,0,0,.3))}
 .pc.w,.w{--pf:#fff7e6;--ps:#2a2440;--pd:#2a2440}
 .pc.b,.b{--pf:#3d3760;--ps:#110d24;--pd:#e9e2ff}
-.side{width:min(96vw,calc(100dvh - 250px));display:flex;flex-direction:column;gap:8px}
+.side{width:min(96vw,calc(100dvh - 264px));display:flex;flex-direction:column;gap:8px}
 .status{font-family:'Fredoka';font-size:1.25rem;font-weight:600;text-align:center;min-height:1.6em}
+.snakk{display:flex;align-items:center;gap:12px;background:var(--cream);color:var(--ink);border-radius:20px;padding:8px 16px 8px 8px;box-shadow:0 5px 0 rgba(0,0,0,.28)}
+.snakk .status{flex:1;text-align:left;min-height:0;font-size:1.2rem;line-height:1.25}
+.snakk .status.bra{color:#047857}.snakk .status.feil{color:#b91c1c}
+.msk{width:66px;height:66px;flex:none;border-radius:50%;overflow:hidden;background:#e7dcff;box-shadow:inset 0 0 0 3px #fff}
+.msk img{width:158%;margin:-2% 0 0 -27%;display:block}
+.pc{will-change:transform}
+.tnm{width:120px;height:120px;float:right;margin:-6px -6px 0 8px}
 .status.think::after{content:" …";animation:bl 1s infinite}
 @keyframes bl{50%{opacity:.2}}
 .tatt{display:flex;justify-content:space-between;gap:8px;min-height:26px}
 .tatt div{display:flex;flex-wrap:wrap}
-.tatt svg{width:24px;height:24px;margin-right:-6px}
+.tatt svg{width:26px;height:26px;margin-right:-7px}
+.tatt{background:#e6dccb;border-radius:12px;padding:3px 10px}
 .knapper{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .knapper .btn{flex:1;min-width:110px;padding:.5em .8em}
 .trekk{background:rgba(255,255,255,.08);border-radius:12px;padding:8px 12px;font-size:.95rem;max-height:92px;overflow-y:auto;line-height:1.6;display:none}
@@ -90,7 +107,7 @@ button{font:inherit;cursor:pointer}
 .regel{background:rgba(255,255,255,.1);border-radius:12px;padding:8px 12px;font-size:.95rem}
 @media (min-aspect-ratio:11/10) and (min-width:760px){
   #game .body,#tour .body{flex-direction:row;justify-content:center;align-items:flex-start;gap:22px;padding-top:4px}
-  .boardwrap{width:min(calc(100vw - 370px),calc(100dvh - 96px))}
+  .boardwrap{width:min(calc(100vw - 400px),calc(100dvh - 122px))}
   .side{width:320px;align-self:stretch;justify-content:center}
   .trekk{display:block;max-height:30dvh}
   .knapper .btn{min-width:130px}
@@ -147,7 +164,9 @@ button{font:inherit;cursor:pointer}
 .tab td:last-child{text-align:right;font-family:'Fredoka';font-weight:600}
 .tab tr.meg td{background:#fde9a9;font-weight:700}
 .tab .prikk{text-align:center!important;color:#5b557a}
-.stor{width:92px;height:92px;margin:0 auto 6px;display:block}
+.stor{width:150px;height:150px;margin:-6px auto 2px;display:block}
+.card{animation:inn .18s ease-out}
+@keyframes inn{from{transform:translateY(14px) scale(.97);opacity:0}}
 
 /* springerløypa */
 .teller{font-family:'Fredoka';text-align:center}
@@ -186,22 +205,24 @@ button{font:inherit;cursor:pointer}
     <a href="index.html" aria-label="Tilbake til Mykje spill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Mykje spill</a>
     <h1>Mykje Sjakk</h1>
   </div>
-  <p class="intro">Spill sjakk mot datamaskinen eller en venn, prøv minispill med nye regler, eller ta springerløypa.</p>
+  <div class="helt">
+    <img class="heltm" src="sjakk/hei.webp" alt="Sprett, en sjakkspringer som vinker" width="512" height="512">
+    <div class="boble"><h2>Hei! Jeg heter Sprett.</h2><p>Spill sjakk mot datamaskinen eller en venn, løs sjakknøtter, eller bli med meg ut i springerløypa.</p></div>
+  </div>
   <div class="sect">
     <h2>Spill sjakk</h2>
     <div class="tiles">
-      <button class="tile" data-start="standard,bot"><span class="ic w"><svg><use href="#p6"/></svg></span><h3>Mot datamaskinen</h3><p>Fem nivåer, fra Kyllingen til Dragen.</p></button>
-      <button class="tile" id="tilNotter"><span class="ic w"><svg><use href="#p3"/></svg></span><h3>Sjakknøtter</h3><p>Finn det beste trekket. 750 nøtter i fire nivåer.</p></button>
-      <button class="tile" id="tilNett"><span class="ic w"><svg><use href="#p4"/></svg></span><h3>Mot en medelev</h3><p>Hver sin iPad. Den ene lager spillet og deler en kode.</p></button>
-      <button class="tile" id="tilTurn"><span class="ic w"><svg><use href="#p5"/></svg></span><h3>Turnering</h3><p>Logg inn med koden du har fått av læreren.</p></button>
-      <button class="tile" data-start="standard,to"><span class="ic w"><svg><use href="#p1"/></svg></span><h3>To på samme brett</h3><p>Spill mot en venn på én skjerm.</p></button>
+      <button class="tile" style="--c:#7c5cff" data-start="standard,bot"><span class="ic w"><svg><use href="#p6"/></svg></span><h3>Mot datamaskinen</h3><p>Fem nivåer, fra Kyllingen til Dragen.</p></button>
+      <button class="tile" style="--c:#f59e0b" id="tilNotter"><span class="ic w"><svg><use href="#p3"/></svg></span><h3>Sjakknøtter</h3><p>Finn det beste trekket. 750 nøtter i fire nivåer.</p></button>
+      <button class="tile" style="--c:#14b8a6" id="tilNett"><span class="ic w"><svg><use href="#p4"/></svg></span><h3>Mot en medelev</h3><p>Hver sin iPad. Den ene lager spillet og deler en kode.</p></button>
+      <button class="tile" style="--c:#ec4899" id="tilTurn"><span class="ic w"><svg><use href="#p5"/></svg></span><h3>Turnering</h3><p>Logg inn med koden du har fått av læreren.</p></button>
+      <button class="tile" style="--c:#3b82f6" data-start="standard,to"><span class="ic w"><svg><use href="#p1"/></svg></span><h3>To på samme brett</h3><p>Spill mot en venn på én skjerm.</p></button>
     </div>
     <h2>Minispill</h2>
     <div class="tiles">
-      <button class="tile" data-start="bonde,bot"><span class="ic w"><svg><use href="#p1"/></svg></span><h3>Bondekappløp</h3><p>Bare bønder. Første bonde helt over vinner.</p></button>
-      <button class="tile" data-start="dronning,bot"><span class="ic w"><svg><use href="#p5"/></svg></span><h3>Dronningkaos</h3><p>En konge og sju dronninger hver. Sett sjakkmatt!</p></button>
-      <button class="tile" data-start="kongebonde,bot"><span class="ic w"><svg><use href="#p6"/></svg></span><h3>Konge og bønder</h3><p>Få en bonde over og lag en dronning.</p></button>
-      <button class="tile" id="tilTour"><span class="ic w"><svg><use href="#p2"/></svg></span><h3>Springerløypa</h3><p>Klarer springeren å besøke alle rutene?</p></button>
+      <button class="tile" style="--c:#22c55e" data-start="bonde,bot"><span class="ic w"><svg><use href="#p1"/></svg></span><h3>Bondekappløp</h3><p>Bare bønder. Første bonde helt over vinner.</p></button>
+      <button class="tile" style="--c:#ef4444" data-start="kongebonde,bot"><span class="ic w"><svg><use href="#p6"/></svg></span><h3>Konge og bønder</h3><p>Få en bonde over og lag en dronning.</p></button>
+      <button class="tile" style="--c:#8b5cf6" id="tilTour"><span class="ic w"><svg><use href="#p2"/></svg></span><h3>Springerløypa</h3><p>Klarer springeren å besøke alle rutene?</p></button>
     </div>
     <h2>Velg brett</h2>
     <div class="velg" id="brettvalg"></div>
@@ -218,8 +239,8 @@ button{font:inherit;cursor:pointer}
     <div class="boardwrap"><div class="board" id="board"></div></div>
     <div class="side">
       <div class="klokker" id="gKlokker" hidden><div><span>Motstander</span><b id="kMot">0:00</b></div><div><span>Deg</span><b id="kMeg">0:00</b></div></div>
-      <div class="status" id="gStatus"></div>
-      <div class="tatt"><div id="tattW" class="b"></div><div id="tattB" class="w"></div></div>
+      <div class="snakk"><div class="msk"><img id="gMsk" alt=""></div><div class="status" id="gStatus"></div></div>
+      <div class="tatt" id="gTatt"><div id="tattW" class="b"></div><div id="tattB" class="w"></div></div>
       <div class="regel" id="gRegel" hidden></div>
       <div class="trekk" id="gTrekk"></div>
       <div class="knapper">
@@ -246,7 +267,7 @@ button{font:inherit;cursor:pointer}
     <div class="boardwrap"><div class="board" id="tboard"></div><svg id="tline"></svg></div>
     <div class="side">
       <div class="teller"><div class="t1">Ruter: <b id="tAnt">0</b> / <span id="tTot">64</span></div><div class="t2">hopp: <span id="tHopp">0</span> · åpne valg herfra: <b id="tValg">–</b></div></div>
-      <div class="status" id="tStatus"></div>
+      <div class="snakk"><div class="msk"><img id="tMsk" alt=""></div><div class="status" id="tStatus"></div></div>
       <div class="regel" id="tRegel">Springeren hopper i en L: to ruter én vei og én rute til siden. Trykk på en rute for å starte. Klarer du å besøke alle rutene uten å lande på samme rute to ganger?</div>
       <div class="knapper">
         <button class="btn" id="tAngre">Angre</button>
@@ -267,6 +288,7 @@ button{font:inherit;cursor:pointer}
   </div>
   <div class="tnbody">
     <div class="tnkort">
+      <img class="tnm" id="tnMsk" alt="">
       <div class="hvem">Du spiller som <b id="tnNavn"></b></div>
       <h2 id="tnT1"></h2><p id="tnT2"></p>
       <p class="min" id="tnMin"></p>
@@ -325,7 +347,7 @@ button{font:inherit;cursor:pointer}
 <div class="modal" id="mPromo"><div class="card"><h2>Bonden er over!</h2><p>Hva skal den bli til?</p><div class="promo" id="promoValg"></div></div></div>
 <!-- slutt -->
 <div class="modal" id="mSlutt"><div class="card" style="text-align:center">
-  <svg class="stor" id="sIkon"><use href="#p6"/></svg>
+  <img class="stor" id="sIkon" alt="">
   <h2 id="sTittel"></h2><p id="sTekst"></p>
   <div class="bunn"><button class="btn ghost" id="sSe">Se brettet</button><button class="btn primary" id="sIgjen">Spill igjen</button></div>
 </div></div>
@@ -409,7 +431,6 @@ var KN=[],KG=[],RAY=[],CM=[];
 var VARIANTS={
   standard:{navn:"Vanlig sjakk",fen:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"},
   bonde:{navn:"Bondekappløp",fen:"8/pppppppp/8/8/8/8/PPPPPPPP/8 w - - 0 1",race:true},
-  dronning:{navn:"Dronningkaos",fen:"qqqqkqqq/8/8/8/8/8/8/QQQQKQQQ w - - 0 1"},
   kongebonde:{navn:"Konge og bønder",fen:"4k3/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1"}
 };
 
@@ -695,7 +716,10 @@ var $=function(id){return document.getElementById(id);};
 function lagre(k,v){try{localStorage.setItem("mykjesjakk."+k,v);}catch(e){}}
 function hent(k,d){try{var v=localStorage.getItem("mykjesjakk."+k);return v===null?d:v;}catch(e){return d;}}
 function vis(id){["home","game","tour","tn"].forEach(function(s){$(s).classList.toggle("active",s===id);});}
-function brikke(pc,kl){return '<svg class="'+(kl||"pc")+" "+((pc&8)?"b":"w")+'"><use href="#p'+(pc&7)+'"/></svg>';}
+var MSK="sjakk/",HUMOR=["hei","tenker","jubler","lei","oi","tips","sover","heia"];
+HUMOR.forEach(function(h){var i=new Image();i.src=MSK+h+".webp";});
+function maskot(id,h){var el=$(id),src=MSK+h+".webp";if(el.getAttribute("src")!==src)el.setAttribute("src",src);}
+function brikke(pc,kl){return '<svg class="'+(kl===undefined?"pc":kl)+" "+((pc&8)?"b":"w")+'"><use href="#p'+(pc&7)+'"/></svg>';}
 
 /* ---------- brettvalg ---------- */
 var BRETT=[["tre","Tre","#f0d9b5","#b58863"],["hav","Hav","#dceefb","#4f8fc4"],["skog","Skog","#eef3d2","#6f9a54"]];
@@ -724,7 +748,6 @@ function spor(level,cb){
 var NIVA=[[1,"Kyllingen","flytter på måfå"],[2,"Katten","lett"],[3,"Reven","middels"],[4,"Ugla","vanskelig"],[5,"Dragen","veldig vanskelig"]];
 var REGEL={
   bonde:"Bøndene går som i vanlig sjakk. Den første som får en bonde helt over til andre siden, vinner. Du vinner også hvis du slår alle bøndene til motstanderen.",
-  dronning:"Hver spiller har en konge og sju dronninger. Vanlige sjakkregler: sett kongen sjakkmatt.",
   kongebonde:"Vanlige sjakkregler, men bare konge og bønder. Få en bonde helt over, så blir den en ny brikke."
 };
 var O={variant:"standard",mot:"bot",niva:+hent("niva",2),farge:2};
@@ -760,6 +783,17 @@ function startSpill(){
   vis("game");oppdater();
   if(G.bot&&G.s.turn!==G.meg)botTrekk();
 }
+/* hvilket uttrykk maskoten skal ha akkurat nå */
+function humor(){
+  if(G.puz)return G.puz.farge==="feil"?"heia":G.ferdig?(G.puz.farge==="bra"?"jubler":"tips"):G.puz.farge==="bra"?"jubler":G.tips||G.puz.hjelp?"tips":G.tenker?"hei":"tenker";
+  if(G.ferdig){var st=G.ferdig;if(st.result==="draw")return "heia";
+    if(G.bot||G.net||G.tn)return ((st.result==="w")===(G.meg===0))?"jubler":"lei";return "jubler";}
+  if(G.tenker)return G.tn?"hei":"tenker";
+  if((G.net||G.tn)&&G.s.turn!==G.meg)return "sover";
+  if(Sjakk.inCheck(G.s))return "oi";
+  if(G.tips)return "tips";
+  return "hei";
+}
 function minTur(){return !G.ferdig&&!G.tenker&&((!G.bot&&!G.net&&!G.tn)||G.s.turn===G.meg);}
 function tegnBrett(){
   var h="",s=G.s,st=Sjakk.status(s),kSj=st.check?s.k[s.turn]:-1,mal={};
@@ -778,6 +812,12 @@ function tegnBrett(){
     h+='</div>';
   }
   $("board").innerHTML=h;
+  /* la brikken gli fra ruta den kom fra */
+  if(G.anim){var a=G.anim;G.anim=null;
+    var el=$("board").querySelector('[data-sq="'+a.t+'"] .pc');
+    if(el){var fi=G.snu?63-a.f:a.f,ti=G.snu?63-a.t:a.t,sz=$("board").clientWidth/8;
+      el.style.zIndex=5;el.style.transition="none";el.style.transform="translate("+((fi&7)-(ti&7))*sz+"px,"+((fi>>3)-(ti>>3))*sz+"px)";
+      el.getBoundingClientRect();el.style.transition="transform .2s ease-out";el.style.transform="";}}
 }
 function oppdater(){
   G.lov=G.ferdig?[]:Sjakk.legal(G.s);
@@ -797,9 +837,10 @@ function oppdater(){
   if(pz){$("gLosning").disabled=!minTur();$("gNeste").textContent=G.ferdig?"Neste nøtt":"Hopp over";
     $("gNeste").classList.toggle("primary",!!G.ferdig);$("gNeste").classList.toggle("ghost",!G.ferdig);}
   $("gStatus").textContent=t;$("gStatus").classList.toggle("think",G.tenker);
+  maskot("gMsk",humor());
   var tw="",tb="";
   s.undo.forEach(function(u){if(u.m.c){if(u.m.c&8)tw+=brikke(u.m.c,"");else tb+=brikke(u.m.c,"");}});
-  $("tattW").innerHTML=tw;$("tattB").innerHTML=tb;
+  $("tattW").innerHTML=tw;$("tattB").innerHTML=tb;$("gTatt").hidden=!tw&&!tb;
   var th="";G.san.forEach(function(x,i){th+=(i%2===0?"<span><b>"+(i/2+1)+".</b>"+x:" "+x+"</span>");});
   $("gTrekk").innerHTML=th;$("gTrekk").scrollTop=1e5;
   $("gAngre").disabled=!s.undo.length||G.tenker;
@@ -820,7 +861,7 @@ function utfor(m,fraNett){
   if(G.net&&!fraNett)NET.trekk(G.net.code,G.s.undo.length-1,uci(m)).catch(function(){});
   var st=Sjakk.status(G.s);
   G.san.push(n+(st.reason==="matt"?"#":st.check?"+":""));
-  G.siste=m;G.valgt=-1;G.tips=null;
+  G.siste=m;G.valgt=-1;G.tips=null;G.anim=m;
   if(st.over)G.ferdig=st;
   oppdater();
   if(st.over)setTimeout(visSlutt,650);
@@ -873,8 +914,7 @@ function sluttTekst(st){
 function visSlutt(){
   if(!G.ferdig||G.tn)return;var t=sluttTekst(G.ferdig),st=G.ferdig;
   $("sTittel").textContent=t[0];$("sTekst").textContent=t[1];
-  $("sIkon").setAttribute("class","stor "+(st.result==="b"?"b":"w"));
-  $("sIkon").firstElementChild.setAttribute("href","#p"+(G.variant==="bonde"?1:st.result==="draw"?4:6));
+  maskot("sIkon",humor());
   $("mSlutt").classList.add("open");
 }
 $("sSe").onclick=function(){$("mSlutt").classList.remove("open");};
@@ -1182,6 +1222,7 @@ function tnVis(){
     t2=m.neste?(igjen>0?"Neste runde starter om "+igjen+" sekunder.":"Neste runde starter nå …"):"Vent til læreren starter neste runde.";
   }else{t1="Turneringen er ferdig!";t2="Takk for kampen.";}
   $("tnT1").textContent=t1;$("tnT2").textContent=t2;$("tnSe").hidden=!knapp;
+  maskot("tnMsk",!m?"sover":m.status==="lobby"?"hei":m.status==="pause"?"heia":m.status==="ferdig"?"jubler":(TN.par&&TN.par.bye)?"sover":"tenker");
   var min="";
   if(TN.tabell){TN.tabell.forEach(function(x,i){if(x.p===TN.inn.pid)min="Du har "+Felles.poeng(x.po)+" poeng og ligger på "+(i+1)+". plass.";});}
   $("tnMin").textContent=(m&&m.status!=="lobby")?min:"";
@@ -1277,8 +1318,10 @@ function tTegn(){
   }else if(her>=0&&!valg.length){
     st="Ingen flere hopp. Du rakk "+sti.length+" av "+tot+". Angre, eller start på nytt.";
     if(sti.length>+hent("tbest"+n,0))lagre("tbest"+n,sti.length);
-  }else if(her<0){var best=+hent("tbest"+n,0);st=best?"Rekorden din på dette brettet: "+best+" ruter.":"";}
+  }else if(her<0){var best=+hent("tbest"+n,0);st=best?"Rekorden din på dette brettet er "+best+" ruter. Trykk på en rute for å starte.":"Trykk på en rute for å starte.";}
+  else st=(tot-sti.length)+" ruter igjen. Hvor hopper du nå?";
   $("tStatus").textContent=st;
+  maskot("tMsk",sti.length===tot?"jubler":her>=0&&!valg.length?"oi":her<0?"hei":T.tall?"tips":"tenker");
   $("tAngre").disabled=!sti.length;
   $("tTall").textContent=T.tall?"Skjul hjelpetall":"Vis hjelpetall";
   $("tRegel").textContent=T.tall
@@ -1298,7 +1341,7 @@ $("tNy").onclick=function(){T.sti=[];tTegn();};
 $("tTall").onclick=function(){T.tall=!T.tall;tTegn();};
 $("tilTour").onclick=function(){vis("tour");tTegn();};
 $("tHjem").onclick=function(){vis("home");};
-window.__sjakk={G:function(){return G;},T:T,TN:TN};
+window.__sjakk={G:function(){return G;},T:T,TN:TN,oppdater:oppdater};
 })();
 
 </script>
