@@ -18,9 +18,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mykje spill">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="fonts/skrifter.css" rel="stylesheet">
 <style>
 :root{
   --natt-1:#2a1a5e;
@@ -281,6 +279,7 @@ footer b{color:var(--gul);}
 @media (prefers-reduced-motion:reduce){
   *{animation:none !important;transition:none !important;}
 }
+footer .juridisk{display:block;margin-top:.5em;font-size:.9em}footer .juridisk a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 </style>
 </head>
 <body>
@@ -322,6 +321,7 @@ footer b{color:var(--gul);}
 
   <footer>
     En del av <b>Mykje</b>-familien · Laget for og av elevene
+    <span class="juridisk"><a href="personvern.html">Personvern</a> · <a href="vilkar.html">Brukervilkår</a></span>
   </footer>
 
 </div>

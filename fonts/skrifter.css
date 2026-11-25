@@ -1,0 +1,17 @@
+/* Mykje spill – skrifttyper lagt på egen server (ingenting hentes fra Google Fonts).
+   Alle skriftene har SIL Open Font License, se LISENS-skrifttyper.txt. */
+@font-face{font-family:'Atkinson Hyperlegible';font-style:normal;font-weight:400;font-display:swap;src:url(atkinson-hyperlegible-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Atkinson Hyperlegible';font-style:normal;font-weight:700;font-display:swap;src:url(atkinson-hyperlegible-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Atkinson Hyperlegible';font-style:italic;font-weight:400;font-display:swap;src:url(atkinson-hyperlegible-latin-400-italic.woff2) format('woff2')}
+@font-face{font-family:'Fredoka';font-style:normal;font-weight:400;font-display:swap;src:url(fredoka-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Fredoka';font-style:normal;font-weight:500;font-display:swap;src:url(fredoka-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Fredoka';font-style:normal;font-weight:600;font-display:swap;src:url(fredoka-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Fredoka';font-style:normal;font-weight:700;font-display:swap;src:url(fredoka-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Fredoka One';font-style:normal;font-weight:400;font-display:swap;src:url(fredoka-one-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Alfa Slab One';font-style:normal;font-weight:400;font-display:swap;src:url(alfa-slab-one-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Baloo 2';font-style:normal;font-weight:500;font-display:swap;src:url(baloo-2-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Baloo 2';font-style:normal;font-weight:600;font-display:swap;src:url(baloo-2-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Baloo 2';font-style:normal;font-weight:700;font-display:swap;src:url(baloo-2-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Baloo 2';font-style:normal;font-weight:800;font-display:swap;src:url(baloo-2-latin-800-normal.woff2) format('woff2')}
+@font-face{font-family:'Lilita One';font-style:normal;font-weight:400;font-display:swap;src:url(lilita-one-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Patrick Hand';font-style:normal;font-weight:400;font-display:swap;src:url(patrick-hand-latin-400-normal.woff2) format('woff2')}

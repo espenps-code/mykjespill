@@ -1,0 +1,26 @@
+/* Felles stil for personvern- og vilkårssidene på Mykje spill */
+:root{--natt-1:#2a1a5e;--natt-2:#4c1d95;--natt-3:#1b1147;--teal:#2dd4bf;--lilla:#a855f7;--tekst:#f4f0ff;--dempet:#c9bfe8;--kort:rgba(255,255,255,.07);--kant:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;color:var(--tekst);font:17px/1.65 "Atkinson Hyperlegible",system-ui,sans-serif;background:radial-gradient(ellipse at top,var(--natt-2) 0%,var(--natt-1) 45%,var(--natt-3) 100%) fixed}
+.side{max-width:860px;margin:0 auto;padding:28px 20px 72px}
+.tilbake{display:inline-block;color:var(--teal);text-decoration:none;font-weight:700;margin-bottom:22px}
+.tilbake:hover,.tilbake:focus-visible{text-decoration:underline}
+header{margin-bottom:22px}
+.merke{margin:0;font-family:Fredoka,sans-serif;font-weight:600;color:var(--teal);letter-spacing:.06em;text-transform:uppercase;font-size:.85rem}
+h1{font-family:Fredoka,sans-serif;font-weight:700;font-size:clamp(2rem,5vw,2.8rem);line-height:1.15;margin:.2em 0 .25em}
+.versjon{margin:0;color:var(--dempet);font-size:.95rem}
+h2{font-family:Fredoka,sans-serif;font-weight:600;font-size:1.45rem;margin:2em 0 .5em;color:#fff}
+p,li{max-width:70ch}
+a{color:var(--teal)}
+.kort{background:var(--kort);border:1px solid var(--kant);border-radius:18px;padding:16px 20px}
+.ingress{border-left:5px solid var(--teal)}
+.ingress p{margin:0}
+.tabell-wrap{overflow-x:auto;margin:12px 0;border-radius:14px;border:1px solid var(--kant)}
+table{width:100%;border-collapse:collapse;font-size:.95rem;background:rgba(0,0,0,.15)}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--kant)}
+th{background:rgba(255,255,255,.1);font-family:Fredoka,sans-serif;font-weight:600}
+tr:last-child td{border-bottom:0}
+ul{padding-left:1.3em}
+.lenker{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--kant);color:var(--dempet)}
+@media print{body{background:#fff;color:#000}.tilbake{display:none}h2,th{color:#000}a{color:#000}.kort,.tabell-wrap,th,td{border-color:#999}th{background:#eee}}
