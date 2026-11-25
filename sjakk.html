@@ -197,8 +197,12 @@ img.pc{object-fit:contain;object-position:50% 100%;inset:0 0 3% 0;width:100%;hei
 #tboard .sq{background:#3a2a8c}
 #tboard .sq.d{background:#33247c}
 #tboard .sq{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
-#tboard .sq.vis{background:#5a45c9}
-#tboard .sq .nr{position:absolute;right:5px;bottom:3px;font-size:clamp(9px,1.6vmin,13px);opacity:.7;font-weight:700}
+/* besøkte ruter: tydelig grønne med hake-farge og stort tall */
+#tboard .sq.vis{background:#17a37f;box-shadow:inset 0 0 0 3px #0c7a5e}
+#tboard .sq.vis.d{background:#12936f}
+#tboard .sq.her{background:#f5b301;box-shadow:inset 0 0 0 3px #b98300}
+#tboard .sq .nr{position:absolute;right:6px;bottom:3px;font-family:'Fredoka';font-size:clamp(12px,2.3vmin,20px);font-weight:700;color:#eafff6;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+#tboard.utenstrek .sq .nr{inset:0;display:grid;place-items:center;font-size:clamp(16px,4vmin,34px)}
 #tboard .sq .tall{position:absolute;inset:0;display:grid;place-items:center;font-family:'Fredoka';font-weight:700;font-size:clamp(14px,3.4vmin,26px);color:var(--gul);z-index:2}
 #tboard .sq.mv::after{background:rgba(255,255,255,.55);box-shadow:0 0 14px #fff}
 #tboard .sq.mv.tl::after{display:none}
@@ -308,6 +312,7 @@ img.pc{object-fit:contain;object-position:50% 100%;inset:0 0 3% 0;width:100%;hei
       <div class="knapper">
         <button class="btn" id="tAngre">Angre</button>
         <button class="btn" id="tTall">Vis hjelpetall</button>
+        <button class="btn" id="tStrek">Skjul streken</button>
         <button class="btn ghost" id="tNy">Start på nytt</button>
       </div>
       <div class="knapper" id="tStr"></div>
@@ -1595,14 +1600,14 @@ $("oKn").addEventListener("click",function(e){
 
 
 /* ---------- springerløypa ---------- */
-var T={n:+hent("tn",8),sti:[],tall:false};
+var T={n:+hent("tn",8),sti:[],tall:false,strek:hent("tstrek","1")!=="0"};
 var HOPP=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
 function tNaboer(sq){var n=T.n,r=Math.floor(sq/n),f=sq%n,o=[];
   HOPP.forEach(function(d){var a=r+d[0],b=f+d[1];if(a>=0&&a<n&&b>=0&&b<n&&T.sti.indexOf(a*n+b)<0)o.push(a*n+b);});return o;}
 function tTegn(){
   var n=T.n,tot=n*n,h="",sti=T.sti,her=sti.length?sti[sti.length-1]:-1,valg=her>=0?tNaboer(her):[];
   for(var i=0;i<tot;i++){
-    var r=Math.floor(i/n),f=i%n,ix=sti.indexOf(i),kl="sq"+(((r+f)&1)?" d":"")+(ix>=0?" vis":"");
+    var r=Math.floor(i/n),f=i%n,ix=sti.indexOf(i),kl="sq"+(((r+f)&1)?" d":"")+(ix>=0?" vis":"")+(i===her?" her":"");
     var erValg=valg.indexOf(i)>=0;
     if(erValg)kl+=" mv"+(T.tall?" tl":"");
     h+='<div class="'+kl+'" data-sq="'+i+'">';
@@ -1633,6 +1638,8 @@ function tTegn(){
   maskot("tMsk",sti.length===tot?"jubler":her>=0&&!valg.length?"oi":her<0?"hei":T.tall?"tips":"tenker");
   $("tAngre").disabled=!sti.length;
   $("tTall").textContent=T.tall?"Skjul hjelpetall":"Vis hjelpetall";
+  $("tStrek").textContent=T.strek?"Skjul streken":"Vis streken";
+  $("tline").style.display=T.strek?"":"none";$("tboard").classList.toggle("utenstrek",!T.strek);
   $("tRegel").textContent=T.tall
     ?"Tallet viser hvor mange hopp du har videre fra den ruta. Lurt triks: velg ruta med det laveste tallet, så sparer du de enkle rutene til slutt."
     :"Springeren hopper i en L: to ruter én vei og én rute til siden. Trykk på en rute for å starte. Klarer du å besøke alle rutene uten å lande på samme rute to ganger?";
@@ -1648,6 +1655,7 @@ $("tboard").addEventListener("click",function(e){
 $("tAngre").onclick=function(){T.sti.pop();tTegn();};
 $("tNy").onclick=function(){T.sti=[];tTegn();};
 $("tTall").onclick=function(){T.tall=!T.tall;tTegn();};
+$("tStrek").onclick=function(){T.strek=!T.strek;lagre("tstrek",T.strek?"1":"0");tTegn();};
 $("tilTour").onclick=function(){vis("tour");tTegn();};
 $("tHjem").onclick=function(){vis("home");};
 window.__sjakk={G:function(){return G;},T:T,TN:TN,oppdater:oppdater};
