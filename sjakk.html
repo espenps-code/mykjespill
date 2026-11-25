@@ -896,7 +896,7 @@ var NIVA=[[1,"Kyllingen","flytter på måfå"],[2,"Katten","lett"],[3,"Reven","m
 var REGEL={
   bonde:"Bøndene går som i vanlig sjakk. Den første som får en bonde helt over til andre siden, vinner. Du vinner også hvis du slår alle bøndene til motstanderen.",
   kongebonde:"Vanlige sjakkregler, men bare konge og bønder. Få en bonde helt over, så blir den en ny brikke.",
-  fischer:"Brikkene på bakerste rad står i tilfeldig rekkefølge, likt for begge. Ellers er alt som i vanlig sjakk. Rokade: trykk på kongen og så på tårnet. Kongen og tårnet havner på de samme rutene som i vanlig sjakk.",
+  fischer:"Brikkene på bakerste rad står i tilfeldig rekkefølge, likt for begge. Ellers er alt som i vanlig sjakk. Rokade: trykk på kongen og så på tårnet (eller på ruta kongen skal til). Kongen og tårnet havner på de samme rutene som i vanlig sjakk.",
   mattD:"Sett matt med konge og dronning. Bruk dronningen til å stenge kongen inne i en mindre og mindre boks, og hent så kongen din. Pass på patt: den svarte kongen må alltid ha en rute å gå til, helt til du setter matt.",
   matt2T:"Sett matt med to tårn. Bruk «trappa»: det ene tårnet sperrer en rad, det andre gir sjakk på neste rad. Så bytter de på, helt til kongen er på kanten.",
   mattT:"Sett matt med konge og ett tårn. Tårnet lager en boks rundt den svarte kongen. Kongen din må hjelpe til. Gjør boksen mindre hver gang du kan."
@@ -948,9 +948,24 @@ function humor(){
 function minTur(){return !G.ferdig&&!G.tenker&&((!G.bot&&!G.net&&!G.tn)||G.s.turn===G.meg);}
 /* I Fischer-sjakk rokerer du ved å trykke på tårnet, fordi kongens rute kan være et vanlig kongetrekk også. */
 function maalrute(m){return (G.variant==="fischer"&&(m.fl===2||m.fl===3))?m.rf:m.t;}
+/* Når eleven prøver å rokere og det ikke er lov: si hvorfor. */
+function rokadeGrunn(fra,til){
+  var s=G.s,b=s.b,us=s.turn?8:0,rad=us?0:7;
+  if(G.variant!=="standard"&&G.variant!=="fischer")return "";
+  if((b[fra]&7)!==6||(fra>>3)!==rad||(til>>3)!==rad||til===fra)return "";
+  var kf=fra&7,tf=til&7,egetTarn=b[til]===(4|us);
+  if(!egetTarn&&!(Math.abs(tf-kf)===2&&G.variant==="standard")&&!(G.variant==="fischer"&&(tf===6||tf===2)&&Math.abs(tf-kf)>1))return "";
+  var kort=tf>kf,bit=(us?4:1)<<(kort?0:1);
+  if(kf!==s.cf[0]||!(s.cast&bit))return "Du kan ikke rokere til den siden lenger. Kongen eller tårnet har flyttet tidligere i partiet.";
+  if(Sjakk.inCheck(s))return "Du kan ikke rokere når kongen står i sjakk. Du må først komme deg ut av sjakken.";
+  var rs=rad*8+s.cf[kort?1:2],kd=rad*8+(kort?6:2),rd=rad*8+(kort?5:3),lo=Math.min(fra,rs,kd,rd),hi=Math.max(fra,rs,kd,rd);
+  for(var q=lo;q<=hi;q++)if(q!==fra&&q!==rs&&b[q])return "Du kan ikke rokere ennå. Det står brikker mellom kongen og tårnet.";
+  return "Du kan ikke rokere nå. Kongen kan ikke gå over eller til en rute som motstanderen angriper.";
+}
 function tegnBrett(){
   var h="",s=G.s,st=Sjakk.status(s),kSj=st.check?s.k[s.turn]:-1,mal={};
   G.lov.forEach(function(m){if(m.f===G.valgt)mal[maalrute(m)]=(m.c||maalrute(m)!==m.t)?"cap":"mv";});
+  G.lov.forEach(function(m){if(m.f===G.valgt&&(m.fl===2||m.fl===3)){if(!mal[m.t]&&m.t!==m.f)mal[m.t]="mv";if(!mal[m.rf])mal[m.rf]="cap";}});
   for(var i=0;i<64;i++){
     var sq=G.snu?63-i:i,r=sq>>3,f=sq&7,pc=s.b[sq],kl="sq"+(((r+f)&1)?" d":"");
     if(G.siste&&(G.siste.f===sq||G.siste.t===sq))kl+=" last";
@@ -1016,6 +1031,7 @@ function utfor(m,fraNett){
   var st=Sjakk.status(G.s);
   G.san.push(n+(st.reason==="matt"?"#":st.check?"+":""));
   G.siste=m;G.valgt=-1;G.tips=null;G.anim=m;
+  if(!G.puz){$("gRegel").hidden=!REGEL[G.variant];$("gRegel").textContent=REGEL[G.variant]||"";}
   if(st.over)G.ferdig=st;
   oppdater();
   if(st.over)setTimeout(visSlutt,650);
@@ -1038,9 +1054,13 @@ $("board").addEventListener("click",function(e){
   var sq=+el.dataset.sq,pc=G.s.b[sq],us=G.s.turn?8:0;
   if(G.valgt>=0){
     var ms=G.lov.filter(function(m){return m.f===G.valgt&&maalrute(m)===sq;});
+    /* rokade kan gjøres på begge måter i alle varianter: trykk på ruta kongen skal til, eller på tårnet */
+    if(!ms.length)ms=G.lov.filter(function(m){return m.f===G.valgt&&(m.fl===2||m.fl===3)&&(m.t===sq||m.rf===sq);});
     if(ms.length===1){trekk(ms[0]);return;}
     if(ms.length>1){velgPromo(ms);return;}
   }
+  var hvorfor=G.valgt>=0&&!G.puz?rokadeGrunn(G.valgt,sq):"";
+  if(hvorfor){$("gRegel").hidden=false;$("gRegel").textContent=hvorfor;maskot("gMsk","heia");return;}
   G.valgt=(pc&&(pc&8)===us&&sq!==G.valgt)?sq:-1;G.tips=null;
   tegnBrett();
 });
